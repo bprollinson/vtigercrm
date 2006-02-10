@@ -1,0 +1,550 @@
+<?php
+/*********************************************************************************
+ * The contents of this file are subject to the SugarCRM Public License Version 1.1.2
+ * ("License"); You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at http://www.sugarcrm.com/SPL
+ * Software distributed under the License is distributed on an  "AS IS"  basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+ * the specific language governing rights and limitations under the License.
+ * The Original Code is:  SugarCRM Open Source
+ * The Initial Developer of the Original Code is SugarCRM, Inc.
+ * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.;
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ ********************************************************************************/
+/*********************************************************************************
+ * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/install/3confirmConfig.php,v 1.14 2005/04/25 09:41:26 samk Exp $
+ * Description:  Executes a step in the installation process.
+ ********************************************************************************/
+
+if (isset($_REQUEST['db_host_name'])) $db_host_name 	= $_REQUEST['db_host_name'];
+if (isset($_REQUEST['db_user_name'])) $db_user_name 	= $_REQUEST['db_user_name'];
+if (isset($_REQUEST['db_password'])) $db_password 		= $_REQUEST['db_password'];
+if (isset($_REQUEST['db_name'])) $db_name  				= $_REQUEST['db_name'];
+if (isset($_REQUEST['db_drop_tables'])) $db_drop_tables = $_REQUEST['db_drop_tables'];
+if (isset($_REQUEST['site_URL'])) $site_URL 			= $_REQUEST['site_URL'];
+if (isset($_REQUEST['admin_email'])) $admin_email 		= $_REQUEST['admin_email'];
+if (isset($_REQUEST['admin_password'])) $admin_password = $_REQUEST['admin_password'];
+if (isset($_REQUEST['cache_dir'])) $cache_dir           = $_REQUEST['cache_dir'];
+if (isset($_REQUEST['mail_server'])) $mail_server           = $_REQUEST['mail_server'];
+if (isset($_REQUEST['mail_server_username'])) $mail_server_username           = $_REQUEST['mail_server_username'];
+if (isset($_REQUEST['mail_server_password'])) $mail_server_password           = $_REQUEST['mail_server_password'];
+if (isset($_REQUEST['root_directory'])) $root_directory = $_REQUEST['root_directory'];
+if (isset($_REQUEST['ftpserver'])) $ftpserver 	= $_REQUEST['ftpserver'];
+if (isset($_REQUEST['ftpuser'])) $ftpuser 	= $_REQUEST['ftpuser'];
+if (isset($_REQUEST['ftppassword'])) $ftppassword	= $_REQUEST['ftppassword'];
+if (isset($_REQUEST['dbtype'])) $dbtype	= $_REQUEST['dbtype'];
+
+//Checking for mysql connection parameters
+
+$mysql_status = '';
+$mysql_db_status = '';
+if($dbtype != 'mysql' || $dbtype =='')
+{
+	$mysql_status = 'true';
+	$mysql_db_status = 'true';
+}
+else
+{
+	$conn = @mysql_pconnect($db_host_name,$db_user_name,$db_password);
+	if(!$conn)
+	{
+		$mysql_status = 'false';
+	}
+	else
+	{
+		if(mysql_select_db($db_name,$conn))
+		{
+			$mysql_status = 'true';
+			$mysql_db_status = 'true';
+		}
+		else
+		{
+			$mysql_status = 'true';
+			$mysql_db_status = 'false';
+		}
+	}
+}
+?>
+
+<?php
+if($mysql_status == 'true' && $mysql_db_status == 'true')
+{
+?>
+	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+	<HTML>
+	<HEAD>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>vtiger CRM 5.0 Beta Installer: Step 3</title>
+	<link rel="stylesheet" href="install/install.css" type="text/css" />
+	<link rel="stylesheet" href="style.css" type="text/css" />
+	</head>
+
+	<body leftMargin="0" topMargin="0" marginheight="0" marginwidth="0">
+
+	<!-- Master table -->
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+	<td align=center>
+	<br><br>
+	<!--  Top Header -->
+	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwTopBg.gif) repeat-x;">
+	<tr>
+	<td><img src="install/images/cwTopLeft.gif" alt="vtiger CRM" title="vtiger CRM"></td>
+	<td align=right><img src="install/images/cwTopRight.gif" alt="v5beta" title="v5beta"></td>
+	</tr>
+	</table>
+
+
+
+	<!-- 3 of 5 header -->
+	<table border="0" cellspacing="0" cellpadding="5" width="75%" class=small> 
+	<tr>	
+	<td valign=top><img src="install/images/cwIcoSystem.gif" alt="Confirm Configuration" title="Confirm Configuration"></td>
+	<td width=98% valign=top>
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+	<td><img src="install/images/cwHdrVtConfWiz.gif" alt="vtiger CRM Configuration Wizard" title="vtiger CRM Configuration Wizard"></td>
+	<td align=right><img src="install/images/cwStep3of5.gif" alt="Step 3 of 5" title="Step 3 of 5"></td>
+	</tr>
+	<tr>
+	<td colspan=2><img src="install/images/cwHdrCnfSysConf.gif" alt="Confirm Configuration" title="Confirm Configuration"></td>
+	</tr>
+	</table>
+	<hr noshade size=1>
+	</td>
+
+	</tr>
+	<tr>
+	<td></td>
+	<td valign="top" align=center>
+	<!-- ---------------------------------------------- System Configuration-- -->
+
+	<table width="90%" cellpadding="5" border="0" class="small" style="background-color:#cccccc" cellspacing="1"><tbody>
+	<tr>
+	<td ><strong>Database Configuration</strong></td>
+	</tr>
+	<tr bgcolor="White">
+	<td bgcolor="#F5F5F5" width="40%">Host Name</td>
+	<td align="left" nowrap> <font class="dataInput"><?php if (isset($db_host_name)) echo "$db_host_name"; ?></font></td>
+	</tr>
+	<tr bgcolor="White">
+	<td bgcolor="#F5F5F5" width="40%">User Name</td>
+	<td align="left" nowrap> <font class="dataInput"><?php if (isset($db_user_name)) echo "$db_user_name"; ?></font></td>
+	</tr>
+	<tr bgcolor="White">
+	<td bgcolor="#F5F5F5" width="40%" noWrap>Password</td>
+	<td align="left" nowrap> <font class="dataInput"><?php if (isset($db_password)) echo ereg_replace('.', '*', $db_password); ?></font></td>
+	</tr>
+	<tr bgcolor="White">
+	<td noWrap bgcolor="#F5F5F5" width="40%">Database Name</td>
+	<td align="left" nowrap> <font class="dataInput"><?php if (isset($db_name)) echo "$db_name"; ?></font></td>
+	</tr>
+	<tr bgcolor="White">
+	<td noWrap bgcolor="#F5F5F5" width="40%">Drop Existing Tables</td>
+	<td align="left" nowrap> <font class="dataInput">
+	<?php if (isset($db_drop_tables) && $db_drop_tables == true) echo "True"; else echo "False"; ?>
+	</font></td>
+	</tr></table><br>
+
+	<table width="90%" cellpadding="5" border="0" class="small" cellspacing="1" style="background-color:#cccccc"><tbody>
+	<tr>
+	<td colspan=2 ><h4>Site Configuration</h4></td>
+	</tr>
+	<tr bgcolor="White">
+	<td bgcolor="#F5F5F5" width="40%">URL</td>
+	<td align="left"> <font class="dataInput"><?php if (isset($site_URL)) echo $site_URL; ?></font></td>
+	</tr>
+	<tr bgcolor="White"> 
+	<td bgcolor="#F5F5F5" width="40%">Path</td>
+	<td align="left"> <font class="dataInput"><?php if (isset($root_directory)) echo $root_directory; ?></font></td>
+	</tr>
+	<tr bgcolor="White">
+	<td bgcolor="#F5F5F5" width="40%">Cache Path</td>
+	<td align="left"> <font class="dataInput"><?php if (isset($cache_dir)) echo $root_directory.''.$cache_dir; ?></font></td>
+	</tr>
+	<tr bgcolor="White">
+	<td bgcolor="#F5F5F5" width="40%">Admin Password</td>
+	<td align="left"> <font class="dataInput"><?php if (isset($admin_password)) echo ereg_replace('.', '*', $admin_password); ?></font></td>
+	</tr>
+
+	</tbody>
+	</table>
+	<br><br>
+
+	<table width="90%" cellpadding="5" border="0" class="small" >
+	<tr>
+	<td align="left" valign="bottom">
+	<form action="install.php" method="post" name="form" id="form">
+	<input type="hidden" name="file" value="2setConfig.php">
+	<input type="hidden" class="dataInput" name="db_host_name" value="<?php if (isset($db_host_name)) echo "$db_host_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_user_name" value="<?php if (isset($db_user_name)) echo "$db_user_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_password" value="<?php if (isset($db_password)) echo "$db_password"; ?>" />
+	<input type="hidden" class="dataInput" name="db_name" value="<?php if (isset($db_name)) echo "$db_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_drop_tables" value="<?php if (isset($db_drop_tables)) echo "$db_drop_tables"; ?>" />
+	<input type="hidden" class="dataInput" name="site_URL" value="<?php if (isset($site_URL)) echo "$site_URL"; ?>" />
+	<input type="hidden" class="dataInput" name="root_directory" value="<?php if (isset($root_directory)) echo "$root_directory"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_email" value="<?php if (isset($admin_email)) echo "$admin_email"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_password" value="<?php if (isset($admin_password)) echo "$admin_password"; ?>" />
+	<input type="hidden" class="dataInput" name="cache_dir" value="<?php if (isset($cache_dir)) echo $cache_dir; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server" value="<?php if (isset($maill_server)) echo $mail_server; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_username" value="<?php if (isset($maill_server_username)) echo $mail_server_username; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_password" value="<?php if (isset($maill_server_password)) echo $mail_server_password; ?>" />
+	<input type="hidden" class="dataInput" name="ftpserver" value="<?php if (isset($ftpserver)) echo "$ftpserver"; ?>" />
+	<input type="hidden" class="dataInput" name="ftpuser" value="<?php if (isset($ftpuser)) echo "$ftpuser"; ?>" />
+	<input type="hidden" class="dataInput" name="ftppassword" value="<?php if (isset($ftppassword)) echo "$ftppassword"; ?>" />
+	<input type="image" name="Change" value="Change" src="install/images/cwBtnChange.gif"/></td>
+	</form>
+	</td>
+
+	<td align="right" valign="bottom">
+
+	<form action="install.php" method="post" name="form" id="form">
+	<input type="hidden" name="file" value="4createConfigFile.php">
+	<!-- TODO Clint 4/28 - Add support for creating the database as well -->
+	<!--			 Also create database <font class="dataInput"><?php if (isset($db_name)) echo "$db_name"; ?></font>? -->
+	<!--			 <input type="checkbox" class="dataInput" name="db_create" value="1" /> -->
+	<table class=small>
+	<tr>
+	<td><input type="checkbox" class="dataInput" name="db_populate" value="1"></td>
+	<td>Populate database with demo data</td>
+	</tr>
+	</table>
+
+	<input type="hidden" class="dataInput" name="db_host_name" value="<?php if (isset($db_host_name)) echo "$db_host_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_user_name" value="<?php if (isset($db_user_name)) echo "$db_user_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_password" value="<?php if (isset($db_password)) echo "$db_password"; ?>" />
+	<input type="hidden" class="dataInput" name="db_name" value="<?php if (isset($db_name)) echo "$db_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_drop_tables" value="<?php if (isset($db_drop_tables)) echo "$db_drop_tables"; ?>" />
+	<input type="hidden" class="dataInput" name="site_URL" value="<?php if (isset($site_URL)) echo "$site_URL"; ?>" />
+	<input type="hidden" class="dataInput" name="root_directory" value="<?php if (isset($root_directory)) echo "$root_directory"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_email" value="<?php if (isset($admin_email)) echo "$admin_email"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_password" value="<?php if (isset($admin_password)) echo "$admin_password"; ?>" />
+	<input type="hidden" class="dataInput" name="cache_dir" value="<?php if (isset($cache_dir)) echo $cache_dir; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server" value="<?php if (isset($mail_server)) echo $mail_server; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_username" value="<?php if (isset($mail_server_username)) echo $mail_server_username; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_password" value="<?php if (isset($mail_server_password)) echo $mail_server_password; ?>" />
+	<input type="hidden" class="dataInput" name="ftpserver" value="<?php if (isset($ftpserver)) echo "$ftpserver"; ?>" />
+	<input type="hidden" class="dataInput" name="ftpuser" value="<?php if (isset($ftpuser)) echo "$ftpuser"; ?>" />
+	<input type="hidden" class="dataInput" name="ftppassword" value="<?php if (isset($ftppassword)) echo "$ftppassword"; ?>" />
+	<input type="image" src="install/images/cwBtnNext.gif" name="next" value="Create" onClick="window.location=('install.php')"/></form>
+	</td>
+
+	<!-- td align="right">
+	<form action="install.php" method="post" name="form" id="form">
+	<input type="hidden" name="file" value="4createConfigFile.php">
+	<input type="hidden" class="dataInput" name="db_host_name" value="<?php if (isset($db_host_name)) echo "$db_host_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_user_name" value="<?php if (isset($db_user_name)) echo "$db_user_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_password" value="<?php if (isset($db_password)) echo "$db_password"; ?>" />
+	<input type="hidden" class="dataInput" name="db_name" value="<?php if (isset($db_name)) echo "$db_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_drop_tables" value="<?php if (isset($db_drop_tables)) echo "$db_drop_tables"; ?>" />
+	<input type="hidden" class="dataInput" name="site_URL" value="<?php if (isset($site_URL)) echo "$site_URL"; ?>" />
+	<input type="hidden" class="dataInput" name="root_directory" value="<?php if (isset($root_directory)) echo "$root_directory"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_email" value="<?php if (isset($admin_email)) echo "$admin_email"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_password" value="<?php if (isset($admin_password)) echo "$admin_password"; ?>" />
+	<input type="hidden" class="dataInput" name="cache_dir" value="<?php if (isset($cache_dir)) echo $cache_dir; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server" value="<?php if (isset($mail_server)) echo $mail_server; ?>" />
+
+	<input type="hidden" class="dataInput" name="mail_server_username" value="<?php if (isset($mail_server_username)) echo $mail_server_username; ?>" />
+
+
+	<input type="hidden" class="dataInput" name="mail_server_password" value="<?php if (isset($mail_server_password)) echo $mail_server_password; ?>" />
+
+	<input type="hidden" class="dataInput" name="ftpserver" value="<?php if (isset($ftpserver)) echo "$ftpserver"; ?>" />
+	<input type="hidden" class="dataInput" name="ftpuser" value="<?php if (isset($ftpuser)) echo "$ftpuser"; ?>" />
+	<input type="hidden" class="dataInput" name="ftppassword" value="<?php if (isset($ftppassword)) echo "$ftppassword"; ?>" />
+
+
+	<input class="button" type="submit" name="next" value="Create" /></form>
+	</td -->
+	</tr>
+
+
+
+	</tbody></table>
+
+
+	<!-- ---------------------------------------------- System Configuration -- -->
+
+	</td>
+	</tr>
+	</table>
+
+
+
+	<!-- -->
+	<br><br>
+	<!-- Horizontal Shade -->
+	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwShadeBg.gif) repeat-x;">
+	<tr>
+	<td><img src="install/images/cwShadeLeft.gif"></td>
+	<td align=right><img src="install/images/cwShadeRight.gif"></td>
+	</tr>
+	</table>
+
+
+	</td>
+	</tr>
+	</table>
+	</table>
+	<!-- Master table closes -->
+
+
+
+	</html>
+<?php
+}
+?>
+
+<?php
+if($mysql_status == 'false')
+{
+?>
+	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+	<HTML>
+	<HEAD>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>vtiger CRM 5.0 Beta Installer: Step 3</title>
+	<link rel="stylesheet" href="install/install.css" type="text/css" />
+	</head>
+	<body leftMargin="0" topMargin="0" marginheight="0" marginwidth="0">
+
+
+	<!-- Master table -->
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+	<td align=center>
+	<br><br>
+	<!--  Top Header -->
+	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwTopBg.gif) repeat-x;">
+	<tr>
+	<td><img src="install/images/cwTopLeft.gif" alt="vtiger CRM" title="vtiger CRM"></td>
+	<td align=right><img src="install/images/cwTopRight.gif" alt="v5beta" title="v5beta"></td>
+	</tr>
+	</table>
+
+	<!-- 3 of 5 header -->
+	<table border="0" cellspacing="0" cellpadding="5" width="75%" class=small> 
+	<tr>	
+	<td valign=top><img src="install/images/cwIcoSystem.gif" alt="Confirm Configuration" title="Confirm Configuration"></td>
+	<td width=98% valign=top>
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+	<td><img src="install/images/cwHdrVtConfWiz.gif" alt="vtiger CRM Configuration Wizard" title="vtiger CRM Configuration Wizard"></td>
+	<td align=right><img src="install/images/cwStep3of5.gif" alt="Step 3 of 5" title="Step 3 of 5"></td>
+	</tr>
+	<tr>
+	<td colspan=2><img src="install/images/cwHdrCnfSysConf.gif" alt="Confirm Configuration" title="Confirm Configuration"></td>
+	</tr>
+	</table>
+	<hr noshade size=1>
+	</td>
+
+	</tr>
+	<tr>
+	<td></td>
+	<td valign="top" align=center>
+	<!-- ---------------------------------------------- System Configuration -- -->
+
+	<table border=0 cellspacing=0 cellpadding=10 width=90% class=small >
+	<tr>
+	<td>
+	<!-- Error Messages -->
+	<b><span style="background-color:#ff0000;padding:5px;color:#ffffff;">Unable to connect to database Server. Invalid mySQL Connection Parameters specified</span></b><br><br>
+	This may be due to the following reasons:<br>
+	-  specified database user, password , hostname or port is invalid.<BR>
+	-  specified database user does not have access to connect to the database server from the host
+
+
+	<br><br>
+	<table width="100%" cellpadding="5" border="0" style="background-color:#cccccc" cellspacing="1" class=small>
+	<tr>
+	<td colspan=2><strong>Database Configuration, as provided by you</strong></td>
+	</tr>
+	<tr>
+	<td bgcolor="#F5F5F5" width="40%">Host Name</td>
+	<td bgcolor="White" align="left" nowrap><font class="dataInput"><?php if (isset($db_host_name)) echo "$db_host_name"; ?></font></td>
+	</tr>
+	<tr>
+	<td bgcolor="#F5F5F5" width="40%">User Name</td>
+	<td bgcolor="White" align="left" nowrap><font class="dataInput"><?php if (isset($db_user_name)) echo "$db_user_name"; ?></font></td>
+	</tr>
+	<tr>
+	<td noWrap bgcolor="#F5F5F5" width="40%">Password</td>
+	<td bgcolor="White" align="left" nowrap><font class="dataInput"><?php if (isset($db_password)) echo ereg_replace('.', '*', $db_password); ?></font></td>
+	</tr>
+	<tr>
+	<td noWrap bgcolor="#F5F5F5" width="40%">Database Name</td>
+	<td bgcolor="White" align="left" nowrap> <font class="dataInput"><?php if (isset($db_name)) echo "$db_name"; ?></font></td>
+	</tr>
+	</table>
+
+	<!-- ---------------------------------------------- System Configuration -- -->
+
+	</td>
+	</tr>
+	</table>
+	<br>
+	<table border=0 cellspacing=0 cellpadding=10 width=100%>
+	<tr>
+	<td align=center>
+	<form action="install.php" method="post" name="form" id="form">
+	<input type="hidden" name="file" value="2setConfig.php">
+	<input type="hidden" class="dataInput" name="db_host_name" value="<?php if (isset($db_host_name)) echo "$db_host_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_user_name" value="<?php if (isset($db_user_name)) echo "$db_user_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_password" value="<?php if (isset($db_password)) echo "$db_password"; ?>" />
+	<input type="hidden" class="dataInput" name="db_name" value="<?php if (isset($db_name)) echo "$db_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_drop_tables" value="<?php if (isset($db_drop_tables)) echo "$db_drop_tables"; ?>" />
+	<input type="hidden" class="dataInput" name="site_URL" value="<?php if (isset($site_URL)) echo "$site_URL"; ?>" />
+	<input type="hidden" class="dataInput" name="root_directory" value="<?php if (isset($root_directory)) echo "$root_directory"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_email" value="<?php if (isset($admin_email)) echo "$admin_email"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_password" value="<?php if (isset($admin_password)) echo "$admin_password"; ?>" />
+	<input type="hidden" class="dataInput" name="cache_dir" value="<?php if (isset($cache_dir)) echo $cache_dir; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server" value="<?php if (isset($maill_server)) echo $mail_server; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_username" value="<?php if (isset($maill_server_username)) echo $mail_server_username; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_password" value="<?php if (isset($maill_server_password)) echo $mail_server_password; ?>" />
+	<input type="hidden" class="dataInput" name="ftpserver" value="<?php if (isset($ftpserver)) echo "$ftpserver"; ?>" />
+	<input type="hidden" class="dataInput" name="ftpuser" value="<?php if (isset($ftpuser)) echo "$ftpuser"; ?>" />
+	<input type="hidden" class="dataInput" name="ftppassword" value="<?php if (isset($ftppassword)) echo "$ftppassword"; ?>" />
+	<input type="image" name="next" value="Change" src="install/images/cwBtnChange.gif" />
+	</form>
+	</td>
+	</tr>
+	</table>
+
+	</td>
+	</tr>
+	</table>
+	<!-- Horizontal Shade -->
+	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwShadeBg.gif) repeat-x;">
+	<tr>
+	<td><img src="install/images/cwShadeLeft.gif"></td>
+	<td align=right><img src="install/images/cwShadeRight.gif"></td>
+	</tr>
+	</table><br><br>
+
+	<!-- 3 of 5 closes -->
+
+	</td>
+	</tr>
+	</table>
+	<!-- Master table closes -->
+
+
+
+	</body>
+	</html>
+<?php
+}
+?>
+
+<?php
+if($mysql_status == 'true' && $mysql_db_status == 'false')
+{
+?>
+	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+	<HTML>
+	<HEAD>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+	<title>vtiger CRM 5.0 Beta Installer: Step 3</title>
+	<link rel="stylesheet" href="install/install.css" type="text/css" />
+	</head>
+	<body leftMargin="0" topMargin="0" marginheight="0" marginwidth="0">
+
+	<!-- Master table -->
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+	<td align=center>
+	<br><br>
+	<!--  Top Header -->
+	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwTopBg.gif) repeat-x;">
+	<tr>
+	<td><img src="install/images/cwTopLeft.gif" alt="vtiger CRM" title="vtiger CRM"></td>
+	<td align=right><img src="install/images/cwTopRight.gif" alt="v5beta" title="v5beta"></td>
+	</tr>
+	</table>
+
+
+
+	<!-- 3 of 5 header -->
+	<table border="0" cellspacing="0" cellpadding="5" width="75%" class=small> 
+	<tr>	
+	<td valign=top><img src="install/images/cwIcoSystem.gif" alt="Confirm Configuration" title="Confirm Configuration"></td>
+	<td width=98% valign=top>
+	<table border=0 cellspacing=0 cellpadding=0 width=100%>
+	<tr>
+	<td><img src="install/images/cwHdrVtConfWiz.gif" alt="vtiger CRM Configuration Wizard" title="vtiger CRM Configuration Wizard"></td>
+	<td align=right><img src="install/images/cwStep3of5.gif" alt="Step 3 of 5" title="Step 3 of 5"></td>
+	</tr>
+	<tr>
+	<td colspan=2><img src="install/images/cwHdrCnfSysConf.gif" alt="Confirm Configuration" title="Confirm Configuration"></td>
+	</tr>
+	</table>
+	<hr noshade size=1>
+	</td>
+
+	</tr>
+	<tr>
+	<td></td>
+	<td valign="top" align=center>
+	<!-- ---------------------------------------------- System Configuration-->
+
+	<div style="background-color:#ff0000;color:#ffffff;padding:5px">
+	<b>Database Not Found</b>
+	</div>
+	<P>Message: The specified database <?php echo $db_name ?> is not present. Try changing the Database settings<P></font>
+
+	<br><br>
+	<table border=0 width=100% cellspacing=0 cellpadding=0>
+	<tr>
+	<td align=center>
+	<form action="install.php" method="post" name="form" id="form">
+	<input type="hidden" name="file" value="2setConfig.php">
+	<input type="hidden" class="dataInput" name="db_host_name" value="<?php if (isset($db_host_name)) echo "$db_host_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_user_name" value="<?php if (isset($db_user_name)) echo "$db_user_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_password" value="<?php if (isset($db_password)) echo "$db_password"; ?>" />
+	<input type="hidden" class="dataInput" name="db_name" value="<?php if (isset($db_name)) echo "$db_name"; ?>" />
+	<input type="hidden" class="dataInput" name="db_drop_tables" value="<?php if (isset($db_drop_tables)) echo "$db_drop_tables"; ?>" />
+	<input type="hidden" class="dataInput" name="site_URL" value="<?php if (isset($site_URL)) echo "$site_URL"; ?>" />
+	<input type="hidden" class="dataInput" name="root_directory" value="<?php if (isset($root_directory)) echo "$root_directory"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_email" value="<?php if (isset($admin_email)) echo "$admin_email"; ?>" />
+	<input type="hidden" class="dataInput" name="admin_password" value="<?php if (isset($admin_password)) echo "$admin_password"; ?>" />
+	<input type="hidden" class="dataInput" name="cache_dir" value="<?php if (isset($cache_dir)) echo $cache_dir; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server" value="<?php if (isset($maill_server)) echo $mail_server; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_username" value="<?php if (isset($maill_server_username)) echo $mail_server_username; ?>" />
+	<input type="hidden" class="dataInput" name="mail_server_password" value="<?php if (isset($maill_server_password)) echo $mail_server_password; ?>" />
+	<input type="hidden" class="dataInput" name="ftpserver" value="<?php if (isset($ftpserver)) echo "$ftpserver"; ?>" />
+	<input type="hidden" class="dataInput" name="ftpuser" value="<?php if (isset($ftpuser)) echo "$ftpuser"; ?>" />
+	<input type="hidden" class="dataInput" name="ftppassword" value="<?php if (isset($ftppassword)) echo "$ftppassword"; ?>" />
+	<input type="image" name="next" value="Change" src="install/images/cwBtnChange.gif"/>
+	</form>
+	</td>
+	</tr>
+	</table>
+
+
+	</td>
+	</tr>
+	</table>
+	<!-- Horizontal Shade -->
+	<br><br>
+	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwShadeBg.gif) repeat-x;">
+	<tr>
+	<td><img src="install/images/cwShadeLeft.gif"></td>
+	<td align=right><img src="install/images/cwShadeRight.gif"></td>
+	</tr>
+	</table><br><br>
+
+
+	<!-- 3 of 5 stops -->
+
+	</td>
+	</tr>
+	</table>
+
+
+
+
+<?php
+}
+?>

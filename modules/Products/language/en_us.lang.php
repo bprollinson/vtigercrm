@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Products/language/en_us.lang.php,v 1.21.2.4 2005/09/12 11:37:53 cooljaguar Exp $
  * Description:  Defines the English language pack for the Account module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -140,7 +140,6 @@ $mod_strings = Array(
 'Postal Code'=>'Postal Code',
 'Country'=>'Country',
 'Description'=>'Description',
-'Po Box'=>'Po Box',
 
 //Mapping for price book
 'Price Book Name'=>'Price Book Name',
@@ -172,7 +171,6 @@ $mod_strings = Array(
 'LBL_IMAGE_ERROR'=>'The given file is not of type image(.gif/.jpg/.png)',
 'LBL_INVALID_IMAGE'=>'Invalid file OR File has no data',
 
-'LBL_EMAIL'=>'Email',
 );
 
 ?>

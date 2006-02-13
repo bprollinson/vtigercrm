@@ -22,7 +22,7 @@
 
 require_once('modules/Users/User.php');
 require_once('include/logging.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 $log =& LoggerManager::getLogger('index');
 
 
@@ -90,9 +90,7 @@ else {
 	}
 	
 	if (!isset($_POST['is_admin'])) $focus->is_admin = 'off';
-	//Code contributed by mike crowe for rearrange the home page and tab
-	if (!isset($_POST['deleted'])) $focus->deleted = '0';
-	if (!isset($_POST['homeorder']) || $_POST['homeorder'] == "" ) $focus->homeorder = 'ILTI,QLTQ,ALVT,PLVT,CVLVT,HLT,OLV,GRT,OLTSO';
+	
 	
 	if (!$focus->verify_data()) {
 		header("Location: index.php?action=Error&module=Users&error_string=".urlencode($focus->error_string));

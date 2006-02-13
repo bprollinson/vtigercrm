@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/Forms.php,v 1.3 2005/07/16 09:22:20 crouchingtiger Exp $
  * Description:  Contains a variety of utility functions specific to this module.
  ********************************************************************************/
 
@@ -24,7 +24,7 @@
  * Contributor(s): ______________________________________..
  */
 require_once('include/ComboUtil.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 function get_validate_record_js () {
 global $mod_strings;
 global $app_strings;

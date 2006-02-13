@@ -11,6 +11,7 @@
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 global $adb;
+global $vtlog;
 
 $cvid = $_REQUEST["record"];
 $module = $_REQUEST["dmodule"];
@@ -20,8 +21,8 @@ if(isset($cvid) && $cvid != '')
 {
 	$deletesql = "delete from customview where cvid =".$cvid;
 	$deleteresult = $adb->query($deletesql);
-	$_SESSION["cv$module"] ='';
 }
+
 if(isset($smodule) && $smodule != '')
 {
 	$smodule_url = "&smodule=".$smodule;

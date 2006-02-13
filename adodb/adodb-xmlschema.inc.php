@@ -10,27 +10,13 @@
  * build a database on any ADOdb-supported platform using a simple
  * XML schema.
  *
- * Last Editor: $Author: jlim $
+ * Last Editor: $Author: srinivasan $
  * @author Richard Tango-Lowy & Dan Cech
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.2 $
  *
  * @package axmls
  * @tutorial getting_started.pkg
  */
- 
-function _file_get_contents($file) 
-{
- 	if (function_exists('file_get_contents')) return file_get_contents($file);
-	
-	$f = fopen($file,'r');
-	if (!$f) return '';
-	$t = '';
-	
-	while ($s = fread($f,100000)) $t .= $s;
-	fclose($f);
-	return $t;
-}
-
 
 /**
 * Debug on or off
@@ -241,6 +227,7 @@ class dbTable extends dbObject {
 	* @access private
 	*/
 	var $drop_field = array();
+	var $alter; // GS Fix for constraint impl
 	
 	/**
 	* Iniitializes a new table object.
@@ -251,6 +238,11 @@ class dbTable extends dbObject {
 	function dbTable( &$parent, $attributes = NULL ) {
 		$this->parent =& $parent;
 		$this->name = $this->prefix($attributes['NAME']);
+		// GS Fix for constraint impl
+		if(isset($attributes['ALTER']))
+		{
+			$this->alter = $attributes['ALTER'];
+		}
 	}
 	
 	/**
@@ -323,12 +315,12 @@ class dbTable extends dbObject {
 				if( isset( $this->current_field ) ) {
 					$this->addFieldOpt( $this->current_field, $this->currentElement, $cdata );
 				} else {
-					$this->addTableOpt( $cdata );
+					$this->addTableOpt('CONSTRAINTS', $cdata ); // GS Fix for constraint impl
 				}
 				break;
 			// Table option
 			case 'OPT':
-				$this->addTableOpt( $cdata );
+				$this->addTableOpt('mysql', $cdata ); // GS Fix for constraint impl
 				break;
 			default:
 				
@@ -462,11 +454,13 @@ class dbTable extends dbObject {
 	* @param string $opt Table option
 	* @return array Options
 	*/
-	function addTableOpt( $opt ) {
-		$this->opts[] = $opt;
+	function addTableOpt($key, $opt ) { // GS Fix for constraint impl
+		//$this->opts[] = $opt;
+		$this->opts[$key] = $opt;
 		
 		return $this->opts;
 	}
+
 	
 	/**
 	* Generates the SQL that will create the table in the database
@@ -474,8 +468,10 @@ class dbTable extends dbObject {
 	* @param object $xmls adoSchema object
 	* @return array Array containing table creation SQL
 	*/
+	
 	function create( &$xmls ) {
 		$sql = array();
+		
 		
 		// drop any existing indexes
 		if( is_array( $legacy_indexes = $xmls->dict->MetaIndexes( $this->name ) ) ) {
@@ -544,8 +540,7 @@ class dbTable extends dbObject {
 				}
 			}
 		}
-		
-		if( empty( $legacy_fields ) ) {
+		if( empty( $legacy_fields ) && !isset($this->alter)) { // GS Fix for constraint impl
 			// Create the new table
 			$sql[] = $xmls->dict->CreateTableSQL( $this->name, $fldarray, $this->opts );
 			logMsg( end( $sql ), 'Generated CreateTableSQL' );
@@ -556,7 +551,7 @@ class dbTable extends dbObject {
 				// Use ChangeTableSQL
 				case 'ALTER':
 					logMsg( 'Generated ChangeTableSQL (ALTERing table)' );
-					$sql[] = $xmls->dict->ChangeTableSQL( $this->name, $fldarray, $this->opts );
+					$sql[] = $xmls->dict->ChangeTableSQL( $this->name, $fldarray, $this->opts, $this->alter ); // GS Fix for constraint impl
 					break;
 				case 'REPLACE':
 					logMsg( 'Doing upgrade REPLACE (testing)' );
@@ -935,10 +930,9 @@ class dbData extends dbObject {
 			// check that no required columns are missing
 			if( count( $fields ) < $table_field_count ) {
 				foreach( $table_fields as $field ) {
-					if (isset( $field['OPTS'] ))
-						if( ( in_array( 'NOTNULL', $field['OPTS'] ) || in_array( 'KEY', $field['OPTS'] ) ) && !in_array( 'AUTOINCREMENT', $field['OPTS'] ) ) {
-							continue(2);
-						}
+					if( ( in_array( 'NOTNULL', $field['OPTS'] ) || in_array( 'KEY', $field['OPTS'] ) ) && !in_array( 'AUTOINCREMENT', $field['OPTS'] ) ) {
+						continue(2);
+					}
 				}
 			}
 			
@@ -1209,7 +1203,7 @@ class dbQuerySet extends dbObject {
 * @tutorial getting_started.pkg
 *
 * @author Richard Tango-Lowy & Dan Cech
-* @version $Revision: 1.12 $
+* @version $Revision: 1.2 $
 *
 * @package axmls
 */
@@ -1716,13 +1710,6 @@ class adoSchema {
 		return $result;
 	}
 	
-	// compat for pre-4.3 - jlim
-	function _file_get_contents($path)
-	{
-		if (function_exists('file_get_contents')) return file_get_contents($path);
-		return join('',file($path));
-	}
-	
 	/**
 	* Converts an XML schema file to the specified DTD version.
 	*
@@ -1751,7 +1738,7 @@ class adoSchema {
 		}
 		
 		if( $version == $newVersion ) {
-			$result = _file_get_contents( $filename );
+			$result = file_get_contents( $filename );
 			
 			// remove unicode BOM if present
 			if( substr( $result, 0, 3 ) == sprintf( '%c%c%c', 239, 187, 191 ) ) {
@@ -1790,7 +1777,7 @@ class adoSchema {
 					return FALSE;
 				}
 				
-				$schema = _file_get_contents( $schema );
+				$schema = file_get_contents( $schema );
 				break;
 			case 'string':
 			default:
@@ -1801,7 +1788,7 @@ class adoSchema {
 		
 		$arguments = array (
 			'/_xml' => $schema,
-			'/_xsl' => _file_get_contents( $xsl_file )
+			'/_xsl' => file_get_contents( $xsl_file )
 		);
 		
 		// create an XSLT processor
@@ -2005,7 +1992,7 @@ class adoSchema {
 						
 						while( $row = $rs->FetchRow() ) {
 							foreach( $row as $key => $val ) {
-								$row[$key] = htmlentities($val);
+								$row[$key] = htmlentities($val); // GS FIX
 							}
 							
 							$schema .= '			<row><f>' . implode( '</f><f>', $row ) . '</f></row>' . "\n";

@@ -28,7 +28,7 @@
 
 /*********************************************************************************
 
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/index.php,v 1.1 2005/05/17 11:28:46 crouchingtiger Exp $
 
  * Description:  TODO To be written.
 
@@ -54,7 +54,23 @@ global $mod_strings;
 
 
 
+echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_TITLE'], true); 
+
+echo "\n<BR>\n";
+
 include ('modules/Quotes/ListView.php'); 
+
+/*
+echo "<br><table width='250' cellpadding=0 cellspacing=0><tr><td>";
+echo get_form_header($mod_strings['LBL_TOOL_FORM_TITLE'], "", false);
+echo "</td></tr>";
+echo "<tr><td class='formOuterBorder' style='padding: 10px'>";
+echo "<ul>";
+include('modules/Import/ImportButton.php');
+echo "</ul>";
+echo "</td></tr></table>";
+*/
+
 
 
 ?>

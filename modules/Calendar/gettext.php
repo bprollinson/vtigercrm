@@ -14,7 +14,7 @@
  * Possible use in other PHP scripts?  The only SM-specific thing is
  *   $sm_language, I think
  *
- * $Id$
+ * $Id: gettext.php,v 1.16 2005/05/03 13:18:43 saraj Exp $
  */
 
 global $gettext_php_domain, $gettext_php_dir, $gettext_php_loaded,

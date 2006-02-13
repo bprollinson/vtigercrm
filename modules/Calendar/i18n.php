@@ -14,7 +14,7 @@
  * Internally the output character set is used. Other characters are
  * encoded using Unicode entities according to HTML 4.0.
  *
- * $Id$
+ * $Id: i18n.php,v 1.16 2005/05/03 13:18:43 saraj Exp $
  */
 
   /**

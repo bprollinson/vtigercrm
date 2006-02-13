@@ -13,24 +13,28 @@ require_once('include/database/PearDatabase.php');
 global $adb;
 
 $rolename = $_REQUEST['roleName'];
-$parentRoleId=$_REQUEST['parent'];
-
+$profileId= $_REQUEST['profileId'];
 //Inserting values into Role Table
 if(isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'edit')
 {
-	$roleId = $_REQUEST['roleid'];
-	$selected_col_string = 	$_REQUEST['selectedColumnsString'];
-	$profile_array = explode(';',$selected_col_string);
-	updateRole($roleId,$rolename,$profile_array);
-		
+	$roleid = $_REQUEST['roleid'];	
+	$sql1 = "update role set name='".$rolename."' where roleid=".$roleid;
+	$adb->query($sql1);
+	$sql3 = "update role2profile set profileid='".$profileId."' where roleid=".$roleid;
+	$adb->query($sql3);	
 }
-elseif(isset($_REQUEST['mode']) && $_REQUEST['mode'] == 'create')
+else
 {
-	$selected_col_string = 	$_REQUEST['selectedColumnsString'];
-	$profile_array = explode(';',$selected_col_string);
-	//Inserting into role Table
-	$roleId = createRole($rolename,$parentRoleId,$profile_array);
-	 	
+	$sql1 = "insert into role values('','".$rolename."','')";
+	$adb->query($sql1);
+
+	//Retreiving the profileid
+	$sql2 = "select max(roleid) as current_id from role";
+	$result2 = $adb->query($sql2);
+	$current_role_id = $adb->query_result($result2,0,'current_id');
+	//Inserting the mapping role2profile table
+	$sql3 = "insert into role2profile values(".$current_role_id." ,".$profileId.")";
+	$adb->query($sql3);
 }
 
 $loc = "Location: index.php?action=listroles&module=Users";

@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_lead_source_by_outcome.php,v 1.17 2005/05/03 13:18:53 saraj Exp $
  * Description:  returns HTML for client-side image map.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once('include/ComboUtil.php');

@@ -2,12 +2,12 @@
 /*
  * Copyright 1999 - 2002 by Gero Kohnert
  *
- * CVS Info:  $Id$
- * $Author$
+ * CVS Info:  $Id: auth_x509.pinc,v 1.16 2005/05/03 13:18:49 saraj Exp $
+ * $Author: saraj $
  * contributed by Markus Leist
  */
 
-require_once 'modules/Calendar/auth.pinc';
+require_once 'auth.pinc';
 /**
  * Authentification base class
  *

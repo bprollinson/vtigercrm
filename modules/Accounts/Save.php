@@ -27,16 +27,12 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 
 $local_log =& LoggerManager::getLogger('index');
-global $log;
+global $vtlog;
 $focus = new Account();
-global $current_user;
-$currencyid=fetchCurrency($current_user->id);
-$curr_symbol=getCurrencySymbol($currencyid);
-$rate = getConversionRate($currencyid,$curr_symbol);
 if(isset($_REQUEST['record']))
 {
 	$focus->id = $_REQUEST['record'];
-$log->info("id is ".$focus->id);
+$vtlog->logthis("id is ".$focus->id,'info'); 
 }
 if(isset($_REQUEST['mode']))
 {
@@ -55,11 +51,6 @@ foreach($focus->column_fields as $fieldname => $val)
 		//echo '<BR>';
 		$focus->column_fields[$fieldname] = $value;
 	}
-	if(isset($_REQUEST['annual_revenue']))
-        {
-                        $value = convertToDollar($_REQUEST['annual_revenue'],$rate);
-                        $focus->column_fields['annual_revenue'] = $value;
-        }
 		
 }
 //echo '<BR>';
@@ -91,15 +82,11 @@ if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "") $return_id = $
 
 $local_log->debug("Saved record with id of ".$return_id);
 
-
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname");
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 //Code to save the custom field info into database
 function save_customfields($entity_id)
 {
-$log->info("save customfields invoked");
+$vtlog->logthis("save customfields invoked",'info');
 	global $adb;
 	$dbquery="select * from customfields where module='Accounts'";
         /*

@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Calendar/index.php,v 1.16 2005/05/03 13:18:43 saraj Exp $
  * Description:  TODO To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -26,7 +26,6 @@ $image_path=$theme_path."images/";
 require_once ($theme_path."layout_utils.php");
 global $mod_strings;
 
-//include ('modules/Calendar/calendar_day.php'); 
-include ('modules/Calendar/new_calendar.php');
+include ('modules/Calendar/calendar_day.php'); 
 
 ?>

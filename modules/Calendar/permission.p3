@@ -2,8 +2,8 @@
 /**
  * Copyright 1999 - 2004 by Gero Kohnert
  *
- * CVS Info:  $Id$
- * $Author$
+ * CVS Info:  $Id: permission.p3,v 1.17 2005/05/03 13:18:43 saraj Exp $
+ * $Author: saraj $
  *
  * @modulegroup BASE
  * @module permission

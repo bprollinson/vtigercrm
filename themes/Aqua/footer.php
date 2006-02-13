@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/themes/Aqua/footer.php,v 1.19 2005/07/13 18:35:36 venkatraj Exp $
  * Description:  Contains a variety of utility functions used to display UI 
  * components such as form headers and footers.  Intended to be modified on a per 
  * theme basis.
@@ -40,9 +40,7 @@ global $app_strings;
 	  <A href="index.php?module=Calendar&action=index"><?php echo $app_list_strings['moduleList']['Calendar']; ?></A>
 	  <br>
 	  <A href="index.php?module=Quotes&action=index"><?php echo $app_list_strings['moduleList']['Quotes']; ?></A> |
-	  <A href="index.php?module=PurchaseOrder&action=index"><?php echo $app_list_strings['moduleList']['PurchaseOrder']; ?></A> |
-          <A href="index.php?module=SalesOrder&action=index"><?php echo $app_list_strings['moduleList']['SalesOrder']; ?></A> |
-
+          <A href="index.php?module=Orders&action=index"><?php echo $app_list_strings['moduleList']['Orders']; ?></A> |
           <A href="index.php?module=Invoice&action=index"><?php echo $app_list_strings['moduleList']['Invoice']; ?></A> |
 
           <A href="index.php?module=Rss&action=index"><?php echo $app_list_strings['moduleList']['Rss']; ?></A> |

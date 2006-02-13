@@ -11,23 +11,23 @@
 
 require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/database/PearDatabase.php');
 
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
 
-global $log;
+global $vtlog;
 if(isset($_REQUEST['record'])) {
     $id = $_REQUEST['record'];
-$log->debug(" the id is ".$id);
+$vtlog->logthis(" the id is ".$id,'debug');  
 }
 //Retreive lead details from database
 
 $userid = $row["smownerid"];
 
-$log->debug(" the userid is ".$userid);
+$vtlog->logthis(" the userid is ".$userid,'debug');  
 $crmid = $adb->getUniqueID("crmentity");
 //$sql_crmentity = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,deleted) values(".$id.",".$userid.",".$userid.",account,0,0)";
 
@@ -39,14 +39,14 @@ $result = $adb->query($sql);
 $row = $adb->fetch_array($result);
 
 $firstname = $row["firstname"];
-$log->debug(" the firstname is ".$firstname);
+$vtlog->logthis(" the firstname is ".$firstname,'debug');  
 $lastname = $row["lastname"];
-$log->debug(" the lastname is ".$lastname);
+$vtlog->logthis(" the lastname is ".$lastname,'debug');  
 $company = $row["company"];
-$log->debug(" the company is  ".$company);
+$vtlog->logthis(" the company is  ".$company,'debug');  
 $potentialname = $row["company"] ."-";
 
-$log->debug(" the potentialname is ".$potentialname);
+$vtlog->logthis(" the potentialname is ".$potentialname,'debug');  
 
 //Retreiving the current user id
 global $current_user;

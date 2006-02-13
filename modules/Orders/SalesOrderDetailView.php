@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Orders/SalesOrderDetailView.php,v 1.12 2005/07/16 07:12:13 mickie Exp $
  * Description:  TODO To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -25,7 +25,7 @@ require_once('data/Tracker.php');
 require_once('modules/Orders/SalesOrder.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
+require_once('include/uifromdbutil.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;

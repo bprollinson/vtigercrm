@@ -6,7 +6,7 @@
  *   copyright            : (C) 2002 Meik Sievertsen
  *   email                : acyd.burn@gmx.de
  *
- *   $Id$
+ *   $Id: displaying.php,v 1.9 2005/01/04 15:04:14 saraj Exp $
  *
  *
  ***************************************************************************/

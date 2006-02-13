@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Settings/Forms.php,v 1.14 2005/05/16 07:31:42 saraj Exp $
  * Description:  Contains a variety of utility functions used to display UI
  * components such as form headers and footers.  Intended to be modified on a per
  * theme basis.
@@ -28,9 +28,6 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  */
-
- require_once('include/utils/utils.php'); //new
-
 function get_validate_record_js () {
 global $mod_strings;
 global $app_strings;
@@ -104,131 +101,7 @@ return $the_script;
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  */
-
 function get_new_record_form () {
-global $mod_strings;
-global $app_strings;
-global $current_user;
-global $adb;//for dynamic quickcreateform construction
-
-
-$lbl_required_symbol = $app_strings['LBL_REQUIRED_SYMBOL'];
-$lbl_first_name = $mod_strings['LBL_FIRST_NAME'];
-$lbl_last_name = $mod_strings['LBL_LAST_NAME'];
-$lbl_account_name = $mod_strings['LBL_ACCOUNT_NAME'];
-$lbl_phone = $mod_strings['LBL_PHONE'];
-$lbl_email_address = $mod_strings['LBL_EMAIL_ADDRESS'];
-$lbl_save_button_title = $app_strings['LBL_SAVE_BUTTON_TITLE'];
-$lbl_save_button_key = $app_strings['LBL_SAVE_BUTTON_KEY'];
-$lbl_save_button_label = $app_strings['LBL_SAVE_BUTTON_LABEL'];
-$user_id = $current_user->id;
-
-$qcreate_form = get_left_form_header($mod_strings['LBL_NEW_FORM_TITLE']);
-
-
-$qcreate_get_field="select * from field where tabid=4 and quickcreate=0 order by quickcreatesequence";
-$qcreate_get_result=$adb->query($qcreate_get_field);
-$qcreate_get_noofrows=$adb->num_rows($qcreate_get_result);
-
-$fieldName_array = Array();//for validation
-
-$qcreate_form.='<form name="EditView" onSubmit="return formValidate()" method="POST" action="index.php">';
-$qcreate_form.='<input type="hidden" name="module" value="Contacts">';
-$qcreate_form.='<input type="hidden" name="record" value="">';
-$qcreate_form.='<input type="hidden" name="assigned_user_id" value="'.$user_id.'">';
-$qcreate_form.='<input type="hidden" name="email2" value="">';
-$qcreate_form.='<input type="hidden" name="action" value="Save">';
-//$qcreate_form.='<input type="hidden" name="return_action" value="index">';
-//$qcreate_form.='<input type="hidden" name="return_module" value="Contacts">';
-
-$qcreate_form.='<table>';
-
-for($j=0;$j<$qcreate_get_noofrows;$j++)
-{
-        $qcreate_form.='<tr>';
-        $fieldlabel=$adb->query_result($qcreate_get_result,$j,'fieldlabel');
-        $uitype=$adb->query_result($qcreate_get_result,$j,'uitype');
-        $tabid=$adb->query_result($qcreate_get_result,$j,'tabid');
-
-        $fieldname=$adb->query_result($qcreate_get_result,$j,'fieldname');//for validation
-        $typeofdata=$adb->query_result($qcreate_get_result,$j,'typeofdata');//for validation
-        $qcreate_form .= get_quickcreate_form($fieldlabel,$uitype,$fieldname,$tabid);
-
-
-        //to get validationdata
-        //start
-        $fldLabel_array = Array();
-        $fldLabel_array[$fieldlabel] = $typeofdata;
-        $fieldName_array['QCK_'.$fieldname] = $fldLabel_array;
-
-        //end
-
-        $qcreate_form.='</tr>';
-
-}
-
-
-//for validation
-$validationData = $fieldName_array;
-$fieldName = '';
-$fieldLabel = '';
-$fldDataType = '';
-
-$rows = count($validationData);
-foreach($validationData as $fldName => $fldLabel_array)
-{
-   if($fieldName == '')
-   {
-     $fieldName="'".$fldName."'";
-   }
-   else
-   {
-     $fieldName .= ",'".$fldName ."'";
-   }
-   foreach($fldLabel_array as $fldLabel => $datatype)
-   {
-        if($fieldLabel == '')
-        {
-
-                $fieldLabel = "'".$fldLabel ."'";
-        }
-        else
-        {
-                $fieldLabel .= ",'".$fldLabel ."'";
-        }
-        if($fldDataType == '')
-        {
-                $fldDataType = "'".$datatype ."'";
-        }
-        else
-        {
-                $fldDataType .= ",'".$datatype ."'";
-        }
-   }
-}
-
-$qcreate_form.='</table>';
-
-
-$qcreate_form.='<input title="'.$lbl_save_button_title.'" accessKey="'.$lbl_save_button_key.'" class="button" type="submit" name="button" value="'.$lbl_save_button_label.'" >';
-$qcreate_form.='</form>';
-$qcreate_form.='<script type="text/javascript">
-
-        var fieldname = new Array('.$fieldName.')
-        var fieldlabel = new Array('.$fieldLabel.')
-        var fielddatatype = new Array('.$fldDataType.')
-
-                </script>';
-
-$qcreate_form .= get_left_form_footer();
-return $qcreate_form;
-
-
-
-
-}
-
-/*function get_new_record_form () {
 global $mod_strings;
 global $app_strings;
 global $current_user;
@@ -268,6 +141,6 @@ $the_form .= get_left_form_footer();
 $the_form .= get_validate_record_js();
 
 return $the_form;
-}*/
+}
 
 ?>

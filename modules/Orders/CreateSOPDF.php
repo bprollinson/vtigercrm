@@ -10,7 +10,6 @@
  ********************************************************************************/
 require('include/fpdf/fpdf.php');
 require_once('modules/Orders/SalesOrder.php');
-require_once('include/utils/utils.php');
 
 $id = $_REQUEST['record'];
 global $adb;
@@ -20,8 +19,7 @@ $focus->retrieve_entity_info($_REQUEST['record'],"SalesOrder");
 $account_name = getAccountName($focus->column_fields[account_id]);
 $iData[] = $account_name;
 $iData[] = $id;
-$created_time = getDateFromDateAndTime($focus->column_fields['createdtime']);
-$iData[] = getDisplayDate($created_time[0]);
+$iData[] = date('Y-m-d');
 //newly added for Sales Order No.
 if($focus->column_fields["quote_id"] != '')
 {
@@ -52,7 +50,7 @@ $iCustData[] = $po_name;
 
 if($focus->column_fields["duedate"] != '')
 {
-	$due_date = getDisplayDate($focus->column_fields["duedate"]);
+	$due_date = $focus->column_fields["duedate"];
 }
 else
 {
@@ -68,11 +66,7 @@ if($focus->column_fields["bill_street"] != '')
 	$bdata[] = $bill_street;
 	
 }
-if($focus->column_fields["bill_pobox"] != '')
-{
-        $bill_pobox = $focus->column_fields["bill_pobox"];
-        $bdata[] = $bill_pobox;
-}
+
 if($focus->column_fields["bill_city"] != '')
 {
         $bill_city = $focus->column_fields["bill_city"];
@@ -100,7 +94,7 @@ if($focus->column_fields["bill_country"] != '')
 	$bdata[] = $bill_country;
 }
 
-for($i =0; $i <6; $i++)
+for($i =0; $i <5; $i++)
 {
 	if(sizeof($bdata) < 6)
 	{
@@ -114,11 +108,6 @@ if($focus->column_fields["ship_street"] != '')
 {
         $ship_street = $focus->column_fields["ship_street"];
 	$sdata[] = $ship_street;
-}
-if($focus->column_fields["ship_pobox"] != '')
-{
-        $ship_pobox = $focus->column_fields["ship_pobox"];
-        $sdata[] = $ship_pobox;
 }
 
 if($focus->column_fields["ship_city"] != '')
@@ -148,7 +137,7 @@ if($focus->column_fields["ship_country"] != '')
 	$sdata[] = $ship_country;
 }
 
-for($i =0; $i <6; $i++)
+for($i =0; $i <5; $i++)
 {
 	if(sizeof($sdata) < 6)
 	{

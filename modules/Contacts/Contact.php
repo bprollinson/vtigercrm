@@ -24,13 +24,15 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('modules/Potentials/Opportunity.php');
 require_once('modules/Activities/Activity.php');
 require_once('modules/Notes/Note.php');
 require_once('modules/Emails/Email.php');
 require_once('modules/HelpDesk/HelpDesk.php');
 
+require_once('vtiger_logger.php');
+$vtlog = new vtiger_logger();
 
 // Contact is used to store customer information.
 class Contact extends CRMEntity {
@@ -67,7 +69,6 @@ class Contact extends CRMEntity {
 	// These are for related fields
 	var $accountname;
 	var $accountid;
-	var $campaignid;
 	var $reports_to_name;
 	var $opportunity_role;
 	var $opportunity_rel_id;
@@ -83,8 +84,8 @@ class Contact extends CRMEntity {
 	var $assigned_user_name;
 		
 	var $table_name = "contactdetails";
-	var $tab_name = Array('crmentity','contactdetails','contactaddress','contactsubdetails','contactscf','customerdetails');
-	var $tab_name_index = Array('crmentity'=>'crmid','contactdetails'=>'contactid','contactaddress'=>'contactaddressid','contactsubdetails'=>'contactsubscriptionid','contactscf'=>'contactid','customerdetails'=>'customerid');
+	var $tab_name = Array('crmentity','contactdetails','contactaddress','contactsubdetails','contactscf','CustomerDetails');
+	var $tab_name_index = Array('crmentity'=>'crmid','contactdetails'=>'contactid','contactaddress'=>'contactaddressid','contactsubdetails'=>'contactsubscriptionid','contactscf'=>'contactid','CustomerDetails'=>'customerid');
 
 
 	var $rel_account_table = "accounts_contacts";
@@ -98,15 +99,14 @@ class Contact extends CRMEntity {
 
 	var $column_fields = Array();
 	
-	var $sortby_fields = Array('lastname','firstname','title','email','phone','smownerid');
+	var $sortby_fields = Array('lastname','title','email','phone');
 
 	// This is used to retrieve related fields from form posts.
 	var $additional_column_fields = Array('assigned_user_name', 'account_name', 'account_id', 'opportunity_id', 'case_id', 'task_id', 'note_id', 'meeting_id', 'call_id', 'email_id');		
 	
 	// This is the list of fields that are in the lists.
 	var $list_fields = Array(
-	'Last Name' => Array('contactdetails'=>'lastname'),
-	'First Name' => Array('contactdetails'=>'firstname'),
+	'Name' => Array('contactdetails'=>'lastname'),
 	'Title' => Array('contactdetails'=>'title'),
 	'Account Name' => Array('account'=>'accountname'),
 	'Email' => Array('contactdetails'=>'email'),
@@ -151,8 +151,7 @@ class Contact extends CRMEntity {
 	);
 
 	var $list_fields_name = Array(
-	'Last Name' => 'lastname',
-	'First Name' => 'firstname',
+	'Name' => 'lastname',
 	'Title' => 'title',
 	'Account Name' => 'accountid',
 	'Email' => 'email',
@@ -180,10 +179,6 @@ class Contact extends CRMEntity {
 	// This is the list of fields that are required
 	var $required_fields =  array("lastname"=>1);
 
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'lastname';
-	var $default_sort_order = 'ASC';
-
 	function Contact() {
 		$this->log = LoggerManager::getLogger('contact');
 		$this->db = new PearDatabase();
@@ -195,6 +190,29 @@ class Contact extends CRMEntity {
 	}
 
 	function drop_tables () {
+		/*
+		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
+
+		
+			
+		$this->db->query($query);
+
+		$query = 'DROP TABLE IF EXISTS '.$this->rel_account_table;
+
+		
+			
+		$this->db->query($query);
+
+		$query = 'DROP TABLE IF EXISTS '.$this->rel_opportunity_table;
+
+		
+			
+		$this->db->query($query);
+	
+		
+		//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
+		*/
+
 	}
 	
 	function delete($id)
@@ -217,6 +235,7 @@ class Contact extends CRMEntity {
         function get_contacts1($user_name,$email_address)
     {   
       $query = "select contactdetails.lastname last_name,contactdetails.firstname first_name,contactdetails.contactid as id, contactdetails.salutation as salutation, contactdetails.email as email1,contactdetails.title as title,contactdetails.mobile as phone_mobile,account.accountname as account_name,account.accountid as account_id   from contactdetails inner join crmentity on crmentity.crmid=contactdetails.contactid inner join users on users.id=crmentity.smownerid  left join account on account.accountid=contactdetails.accountid left join contactaddress on contactaddress.contactaddressid=contactdetails.contactid where user_name='" .$user_name ."' and crmentity.deleted=0  and contactdetails.email like '%" .$email_address ."%' limit 50";
+      //echo $query;
       return $this->process_list_query1($query);
     }
 
@@ -254,6 +273,10 @@ class Contact extends CRMEntity {
     
 // TODO OPTIMIZE THE QUERY ACCOUNT NAME AND ID are set separetly for every contactdetails and hence 
 // account query goes for ecery single account row
+
+                //$this->fill_in_additional_list_fields();
+		//$this->account_name = $row['accountname'];
+		//$this->account_id = $row['accountid'];
 
                     $list[] = $contact;
                 }
@@ -295,26 +318,25 @@ class Contact extends CRMEntity {
 	*/
 	function get_opportunities($id)
 	{
-		global $log;
-		global $mod_strings;
-
-		$focus = new Potential();
-		$button = '';
-
-		if(isPermitted("Potentials",1,"") == 'yes')
-		{
-
-			$button .= '<input title="New Potential" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'Potentials\'" type="submit" name="button" value="'.$mod_strings['LBL_NEW_POTENTIAL'].'">&nbsp;';
-		}
-		$returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		$log->info("Potential Related List for Contact Displayed");
-
-		// First, get the list of IDs.
-		$query = 'select contactdetails.accountid, contactdetails.contactid , potential.potentialid, potential.potentialname, potential.potentialtype, potential.sales_stage, potential.amount, potential.closingdate, crmentity.crmid, crmentity.smownerid from contactdetails inner join potential on contactdetails.accountid = potential.accountid inner join crmentity on crmentity.crmid = potential.potentialid where contactdetails.contactid = '.$id.' and crmentity.deleted=0';
-		if($this->column_fields['account_id'] != 0)
-		return GetRelatedList('Contacts','Potentials',$focus,$query,$button,$returnset);
+          // First, get the list of IDs.
+          //include('modules/Contacts/RenderRelatedListUI.php');
+	  $query = 'select contactdetails.accountid, contactdetails.contactid , potential.potentialid, potential.potentialname, potential.potentialtype, potential.sales_stage, potential.amount, potential.closingdate, crmentity.crmid, crmentity.smownerid from contactdetails inner join potential on contactdetails.accountid = potential.accountid inner join crmentity on crmentity.crmid = potential.potentialid where contactdetails.contactid = '.$id.' and crmentity.deleted=0';
+	  if($this->column_fields['account_id'] != 0)
+          	renderRelatedPotentials($query,$id);
+          //return $this->build_related_list($query, new Opportunity());
 	}
+	
+		/** Returns a list of the associated opportunities
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	*/
+	function get_accounts($id)
+	{
+          // First, get the list of IDs.
+          $query = "SELECT accountid from contactdetails where contactid=".$id." AND deleted=0";
+          renderRelatedAccounts($query,$id);
+        }
 	
   
 	/** Returns a list of the associated tasks
@@ -324,191 +346,67 @@ class Contact extends CRMEntity {
 	*/
 	function get_activities($id)
 	{
-     	global $log;
-		global $mod_strings;
+          // First, get the list of IDs.
 
-    	$focus = new Activity();
+		//$query = 'SELECT contactdetails.lastname, contactdetails.firstname,  activity.activityid , activity.subject, activity.activitytype, activity.date_start, cntactivityrel.contactid, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from contactdetails inner join cntactivityrel on cntactivityrel.contactid = contactdetails.contactid inner join activity on cntactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid = cntactivityrel.activityid where contactdetails.contactid = '.$id.' and (activitytype="Task" or activitytype="Call" or activitytype="Meeting") and crmentity.deleted=0';
+		$query = "SELECT contactdetails.lastname, contactdetails.firstname,  activity.activityid , activity.subject, activity.activitytype, activity.date_start, activity.due_date, cntactivityrel.contactid, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, recurringevents.recurringtype  from contactdetails inner join cntactivityrel on cntactivityrel.contactid = contactdetails.contactid inner join activity on cntactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid = cntactivityrel.activityid left outer join recurringevents on recurringevents.activityid=activity.activityid where contactdetails.contactid = ".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and crmentity.deleted=0 and ( activity.status is NULL || activity.status != 'Completed' ) and (  activity.eventstatus is NULL ||  activity.eventstatus != 'Held')"; //recurring type is added in Query -Jaguar
+		renderRelatedTasks($query,$id);		
 
-		$button = '';
-
-        if(isPermitted("Activities",1,"") == 'yes')
-        {
-		$button .= '<input title="New Task" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.return_action.value=\'DetailView\';this.form.module.value=\'Activities\';this.form.activity_mode.value=\'Task\';this.form.return_module.value=\'Contacts\'" type="submit" name="button" value="'.$mod_strings['LBL_NEW_TASK'].'">&nbsp;';
-		$button .= '<input title="New Event" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.return_action.value=\'DetailView\';this.form.module.value=\'Activities\';this.form.return_module.value=\'Contacts\';this.form.activity_mode.value=\'Events\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_EVENT'].'">&nbsp;';
-		}
-		$returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		$log->info("Activity Related List for Contact Displayed");
-
-		$query = "SELECT contactdetails.lastname, contactdetails.firstname,  activity.activityid , activity.subject, activity.activitytype, activity.date_start, activity.due_date, cntactivityrel.contactid, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, recurringevents.recurringtype  from contactdetails inner join cntactivityrel on cntactivityrel.contactid = contactdetails.contactid inner join activity on cntactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid = cntactivityrel.activityid left outer join recurringevents on recurringevents.activityid=activity.activityid left join activitygrouprelation on activitygrouprelation.activityid=crmentity.crmid left join groups on groups.groupname=activitygrouprelation.groupname  where contactdetails.contactid=".$id." and crmentity.deleted = 0 and (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task') AND ( activity.status is NULL || activity.status != 'Completed' ) and ( activity.eventstatus is NULL || activity.eventstatus != 'Held') and ( activity.eventstatus is NULL || activity.eventstatus != 'Not Held' )";  //recurring type is added in Query -Jaguar
-
-		return GetRelatedList('Contacts','Activities',$focus,$query,$button,$returnset);
-
+          //return $this->build_related_list($query, new Task());
 	}
 
 	function get_history($id)
 	{
-		$query = "SELECT activity.activityid, activity.subject, activity.status, activity.eventstatus,
-			activity.activitytype, contactdetails.contactid, contactdetails.firstname,
-			contactdetails.lastname, crmentity.modifiedtime,
-			crmentity.createdtime, crmentity.description, users.user_name
-				from activity
-				inner join cntactivityrel on cntactivityrel.activityid= activity.activityid
-				inner join contactdetails on contactdetails.contactid= cntactivityrel.contactid
-				inner join crmentity on crmentity.crmid=activity.activityid
-				left join seactivityrel on seactivityrel.activityid=activity.activityid
-				inner join users on crmentity.smcreatorid= users.id
-				where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task')
-				and (activity.status = 'Completed' or activity.status = 'Deferred' or (activity.eventstatus != 'Planned' and activity.eventstatus != ''))
-				and cntactivityrel.contactid=".$id;
-		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
-
-		return getHistory('Contacts',$query,$id);
+		$query = "SELECT activity.activityid, activity.subject, activity.status, activity.eventstatus, activity.activitytype, activity.description, contactdetails.contactid, contactdetails.firstname, contactdetails.lastname, crmentity.modifiedtime from activity inner join cntactivityrel on cntactivityrel.activityid= activity.activityid inner join contactdetails on contactdetails.contactid= cntactivityrel.contactid inner join crmentity on crmentity.crmid=activity.activityid left join seactivityrel on seactivityrel.activityid=activity.activityid where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task') and (activity.status='Completed' or activity.eventstatus='Held') and cntactivityrel.contactid=".$id;
+		renderRelatedHistory($query,$id);
 	}
-	
 	function get_tickets($id)
 	{
-		global $log;
-		global $app_strings;
-
-		$focus = new HelpDesk();
-
-		$button = '<td valign="bottom" align="right"><input title="New Ticket" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'HelpDesk\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_TICKET'].'">&nbsp;</td>';
-		$returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		$query = "select crmentity.crmid, troubletickets.title, contactdetails.contactid, troubletickets.parent_id, contactdetails.firstname, contactdetails.lastname, troubletickets.status, troubletickets.priority, crmentity.smownerid from troubletickets inner join crmentity on crmentity.crmid=troubletickets.ticketid left join contactdetails on contactdetails.contactid=troubletickets.parent_id left join users on users.id=crmentity.smownerid left join ticketgrouprelation on troubletickets.ticketid=ticketgrouprelation.ticketid left join groups on groups.groupname=ticketgrouprelation.groupname where crmentity.deleted=0 and contactdetails.contactid=".$id;
-		$log->info("Ticket Related List for Contact Displayed");
-		return GetRelatedList('Contacts','HelpDesk',$focus,$query,$button,$returnset);
+		$query = "select crmentity.crmid, troubletickets.title, contactdetails.contactid, troubletickets.parent_id, contactdetails.firstname, contactdetails.lastname, troubletickets.status, troubletickets.priority, crmentity.smownerid from troubletickets inner join crmentity on crmentity.crmid=troubletickets.ticketid left join contactdetails on contactdetails.contactid=troubletickets.parent_id left join users on users.id=crmentity.smownerid where crmentity.deleted=0 and contactdetails.contactid=".$id;
+		renderRelatedTickets($query,$id);
 	}
 
-	function get_attachments($id)
-	{
-		global $log;
-		$query = "select notes.title,'Notes      '  ActivityType,
-			notes.filename, attachments.type  FileType,crm2.modifiedtime  lastmodified,
-			seattachmentsrel.attachmentsid  attachmentsid, notes.notesid crmid,
-			crm2.createdtime, notes.notecontent description, users.user_name
-		from notes
-			inner join crmentity on crmentity.crmid= notes.contact_id
-			inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0
-			left join seattachmentsrel on seattachmentsrel.crmid =notes.notesid
-			left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".$id;
-		$query .= " union all ";
-		$query .= "select attachments.description title,'Attachments'  ActivityType,
-			attachments.name  filename, attachments.type  FileType,crm2.modifiedtime  lastmodified,
-			attachments.attachmentsid attachmentsid, seattachmentsrel.attachmentsid crmid,
-			crm2.createdtime, attachments.description, users.user_name
-		from attachments
-			inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid
-			inner join crmentity on crmentity.crmid= seattachmentsrel.crmid
-			inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid
-			inner join users on crm2.smcreatorid= users.id
-		where crmentity.crmid=".$id."
-		order by createdtime desc";
-	  	$log->info("Notes&Attachmenmts for Contact Displayed");
-		return getAttachmentsAndNotes('Contacts',$query,$id);
-	  }
-	 
-	 function get_quotes($id)
-	 {	
-		global $app_strings;
-		require_once('modules/Quotes/Quote.php');		
-		$focus = new Quote();
-	
-		$button = '';
-		if(isPermitted("Quotes",1,"") == 'yes')
+        function get_attachments($id)
         {
-		$button .= '<input title="'.$app_strings['LBL_NEW_QUOTE_BUTTON_TITLE'].'" accessyKey="'.$app_strings['LBL_NEW_QUOTE_BUTTON_KEY'].'" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'Quotes\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_QUOTE_BUTTON'].'">&nbsp;</td>';
-		}
-		$returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-		$query = "select crmentity.*, quotes.*,potential.potentialname,contactdetails.lastname from quotes inner join crmentity on crmentity.crmid=quotes.quoteid left outer join contactdetails on contactdetails.contactid=quotes.contactid left outer join potential on potential.potentialid=quotes.potentialid where crmentity.deleted=0 and contactdetails.contactid=".$id;
-		return GetRelatedList('Contacts','Quotes',$focus,$query,$button,$returnset);
+		//$query = 'select notes.title,"Notes      " as ActivityType, notes.filename, attachments.type as "FileType",crm2.modifiedtime as "lastmodified", notes.notesid as noteattachmentid from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid inner join crmentity crm2 on crm2.crmid=notes.notesid left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid='.$id;
+		$query = "select notes.title,'Notes      '  ActivityType, notes.filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, seattachmentsrel.attachmentsid  attachmentsid, notes.notesid crmid from notes inner join crmentity on crmentity.crmid= notes.contact_id inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0 left join seattachmentsrel on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid=".$id;
+                $query .= ' union all ';
+		$query .= "select attachments.description title ,'Attachments'  ActivityType, attachments.name  filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, attachments.attachmentsid attachmentsid, seattachmentsrel.attachmentsid crmid from attachments inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid inner join crmentity on crmentity.crmid= seattachmentsrel.crmid inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid where crmentity.crmid=".$id;
+                renderRelatedAttachments($query,$id);
 	  }
-	 
-	 function get_salesorder($id)
-	 {	
-		 require_once('modules/SalesOrder/SalesOrder.php');
-		 global $app_strings;
-		 $focus = new SalesOrder();
-		 $button = '';
-
-		 if(isPermitted("SalesOrder",1,"") == 'yes')
-		 {
-
-			 $button .= '<input title="'.$app_strings['LBL_NEW_SORDER_BUTTON_TITLE'].'" accessyKey="O" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'SalesOrder\';this.form.return_module.value=\'Contacts\';this.form.return_action.value=\'DetailView\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_SORDER_BUTTON'].'">&nbsp;';
-		 }
-		 $returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		 $query = "select crmentity.*, salesorder.*, quotes.subject as quotename, account.accountname, contactdetails.lastname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid left outer join quotes on quotes.quoteid=salesorder.quoteid left outer join account on account.accountid=salesorder.accountid left outer join contactdetails on contactdetails.contactid=salesorder.contactid where crmentity.deleted=0 and salesorder.contactid = ".$id;
-		 return GetRelatedList('Contacts','SalesOrder',$focus,$query,$button,$returnset);
-	 }
-	 
-	 function get_products($id)
-	 {
-		 
-		 global $app_strings;
-		 require_once('modules/Products/Product.php');
-		 $focus = new Product();
-		 $button = '';
-
-		 if(isPermitted("Products",1,"") == 'yes')
-		 {
-
-			 $button .= '<input title="'.$app_strings['LBL_NEW_PRODUCT'].'" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'Products\';this.form.return_module.value=\'Contacts\';this.form.return_action.value=\'DetailView\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_PRODUCT'].'">&nbsp;';
-		 }
-		 $returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		 $query = 'select products.productid, products.productname, products.productcode, products.commissionrate, products.qty_per_unit, products.unit_price, crmentity.crmid, crmentity.smownerid,contactdetails.lastname from products inner join crmentity on crmentity.crmid = products.productid left outer join contactdetails on contactdetails.contactid = products.contactid where contactdetails.contactid = '.$id.' and crmentity.deleted = 0';
-		 return GetRelatedList('Contacts','Products',$focus,$query,$button,$returnset);
-	 }
-	 
-	 function get_purchase_orders($id)
-	 {
-		 global $app_strings;
-		 require_once('modules/PurchaseOrder/PurchaseOrder.php');
-		 $focus = new Order();
-
-		 $button = '';
-
-		 if(isPermitted("PurchaseOrder",1,"") == 'yes')
-		 {
-
-			 $button .= '<input title="'.$app_strings['LBL_PORDER_BUTTON_TITLE'].'" accessyKey="O" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'PurchaseOrder\';this.form.return_module.value=\'Contacts\';this.form.return_action.value=\'DetailView\'" type="submit" name="button" value="'.$app_strings['LBL_PORDER_BUTTON'].'">&nbsp;';
-		 }
-		 $returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		 $query = "select crmentity.*, purchaseorder.*,vendor.vendorname,contactdetails.lastname from purchaseorder inner join crmentity on crmentity.crmid=purchaseorder.purchaseorderid left outer join vendor on purchaseorder.vendorid=vendor.vendorid left outer join contactdetails on contactdetails.contactid=purchaseorder.contactid where crmentity.deleted=0 and purchaseorder.contactid=".$id;
-		 return GetRelatedList('Contacts','PurchaseOrder',$focus,$query,$button,$returnset);
-	 }
+	  function get_quotes($id)
+	  {
+		$query = "select crmentity.*, quotes.*,potential.potentialname,contactdetails.lastname from quotes inner join crmentity on crmentity.crmid=quotes.quoteid left outer join contactdetails on contactdetails.contactid=quotes.contactid left outer join potential on potential.potentialid=quotes.potentialid where crmentity.deleted=0 and contactdetails.contactid=".$id;
+		renderRelatedQuotes($query,$id);
+	  }
+	  function get_salesorder($id)
+	  {
+		$query = "select crmentity.*, salesorder.*, quotes.subject as quotename, account.accountname, contactdetails.lastname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid left outer join quotes on quotes.quoteid=salesorder.quoteid left outer join account on account.accountid=salesorder.accountid left outer join contactdetails on contactdetails.contactid=salesorder.contactid where crmentity.deleted=0 and salesorder.contactid = ".$id;
+		renderRelatedSalesOrders($query,$id);	
+	  }
+	  function get_products($id)
+	  {
+		$query = 'select products.productid, products.productname, products.productcode, products.commissionrate, products.qty_per_unit, products.unit_price, crmentity.crmid, crmentity.smownerid,contactdetails.lastname from products inner join crmentity on crmentity.crmid = products.productid left outer join contactdetails on contactdetails.contactid = products.contactid where contactdetails.contactid = '.$id.' and crmentity.deleted = 0';
+	      	renderRelatedProducts($query,$id);
+          }
+	  function get_purchase_orders($id)
+	  {
+		$query = "select crmentity.*, purchaseorder.*,vendor.vendorname,contactdetails.lastname from purchaseorder inner join crmentity on crmentity.crmid=purchaseorder.purchaseorderid left outer join vendor on purchaseorder.vendorid=vendor.vendorid left outer join contactdetails on contactdetails.contactid=purchaseorder.contactid where crmentity.deleted=0 and purchaseorder.contactid=".$id;
+	      	renderRelatedOrders($query,$id);
+          }
 
 	/** Returns a list of the associated emails
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
 	*/
-	function get_emails($id)
-	{
-		global $log;
-		global $mod_strings;
-
-		$focus = new Email();
-
-		$button = '';
-
-		if(isPermitted("Emails",1,"") == 'yes')
-		{	
-			$button .= '<input title="New Email" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'Emails\';this.form.email_directing_module.value=\'contacts\';this.form.record.value='.$id.';this.form.return_action.value=\'DetailView\'" type="submit" name="button" value="'.$mod_strings['LBL_NEW_EMAIL'].'">';
-		}
-		$returnset = '&return_module=Contacts&return_action=DetailView&return_id='.$id;
-
-		$log->info("Email Related List for Contact Displayed");
-
-		$query = 'select activity.activityid, activity.activityid, activity.subject, activity.activitytype, users.user_name, crmentity.modifiedtime, crmentity.crmid, crmentity.smownerid, activity.date_start from activity, seactivityrel, contactdetails, users, crmentity where seactivityrel.activityid = activity.activityid and contactdetails.contactid = seactivityrel.crmid and users.id=crmentity.smownerid and crmentity.crmid = activity.activityid  and contactdetails.contactid = '.$id.'  and activity.activitytype="Emails" and crmentity.deleted = 0';
-		return GetRelatedList('Contacts','Emails',$focus,$query,$button,$returnset);
-	}
-
+  function get_emails($id)
+  {
+	//$query = 'select seactivityrel.crmid, emails.emailid, activity.subject, activity.activitytype,users.user_name, crmentity.modifiedtime, crmentity.crmid, crmentity.smownerid, activity.date_start from activity inner join seactivityrel on seactivityrel.activityid = activity.activityid inner join emails on emails.emailid = seactivityrel.activityid inner join contactdetails on contactdetails.contactid = seactivityrel.crmid inner join users on users.id=crmentity.smownerid inner join crmentity on crmentity.crmid = emails.emailid  where contactdetails.contactid = '.$id.'  and crmentity.deleted = 0';
+	$query = 'select activity.activityid, emails.emailid, activity.subject, activity.activitytype,users.user_name, crmentity.modifiedtime, crmentity.crmid, crmentity.smownerid, activity.date_start from activity,seactivityrel,emails,contactdetails,users,crmentity where seactivityrel.activityid = activity.activityid and emails.emailid = seactivityrel.activityid and contactdetails.contactid = seactivityrel.crmid and users.id=crmentity.smownerid and crmentity.crmid = emails.emailid  and contactdetails.contactid = '.$id.'  and crmentity.deleted = 0';
+    renderRelatedEmails($query,$id);
+  }
+  
 	function create_list_query(&$order_by, &$where)
 	{
 		// Determine if the account name is present in the where clause.
@@ -543,12 +441,13 @@ class Contact extends CRMEntity {
 	function constructCustomQueryAddendum()
 	{
         
-	 global $log;
+	 global $vtlog;
          global $adb;
         	//get all the custom fields created 
 		$sql1 = "select columnname,fieldlabel from field where generatedtype=2 and tabid=4";
         	$result = $adb->query($sql1);
 		$numRows = $adb->num_rows($result);
+	//select accountscf.columnname fieldlabel,contactscf.columnname fieldlabel	
 		$sql3 = "select ";
 		for($i=0; $i < $numRows;$i++)
 		{
@@ -565,7 +464,7 @@ class Contact extends CRMEntity {
 			}
         
 	         }
-		 $log->info("Custom Query successfully Constructed in constructCustomQueryAddendum()");
+		$vtlog->logthis("Custom Query successfully Constructed in constructCustomQueryAddendum()",'info');
 		return $sql3;
         	}
 
@@ -587,7 +486,7 @@ return $exists;
 
         function create_export_query(&$order_by, &$where)
         {
-		global $log;
+		global $vtlog;
 		if($this->checkIfCustomTableExists())
 		{
 	   $query =  $this->constructCustomQueryAddendum() .",
@@ -616,8 +515,8 @@ return $exists;
 			        left join contactscf on contactscf.contactid=contactdetails.contactid
 				where crmentity.deleted=0 and users.status='Active' ";
 		}
-                 $log->info("Export Query Constructed Successfully");
-		return $query;
+		$vtlog->logthis("Export Query Constructed Successfully",'info');
+                return $query;
         }
 
 
@@ -817,6 +716,7 @@ return $exists;
 			$this->account_name = '';
 			$this->account_id = '';
 		}		
+		//$query = "SELECT c1.first_name, c1.last_name from contactdetails c1, contactdetails c2 where c1.id = c2.reports_to_id and c2.id = '$this->id' and c1.deleted=0";
 		$query = "SELECT c1.firstname, c1.lastname from contactdetails c1, contactdetails c2 where c1.contactid = c2.reportsto and c2.contactid = '$this->id' and c1.deleted=0";
 		$result = $this->db->query($query,true," Error filling in additional detail fields: ");
 
@@ -882,68 +782,26 @@ return $exists;
 }
 
 
-//Used By vtigerCRM Word Add-In
-function getColumnNames()
-{
-	$sql1 = "select fieldlabel from field where tabid=4 and block <> 4";
-	$result = $this->db->query($sql1);
-	$numRows = $this->db->num_rows($result);
-	for($i=0; $i < $numRows;$i++)
-	{
-	$custom_fields[$i] = $this->db->query_result($result,$i,"fieldlabel");
-	$custom_fields[$i] = ereg_replace(" ","",$custom_fields[$i]);
-	$custom_fields[$i] = strtoupper($custom_fields[$i]);
-	}
-	$mergeflds = $custom_fields;
-	return $mergeflds;
-}
-//End 
 
-//Used By vtigerCRM Outlook Add-In
-function get_searchbyemailid($username,$emailaddress)
-{
-	$query = "select contactdetails.lastname as last_name,contactdetails.firstname as first_name,
-						contactdetails.contactid as id, contactdetails.salutation as salutation, 
-						contactdetails.email as email1,contactdetails.title as title,
-						contactdetails.mobile as phone_mobile,account.accountname as account_name,
-						account.accountid as account_id  from contactdetails 
-						inner join crmentity on crmentity.crmid=contactdetails.contactid 
-						inner join users on users.id=crmentity.smownerid  
-						left join account on account.accountid=contactdetails.accountid 
-						left join contactaddress on contactaddress.contactaddressid=contactdetails.contactid 
-						where user_name='" .$username ."' and crmentity.deleted=0  and contactdetails.email like '%".$emailaddress."%'";
-						
-	return $this->process_list_query1($query);
+ function getColumnNames()
+ {
+       $table1flds = $this->db->getColumnNames("contactdetails");
+       $table2flds = $this->db->getColumnNames("contactsubdetails");
+       $table3flds = $this->db->getColumnNames("contactaddress");
+       $sql1 = "select fieldlabel from field where generatedtype=2 and tabid=4";
+		 $result = $this->db->query($sql1);
+		 $numRows = $this->db->num_rows($result);
+		 for($i=0; $i < $numRows;$i++)
+		 {
+			$custom_fields[$i] = $this->db->query_result($result,$i,"fieldlabel");
+		 }
+		 
+		 $mergeflds = array_merge($table1flds,$table2flds,$table3flds,$custom_fields);
+       return $mergeflds;
 }
 
-function get_contactsforol($user_name)
-{
-	$query = "select contactdetails.department department, contactdetails.phone, 
-						contactdetails.fax, contactsubdetails.assistant assistant_name,
-						contactsubdetails.assistantphone,  
-						contactsubdetails.otherphone, contactsubdetails.homephone,
-						contactsubdetails.birthday birthdate, contactdetails.lastname last_name,
-						contactdetails.firstname first_name,contactdetails.contactid as id, 
-						contactdetails.salutation, contactdetails.email,
-						contactdetails.title,contactdetails.mobile,
-						account.accountname as account_name,account.accountid as account_id, 
-						contactaddress.mailingcity, contactaddress.mailingstreet, 
-						contactaddress.mailingcountry, contactaddress.mailingstate, 
-						contactaddress.mailingzip, contactaddress.othercity,
-						contactaddress.otherstreet, contactaddress.othercountry,
-						contactaddress.otherstate, contactaddress.otherzip   
-						from contactdetails 
-						inner join crmentity on crmentity.crmid=contactdetails.contactid 
-						inner join users on users.id=crmentity.smownerid 
-						left join account on account.accountid=contactdetails.accountid 
-						left join contactaddress on contactaddress.contactaddressid=contactdetails.contactid 
-						left join contactsubdetails on contactsubdetails.contactsubscriptionid = contactdetails.contactid 
-						where users.user_name='" .$user_name ."' and crmentity.deleted=0";
-						
-	return $query;
 }
-//End
 
-}
+
 
 ?>

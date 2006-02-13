@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/HelpDesk/Delete.php,v 1.3 2005/04/25 05:15:09 mickie Exp $
+ * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/HelpDesk/Delete.php,v 1.3 2005/04/25 05:15:09 rajeshkannan Exp $
  * Description:  Deletes an Account record and then redirects the browser to the 
  * defined return URL.
  ********************************************************************************/
@@ -29,12 +29,22 @@ $focus = new HelpDesk();
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
+if($_REQUEST['return_module'] == $_REQUEST['module'])
+	$focus->mark_deleted($_REQUEST['record']);
 
-//code added for returning back to the current view after delete from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
+if($_REQUEST['return_module'] == 'Contacts' || $_REQUEST['return_module'] == 'Accounts')
+{
+	$sql = "update troubletickets set parent_id='' where ticketid=".$_REQUEST['record'];
+	$adb->query($sql);
+	$se_sql= 'delete from seticketsrel where ticketid='.$_REQUEST['record'];
+	$adb->query($se_sql);
 
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&viewname=".$return_viewname);
+}
+if($_REQUEST['return_module'] == 'Products')
+{
+	$sql = "update troubletickets set product_id='' where ticketid=".$_REQUEST['record'];
+	$adb->query($sql);
+}
 
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
 ?>

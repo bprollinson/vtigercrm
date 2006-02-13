@@ -10,19 +10,12 @@
 		<field name="user_name" type="C" size="20"></field>
 		<field name="user_password" type="C" size="30"></field>
 		<field name="user_hash" type="C" size="32"></field>
-		<field name="cal_color" type="C" size="25">
-			<DEFAULT value="#E6FAD8"/>
-		</field>
 		<field name="first_name" type="C" size="30"></field>
 		<field name="last_name" type="C" size="30"></field>
 		<field name="reports_to_id" type="C" size="36"></field>
 		<field name="is_admin" type="C" size="3">
 			<DEFAULT value="0"/>
 		</field>
-		<field name="currency_id" type="I" size="19">
-			<DEFAULT value="1"/>
-                        <NOTNULL/>
-                </field>
 		<field name="description" type="X"></field>
 		<field name="date_entered" type="T">
 			<NOTNULL/>
@@ -45,7 +38,7 @@
 		<field name="email2" type="C" size="100"></field>
 		<field name="yahoo_id" type="C" size="100"></field>
 		<field name="status" type="C" size="25"></field>
-		<field name="signature" type="C" size="250"></field>
+		<field name="signature" type="C" size="50"></field>
 		<field name="address_street" type="C" size="150"></field>
 		<field name="address_city" type="C" size="100"></field>
 		<field name="address_state" type="C" size="100"></field>
@@ -58,15 +51,6 @@
 		<field name="workdays" type="C" size="30"></field>
 	 	<field name="weekstart" type="I" size="11"></field>
 		<field name="date_format" type="C" size="30"></field>
-		<field name="homeorder" type="C" size="255">
-			<DEFAULT value="ALVT,PLVT,QLTQ,CVLVT,HLT,OLV,GRT,OLTSO,ILTI,MNL"/>
-		</field>
-		<field name="activity_view" type="C" size="25">
-			<DEFAULT value="Today"/>
-		</field>
-		<field name="lead_view" type="C" size="25">
-			<DEFAULT value="Today"/>
-		</field>
 		<field name="deleted" type="I" size="1">
 			<NOTNULL/>
 			<DEFAULT value="0"/>
@@ -137,14 +121,6 @@
                      <index name="crmentity_IDX2">
 			<col>modifiedby</col>
 		</index>
-		<index name="deleted">
-			<col>deleted</col>
-			<col>smownerid</col>
-		</index>
-		<index name="smownerid">
-			<col>smownerid</col>
-			<col>deleted</col>
-		</index>
 		<data>
 
 		</data>
@@ -176,50 +152,10 @@
 		<opt>Type=InnoDB</opt> <index name="Tab_IDX0">
 			<col>modifiedby</col>
 		</index>
-		<index name="tabid">
-			<col>tabid</col>
-		</index>
 		<data>
 
 		</data>
 	</table>
-
-	<table name="blocks">
-                <field name="blockid" type="I" size="19">
-                        <KEY/>
-                        <NOTNULL/>
-                </field>
-                <field name="tabid" type="I" size="19">
-                        <NOTNULL/>
-                </field>
-                <field name="blocklabel" type="C" size="100">
-                        <NOTNULL/>
-                </field>
-                <field name="sequence" type="I" size="10"></field>
-                <field name="show_title" type="I" size="2"></field>
-                <field name="visible" type="I" size="2">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                </field>
-                <field name="create_view" type="I" size="2">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                </field>
-                <field name="edit_view" type="I" size="2">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                </field>
-                <field name="detail_view" type="I" size="2">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                </field>
-                <index name="block_tabid">
-                        <col>tabid</col>
-                </index>
-                <data>
-
-                </data>
-        </table>
 
 
               <table name="field">
@@ -272,26 +208,9 @@
 
 		<field name="typeofdata" type="C" size="100">
 		</field>
-			<!--new-->
-		<field name="quickcreate" type="I" size="10">
-			<NOTNULL/>
-			<DEFAULT value="1"/>
-		</field>
-		
-		<field name="quickcreatesequence" type="I" size="19">
-			</field>
-	         
 		 <index name="Field_IDX0">
 			<col>tabid</col>
 			</index>
-		<index name="fieldname">
-			<col>fieldname</col>
-		</index>
-		<index name="tabid">
-			<col>tabid</col>
-			<col>block</col>
-			<col>displaytype</col>
-		</index>
                 <opt>Type=InnoDB</opt>
 		<data>
 		</data>
@@ -337,17 +256,11 @@
 		<field name="otherphone" type="C" size="30"></field>
 		<field name="email1" type="C" size="100"></field>
 		<field name="email2" type="C" size="100"></field>
-		<field name="website" type="C" size="100"></field>
+		<field name="website" type="C" size="30"></field>
 		<field name="fax" type="C" size="30"></field>
 		<field name="employees" type="I" size="10">
 			<DEFAULT value="0"/>
 		</field>
-		<field name="emailoptout" type="C" size="3">
-                        <DEFAULT value="0"/>
-                </field>
-		<index name="account_type">
-                        <col>account_type</col>
-                </index>	
 		
                   
 <opt>Type=InnoDB</opt>
@@ -377,7 +290,6 @@
 		<field name="country" type="C" size="30"></field>
 		<field name="state" type="C" size="30"></field>
 		<field name="street" type="C" size="250"></field>
-		<field name="pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -404,7 +316,6 @@
 		<field name="code" type="C" size="30"></field>
 		<field name="country" type="C" size="30"></field>
 		<field name="state" type="C" size="30"></field>
-		<field name="pobox" type="C" size="30"></field>
 		<field name="street" type="C" size="250"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
@@ -450,7 +361,6 @@
 			<DEFAULT value="0"/>
 		</field>
 		<field name="accountid" type="I" size="19"></field>
-		<field name="campaignid" type="I" size="19"></field>
 		<field name="salutation" type="C" size="50">
 			<DEFAULT value="Mr"/>
 		</field>
@@ -477,7 +387,6 @@
 		<field name="currency" type="C" size="20">
 			<DEFAULT value="Dollars"/>
 		</field>
-		<field name="imagename" type="C" size="150"></field>
 
              		 
 		 <index name="ContactDetails_IDX1">
@@ -544,13 +453,11 @@
 		<field name="mailingcountry" type="C" size="40"></field>
 		<field name="othercountry" type="C" size="30"></field>
 		<field name="mailingstate" type="C" size="30"></field>
-		<field name="mailingpobox" type="C" size="30"></field>
 		<field name="othercity" type="C" size="40"></field>
 		<field name="otherstate" type="C" size="50"></field>
 		<field name="mailingzip" type="C" size="30"></field>
 		<field name="otherzip" type="C" size="30"></field>
 		<field name="otherstreet" type="C" size="250"></field>
-		<field name="otherpobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt>
 		<data>
 		</data>
@@ -587,7 +494,7 @@
 		</data>
 	</table>
 
-	<table name="portalinfo">
+	<table name="PortalInfo">
 		<field name="id" type="I" size="11">
                         <KEY/>
 		</field>
@@ -605,9 +512,9 @@
                 </field>
 		<field name="isactive" type="I" size="1"></field>
 	</table>
-	<table name="portalinfo" alter="true">
+	<table name="PortalInfo" alter="true">
 
-                <constraint>ADD CONSTRAINT fk_portalinfo FOREIGN KEY (id) REFERENCES contactdetails(contactid)  ON DELETE CASCADE </constraint>
+                <constraint>ADD CONSTRAINT fk_PortalInfo FOREIGN KEY (id) REFERENCES contactdetails(contactid)  ON DELETE CASCADE </constraint>
 
                 <opt>Type=InnoDB</opt>
 
@@ -615,7 +522,7 @@
                 </data>
         </table>
 
-	<table name="customerdetails">
+	<table name="CustomerDetails">
 		<field name="customerid" type="I" size="19">
 			<KEY/>
                 </field>
@@ -623,9 +530,9 @@
 		<field name="support_start_date" type="D"></field>
 		<field name="support_end_date" type="D"></field>
 	</table>
-	<table name="customerdetails" alter="true">
+	<table name="CustomerDetails" alter="true">
 
-                <constraint>ADD CONSTRAINT fk_customerdetails FOREIGN KEY (customerid) REFERENCES contactdetails(contactid) ON DELETE CASCADE </constraint>
+                <constraint>ADD CONSTRAINT fk_CustomerDetails FOREIGN KEY (customerid) REFERENCES contactdetails(contactid) ON DELETE CASCADE </constraint>
 
                 <opt>Type=InnoDB</opt>
 
@@ -637,7 +544,6 @@
 		<field name="leadid" type="I" size="19">
 			<KEY/>
 		</field>
-		<field name="campaignid" type="I" size="19"></field>
 		<field name="email" type="C" size="100"></field>
 		<field name="interest" type="C" size="50"></field>
 		<field name="firstname" type="C" size="40"></field>
@@ -682,10 +588,6 @@
 		<field name="assignleadchk" type="I" size="1">
 			<DEFAULT value="0"/>
 		</field>
-		<index name="converted">
-			<col>converted</col>
-			<col>leadstatus</col>
-		</index>
 		<opt>Type=InnoDB</opt>
 		<data>
 		</data>
@@ -709,7 +611,7 @@
 		<field name="currency" type="C" size="20">
 			<DEFAULT value="Dollars"/>
 		</field>
-		<field name="website" type="C" size="255"></field>
+		<field name="website" type="C" size="30"></field>
 		<field name="callornot" type="I" size="1">
 			<DEFAULT value="0"/>
 		</field>
@@ -744,12 +646,11 @@
 		<field name="city" type="C" size="30"></field>
 		<field name="code" type="C" size="30"></field>
 		<field name="state" type="C" size="30"></field>
-		<field name="pobox" type="C" size="30"></field>
 		<field name="country" type="C" size="30"></field>
 		<field name="phone" type="C" size="50"></field>
 		<field name="mobile" type="C" size="50"></field>
 		<field name="fax" type="C" size="50"></field>
-		<field name="lane" type="C" size="250"></field>
+		<field name="lane" type="C" size="30"></field>
 		<field name="leadaddresstype" type="C" size="30">
 			<DEFAULT value="Billing"/>
 		</field>
@@ -843,7 +744,7 @@
 		<field name="potentialname" type="C" size="120">
 			<NOTNULL/>
 		</field>
-		<field name="amount" type="N" size="10.2">
+		<field name="amount" type="N">
 			<DEFAULT value="0"/>
 		</field>
 		<field name="currency" type="C" size="20"></field>
@@ -855,7 +756,7 @@
 		<field name="private" type="I" size="1">
 			<DEFAULT value="0"/>
 		</field>
-		<field name="probability" type="N" size="7.3">
+		<field name="probability" type="N" size="2.3">
 			<DEFAULT value="0"/>
 		</field>
 		<field name="sales_stage" type="C" size="50"></field>
@@ -880,12 +781,6 @@
 		</field>
 			<opt>Type=InnoDB</opt> <index name="Potential_IDX0">
 			<col>accountid</col>
-		</index>
-		<index name="potentialid">
-			<col>potentialid</col>
-		</index>
-		<index name="sales_stage">
-			<col>sales_stage</col>
 		</index>
 		<opt>Type=InnoDB</opt>
 		<data>
@@ -985,6 +880,8 @@
 		<field name="activitytype" type="C" size="50">
 			<NOTNULL/>
 		</field>
+         	<field name="description" type="X">
+		</field>
 
        		<field name="date_start" type="D">      
 			<NOTNULL/>
@@ -997,9 +894,9 @@
 			<NOTNULL/>
 		</field>
 
-		<field name="sendnotification" type="C" size="3">
+		<field name="sendnotification" type="C" size="50">
 			<NOTNULL/>
-			<DEFAULT value="0"/>
+			<DEFAULT value="false"/>
 		</field>
                 <field name="duration_hours" type="C" size="2"></field> 
                 <field name="duration_minutes" type="C" size="2"></field> 
@@ -1010,33 +907,10 @@
 		<field name="priority" type="C" size="150"></field>     
                 <field name="location" type="C" size="150"></field>     
 
-        <field name="notime" type="C" size="3">
-			<NOTNULL/>
-			<DEFAULT value="0"/>
-		</field>
-			<opt>Type=InnoDB</opt>
-		 <index name="Activity_IDX0">
+                
+			<opt>Type=InnoDB</opt> <index name="Activity_IDX0">
 			<col>activityid</col>
 			<col>subject</col>
-		</index>
-		<index name="activitytype">
-			<col>activitytype</col>
-			<col>date_start</col>
-		</index>
-		<index name="date_start">
-			<col>date_start</col>
-			<col>due_date</col>
-		</index>
-		<index name="date_start2">
-			<col>date_start</col>
-			<col>time_start</col>
-		</index>
-		<index name="eventstatus">
-			<col>eventstatus</col>
-		</index>
-		<index name="status">
-			<col>status</col>
-			<col>eventstatus</col>
 		</index>
 		<data>
 		</data>
@@ -1076,16 +950,7 @@
 			<NOTNULL/>
 		</field>
 
-		<opt>Type=InnoDB</opt>
-		<index name="attachmentsid">
-			<col>attachmentsid</col>
-		</index>
-		<index name="description">
-			<col>description</col>
-			<col>name</col>
-			<col>type</col>
-			<col>attachmentsid</col>
-		</index> 
+		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
 	</table>
@@ -1117,9 +982,6 @@
 		</index>
 		<opt>Type=InnoDB</opt> <index name="SeAttachmentsRel_IDX1">
 			<col>crmid</col>
-		</index>
-		<index name="attachmentsid">
-			<col>attachmentsid</col>
 		</index>
 		<data>
 		</data>
@@ -1270,7 +1132,7 @@
 		<field name="qtyindemand" type="I" size="11"></field>
 		<field name="glacct" type="C" size="200"></field>
 		<field name="vendor_id" type="I" size="11"></field>	
-		<field name="imagename" type="C" size="350"></field>
+		<field name="imagename" type="C" size="150"></field>
 	
 		<opt>Type=InnoDB</opt>
 		
@@ -1381,25 +1243,24 @@
 
 
 	<table name="role">
-                <field name="roleid" type="C" size="255">
+                <field name="roleid" type="I" size="11">
                         <KEY/>
+                        <AUTOINCREMENT/></field>
+                <field name="name" type="C" size="60">
                 </field>
-                <field name="rolename" type="C" size="200">
-                </field>
-                <field name="parentrole" type="C" size="255">
-                </field>
-                <field name="depth" type="I" size="19">
-                </field>
-                <opt>Type=InnoDB</opt>
+                <field name="description" type="C" size="100"></field>
+		<opt>Type=InnoDB</opt>
                 <data>
+
                 </data>
         </table>
+
 
 	<table name="user2role">
 		<field name="userid" type="I" size="11">
 			<KEY/>
 		</field>
-		<field name="roleid" type="C" size="255">
+		<field name="roleid" type="I" size="11">
 			<NOTNULL/>
 		</field>
 	        <opt>Type=InnoDB</opt>	
@@ -1435,10 +1296,8 @@
 
 
 	<table name="groups">
-		<field name="groupid" type="I" size="19">
+		<field name="name" type="C" size="100">
 			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
 		</field>
 		<field name="description" type="X"></field>
 		
@@ -1450,120 +1309,21 @@
 
 
 	<table name="users2group">
-		<field name="groupid" type="I" size="19">
-			<KEY/>
+		<field name="groupname" type="C" size="100">
 		</field>
-		<field name="userid" type="I" size="19">
-			<KEY/>
+		<field name="userid" type="C" size="50">
 		</field>
+		<index name="idx_users2group">
+			<col>groupname</col>
+			<col>userid</col>
+		</index>
 		<data>
 		</data>
 	</table>
 
 	<table name="users2group" alter="true">
 		
-		<constraint>ADD CONSTRAINT fk_users2group1 FOREIGN KEY (groupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="users2group" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_users2group2 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="group2grouprel">
-		<field name="groupid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="containsgroupid" type="I" size="19">
-			<KEY/>
-		</field>
-		<data>
-		</data>
-	</table>
-
-	<table name="group2grouprel" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_group2grouprel1 FOREIGN KEY (groupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	<table name="group2grouprel" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_group2grouprel2 FOREIGN KEY (containsgroupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="group2role">
-		<field name="groupid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="roleid" type="C" size="255">
-			<KEY/>
-		</field>
-		<data>
-		</data>
-	</table>
-
-	<table name="group2role" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_group2role1 FOREIGN KEY (groupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	<table name="group2role" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_group2role2 FOREIGN KEY (roleid) REFERENCES role(roleid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="group2rs">
-		<field name="groupid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="roleandsubid" type="C" size="255">
-			<KEY/>
-		</field>
-		<data>
-		</data>
-	</table>
-
-	<table name="group2rs" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_group2rs1 FOREIGN KEY (groupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	<table name="group2rs" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_group2rs2 FOREIGN KEY (roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE </constraint>
+		<constraint>ADD CONSTRAINT fk_users2group FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE </constraint>
 		
 		<opt>Type=InnoDB</opt>
 		
@@ -1614,79 +1374,6 @@
 		<data>
 		</data>
 	</table>
-
-	<table name="campaigncontrel">
-                <field name="campaignid" type="I" size="19">
-                         <KEY/>
-                        <DEFAULT value="0"/>
-                </field>
-                <field name="contactid" type="I" size="19">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                </field>
-                                    
-	        <index name="CampaignContRel_IDX1">
-                        <col>contactid</col>
-                </index>
-                <opt>Type=InnoDB</opt>
-                <data> 
-                </data>
-        </table>
-	
-	<table name="campaigncontrel" alter="true">                                                                                                                                                                                         <constraint>ADD CONSTRAINT fk_CampaignContRel1 FOREIGN KEY (campaignid) REFERENCES campaign(contactid)  ON DELETE CASCADE</constraint>
-
-                <opt>Type=InnoDB</opt>
-
-                <data>
-                </data>
-        </table>
-
-        <table name="campaigncontrel" alter="true">
-
-                <constraint>ADD CONSTRAINT fk_CampaignContRel2 FOREIGN KEY (contactid) REFERENCES contactdetails(contactid)  ON DELETE CASCADE</constraint>
-
-                <opt>Type=InnoDB</opt>
-
-                <data>
-                </data>
-        </table>
-
-	<table name="campaignleadrel">
-                <field name="campaignid" type="I" size="19">
-                        <KEY/>
-                        <DEFAULT value="0"/>
-                </field>
-                <field name="leadid" type="I" size="19">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                </field>
-
-                <index name="CampaignLeadRel_IDX1">
-                        <col>leadid</col>
-                </index>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-        <table name="campaignleadrel" alter="true">
-
-                <constraint>ADD CONSTRAINT fk_CampaignContRel1 FOREIGN KEY (campaignid) REFERENCES campaign(campaignid)  ON DELETE CASCADE</constraint>
-
-                <opt>Type=InnoDB</opt>
-
-                <data>
-                </data>
-        </table>
-	<table name="campaignleadrel" alter="true">
-
-                <constraint>ADD CONSTRAINT fk_CampaignLeadRel2 FOREIGN KEY (leadid) REFERENCES leaddetails(leadid)  ON DELETE CASCADE</constraint>
-
-                <opt>Type=InnoDB</opt>
-
-                <data>
-                </data>
-        </table>
 
 
 
@@ -1994,7 +1681,6 @@
 		<field name="title" type="C" size="255">
 			<NOTNULL/>
 		</field>
-		<field name="filename" type="C" size="50"></field>
 		<field name="description" type="X"></field>
 		<field name="solution" type="X"></field>
 		<field name="update_log" type="X"></field>
@@ -2004,9 +1690,6 @@
 		<opt>Type=InnoDB</opt>
 	 		<index name="troubletickets_IDX0">
                                 <col>ticketid</col>
-                        </index>
-			<index name="status">
-                                <col>status</col>
                         </index>	
 
 		<data>
@@ -2377,11 +2060,14 @@
 
 	<table name="leadgrouprelation">
 		<field name="leadid" type="I" size="19">
-			<KEY/>
 		</field>
 		<field name="groupname" type="C" size="100">
 		</field>		
 		<opt>Type=InnoDB</opt>
+
+	       	<index name="leadgrouprelation_IDX0">
+			<col>leadid</col>
+		</index>
 
 		<index name="leadgrouprelation_IDX1">
 			<col>groupname</col>
@@ -2413,258 +2099,9 @@
 		</data>
 	</table>
 
-	<table name="accountgrouprelation">
-		<field name="accountid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="accountgrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-
-	<table name="accountgrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_accountgrouprelation FOREIGN KEY (accountid) REFERENCES account(accountid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-
-	<table name="accountgrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_accountgrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	
-	<table name="contactgrouprelation">
-		<field name="contactid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="contactgrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-	<table name="contactgrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_contactgrouprelation FOREIGN KEY (accountid) REFERENCES contactdetails(contactid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="contactgrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_contactgrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	
-	<table name="potentialgrouprelation">
-		<field name="potentialid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="potentialgrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-	<table name="potentialgrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_potentialgrouprelation FOREIGN KEY (potentialid) REFERENCES potential(potentialid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="potentialgrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_potentialgrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	
-	<table name="quotegrouprelation">
-		<field name="quoteid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="quotegrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-	<table name="quotegrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_quotegrouprelation FOREIGN KEY (quoteid) REFERENCES quotes(quoteid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="quotegrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_quotegrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	
-	<table name="sogrouprelation">
-		<field name="salesorderid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="sogrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-	<table name="sogrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_sogrouprelation FOREIGN KEY (salesorderid) REFERENCES salesorder(salesorderid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="sogrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_sogrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	
-	<table name="invoicegrouprelation">
-		<field name="invoiceid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="invoicegrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-	<table name="invoicegrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_invoicegrouprelation FOREIGN KEY (invoiceid) REFERENCES invoices(invoiceid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="invoicegrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_invoicegrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-	
-	<table name="pogrouprelation">
-		<field name="purchaseorderid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="groupname" type="C" size="100">
-		</field>		
-		<opt>Type=InnoDB</opt>
-
-		<index name="pogrouprelation_IDX1">
-			<col>groupname</col>
-		</index>
-		<data>		
-		</data>
-	</table>
-
-	<table name="pogrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_pogrouprelation FOREIGN KEY (purchaseorderid) REFERENCES purchaseorder(purchaseorderid) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="pogrouprelation" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_pogrouprelation2 FOREIGN KEY (groupname) REFERENCES groups(name) ON DELETE CASCADE</constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
 
 	<table name="activitygrouprelation">
 		<field name="activityid" type="I" size="19">
-		<KEY/>
 		</field>
 		<field name="groupname" type="C" size="100">
 		</field>		
@@ -2706,7 +2143,6 @@
 
         <table name="ticketgrouprelation">
                 <field name="ticketid" type="I" size="19">
-		<KEY/>
                 </field>
                 <field name="groupname" type="C" size="100">
 		</field>
@@ -2760,20 +2196,11 @@
         </table>
 
 	<table name="currency_info">
-                <field name="id" type="I" >
+                <field name="currency_name" type="C" size="100">
                         <KEY/>
-                <AUTOINCREMENT/>
-
                 </field>
-                <field name="currency_name" type="C" size="100"></field>
-                <field name="currency_code" type="C" size="100"></field>
+                <field name="currency_code" type="C" size="100"> </field>
                 <field name="currency_symbol" type="C" size="30"> </field>
-                <field name="conversion_rate" type="N" size="5.3"> </field>
-                <field name="currency_status" type="C" size="25"> </field>
-		<field name="defaultid" type="C" size="10">
-                        <NOTNULL/>
-                        <DEFAULT value="0"/>
-                        </field>
                 <data>
                 </data>
         </table>
@@ -2797,6 +2224,30 @@
 	<table name="defaultcv" alter="true">
 		
 		<constraint>ADD CONSTRAINT fk_defaultcv FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE</constraint>
+		<opt>Type=InnoDB</opt>
+		
+		<data>
+		</data>
+	</table>
+
+
+	<table name="emails">
+		<field name="emailid" type="I" size="19">
+			<KEY/>
+		</field>
+			<field name="filename" type="C" size="50">
+                </field>
+		<field name="description" type="X"></field>
+		<data>
+		</data>
+	</table>
+
+
+
+
+	<table name="emails" alter="true">
+		
+		<constraint>ADD CONSTRAINT fk_emails FOREIGN KEY (emailid) REFERENCES activity(activityid) ON DELETE CASCADE</constraint>
 		<opt>Type=InnoDB</opt>
 		
 		<data>
@@ -2993,9 +2444,52 @@
 
 
 
+	<table name="role2action">
+		<field name="rolename" type="C" size="50">
+		</field>
+		<field name="tabid" type="I" size="11">
+			<DEFAULT value="0"/>
+		</field>
+		<field name="actionname" type="C" size="100">
+		</field>
+		<field name="action_permission" type="I" size="4">
+			<NOTNULL/>
+			<DEFAULT value="0"/>
+		</field>
+		<field name="description" type="C" size="100">
+		</field>
+		<index name="idx_role2action_name">
+			<col>rolename</col>
+			<col>tabid</col>
+			<col>actionname</col>
+		</index>
+		<data>
+		
+		</data>
+	</table>
+	<table name="role2tab">
+		<field name="rolename" type="C" size="100">
+		</field>
+		<field name="tabid" type="I" size="11">
+			<DEFAULT value="0"/>
+		</field>
+		<field name="module_permission" type="I" size="4">
+			<NOTNULL/>
+			<DEFAULT value="0"/>
+		</field>
+		<field name="description" type="C" size="100">
+		</field>
+		<index name="idx_role2tab_name">
+			<col>rolename</col>
+			<col>tabid</col>
+		</index>
+		<data>
+		
+		</data>
+	</table>
+
 <table name="ticketstracktime">
 		<field name="ticket_id" type="I" size="11">
-			<KEY/>
 			<NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
@@ -3084,11 +2578,8 @@
 
 
 	<table name="wordtemplates">
-		<field name="templateid" type="I" size="19">
-			<KEY/>
-		</field>
 		<field name="filename" type="C" size="100">
-			<NOTNULL/>
+			<KEY/>
 		</field>
 		<field name="module" type="C" size="30">
 			<NOTNULL/>
@@ -4033,52 +3524,39 @@
 	</table>
 
 	<table name="profile2standardpermissions">
-		<field name="profileid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="10">
-			<KEY/>
-		</field>
-		<field name="Operation" type="I" size="10">
-			<KEY/>
-		</field>
+		<field name="profileid" type="I" size="11"></field>
+		<field name="tabid" type="I" size="10"></field>
+		<field name="Operation" type="I" size="10"></field>
 		<field name="permissions" type="I" size="1"></field>
+		<index name="idx_prof2stad">
+			<col>profileid</col>
+			<col>tabid</col>
+			<col>Operation</col>
+		</index>
 		<data>
 		</data>
 	</table>
 
 	<table name="profile2field">
-			<field name="profileid" type="I" size="11">
-				<KEY/>
-			</field>
+			<field name="profileid" type="I" size="11"></field>
                 	<field name="tabid" type="I" size="10"></field>
-                	<field name="fieldid" type="I" size="19">
-				<KEY/>
-			</field>
+                	<field name="fieldid" type="I" size="19"></field>
 	                <field name="visible" type="I" size="19"></field>
         	        <field name="readonly" type="I" size="19"></field>
 			<index name="idx_prof2fileid">
 			<col>profileid</col>
 			<col>tabid</col>
-		</index>
-			<index name="tabid">
-			<col>tabid</col>
-			<col>profileid</col>
-		</index>
-			<index name="visible">
-			<col>visible</col>
-			<col>profileid</col>
+			<col>fieldname</col>
 		</index>
 		<data>
 		</data>
 	</table>
 	
 	<table name="role2profile">
-		<field name="roleid" type="C" size="255">
+		<field name="roleid" type="I" size="11">
 			<KEY/>
 		</field>
 		<field name="profileid" type="I" size="11">
-			<KEY/>
 		</field>
 		
 		<data>
@@ -4095,56 +3573,38 @@
 		<field name="tabid" type="I" size="11">
 			<NOTNULL/>
 		</field>
-		<field name="permission" type="I" size="19">
-		</field>
-		<field name="editstatus" type="I" size="19">
+		<field name="permission" type="I" size="10">
 		</field>
 
 		<data>
 		
 		</data>
 	</table>
-	<table name="def_org_share" alter="true">
-		<constraint>ADD CONSTRAINT fk_def_org_share FOREIGN KEY (permission) REFERENCES org_share_action_mapping(share_action_id) ON DELETE CASCADE</constraint>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
 
 	<table name="def_org_field">
                 	<field name="tabid" type="I" size="10"></field>
-                	<field name="fieldid" type="I" size="19">
-				<KEY/>
-			</field>
+                	<field name="fieldid" type="I" size="19"></field>
 	                <field name="visible" type="I" size="19"></field>
         	        <field name="readonly" type="I" size="19"></field>
 			<index name="idx_def_org_field">
 			<col>tabid</col>
 			<col>fieldid</col>
-			</index>
-			<index name="tabid">
-				<col>tabid</col>
-			</index>
-			<index name="visible">
-				<col>visible</col>
-				<col>fieldid</col>
-			</index>	
+		</index>
 		<data>
 		</data>
 	</table>
 
 	<table name="profile2utility">
-		<field name="profileid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="activityid" type="I" size="11">
-			<KEY/>
-		</field>
+		<field name="profileid" type="I" size="11"></field>
+		<field name="tabid" type="I" size="11"></field>
+		<field name="activityid" type="I" size="11"></field>
 		<field name="permission" type="I" size="1"></field>
 
+		<index name="idx_prof2utility">
+                        <col>profileid</col>
+                        <col>tabid</col>
+                        <col>activityid</col>
+                </index>
 		<data>
 		
 		</data>
@@ -4319,6 +3779,7 @@
                     <NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
+		<field name="company_name" type="C" size="100"></field>
 		<field name="vendorname" type="C" size="100"></field>
 		<field name="phone" type="C" size="100"></field>
 		<field name="email" type="C" size="100"></field>
@@ -4328,10 +3789,10 @@
 		<field name="street" type="X"></field>
 		<field name="city" type="C" size="30"></field>
 		<field name="state" type="C" size="30"></field>
-		<field name="pobox" type="C" size="30"></field>
 		<field name="postalcode" type="C" size="100"></field>
 		<field name="country" type="C" size="100"></field>
 		<field name="description" type="X"></field>
+		
                   
 <opt>Type=InnoDB</opt>
 		<data>
@@ -4505,9 +3966,6 @@
 		<field name="total" type="N" size="11.3"></field>
 		<field name="accountid" type="I" size="19"></field>
 		<field name="terms_conditions" type="X"></field>
-		<index name="quotestage">
-			<col>quotestage</col>
-		</index>
 		
                   
 <opt>Type=InnoDB</opt>
@@ -4548,7 +4006,6 @@
 		<field name="bill_country" type="C" size="30"></field>
 		<field name="bill_state" type="C" size="30"></field>
 		<field name="bill_street" type="C" size="250"></field>
-		<field name="bill_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -4576,7 +4033,6 @@
 		<field name="ship_country" type="C" size="30"></field>
 		<field name="ship_state" type="C" size="30"></field>
 		<field name="ship_street" type="C" size="250"></field>
-		<field name="ship_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -4726,7 +4182,6 @@
 		<field name="bill_country" type="C" size="30"></field>
 		<field name="bill_state" type="C" size="30"></field>
 		<field name="bill_street" type="C" size="250"></field>
-		<field name="bill_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -4754,7 +4209,6 @@
 		<field name="ship_country" type="C" size="30"></field>
 		<field name="ship_state" type="C" size="30"></field>
 		<field name="ship_street" type="C" size="250"></field>
-		<field name="ship_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -4907,7 +4361,6 @@
 		<field name="bill_country" type="C" size="30"></field>
 		<field name="bill_state" type="C" size="30"></field>
 		<field name="bill_street" type="C" size="250"></field>
-		<field name="bill_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -4935,7 +4388,6 @@
 		<field name="ship_country" type="C" size="30"></field>
 		<field name="ship_state" type="C" size="30"></field>
 		<field name="ship_street" type="C" size="250"></field>
-		<field name="ship_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -5023,9 +4475,6 @@
 		<field name="subject" type="C" size="100"></field>
 		<field name="salesorderid" type="I" size="19"></field>
 		<field name="customerno" type="C" size="100"></field>
-                <!--to include contact name field in Invoice-start-->
-		<field name="contactid" type="I" size="19"></field>
-		<!--end-->
 		<field name="notes" type="C" size="100"></field>
 		<field name="invoicedate" type="D"></field>
 		<field name="duedate" type="D"></field>
@@ -5076,7 +4525,6 @@
 		<field name="bill_country" type="C" size="30"></field>
 		<field name="bill_state" type="C" size="30"></field>
 		<field name="bill_street" type="C" size="250"></field>
-		<field name="bill_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -5104,7 +4552,6 @@
 		<field name="ship_country" type="C" size="30"></field>
 		<field name="ship_state" type="C" size="30"></field>
 		<field name="ship_street" type="C" size="250"></field>
-		<field name="ship_pobox" type="C" size="30"></field>
 		<opt>Type=InnoDB</opt> 
 		<data>
 		</data>
@@ -5186,7 +4633,6 @@
 		
 	<table name="activity_reminder">
                 <field name="activity_id" type="I" size="11">
-			<KEY/>
                         <NOTNULL/>
                 </field>
                 <field name="reminder_time" type="I" size="11">
@@ -5196,7 +4642,6 @@
                         <NOTNULL/>
 		</field>
 		<field name="recurringid" type="I" size="19">
-			<KEY/>
 			<NOTNULL/>
 		</field>
                 <data>
@@ -5219,20 +4664,15 @@
                 <field name="entitytype" type="C" size="100">
                         <NOTNULL/>
                 </field>
-		<index name="customview">
-                        <col>cvid</col>
-                </index>
-		<data>
+                <data>
                 </data>
         </table>
 
 
 	<table name="cvcolumnlist">
 		<field name="cvid" type="I" size="19">
-		<KEY/>
 		</field>
 		<field name="columnindex" type="I" size="11">
-		     <KEY/>	
 		     <NOTNULL/>
 		</field>
 		<field name="columnname" type="C" size="250">
@@ -5240,9 +4680,6 @@
 		</field>
 		<index name="cvcolumnlist_IDX0">
 			<col>cvid</col>
-		</index>
-		<index name="columnindex">
-			<col>columnindex</col>
 		</index>
 		<opt>Type=InnoDB</opt>
 		<data></data>
@@ -5256,7 +4693,6 @@
 
 	<table name="cvstdfilter">
 		<field name="cvid" type="I" size="19">
-		<KEY/>
 		</field>
 		<field name="columnname" type="C" size="250">
 			<DEFAULT value=""/>
@@ -5285,10 +4721,8 @@
 
 	<table name="cvadvfilter">
 		<field name="cvid" type="I" size="19">
-			<KEY/>
 		</field>
 		<field name="columnindex" type="I" size="11">
-			<KEY/>
 			<NOTNULL/>
 		</field>
 		<field name="columnname" type="C" size="250">
@@ -5328,7 +4762,6 @@
                 <index name="customaction_IDX0">
                         <col>cvid</col>
                 </index>
-		
                 <opt>Type=InnoDB</opt>
                 <data></data>
         </table>
@@ -5356,10 +4789,8 @@ E</constraint>
 
 	<table name="selectcolumn">
 		<field name="queryid" type="I" size="19">
-		<KEY/>
 		</field>
 		<field name="columnindex" type="I" size="11">
-		     <KEY/>	
 		     <NOTNULL/>
 		     <DEFAULT value="0"/>
 		</field>
@@ -5381,10 +4812,8 @@ E</constraint>
 
 	<table name="relcriteria">
 		<field name="queryid" type="I" size="19">
-		<KEY/>
 		</field>
 		<field name="columnindex" type="I" size="11">
-			<KEY/>
 			<NOTNULL/>
 		</field>
 		<field name="columnname" type="C" size="250">
@@ -5502,12 +4931,10 @@ E</constraint>
 
 	<table name="reportsortcol">
 		<field name="sortcolid" type="I" size="19">
-			<KEY/>
 			<NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
 		<field name="reportid" type="I" size="19">
-			<KEY/>
 			<NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
@@ -5531,7 +4958,6 @@ E</constraint>
 
 	<table name="reportdatefilter">
 		<field name="datefilterid" type="I" size="19">
-			<KEY/>
 			<NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
@@ -5561,17 +4987,14 @@ E</constraint>
 	
 	<table name="reportsummary">
 		<field name="reportsummaryid" type="I" size="19">
-			<KEY/>
 			<NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
 		<field name="summarytype" type="I" size="19">
-			<KEY/>
 			<NOTNULL/>
 			<DEFAULT value="0"/>
 		</field>
 		<field name="columnname" type="C" size="250">
-			<KEY/>
 			<DEFAULT value=""/>
 		</field>
 		<index name="reportsummary_IDX0">
@@ -5787,9 +5210,7 @@ E</constraint>
 	</table>
 
 	<table name="organizationdetails">
-		<field name="organizationame" type="C" size="60">
-			<KEY/>
-		</field>
+		<field name="organizationame" type="C" size="60"></field>
 		<field name="address" type="C" size="150"></field>
 		<field name="city" type="C" size="100"></field>
 		<field name="state" type="C" size="100"></field>
@@ -5797,7 +5218,7 @@ E</constraint>
 		<field name="code" type="C" size="30"></field>
 		<field name="phone" type="C" size="30"></field>
 		<field name="fax" type="C" size="30"></field>
-		<field name="website" type="C" size="100"></field>
+		<field name="website" type="C" size="50"></field>
 		<field name="logoname" type="C" size="50"></field>
 		<field name="logo" type="X"></field>
 		<opt>Type=InnoDB</opt>
@@ -5864,15 +5285,6 @@ E</constraint>
                 </data>
 	</table>
 
-       <table name="inventory_tandc">
-             <field name="id" type="I" size="19">
-              <KEY/></field>
-             <field name="type" type="C" size="30">
-              <NOTNULL/></field>
-             <field name="tandc" type="X"></field>
-        </table>
-
-
 	<table name="convertleadmapping">
 		<field name="cfmid" type="I" size="19">
 			<KEY/>
@@ -5888,1075 +5300,6 @@ E</constraint>
 		<data>
 		</data>
 	</table>
-	
-	<table name="profile2globalpermissions">
-		<field name="profileid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="globalactionid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="globalactionpermission" type="I" size="19"></field>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
-
-	<table name="profile2globalpermissions" alter="true">
-	<constraint>ADD CONSTRAINT fk_profile2globalpermissions FOREIGN KEY (profileid) REFERENCES profile(profileid) ON DELETE CASCADE</constraint>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>	
-
-	<table name="actionmapping">
-		<field name="actionid" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="actionname" type="C" size="200">
-			<KEY/>
-		</field>
-		<field name="securitycheck" type="I" size="19">
-		</field>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
-
-	<table name="org_share_action_mapping">
-		<field name="share_action_id" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="share_action_name" type="C" size="200">
-			<KEY/>
-		</field>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
-
-	<table name="org_share_action2tab">
-		<field name="share_action_id" type="I" size="19">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="19">
-			<KEY/>
-		</field>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
-	<table name="org_share_action2tab" alter="true">
-		<constraint>ADD CONSTRAINT fk_org_share_action2tab FOREIGN KEY (share_action_id) REFERENCES org_share_action_mapping(share_action_id) ON DELETE CASCADE</constraint>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
-
-	<table name="org_share_action2tab" alter="true">
-		<constraint>ADD CONSTRAINT fk_org_share_action2tab1 FOREIGN KEY (tab) REFERENCES tab(tabid) ON DELETE CASCADE</constraint>
-		<opt>Type=InnoDB</opt>
-		<data>
-		</data>
-	</table>
-
-
-	<table name="moduleowners">
-                <field name="tabid" type="I" size="19">
-			<KEY/>
-                        <UNIQUE/>
-                        <DEFAULT value="0"/>
-                </field>
-                <field name="user_id" type="C" size="11">
-                        <NOTNULL/>
-                </field>
-        </table>
-        <table name="moduleowners" alter="true">
-        <constraint>ADD CONSTRAINT fk_ModuleOwners FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="ownernotify">
-        <field name="crmid" type="I" size="19">
-        </field>
-        <field name="smownerid" type="I" size="19">
-        </field>
-        <field name="flag" type="I" size="3">
-        </field>
-        <opt>Type=InnoDB</opt>
-        <data>
-        </data>
-    </table>	
-
-	<table name="datashare_module_rel">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="tabid" type="I" size="19">
-                        <NOTNULL/>
-                </field>
-		<field name="relationtype" type="C" size="200">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_module_rel_tabid">
-                        <col>tabid</col>
-                </index>
-		
-        </table>
-	<table name="datashare_module_rel" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_module_rel FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_grp2grp">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_groupid" type="I" size="19">
-                </field>
-		<field name="to_groupid" type="I" size="19">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_grp2grp_share_groupid">
-                        <col>share_groupid</col>
-                </index>
-		<index name="idx_datashare_grp2grp_to_groupid">
-                        <col>to_groupid</col>
-                </index>	
-        </table>
-        <table name="datashare_grp2grp" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2grp FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_grp2grp" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2grp1 FOREIGN KEY (share_groupid) REFERENCES groups(groupid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_grp2grp" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2grp2 FOREIGN KEY (to_groupid) REFERENCES groups(groupid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-
-	<table name="datashare_grp2role">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_groupid" type="I" size="19">
-                </field>
-		<field name="to_roleid" type="C" size="255">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_grp2role_share_groupid">
-                        <col>share_groupid</col>
-                </index>
-		<index name="idx_datashare_grp2role_to_roleid">
-                        <col>to_roleid</col>
-                </index>	
-        </table>
-        <table name="datashare_grp2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2role FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_grp2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2role1 FOREIGN KEY (share_groupid) REFERENCES groups(groupid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_grp2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2role2 FOREIGN KEY (to_roleid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_grp2rs">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_groupid" type="I" size="19">
-                </field>
-		<field name="to_roleandsubid" type="C" size="255">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_grp2rs_share_groupid">
-                        <col>share_groupid</col>
-                </index>
-		<index name="idx_datashare_grp2rs_to_roleandsubid">
-                        <col>to_roleandsubid</col>
-                </index>	
-        </table>
-        <table name="datashare_grp2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2rs FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_grp2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2rs1 FOREIGN KEY (share_groupid) REFERENCES groups(groupid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_grp2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_grp2rs3 FOREIGN KEY (to_roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_role2group">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_roleid" type="C" size="255">
-                </field>
-		<field name="to_groupid" type="I" size="19">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_role2group_share_roleid">
-                        <col>share_roleid</col>
-                </index>
-		<index name="idx_datashare_role2group_to_groupid">
-                        <col>to_groupid</col>
-                </index>	
-        </table>
-        <table name="datashare_role2group" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2group FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_role2group" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2group1 FOREIGN KEY (share_roleid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_role2group" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2group3 FOREIGN KEY (to_groupid) REFERENCES groups(groupid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-
-	<table name="datashare_role2role">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_roleid" type="C" size="255">
-                </field>
-		<field name="to_roleid" type="C" size="255">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_role2role_share_roleid">
-                        <col>share_roleid</col>
-                </index>
-		<index name="idx_datashare_role2role_to_roleid">
-                        <col>to_roleid</col>
-                </index>	
-        </table>
-        <table name="datashare_role2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2role FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_role2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2role1 FOREIGN KEY (share_roleid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_role2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2role3 FOREIGN KEY (to_roleid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-
-	<table name="datashare_role2rs">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_roleid" type="C" size="255">
-                </field>
-		<field name="to_roleandsubid" type="C" size="255">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_role2s_share_roleid">
-                        <col>share_roleid</col>
-                </index>
-		<index name="idx_datashare_role2s_to_roleandsubid">
-                        <col>to_roleandsubid</col>
-                </index>	
-        </table>
-        <table name="datashare_role2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2rs FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_role2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2rs1 FOREIGN KEY (share_roleid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_role2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_role2rs3 FOREIGN KEY (to_roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_rs2grp">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_roleandsubid" type="C" size="255">
-                </field>
-		<field name="to_groupid" type="I" size="19">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_rs2grp_share_roleandsubid">
-                        <col>share_roleandsubid</col>
-                </index>
-		<index name="idx_datashare_rs2grp_to_groupid">
-                        <col>to_groupid</col>
-                </index>	
-        </table>
-        <table name="datashare_rs2grp" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2grp FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_rs2grp" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2grp1 FOREIGN KEY (share_roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_rs2grp" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2grp2 FOREIGN KEY (to_groupid) REFERENCES groups(groupid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_rs2role">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_roleandsubid" type="C" size="255">
-                </field>
-		<field name="to_roleid" type="C" size="255">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_rs2role_share_roleandsubid">
-                        <col>share_roleandsubid</col>
-                </index>
-		<index name="idx_datashare_rs2role_to_roleid">
-                        <col>to_roleid</col>
-                </index>	
-        </table>
-        <table name="datashare_rs2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2role FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_rs2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2role1 FOREIGN KEY (share_roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_rs2role" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2role2 FOREIGN KEY (to_roleid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_rs2rs">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="share_roleandsubid" type="C" size="255">
-                </field>
-		<field name="to_roleandsubid" type="C" size="255">
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_rs2rs_share_roleandsubid">
-                        <col>share_roleandsubid</col>
-                </index>
-		<index name="idx_datashare_rs2rs_to_roleandsubid">
-                        <col>to_roleandsubid</col>
-                </index>	
-        </table>
-        <table name="datashare_rs2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2rs FOREIGN KEY (shareid) REFERENCES datashare_module_rel(shareid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_rs2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2rs1 FOREIGN KEY (share_roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_rs2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_rs2rs2 FOREIGN KEY (to_roleandsubid) REFERENCES role(roleid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_relatedmodules">
-                <field name="datashare_relatedmodule_id" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="tabid" type="I" size="19">
-                </field>
-		<field name="relatedto_tabid" type="I" size="19">
-                </field>
-		<opt>Type=InnoDB</opt>
-		<index name="idx_datashare_relatedmodules_tabid">
-                        <col>tabid</col>
-                </index>
-		<index name="idx_datashare_relatedmodules_relatedto_tabid">
-                        <col>relatedto_tabid</col>
-                </index>	
-        </table>
-        <table name="datashare_relatedmodules" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_relatedmodules FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-	<table name="datashare_relatedmodules" alter="true">
-        <constraint>ADD CONSTRAINT fk_datashare_relatedmodules1 FOREIGN KEY (relatedto_tabid) REFERENCES tab(tabid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-	<table name="datashare_relatedmodule_permission">
-                <field name="shareid" type="I" size="19">
-			<KEY/>
-                </field>
-                <field name="datashare_relatedmodule_id" type="I" size="19">
-			<KEY/>
-                </field>
-		<field name="permission" type="I" size="19">
-                </field>
-        </table>
-		
-     <table name="parenttab">
-        <field name="parenttabid" type="I" size="19"><NOTNULL/>
-			<KEY/>
-        </field>
-		<field name="parenttab_label" type="C" size="100"><NOTNULL/>
-        </field>
-		<field name="sequence" type="I" size="10"><NOTNULL/>
-        </field>
-		<field name="visible" type="I" size="2"><NOTNULL/><DEFAULT value="0"/>
-        </field>
-     </table>
-  		
-
-
-	<table name="tmp_read_user_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="shareduserid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_read_user_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_read_user_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="tmp_read_user_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_sharing_per3 FOREIGN KEY (shareduserid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_read_group_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="sharedgroupid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_read_group_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_read_group_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 
-
-	<table name="tmp_read_group_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_sharing_per3 FOREIGN KEY (sharedgroupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 
-
-	
-	<table name="tmp_write_user_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="shareduserid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_write_user_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_write_user_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 
-
-	<table name="tmp_write_user_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_sharing_per3 FOREIGN KEY (shareduserid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-
-	<table name="tmp_write_group_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="sharedgroupid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_write_group_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_write_group_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 
-
-	<table name="tmp_write_group_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_sharing_per3 FOREIGN KEY (sharedgroupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 
-
-
-
-	<table name="tmp_read_user_rel_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="relatedtabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="shareduserid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_read_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_rel_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_read_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_rel_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="tmp_read_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_rel_sharing_per4 FOREIGN KEY (relatedtabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 	 
-
-	<table name="tmp_read_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_user_rel_sharing_per3 FOREIGN KEY (shareduserid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_read_group_rel_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="relatedtabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="sharedgroupid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_read_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_rel_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_read_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_rel_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="tmp_read_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_rel_sharing_per4 FOREIGN KEY (relatedtabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 	 
-
-	<table name="tmp_read_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_read_group_rel_sharing_per3 FOREIGN KEY (sharedgroupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-
-	<table name="tmp_write_user_rel_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="relatedtabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="shareduserid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_write_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_rel_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_write_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_rel_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="tmp_write_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_rel_sharing_per4 FOREIGN KEY (relatedtabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 	 
-
-	<table name="tmp_write_user_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_user_rel_sharing_per3 FOREIGN KEY (shareduserid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_write_group_rel_sharing_per">
-		<field name="userid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="tabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="relatedtabid" type="I" size="11">
-			<KEY/>
-		</field>
-		<field name="sharedgroupid" type="I" size="11">
-			<KEY/>
-		</field>
-	        <opt>Type=InnoDB</opt>	
-		<data>
-		
-		</data>
-	</table>
-
-
-	<table name="tmp_write_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_rel_sharing_per1 FOREIGN KEY (userid) REFERENCES users(id) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-	<table name="tmp_write_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_rel_sharing_per2 FOREIGN KEY (tabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-	<table name="tmp_write_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_rel_sharing_per4 FOREIGN KEY (relatedtabid) REFERENCES tab(tabid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table> 	 
-
-	<table name="tmp_write_group_rel_sharing_per" alter="true">
-		
-		<constraint>ADD CONSTRAINT fk_tmp_write_group_rel_sharing_per3 FOREIGN KEY (sharedgroupid) REFERENCES groups(groupid) ON DELETE CASCADE </constraint>
-		
-		<opt>Type=InnoDB</opt>
-		
-		<data>
-		</data>
-	</table>
-
-
-		<table name="parenttabrel">
-        <field name="parenttabid" type="I" size="3"><NOTNULL/>
-        </field>
-		<field name="tabid" type="I" size="3"><NOTNULL/>
-		</field>
-		<field name="sequence" type="I" size="3"><NOTNULL/>
-        </field>
-     </table>
-
-
-
-	<table name="campaign">
-                <field name="campaignname" type="C" size="255">
-			<KEY/>
-                </field>
-		<field name="campaigntype" type="C" size="255">
-                </field>
-		<field name="campaignstatus" type="C" size="255">
-                </field>
-    <field name="expectedrevenue" type="N" size="11.3">
-                </field>
-    <field name="budgetcost" type="N" size="11.3">
-                    </field>
- <field name="actualcost" type="N" size="11.3">
-                    </field>
- <field name="expectedresponse" type="N" size="10.0">
-                    </field>
- <field name="numsent" type="N" size="11.0">
-                    </field>
- <field name="campaignid" type="I" size="7">
-                    </field>
- <field name="closingdate" type="D"></field>
-
-
-		<opt>Type=InnoDB</opt>
-		<index name="idx_campaignid">
-                        <col>campaignid</col>
-                </index>
-		<index name="idx_campaignname">
-                        <col>campaignname</col>
-                </index>	
-        </table>
-        <table name="datashare_rs2rs" alter="true">
-        <constraint>ADD CONSTRAINT fk_campaign FOREIGN KEY (crmid) REFERENCES crmentity(crmid) ON DELETE CASCADE</constraint>
-                <opt>Type=InnoDB</opt>
-                <data>
-                </data>
-        </table>
-
-
-
-
-
-
-
-	<table name="campaigntype">
-		<field name="campaigntypeid" type="I" size="19">
-			<KEY/>
-	<AUTOINCREMENT/>
-		
-		</field>
-		<field name="campaigntype" type="C" size="200">
-			<NOTNULL/>
-		</field>
-		<field name="sortorderid" type="I" size="19">
-			<NOTNULL/>
-			<DEFAULT value="0"/>
-		</field>
-		<field name="presence" type="I" size="1">
-			<NOTNULL/>
-			<DEFAULT value="1"/>
-		</field>
-		<opt>Type=InnoDB</opt> <index name="Campaigntype_UK0">
-			<UNIQUE/>
-			<col>campaigntype</col>
-		</index>
-		<data>
-		</data>
-	</table>
-
-
-
-
-	<table name="campaignstatus">
-		<field name="campaignstatusid" type="I" size="19">
-			<KEY/>
-	<AUTOINCREMENT/>
-		
-		</field>
-		<field name="campaignstatus" type="C" size="200">
-			<NOTNULL/>
-		</field>
-		<field name="sortorderid" type="I" size="19">
-			<NOTNULL/>
-			<DEFAULT value="0"/>
-		</field>
-		<field name="presence" type="I" size="1">
-			<NOTNULL/>
-			<DEFAULT value="1"/>
-		</field>
-		<opt>Type=InnoDB</opt> <index name="Campaigntype_UK0">
-			<UNIQUE/>
-			<col>campaigntype</col>
-		</index>
-		<data>
-		</data>
-	</table>
-
-
 
 
 

@@ -133,7 +133,7 @@ sqgetGlobalVar('location',        $location,        SQ_POST);
 /* end of get globals */
 
 global $current_user;
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 $mailInfo = getMailServerInfo($current_user);
 $temprow = $adb->fetch_array($mailInfo);
 
@@ -141,9 +141,11 @@ $secretkey=$temprow["mail_password"];
 $imapServerAddress=$temprow["mail_servername"];
 $imapPort="143";
 
+
 $key = OneTimePadEncrypt($secretkey, $onetimepad);
 $imapConnection = sqimap_login($username, $key, $imapServerAddress, $imapPort, 0);
 $mbx_response=sqimap_mailbox_select($imapConnection, $mailbox);
+
 $location = set_url_var($location,'composenew',0,false);
 $location = set_url_var($location,'composesession',0,false);
 $location = set_url_var($location,'session',0,false);
@@ -212,10 +214,10 @@ elseif (!isset($moveButton) )
                   $msgfromemail = array();
                   $mbodies = array();
                   sqgetGlobalVar('mailbox',       $mailbox);
-		 //for each message, add the body 
+                 
                   for($k=0;$k< count($id);$k++)
                   {
-			  $msgData='';
+
                     $message = sqimap_get_message($imapConnection, $id[$k], $mailbox);
                     $header = $message->rfc822_header;
                     
@@ -227,9 +229,18 @@ elseif (!isset($moveButton) )
                     {
                       $messagebody .= formatBody($imapConnection, $message, $color, $wrap_at, $ent_ar[$u], $id[$k], $mailbox);
                       $msgData = $messagebody;
+                      /*
+                      if ($i != $cnt-1)
+                      {
+                        $messagebody .= '<hr noshade size=1>';
+                      }
+                      */
                     }
-		     	  	$messagebody='';
+                    $explodedmessage= explode("\n",$messagebody);
+                    $implodedmessage = implode(":",$explodedmessage);
                     $from = $message->rfc822_header->getAddr_s('from');
+                    
+                    //$date = getLongDateString($message->rfc822_header->date);
                     //Richie : Changed the format to suit the Email part
                     $date = getVTigerLongDateString($message->rfc822_header->date);
                     /* 
@@ -248,13 +259,14 @@ elseif (!isset($moveButton) )
                     $subject  = $header->subject ;
                     $msgsubject[$k]=$subject;
                     $msgfromemail[$k]=$fromemail;
-                    $mbodies[$k] = $msgData;
+                    $mbodies[$k] = $implodedmessage;
                   }
                   $tempidlist = implode(",", $id); 
                   $fromemail = implode(",",$msgfromemail);
                   $subject = implode(",",$msgsubject);
                   $detail = implode(",",$mbodies);
-                  header("Location: index.php?module=Emails&action=Save&fromemail=".$fromemail."&subject=".$subject."&idlist=".$tempidlist."&adddate=".$date."&addFlag=true&smodule=webmails");      
+                  
+                  header("Location: index.php?module=Emails&action=Save&fromemail=".$fromemail."&subject=".$subject."&idlist=".$tempidlist."&adddate=".$date."&detail=".$detail);      
                   return;
                 }
     

@@ -14,14 +14,14 @@
 require_once('include/database/PearDatabase.php');
 require_once('XTemplate/xtpl.php');
 require_once('themes/'.$theme.'/layout_utils.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
 
 echo '<form action="index.php" method="post" name="new" id="form">';
-echo get_module_title("Users",' Profiles List', true);
+echo get_module_title("Users",' Profiles', true);
 
 global $adb;
 global $theme;
@@ -45,8 +45,7 @@ function getStdOutput($profileListResult, $noofrows, $mod_strings)
 	$standCustFld= '';
 	$standCustFld .= '<input type="hidden" name="module" value="Users">';
 	$standCustFld .= '<input type="hidden" name="action" value="CreateProfile">';
-	$standCustFld .= '<br><input title="New" accessKey="C" class="button" type="submit" name="New" value="New Profile">&nbsp;&nbsp;';
-	$standCustFld .= '<input title="Back" accessKey="C" class="button" onclick="this.form.action.value=\'index\';this.form.module.value=\'Settings\'" type="submit" name="New" value="Back">';
+	$standCustFld .= '<br><input title="New" accessKey="C" class="button" type="submit" name="New" value="New Profile">';
 	$standCustFld .= '<br><BR>'; 
 	$standCustFld .= '<table border="0" cellpadding="5" cellspacing="1" class="FormBorder" width="40%">';
 	$standCustFld .=  '<tr height=20>';
@@ -69,17 +68,16 @@ function getStdOutput($profileListResult, $noofrows, $mod_strings)
 		$standCustFld .= '<tr class="'.$trowclass.'">';
 		$profile_name = $adb->query_result($profileListResult,$i,"profilename");
 		$profile_id = $adb->query_result($profileListResult,$i,"profileid");
-		$standCustFld .= '<td width="18%" height="21" style="padding:0px 3px 0px 3px;"><div align="center">';
-		//<a href="index.php?module=Users&action=profilePrivileges&profileid='.$profile_id.'">edit</a>
+		$standCustFld .= '<td width="18%" height="21" style="padding:0px 3px 0px 3px;"><div align="center"><a href="index.php?module=Users&action=ProfileEditView&profileid='.$profile_id.'">edit</a>';
 		global $current_user;
                 $current_profile = fetchUserProfileId($current_user->id);
                 if($profile_id != 1 && $profile_id != 2 && $profile_id != 3 && $profile_id != 4 && $profile_id != $current_profile)
                 {
 
-			$standCustFld .= '<a href="index.php?module=Users&action=ProfileDeleteStep1&profileid='.$profile_id.'">del</a>';	
+			$standCustFld .= ' | <a href="index.php?module=Users&action=ProfileDeleteStep1&profileid='.$profile_id.'">del</a>';	
 		}
 		$standCustFld .= '</div></td>';
-		$standCustFld .= '<td wheight="21" style="padding:0px 3px 0px 3px;"><a href="index.php?module=Users&action=profilePrivileges&profileid='.$profile_id.'">'.$profile_name.'</a></td></tr>';
+		$standCustFld .= '<td wheight="21" style="padding:0px 3px 0px 3px;"><a href="index.php?module=Users&action=ProfileDetailView&profileid='.$profile_id.'">'.$profile_name.'</a></td></tr>';
 		
 	}
 	$standCustFld .='</table>';

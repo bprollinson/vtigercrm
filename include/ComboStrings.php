@@ -256,27 +256,13 @@ $combo_strings = Array(
 'postatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
-			'Canceled'=>'Canceled',
-			'Received Shipment'=>'Received Shipment'
+			'Canceled'=>'Canceled'
 			),
 
 'sostatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
 			'Canceled'=>'Canceled'
-			),
-
-'campaignstatus_dom' => Array('Planning'=>'Planning',
-			'Active'=>'Active',
-			'Inactive'=>'Inactive',
-                      'Canceled'=>'Canceled',
-                      'Complete'=>'Complete'
-			),
-
-'campaigntype_dom' => Array('Conference'=>'Conference',
-			'Podcast'=>'Podcast',
-			'Advertisement'=>'Advertisement',
-			'Email'=>'Email'
 			),
 		
 );

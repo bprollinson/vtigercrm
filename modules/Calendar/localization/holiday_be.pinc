@@ -2,8 +2,8 @@
 /*
 * Copyright 2003 contributed by Puuter
 *
-* CVS Info: $Id$
-* $Author$
+* CVS Info: $Id: holiday_be.pinc,v 1.16 2005/05/03 13:18:52 saraj Exp $
+* $Author: saraj $
 * see (https://sourceforge.net/forum/forum.php?thread_id=801872&forum_id=25073) 
 * Type = 0 day is displayed but not marked
 * Type = 1 marks the day red in the calendar

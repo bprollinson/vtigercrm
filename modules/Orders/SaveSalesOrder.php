@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Orders/SaveSalesOrder.php,v 1.4.2.1 2005/08/05 15:28:36 crouchingtiger Exp $
  * Description:  Saves an Account record and then redirects the browser to the 
  * defined return URL.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -170,6 +170,7 @@ function sendPrdStckMail($product_id,$upd_qty,$prod_name,$qtyinstk,$qty)
 {
         global $current_user;
         global $adb;
+        global $vtlog;
 	$reorderlevel = getPrdReOrderLevel($product_id);
 	if($upd_qty < $reorderlevel)
 	{
@@ -271,8 +272,6 @@ function SendMailToCustomer($to,$current_user_id,$subject,$contents)
 		$errormsg = "Mail Could not be sent...";	
 	}
 }
- //code added for returning back to the current view after edit from list view
- if($_REQUEST['return_viewname'] == '') $return_viewname='0';
- if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname&smodule=SO");
+
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 ?>

@@ -31,13 +31,15 @@ $header->set_size(12);
 $header->set_color('blue');
 
 # Write out the data
+//$worksheet->write(0, 0, 'Company', $header);
+//$worksheet->write(0, 1, 'Price',   $header);
+//$worksheet->write(0, 2, 'Volume',  $header);
+//$worksheet->write(0, 3, 'Change',  $header);
+
 $reportid = $_REQUEST["record"];
 $oReport = new Reports($reportid);
-$filtercolumn = $stdDateFilterField;
-$filter = $stdDateFilter;
 
 $oReportRun = new ReportRun($reportid);
-$filterlist = $oReportRun->RunTimeFilter($filtercolumn,$filter,$startdate,$enddate);
 $arr_val = $oReportRun->GenerateReport("PDF",$filterlist);
 
 if(isset($arr_val))

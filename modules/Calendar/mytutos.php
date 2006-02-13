@@ -312,6 +312,6 @@
  $dbconn->Close();
 ?>
 <!--
-    CVS Info:  $Id$
-    $Author$
+    CVS Info:  $Id: mytutos.php,v 1.12 2005/01/17 05:11:26 saraj Exp $
+    $Author: saraj $
 -->

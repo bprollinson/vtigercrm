@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Invoice/Save.php,v 1.5.2.1 2005/08/05 15:23:24 crouchingtiger Exp $
  * Description:  Saves an Account record and then redirects the browser to the 
  * defined return URL.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -276,8 +276,5 @@ function SendMailToCustomer($to,$current_user_id,$subject,$contents)
 	}
 }
 
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname");
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 ?>

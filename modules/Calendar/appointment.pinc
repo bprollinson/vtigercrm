@@ -390,14 +390,14 @@ class appointment extends tutos_base {
    * @param int    $pos  a index in the resultset
    */
 
- /* function getUserName($userid)
+  function getUserName($userid)
   {
 	//require_once("modules/Users/User.php");
 	$user = new User();
 	$user->retrieve($userid);
 	return $user->first_name." ".$user->last_name;	
   }
-*/
+
   function getContactName($contactid)
   {
 	require_once("modules/Contacts/Contact.php");

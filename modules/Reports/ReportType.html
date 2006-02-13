@@ -12,7 +12,12 @@
 <html>
 <head>
     <title></title>
-    <script language='javascript' type="text/JavaScript" src="modules/Reports/Report.js">
+    <script language='javascript'>
+        function selectAction( url )
+        {
+            document.NewReport.action = url;
+            document.NewReport.submit();
+        }
     </script>        
 </head>
 <body>

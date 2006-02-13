@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Orders/EditView.php,v 1.15.2.1 2005/09/08 15:10:21 mickie Exp $
  * Description:  TODO To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -26,13 +26,13 @@ require_once('modules/Orders/Order.php');
 require_once('modules/Orders/Forms.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
-require_once('include/utils/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('include/FormValidationUtil.php');
 
 global $app_strings;
 global $mod_strings;
 global $current_user;
-global $log;
+global $vtlog;
 
 
 $focus = new Order();
@@ -53,8 +53,8 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 if(isset($_REQUEST['product_id']) && $_REQUEST['product_id'] !='')
 {
         $focus->column_fields['product_id'] = $_REQUEST['product_id'];
-         $log->debug("Purchase Order EditView: Product Id from the request is ".$_REQUEST['product_id']);
-	$num_of_products = getNoOfAssocProducts("Products",$focus,$focus->column_fields['product_id']);
+	$vtlog->logthis("Purchase Order EditView: Product Id from the request is ".$_REQUEST['product_id'],'debug');
+        $num_of_products = getNoOfAssocProducts("Products",$focus,$focus->column_fields['product_id']);
         $associated_prod = getAssociatedProducts("Products",$focus,$focus->column_fields['product_id']);
 }
 
@@ -214,7 +214,6 @@ else $xtpl->assign("RETURN_MODULE","Orders");
 if(isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
 else $xtpl->assign("RETURN_ACTION","index");
 if(isset($_REQUEST['return_id'])) $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
-if (isset($_REQUEST['return_viewname'])) $xtpl->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
 $xtpl->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 $xtpl->assign("THEME", $theme);
 $xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);

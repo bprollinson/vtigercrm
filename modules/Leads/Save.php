@@ -16,15 +16,11 @@
 require_once('modules/Leads/Lead.php');
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 
 $local_log =& LoggerManager::getLogger('index');
-global $log;
+global $vtlog;
 $focus = new Lead();
-global $current_user;
-$currencyid=fetchCurrency($current_user->id);
-$curr_symbol=getCurrencySymbol($currencyid);
-$rate = getConversionRate($currencyid,$curr_symbol);
 
 if(isset($_REQUEST['record']))
 {
@@ -70,16 +66,11 @@ foreach($focus->column_fields as $fieldname => $val)
   	if(isset($_REQUEST[$fieldname]))
 	{
           $value = $_REQUEST[$fieldname];
-            $log->info("the value is ".$value);
-	  //echo '<BR>';
+	  $vtlog->logthis("the value is ".$value,'info');  
+          //echo '<BR>';
           //echo $fieldname."         ".$value;
           //echo '<BR>';
           $focus->column_fields[$fieldname] = $value;
-        }
-	if(isset($_REQUEST['annualrevenue']))
-        {
-                        $value = convertToDollar($_REQUEST['annualrevenue'],$rate);
-                        $focus->column_fields['annualrevenue'] = $value;
         }
         
 }
@@ -138,7 +129,7 @@ updateLeadGroupRelation($focus->id,'');
 $focus->save("Leads");
 
 $return_id = $focus->id;
-	 $log->info("the return id is ".$return_id);
+	  $vtlog->logthis("the return id is ".$return_id,'info');  
 /*
 if($createLeadFlag)
 {
@@ -158,15 +149,13 @@ else $return_action = "DetailView";
 if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "") $return_id = $_REQUEST['return_id'];
 
 $local_log->debug("Saved record with id of ".$return_id);
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname");
+
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 
 //Code to save the custom field info into database
 function save_customfields($entity_id)
 {
-	 $log->debug("save custom field invoked ".$entity_id);
+	  $vtlog->logthis("save custom field invoked ".$entity_id,'debug');  
 	global $adb;
 	$dbquery="select * from customfields where module='Leads'";
 	$result = $adb->query($dbquery);
@@ -186,7 +175,7 @@ function save_customfields($entity_id)
 			if(isset($_REQUEST[$colName]))
 			{
 				$fldvalue=$_REQUEST[$colName];
-				 $log->info("the columnName is ".$fldvalue);
+	  $vtlog->logthis("the columnName is ".$fldvalue,'info');  
 				if(get_magic_quotes_gpc() == 1)
                 		{
                         		$fldvalue = stripslashes($fldvalue);

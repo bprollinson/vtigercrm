@@ -57,7 +57,7 @@ for($i = 0; $i <= 9; $i++){
 /* END GLOBALS */
 //Richie
 global $current_user;
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 $mailInfo = getMailServerInfo($current_user);
 $temprow = $adb->fetch_array($mailInfo);
 

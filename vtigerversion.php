@@ -11,5 +11,5 @@
 
 $patch_version = '';
 $modified_database = '';
-$vtiger_current_version = '4.2 GA';
+$vtiger_version = '4.2';
 ?>

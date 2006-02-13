@@ -12,20 +12,24 @@
 require_once('include/database/PearDatabase.php');
 global $adb;
 
+//if($_REQUEST['module']=='Users')
 if(isset($_REQUEST['user_id']) && $_REQUEST['user_id'] != '')
 {
 	$record = $_REQUEST['record'];
-	//$sql = "insert into salesmanactivityrel values (". $_REQUEST["user_id"] .",".$_REQUEST["record"] .")";
-	$sql = "insert into salesmanactivityrel values (".PearDatabase::quote($_REQUEST["user_id"]).",".PearDatabase::quote($_REQUEST["record"]).")";
+	$sql = "insert into salesmanactivityrel values (". $_REQUEST["user_id"] .",".$_REQUEST["record"] .")";
 }
 else
 {
 	$record = $_REQUEST["parid"];
-	//$sql = "insert into seactivityrel values (". $_REQUEST["entityid"] .",".$_REQUEST["parid"] .")";
-	$sql = "insert into seactivityrel values (". PearDatabase::quote($_REQUEST["entityid"]).",".PearDatabase::quote($_REQUEST["parid"]) .")";
+	$sql = "insert into seactivityrel values (". $_REQUEST["entityid"] .",".$_REQUEST["parid"] .")";
 }
 
 $adb->query($sql);
-header("Location: index.php?action=CallRelatedList&module=Emails&record=".$record);
+ header("Location: index.php?action=DetailView&module=Emails&record=".$record);
+
+
+
+
+
 
 ?>

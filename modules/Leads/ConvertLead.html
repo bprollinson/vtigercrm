@@ -53,7 +53,7 @@
               &nbsp;{MOD.LBL_DO_NOT_CREATE_NEW_POTENTIAL}</td>
           </tr>
           <tr> 
-            <td width="20%" class="dataLabel"><font color="red">*</font>{MOD.LBL_POTENTIAL_NAME}</td>
+            <td width="20%" class="dataLabel">{MOD.LBL_POTENTIAL_NAME}</td>
             <td width="30%"><input name='potential_name' value='{POTENTIAL_NAME}' tabindex='3'></td>
           </tr>
           <tr> 
@@ -63,19 +63,6 @@
               <img src="themes/{THEME}/images/calendar.gif" id="jscal_trigger"> 
               <font size=1><em old="(yyyy-mm-dd)">({DATEFORMAT})</em></font></td>
           </tr>
-	  <tr>
-		<td width="20%" class="dataLabel">{MOD.LBL_POTENTIAL_AMOUNT}</td>
-		<td width="30%"><input name='potential_amount' type="text" tabindex='5' value="{POTENTIAL_AMOUNT}">
-		</td>
-	  </tr>
-	  <tr>
-		<td width="20%" class="dataLabel"><font color="red">*</font>{MOD.LBL_POTENTIAL_SALES_STAGE}</td>
-		<td width="30%"><select name="potential_sales_stage">{POTENTIAL_SALES_STAGE}
-			</select>
-		</td>
-	  </tr>
-
-	
         </table></td>
     </tr>
   </table>
@@ -95,7 +82,44 @@
         });
         </script>
 {JAVASCRIPT} 
-<script type="text/javascript" language="Javascript" src="include/js/general.js"></script>
-<script type="text/javascript" language="Javascript" src="modules/Leads/Lead.js"></script>
+<script type="text/javascript" language="Javascript" src="include/general.js"></script>
+<script type="text/javascript" language="Javascript">
 
+function verify_data(form) {
+	if(! form.createpotential.checked == true)
+	{
+        	if (form.potential_name.value == "")
+		{
+                	alert("Opportunity Name field cannot be empty");
+			return false;	
+		}
+		if (form.closedate.value == "")
+		{
+                	alert("Close Date field cannot be empty");
+			return false;	
+		}
+		return dateValidate('closedate','Potential Close Date','GECD');
+			
+		
+        }
+        return true;
+}
+
+function togglePotFields(form)
+{
+	if (form.createpotential.checked == true)
+	{
+		form.potential_name.disabled = true;
+		form.closedate.disabled = true;
+		
+	}
+	else
+	{
+		form.potential_name.disabled = false;
+		form.closedate.disabled = false;
+	}	
+
+}
+
+</script>
 <!-- END: main -->

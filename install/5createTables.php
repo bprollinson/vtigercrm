@@ -26,29 +26,81 @@ if (isset($_REQUEST['admin_password'])) $admin_password	= $_REQUEST['admin_passw
 
 $new_tables = 0;
 
- require_once('include/database/PearDatabase.php');
- require_once('include/logging.php');
- require_once('modules/Leads/Lead.php');
- require_once('modules/Contacts/Contact.php');
- require_once('modules/Accounts/Account.php');
- require_once('modules/Potentials/Opportunity.php');
- require_once('modules/Activities/Activity.php');
- require_once('modules/Notes/Note.php');
- require_once('modules/Emails/Email.php');
- require_once('modules/Users/User.php');
- require_once('modules/Import/SugarFile.php');
- require_once('modules/Import/ImportMap.php');
- require_once('modules/Import/UsersLastImport.php');
- require_once('modules/Users/TabMenu.php');
- require_once('modules/Users/LoginHistory.php');
- require_once('data/Tracker.php');
- require_once('include/utils/utils.php');
- require_once('modules/Users/Security.php');
+require_once('include/database/PearDatabase.php');
+require_once('include/logging.php');
+require_once('modules/Leads/Lead.php');
+require_once('modules/Settings/FileStorage.php');
+//require_once('modules/imports/Headers.php');
+require_once('modules/Contacts/Contact.php');
+require_once('modules/Accounts/Account.php');
+require_once('modules/Potentials/Opportunity.php');
+require_once('modules/Activities/Activity.php');
+require_once('modules/Notes/Note.php');
+require_once('modules/Emails/Email.php');
+require_once('modules/Users/User.php');
+require_once('modules/Import/SugarFile.php');
+require_once('modules/Import/ImportMap.php');
+require_once('modules/Import/UsersLastImport.php');
+require_once('modules/Users/TabMenu.php');
+require_once('modules/Users/LoginHistory.php');
+require_once('modules/Settings/FileStorage.php');
+require_once('data/Tracker.php');
+require_once('include/utils.php');
+require_once('modules/Users/Security.php');
+// load up the config_override.php file.  This is used to provide default user settings
 if (is_file("config_override.php")) {
 	require_once("config_override.php");
 }
- $db = new PearDatabase();
- $log =& LoggerManager::getLogger('create_table');
+$db = new PearDatabase();
+$log =& LoggerManager::getLogger('create_table');
+
+function createSchemaTable () {
+	global $log;
+	// create the schema tables
+	$query = "CREATE TABLE modules (id int(11) NOT NULL auto_increment, name text,PRIMARY KEY ( ID ))";
+
+	$this->query($query);
+}
+
+
+function createObjectTable () {
+	global $log;
+	// create the object tables
+	$query = "CREATE TABLE objects (
+		module_id int(11),
+		name text,
+		PRIMARY KEY ( module_id, name ))";
+
+	$this->query($query);
+}
+
+function createAttributesTable () {
+	global $log;
+	// create the attributes tables
+	$query = "CREATE TABLE attributes (
+		module_id int(11),
+		object_name text,
+		name text,
+
+		PRIMARY KEY ( module_id, object_name ))";
+	// fk module_id, object_name -> object table.
+
+	$this->query($query);
+}
+
+function createLabelsTable () {
+	global $log;
+	// create the translation tables
+	$query = "CREATE TABLE labels (
+		module_id int(11),
+		name text,
+		value text,
+		value_long text,
+		value_popup text,
+		PRIMARY KEY ( module_id, name ))";
+
+	$this->query($query);
+}
 
 //Drop old tables if table exists and told to drop it
 function drop_table_install(&$focus)
@@ -103,25 +155,25 @@ function create_default_users()
         global $default_user_is_admin;
 
         //Create default admin user
-     	$user = new User();
-         $user->last_name = 'Administrator';
-         $user->user_name = 'admin';
-         $user->status = 'Active';
-         $user->is_admin = 'on';
-         $user->user_password = $user->encrypt_password($admin_password);
-          $user->tz = 'Europe/Berlin';
-         $user->holidays = 'de,en_uk,fr,it,us,';
-         $user->workdays = '0,1,2,3,4,5,6,';
-         $user->weekstart = '1';
-          $user->namedays = '';
-	 $user->date_format = 'yyyy-mm-dd';	
-        //added by philip for default default admin emailid
-	if($admin_email == '')
-	$admin_email ="admin@administrator.com";
-         $user->email = $admin_email;
-         $user->save();
+    	$user = new User();
+        $user->last_name = 'Administrator';
+        $user->user_name = 'admin';
+        $user->status = 'Active';
+        $user->is_admin = 'on';
+        $user->user_password = $user->encrypt_password($admin_password);
+        $user->tz = 'Europe/Berlin';
+        $user->holidays = 'de,en_uk,fr,it,us,';
+        $user->workdays = '0,1,2,3,4,5,6,';
+        $user->weekstart = '1';
+        $user->namedays = '';
+	$user->date_format = 'yyyy-mm-dd';
+        $user->email = $admin_email;
+        $user->save();
 
         // We need to change the admin user to a fixed id of 1.
+        //$query = "update users set id='1' where user_name='$user->user_name'";
+        //$result = $db->query($query, true, "Error updating admin user ID: ");
+
         $log->info("Created ".$user->table_name." table. for user $user->id");
 
         if($create_default_user)
@@ -142,12 +194,12 @@ function create_default_users()
         }
 
 	//Inserting values into user2role table
-	$role_query = "select roleid from role where rolename='administrator'";
+	$role_query = "select roleid from role where name='administrator'";
 	$db->database->SetFetchMode(ADODB_FETCH_ASSOC);
 	$role_result = $db->query($role_query);
 	$role_id = $db->query_result($role_result,0,"roleid");
 
-	$sql_stmt1 = "insert into user2role values(".$user->id.",'".$role_id."')";
+	$sql_stmt1 = "insert into user2role values(".$user->id.",".$role_id.")";
 	$db->query($sql_stmt1) or die($app_strings['ERR_CREATING_TABLE'].mysql_error());
 
 }
@@ -157,93 +209,49 @@ function create_default_users()
 <HTML>
 <HEAD>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>vtiger CRM 5.0 Beta Installer: Step 5</title>
+<title>vtiger CRM 4.2 Installer: Step 5</title>
 <link rel="stylesheet" href="install/install.css" type="text/css" />
-<style type="text/css"><!--
-
-
-.percents {
- background: #eeeeee;
- border: 1px solid #dddddd;
- margin-left: 260px;
- height: 20px;
- position:absolute;
- width:575px;
- z-index:10;
- left: 10px;
- top: 203px;
- text-align: center;
-}
-
-.blocks {
- background: #aaaaaa;
- border: 1px solid #a1a1a1;
- margin-left: 260px;
- height: 20px;
- width: 10px;
- position: absolute;
- z-index:11;
- left: 12px;
- top: 203px;
- filter: alpha(opacity=50);
- -moz-opacity: 0.5;
- opacity: 0.5;
- -khtml-opacity: .5
-}
-
--->
-</style>
 </head>
 <body leftMargin="0" topMargin="0" marginheight="0" marginwidth="0">
+<table width="75%" border="0" cellpadding="3" cellspacing="0" align="center" style="border-bottom: 1px dotted #CCCCCC;"><tbody>
+  <tr>
+      <td align="left"><a href="http://www.vtiger.com" target="_blank" title="vtiger CRM"><IMG alt="vtiger CRM" border="0" src="include/images/vtiger_crmlogo.gif"/></a></td>
+      <td align="right"><h2>Step 5 of 5</h2></td>
+      <td align="right"><IMG alt="vtiger CRM" border="0" src="include/images/spacer.gif" width="10" height="1"/></td>
+    </tr>
+</tbody></table>
+<table width="75%" align="center" cellpadding="10" cellspacing="0" border="0"><tbody>
 
+   <tr>
+      <td width="100%">
+		<table width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
+			  <td>
+			   <table width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
 
-<table border=0 cellspacing=0 cellpadding=0 width=100%>
-<tr>
-	<td align=center>
-	<br><br>
-	<!--  Top Header -->
-	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(install/images/cwTopBg.gif) repeat-x;">
-	<tr>
-		<td><img src="install/images/cwTopLeft.gif" alt="vtiger CRM" title="vtiger CRM"></td>
-		<td align=right><img src="install/images/cwTopRight.gif" alt="v5beta" title="v5beta"></td>
-	</tr>
-	</table>
-	
-	
-	
-	<!-- 5 of 5 header -->
-	<table border="0" cellspacing="0" cellpadding="5" width="75%" class=small> 
-	<tr>	
-		<td valign=top><img src="install/images/cwIcoDB.gif" alt="Create Database Tables" title="Create Database Tables"></td>
-		<td width=98% valign=top>
-			<table border=0 cellspacing=0 cellpadding=0 width=100%>
-			<tr>
-				<td><img src="install/images/cwHdrVtConfWiz.gif" alt="vtiger CRM Configuration Wizard" title="vtiger CRM Configuration Wizard"></td>
-				<td align=right><img src="install/images/cwStep5of5.gif" alt="Step 5 of 5" title="Step 5 of 5"></td>
-			</tr>
-			<tr>
-				<td colspan=2><img src="install/images/cwHdrCrDbTables.gif" alt="Create Database Tables" title="Create Database Tables"></td>
-			</tr>
-			</table>
-			<hr noshade size=1>
-		</td>
+				<td><h3>Create Database Tables</h3></td>
+				<td width="74%"><hr width="100%"></td>
 
-	</tr>
-	<tr>
-		<td></td>
-		<td>
-		<!--- code -->
+				</tr></tbody></table>
+			  </td>
+
+			  </tr>
+		</tbody></table>
+	  </td>
+          </tr>
+          <tr>
+            <td>
 <?php
 $startTime = microtime();
 
 $modules = array(
-"Security"
-,"Contact"
+ "Contact"
 ,"Account"
 ,"potential"
 ,"Lead"
 ,"Tab"
+,"Security"
 ,"LoginHistory"
+,"FileStorage"
 ,"User"
 ,"Tracker"
 ,"Activity"
@@ -261,26 +269,7 @@ $focus = 0;
 // temporary
 require_once('config.php');
 
-/*if (ob_get_level() == 0) {
-   ob_start();
-}
-echo str_pad('Loading... ',4096)."<br />\n";
-for ($i = 0; $i < 48; $i++) {
-   $d = $d + 11;
-   $m=$d+10;
-   //This div will show loading percents
-   echo '<div class="percents">' . $i*2 . '%&nbsp;complete</div>';
-   //This div will show progress bar
-   echo '<div class="blocks" style="left: '.$d.'px">&nbsp;</div>';
-   flush();
-   ob_flush();
-   sleep(1);
-   ob_end_flush();
-}*/
-?>
-<!--<div class="percents" style="z-index:12">Done.</div>-->
-<?
-   $success = $db->createTables("adodb/DatabaseSchema.xml");
+$success = $db->createTables("adodb/DatabaseSchema.xml");
 
 // TODO HTML
 if($success==0)
@@ -299,13 +288,50 @@ else
 
 foreach ( $modules as $module )
 {
-         $focus = new $module();
+        $focus = new $module();
 
+        /*if ($db_drop_tables == true )
+        {
+                $existed = drop_table_install($focus);
 
- 	$focus->create_tables(); // inserts only rows
+                if ($existed)
+                {
+                        echo "<font color=red>Dropped existing ".$focus->table_name." table</font><BR>\n";
+                }
+                else
+                {
+                        echo "<font color=green>Table ".$focus->table_name." does not exist</font><BR>\n";
+                }
+        }
+
+        $success = create_table_install($focus);
+
+        if ( $success)
+        {
+                echo "<font color=green>Created new ".$focus->table_name." table</font><BR>\n";
+                if ( $module == "User")
+                {
+                        $new_tables = 1;
+                }
+        }
+        else
+        {
+		echo "Table ".$focus->table_name." already exists<BR>\n";
+        }*/
+
+	$focus->create_tables(); // inserts only rows
 
 }
+/*
+if ($new_tables)
+{
+        create_default_users();
+}*/
+
+/*if($success==2)
+{*/
 	create_default_users();
+//}
 
 //Populating users table
 $uid = $db->getUniqueID("users");
@@ -313,15 +339,17 @@ $sql_stmt1 = "insert into users(id,user_name,user_password,last_name,email1,date
 $db->query($sql_stmt1) or die($app_strings['ERR_CREATING_TABLE'].mysql_error());
 
 
+//$sql_stmt1 = "insert into user2role values(1,1)";
+//$db->query($sql_stmt1) or die($app_strings['ERR_CREATING_TABLE'].mysql_error());
 
 
-$role_query = "select roleid from role where rolename='standard_user'";
+$role_query = "select roleid from role where name='standard_user'";
 $db->database->SetFetchMode(ADODB_FETCH_ASSOC);
 $role_result = $db->query($role_query);
 $role_id = $db->query_result($role_result,0,"roleid");
 
 
-$sql_stmt2 = "insert into user2role values(".$uid.",'".$role_id."')";
+$sql_stmt2 = "insert into user2role values(".$uid.",".$role_id.")";
 $db->query($sql_stmt2) or die($app_strings['ERR_CREATING_TABLE'].mysql_error());
 
 
@@ -340,6 +368,10 @@ require_once('modules/Reports/PopulateReports.php');
 //Default customview population//
 require_once('modules/CustomView/PopulateCustomView.php');
 
+//Creating and Populating PHPBB tables and data
+//require_once('include/PopulatePhpBBtables.php');
+//create_populate_phpbb();
+
 // populating the db with seed data
 if ($db_populate)
 {
@@ -350,6 +382,24 @@ if ($db_populate)
 
 //populating forums data
 global $log, $db;
+/*
+$db->query("update phpbb_config set config_value='".$admin_email."' where config_name='board_email'");
+
+$db->query("update phpbb_config set config_value='modules/MessageBoard/images/smiles' where config_name='smilies_path'");
+
+$db->query("update phpbb_config set config_value='".$server_name."' where config_name='server_name'");
+
+$db->query("update phpbb_config set config_value='".$server_port."' where config_name='server_port'");
+
+
+$db->query("update phpbb_config set config_value='modules/MessageBoard' where config_name='script_path'");
+
+$curr_time=time();
+$db->query("insert phpbb_config values('board_startdate','".$curr_time."')");
+
+$db->query("insert phpbb_config values('default_lang', 'english')");
+
+*/
 $endTime = microtime();
 
 $deltaTime = microtime_diff($startTime, $endTime);
@@ -408,77 +458,21 @@ mysql_query("insert into role2permission(roleid,permissionid,module,module_actio
 		mysql_query("insert into role2permission(roleid,permissionid,module,module_action,action_permission,module_permission,description) values (2,'','Opportunities','Import',0,1,'')");
 
 
-
-
-        //this is to rename the installation file and folder so that no one destroys the setup
-$renamefile = uniqid(rand(), true);
-
-rename("install.php", $renamefile."install.php.txt");
-rename("install/", $renamefile."install/");
-
-
 }
 
 //populate Calendar data
-
+//include("modules/Calendar/admin/scheme.php");
 
 ?>
-		<br><br>
-		
-		<table borde=0 cellspacing=0 cellpadding=5 width=100% style="background-color:#EEFFEE; border:1px dashed #ccddcc;">
-		<tr>
-			<td align=center class=small>
-			<b>The database tables are now set up.</b>
-			<br>Total time taken: <?php echo "$deltaTime"; ?> seconds.
-			<hr noshade size=1>
-			<div style="width:100%;padding:10px; "align=left>
-			<ul>
-            <li>Your install.php file has been renamed in the format INTEGER.install.php.txt.
-            <li>Your install folder too has been renamed in the format INTEGER.install/.  
-			<li>Your system is now installed and configured for use.  
-			<li>You need to log in for the first time using the "admin" user name and the password you entered in step 2.
-			</ul>
-			</div>
-
-			</td>
-		</tr>
-		</table>
-		
-		</td></tr>
-		<tr><td colspan=2 align="center">
-				 <form action="index.php" method="post" name="form" id="form">
-				 <input type="hidden" name="default_user_name" value="admin">
-				 <input  type="image" src="install/images/cwBtnFinish.gif" name="next" value="Finish" />
-				 </form>
-		</td></tr>
-		</table>		
-							<br><br>
-						<!-- Horizontal Shade -->
-					<table border="0" cellspacing="0" cellpadding="0" width="75%" style="background:url(install/images/cwShadeBg.gif) repeat-x;">
-					<tr>
-						<td><img src="install/images/cwShadeLeft.gif"></td>
-						<td align=right><img src="install/images/cwShadeRight.gif"></td>
-					</tr>
-					</table><br><br>
-
-		<!-- code -->
-		
-		</td>
-	</tr>
-	</table>
-	
-
-
-
-
-
-
-
-
-</td>
-</tr>
-</table>
-<!-- master table closes -->
-
-
-</body></html>
+The database tables are now set up.<HR></HR>
+total time: <?php echo "$deltaTime"; ?> seconds.<BR />
+</td></tr>
+<tr><td><hr></td></tr>
+<tr><td align=left><font color=green>Your system is now installed and configured for use.  You need to log in for the first time using the "admin" user name and the password you entered in step 2.</font></td></tr>
+<tr><td align="right">
+         <form action="index.php" method="post" name="form" id="form">
+         <input type="hidden" name="default_user_name" value="admin">
+         <input class="button" type="submit" name="next" value="Finish" />
+         </form>
+</td></tr>
+</tbody></table></body></html>

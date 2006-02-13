@@ -2,8 +2,8 @@
 /*
  * Copyright 1999/2000 by Gero Kohnert
  *
- * CVS Info:  $Id$
- * $Author$
+ * CVS Info:  $Id: logout.php,v 1.12 2005/01/17 05:11:26 saraj Exp $
+ * $Author: saraj $
  */
 
  global $calpath;

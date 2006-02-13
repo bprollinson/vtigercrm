@@ -10,7 +10,7 @@
  ********************************************************************************/
 require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 require_once('include/database/PearDatabase.php');
 global $mod_strings;
 global $app_strings;
@@ -19,12 +19,12 @@ global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
-global $log;
+global $vtlog;
 
 if(isset($_REQUEST['templateid']) && $_REQUEST['templateid']!='')
 {
 	$templateid = $_REQUEST['templateid'];
-	 $log->debug("the templateid is set to the value ".$templateid);
+	$vtlog->logthis("the templateid is set to the value ".$templateid,'debug');  
 }
 $sql = "select * from emailtemplates where templateid=".$templateid;
 $result = $adb->query($sql);

@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Contacts/BusinessCard.php,v 1.13 2005/06/28 14:30:22 mickie Exp $
  * Description:  Business Card Wizard
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
  
-global $log;
+global $vtlog;
 global $app_strings;
 global $app_list_strings;
 require_once('XTemplate/xtpl.php');
@@ -54,7 +54,7 @@ if(isset($_POST['handle']) && $_POST['handle'] == 'Save'){
 	$accountForm = new AccountFormBase();
 	if(!isset($_POST['selectedContact']) && !isset($_POST['ContinueContact'])){
 		$duplicateContacts = $contactForm->checkForDuplicates('Contacts');
-		$log->info("Duplicate Contact Checking Finished.");
+		$vtlog->logthis("Duplicate Contact Checking Finished.",'info');
 		if(isset($duplicateContacts)){
 			$xtpl->assign('FORMBODY', $contactForm->buildTableForm($duplicateContacts));
 			$xtpl->parse('main.formnoborder');
@@ -65,8 +65,8 @@ if(isset($_POST['handle']) && $_POST['handle'] == 'Save'){
 	}
 	if(!isset($_POST['selectedAccount']) && !isset($_POST['ContinueAccount'])){
 		$duplicateAccounts = $accountForm->checkForDuplicates('Accounts');
-		 $log->info("Duplicate Account Checking Finished.");
- 			if(isset($duplicateAccounts)){
+		$vtlog->logthis("Duplicate Account Checking Finished.",'info');
+		if(isset($duplicateAccounts)){
 			$xtpl->assign('FORMBODY', $accountForm->buildTableForm($duplicateAccounts));
 			$xtpl->parse('main.formnoborder');
 			$xtpl->parse('main');
@@ -77,15 +77,15 @@ if(isset($_POST['handle']) && $_POST['handle'] == 'Save'){
 	if(isset($_POST['selectedContact']) && !empty($_POST['selectedContact'])){
 		$contact = new Contact();
 		$contact->retrieve($_POST['selectedContact']);
-		 $log->info("Selected Contact Successfully Retrieved.");
+		$vtlog->logthis("Selected Contact Successfully Retrieved.",'info');	
 	}else{
 		$contact= $contactForm->handleSave('Contacts',false, true);
 	}
 	if(isset($_POST['selectedAccount']) && !empty($_POST['selectedAccount'])){
 		$account = new Account();
 		$account->retrieve($_POST['selectedAccount']);	
-		$log->info("Selected Account Successfully Retrieved.");	
-		}else{
+		$vtlog->logthis("Selected Account Successfully Retrieved.",'info');
+	}else{
 		$account= $accountForm->handleSave('Accounts',false, true);
 	}
 	require_once('modules/Notes/NoteFormBase.php');

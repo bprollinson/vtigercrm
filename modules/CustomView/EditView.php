@@ -17,7 +17,7 @@ global $app_strings;
 global $current_user;
 $focus = 0;
 global $theme;
-global $log;
+global $vtlog;
 
 //<<<<<>>>>>>
 global $oCustomView;
@@ -29,8 +29,18 @@ $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 require_once('modules/CustomView/CustomView.php');
 
-$cv_module = $_REQUEST['module'];
+$submodule = array('VENDOR'=>'Vendor','PRICEBOOK'=>'PriceBook','PRODUCTS'=>'Products','PO'=>'Orders','SO'=>'SalesOrder');
 
+if(isset($_REQUEST['smodule']) && $_REQUEST['smodule'] != '')
+{
+      $cv_module = $submodule[$_REQUEST['smodule']];
+}
+else
+{
+      $cv_module = $_REQUEST['module'];
+}
+
+//$cv_module = $_REQUEST['module'];
 $recordid = $_REQUEST['record'];
 
 $xtpl=new XTemplate ('modules/CustomView/EditView.html');
@@ -45,15 +55,15 @@ if($recordid == "")
 {
         $oCustomView = new CustomView();
         $modulecollist = $oCustomView->getModuleColumnsList($cv_module);
-	 $log->info('CustomView :: Successfully got ColumnsList for the module'.$cv_module);
+	$vtlog->logthis('CustomView :: Successfully got ColumnsList for the module'.$cv_module,'info');
 	if(isset($modulecollist))
 	{
         	$choosecolhtml = getByModule_ColumnsHTML($cv_module,$modulecollist);
 	}
         //step2
         $stdfilterhtml = $oCustomView->getStdFilterCriteria();
-         $log->info('CustomView :: Successfully got StandardFilter for the module'.$cv_module);
-	$stdfiltercolhtml = getStdFilterHTML($cv_module);
+	$vtlog->logthis('CustomView :: Successfully got StandardFilter for the module'.$cv_module,'info');
+        $stdfiltercolhtml = getStdFilterHTML($cv_module);
         $stdfilterjs = $oCustomView->getCriteriaJS();
 
         //step4
@@ -62,7 +72,7 @@ if($recordid == "")
 	{
 		$xtpl->assign("CHOOSECOLUMN".$i,$choosecolhtml);
 	}
-	 $log->info('CustomView :: Successfully got AdvancedFilter for the module'.$cv_module);
+	$vtlog->logthis('CustomView :: Successfully got AdvancedFilter for the module'.$cv_module,'info');
 	for($i=1;$i<6;$i++)
 	{
 		$xtpl->assign("FOPTION".$i,$advfilterhtml);
@@ -81,10 +91,11 @@ else
 	$oCustomView = new CustomView();
 
 	$customviewdtls = $oCustomView->getCustomViewByCvid($recordid);
-	$log->info('CustomView :: Successfully got ViewDetails for the Viewid'.$recordid);
+	$vtlog->logthis('CustomView :: Successfully got ViewDetails for the Viewid'.$recordid,'info');
+
 	$modulecollist = $oCustomView->getModuleColumnsList($cv_module);
 	$selectedcolumnslist = $oCustomView->getColumnsListByCvid($recordid);
-	 $log->info('CustomView :: Successfully got ColumnsList for the Viewid'.$recordid);
+	$vtlog->logthis('CustomView :: Successfully got ColumnsList for the Viewid'.$recordid,'info');
 
 	$xtpl->assign("VIEWNAME",$customviewdtls["viewname"]);
 
@@ -103,7 +114,7 @@ else
         }
 
 	$stdfilterlist = $oCustomView->getStdFilterByCvid($recordid);
-	$log->info('CustomView :: Successfully got Standard Filter for the Viewid'.$recordid);
+	$vtlog->logthis('CustomView :: Successfully got Standard Filter for the Viewid'.$recordid,'info');
 	$stdfilterhtml = $oCustomView->getStdFilterCriteria($stdfilterlist["stdfilter"]);
         $stdfiltercolhtml = getStdFilterHTML($cv_module,$stdfilterlist["columnname"]);
         $stdfilterjs = $oCustomView->getCriteriaJS();
@@ -115,7 +126,7 @@ else
 	}
 
 	$advfilterlist = $oCustomView->getAdvFilterByCvid($recordid);
-	  $log->info('CustomView :: Successfully got Advanced Filter for the Viewid'.$recordid,'info');
+	$vtlog->logthis('CustomView :: Successfully got Advanced Filter for the Viewid'.$recordid,'info');
 	for($i=1;$i<6;$i++)
         {
                 $advfilterhtml = getAdvCriteriaHTML($advfilterlist[$i-1]["comparator"]);
@@ -140,7 +151,7 @@ else
 	}
 }
 
-$xtpl->assign("RETURN_MODULE", $cv_module);
+$xtpl->assign("RETURN_MODULE", $cvmodule);
 $xtpl->assign("RETURN_ACTION", "index");
 
 $xtpl->parse("main");

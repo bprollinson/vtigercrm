@@ -11,8 +11,8 @@
 require_once('include/database/PearDatabase.php');
 require_once('XTemplate/xtpl.php');
 require_once('modules/Orders/SalesOrder.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/CustomView/CustomView.php');
 
 global $app_strings;
@@ -134,7 +134,6 @@ if(isset($_REQUEST['viewname']) == false)
 }else
 {
         $viewid =  $_REQUEST['viewname'];
-		$oCustomView->setdefaultviewid = $viewid;
 }
 //<<<<<customview>>>>>
 
@@ -221,17 +220,17 @@ if(isPermitted('SalesOrder',2,'') == 'yes')
 
 if($viewid == 0)
 {
-$cvHTML = '<span class="bodyText disabled">'.$app_strings['LNK_CV_EDIT'].'</span>
+$cvHTML = '<span class="bodyText disabled">Edit</span>
 <span class="sep">|</span>
-<span class="bodyText disabled">'.$app_strings['LNK_CV_DELETE'].'</span><span class="sep">|</span>
-<a href="index.php?module=Orders&action=CustomView&smodule=SO" class="link">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>';
+<span class="bodyText disabled">Delete</span><span class="sep">|</span>
+<a href="index.php?module=Orders&action=CustomView&smodule=SO" class="link">Create View</a>';
 }else
 {
-$cvHTML = '<a href="index.php?module=Orders&action=CustomView&smodule=SO&record='.$viewid.'" class="link">'.$app_strings['LNK_CV_EDIT'].'</a>
+$cvHTML = '<a href="index.php?module=Orders&action=CustomView&smodule=SO&record='.$viewid.'" class="link">Edit</a>
 <span class="sep">|</span>
-<a href="index.php?module=CustomView&action=Delete&dmodule=Orders&smodule=SO&record='.$viewid.'" class="link">'.$app_strings['LNK_CV_DELETE'].'</a>
+<a href="index.php?module=CustomView&action=Delete&dmodule=Orders&smodule=SO&record='.$viewid.'" class="link">Delete</a>
 <span class="sep">|</span>
-<a href="index.php?module=Orders&action=CustomView&smodule=SO" class="link">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>';
+<a href="index.php?module=Orders&action=CustomView&smodule=SO" class="link">Create View</a>';
 }
 	$other_text .='<td align="right">'.$app_strings[LBL_VIEW].'
                         <SELECT NAME="view" onchange="showDefaultCustomView(this)">
@@ -265,14 +264,7 @@ $xtpl->assign("SOLISTHEADER", get_form_header($current_module_strings['LBL_LIST_
 
 if(isset($order_by) && $order_by != '')
 {
-	if($order_by == 'smownerid')
-        {
-                $list_query .= ' ORDER BY user_name '.$sorder;
-        }
-        else
-        {
-                $list_query .= ' ORDER BY '.$order_by.' '.$sorder;
-        }
+        $list_query .= ' ORDER BY '.$order_by.' '.$sorder;
 }
 
 $list_result = $adb->query($list_query);
@@ -308,7 +300,6 @@ else
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
 
 // Setting the record count string
-/*
 if ($navigation_array['start'] == 1)
 {
 	if($noofrows != 0)
@@ -338,14 +329,6 @@ else
 		$end_rec = $noofrows;
 	}
 }
-*/
-// Setting the record count string
-//modified by rdhital
-$start_rec = $navigation_array['start'];
-$end_rec = $navigation_array['end_val']; 
-//By Raju Ends
-
-
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
 //Retreive the List View Table Header

@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Orders/DeleteSalesOrder.php,v 1.7 2005/07/15 13:55:43 saraj Exp $
  * Description:  Deletes an Account record and then redirects the browser to the 
  * defined return URL.
  ********************************************************************************/
@@ -74,8 +74,5 @@ elseif($_REQUEST['return_module'] == "Products")
 
 }
 	
- //code added for returning back to the current view after delete from list view
- if($_REQUEST['return_viewname'] == '') $return_viewname='0';
- if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&smodule=SO&record=".$_REQUEST['return_id']."&viewname=".$return_viewname);
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&smodule=SO&record=".$_REQUEST['return_id']);
 ?>

@@ -235,9 +235,9 @@ $info = array();
 
  $tutos['base'] = "../..";
  #ini_set("include_path","..");
- include_once 'modules/Calendar/webelements.p3';
- include_once 'modules/Calendar/permission.p3';
- require 'modules/Calendar/admin/mconfig.pinc';
+ include_once 'webelements.p3';
+ include_once 'permission.p3';
+ require 'admin/mconfig.pinc';
 
  $dbc = null;
  $x = new tutos_user($dbc);
@@ -473,6 +473,6 @@ $info = array();
 
 ?>
 <!--
-    CVS Info:  $Id$
-    $Author$
+    CVS Info:  $Id: create_config.php,v 1.16 2005/05/03 13:18:47 saraj Exp $
+    $Author: saraj $
 -->

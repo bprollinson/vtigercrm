@@ -14,12 +14,12 @@ global $adb;
 
 $rptfolder = Array(Array('Account and Contact Reports'=>'Account and Contact Reports'),
 		   Array('Lead Reports'=>'Lead Reports'),
-	           Array('Potential Reports'=>'Potential Reports'),
+                   Array('Potential Reports'=>'Potential Reports'),
 		   Array('Activity Reports'=>'Activity Reports'),
 		   Array('HelpDesk Reports'=>'HelpDesk Reports'),
 		   Array('Product Reports'=>'Product Reports'),
 		   Array('Quote Reports' =>'Quote Reports'),
-		   Array('PurchaseOrder Reports'=>'PurchaseOrder Reports'),
+		   Array('Order Reports'=>'Order Reports'),
 		   Array('Invoice Reports'=>'Invoice Reports')
                   );
 
@@ -39,8 +39,8 @@ $reportmodules = Array(Array('primarymodule'=>'Contacts','secondarymodule'=>'Acc
 		       Array('primarymodule'=>'Products','secondarymodule'=>'Contacts'),
 		       Array('primarymodule'=>'Quotes','secondarymodule'=>''),
 		       Array('primarymodule'=>'Quotes','secondarymodule'=>''),
-		       Array('primarymodule'=>'PurchaseOrder','secondarymodule'=>'Contacts'),
-		       Array('primarymodule'=>'PurchaseOrder','secondarymodule'=>''),
+		       Array('primarymodule'=>'Orders','secondarymodule'=>'Contacts'),
+		       Array('primarymodule'=>'Orders','secondarymodule'=>''),
 		       Array('primarymodule'=>'Invoice','secondarymodule'=>'')
 		      );
 
@@ -154,23 +154,23 @@ $selectcolumns = Array(Array('contactdetails:firstname:Contacts_First_Name:first
 			     'quotes:carrier:Quotes_Carrier:carrier:V',
 			     'quotes:shipping:Quotes_Shipping:shipping:V'),
 
-		       Array('purchaseorder:subject:PurchaseOrder_Subject:subject:V',
-			     'vendorRel:vendorname:PurchaseOrder_Vendor_Name:vendor_id:I',
-			     'purchaseorder:tracking_no:PurchaseOrder_Tracking_Number:tracking_no:V',
+		       Array('purchaseorder:subject:Orders_Subject:subject:V',
+			     'vendorRel:vendorname:Orders_Vendor_Name:vendor_id:I',
+			     'purchaseorder:tracking_no:Orders_Tracking_Number:tracking_no:V',
 			     'contactdetails:firstname:Contacts_First_Name:firstname:V',
 			     'contactdetails:lastname:Contacts_Last_Name:lastname:V',
 			     'contactsubdetails:leadsource:Contacts_Lead_Source:leadsource:V',
 			     'contactdetails:email:Contacts_Email:email:V'),
 
-		       Array('purchaseorder:subject:PurchaseOrder_Subject:subject:V',
-			     'vendorRel:vendorname:PurchaseOrder_Vendor_Name:vendor_id:I',
-			     'purchaseorder:requisition_no:PurchaseOrder_Requisition_No:requisition_no:V',
-                             'purchaseorder:tracking_no:PurchaseOrder_Tracking_Number:tracking_no:V',
-			     'contactdetailsPurchaseOrder:lastname:PurchaseOrder_Contact_Name:contact_id:I',
-			     'purchaseorder:carrier:PurchaseOrder_Carrier:carrier:V',
-			     'purchaseorder:salescommission:PurchaseOrder_Sales_Commission:salescommission:N',
-			     'purchaseorder:exciseduty:PurchaseOrder_Excise_Duty:exciseduty:N',
-                             'usersPurchaseOrder:user_name:PurchaseOrder_Assigned_To:assigned_user_id:V'),
+		       Array('purchaseorder:subject:Orders_Subject:subject:V',
+			     'vendorRel:vendorname:Orders_Vendor_Name:vendor_id:I',
+			     'purchaseorder:requisition_no:Orders_Requisition_No:requisition_no:V',
+                             'purchaseorder:tracking_no:Orders_Tracking_Number:tracking_no:V',
+			     'contactdetailsOrders:lastname:Orders_Contact_Name:contact_id:I',
+			     'purchaseorder:carrier:Orders_Carrier:carrier:V',
+			     'purchaseorder:salescommission:Orders_Sales_Commission:salescommission:N',
+			     'purchaseorder:exciseduty:Orders_Excise_Duty:exciseduty:N',
+                             'usersOrders:user_name:Orders_Assigned_To:assigned_user_id:V'),
 
 		       Array('invoice:subject:Invoice_Subject:subject:V',
 			     'invoice:salesorderid:Invoice_Sales_Order:salesorder_id:I',
@@ -242,7 +242,7 @@ $reports = Array(Array('reportname'=>'Contacts by Accounts',
                        'reporttype'=>'tabular',
                        'sortid'=>'','stdfilterid'=>'','advfilterid'=>''),
 
-		 Array('reportname'=>'Tickets by Priority',
+		 Array('reportname'=>'Tickets by Priotiry',
                        'reportfolder'=>'HelpDesk Reports',
                        'description'=>'Tickets by Priority',
                        'reporttype'=>'summary',
@@ -278,15 +278,15 @@ $reports = Array(Array('reportname'=>'Contacts by Accounts',
                        'reporttype'=>'tabular',
                        'sortid'=>'','stdfilterid'=>'','advfilterid'=>''),
 
-		 Array('reportname'=>'PurchaseOrder by Contacts',
-                       'reportfolder'=>'PurchaseOrder Reports',
-                       'description'=>'PurchaseOrder related to Contacts',
+		 Array('reportname'=>'Orders by Contacts',
+                       'reportfolder'=>'Order Reports',
+                       'description'=>'Orders related to Contacts',
                        'reporttype'=>'tabular',
                        'sortid'=>'','stdfilterid'=>'','advfilterid'=>''),
 
-		 Array('reportname'=>'PurchaseOrder Detailed Report',
-                       'reportfolder'=>'PurchaseOrder Reports',
-                       'description'=>'PurchaseOrder detailed report',
+		 Array('reportname'=>'Orders Detailed Report',
+                       'reportfolder'=>'Order Reports',
+                       'description'=>'Orders detailed report',
                        'reporttype'=>'tabular',
                        'sortid'=>'','stdfilterid'=>'','advfilterid'=>''),
 
@@ -394,6 +394,7 @@ foreach($reports as $key=>$report)
 	if(isset($stdfilters[$report['stdfilterid']]))
 	{
 		$i = $report['stdfilterid'];
+		//print_r($stdfilters[$report['stdfilterid']]);
 		insertStdFilter($queryid,$stdfilters[$i]['columnname'],$stdfilters[$i]['datefilter'],$stdfilters[$i]['startdate'],$stdfilters[$i]['enddate']);
 	}
 
@@ -408,11 +409,6 @@ foreach($reports as $key=>$report)
 	}
 }
 
-/** Function to store the foldername and folderdescription to database
- *  This function accepts the given folder name and description
- *  ans store it in db as SAVED
- */
-
 function PopulateReportFolder($fldrname,$fldrdescription)
 {
 	global $adb;
@@ -422,10 +418,6 @@ function PopulateReportFolder($fldrname,$fldrdescription)
 	$result = $adb->query($sql);
 }
 
-/** Function to add an entry in selestquery table 
- *
- */
-
 function insertSelectQuery()
 {
 	global $adb;
@@ -433,16 +425,12 @@ function insertSelectQuery()
         if($genQueryId != "")
         {
 		$iquerysql = "insert into selectquery (QUERYID,STARTINDEX,NUMOFOBJECTS) values (".$genQueryId.",0,0)";
+		//echo "<<<<<<<QUERY>>>>>>><br>".$iquerysql;
 		$iquerysqlresult = $adb->query($iquerysql);
 	}
 
 	return $genQueryId;
 }
-
-/** Function to store the field names selected for a report to a database
- *  
- *  
- */
 
 function insertSelectColumns($queryid,$columnname)
 {
@@ -452,16 +440,11 @@ function insertSelectColumns($queryid,$columnname)
 		for($i=0;$i < count($columnname);$i++)
 		{
 			$icolumnsql = "insert into selectcolumn (QUERYID,COLUMNINDEX,COLUMNNAME) values (".$queryid.",".$i.",'".$columnname[$i]."')";
+			//echo "<<<<<<<OLUMNS>>>>>>><br>".$icolumnsql;
 			$icolumnsqlresult = $adb->query($icolumnsql);	
 		}
 	}
 }
-
-
-/** Function to store the report details to database
- *  This function accepts queryid,folderid,reportname,description,reporttype
- *  as arguments and store the informations in report table
- */
 
 function insertReports($queryid,$folderid,$reportname,$description,$reporttype)
 {
@@ -470,15 +453,10 @@ function insertReports($queryid,$folderid,$reportname,$description,$reporttype)
 	{
 		$ireportsql = "insert into report (REPORTID,FOLDERID,REPORTNAME,DESCRIPTION,REPORTTYPE,QUERYID,STATE)";
                 $ireportsql .= " values (".$queryid.",".$folderid.",'".$reportname."','".$description."','".$reporttype."',".$queryid.",'SAVED')";
+		//echo "<<<<<<<REPORTS>>>>>>><br>".$ireportsql;
 		$ireportresult = $adb->query($ireportsql);
 	}
 }
-
-/** Function to store the report modules to database
- *  This function accepts queryid,primary module and secondary module
- *  as arguments and store the informations in reportmodules table
- */
-
 
 function insertReportModules($queryid,$primarymodule,$secondarymodule)
 {
@@ -486,17 +464,10 @@ function insertReportModules($queryid,$primarymodule,$secondarymodule)
 	if($queryid != "")
 	{
 		$ireportmodulesql = "insert into reportmodules (REPORTMODULESID,PRIMARYMODULE,SECONDARYMODULES) values (".$queryid.",'".$primarymodule."','".$secondarymodule."')";
+		//echo "<<<<<<<REPORT MODULES>>>>>>><br>".$ireportmodulesql;	
 		$ireportmoduleresult = $adb->query($ireportmodulesql);
 	}
 }
-
-
-/** Function to store the report sortorder to database
- *  This function accepts queryid,sortlists
- *  as arguments and store the informations sort columns and
- *  and sortorder in reportsortcol table
- */
-
 
 function insertSortColumns($queryid,$sortlists)
 {
@@ -513,13 +484,6 @@ function insertSortColumns($queryid,$sortlists)
 
 }
 
-
-/** Function to store the report sort date details to database
- *  This function accepts queryid,filtercolumn,datefilter,startdate,enddate
- *  as arguments and store the informations in reportdatefilter table
- */
-
-
 function insertStdFilter($queryid,$filtercolumn,$datefilter,$startdate,$enddate)
 {
 	global $adb;
@@ -530,12 +494,6 @@ function insertStdFilter($queryid,$filtercolumn,$datefilter,$startdate,$enddate)
 	}
 
 }
-
-/** Function to store the report conditions to database
- *  This function accepts queryid,filters
- *  as arguments and store the informations in relcriteria table
- */
-
 
 function insertAdvFilter($queryid,$filters)
 {

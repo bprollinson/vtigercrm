@@ -7,8 +7,7 @@
  * @modulegroup appointment
  * @module calendar_day
  */
- require_once('modules/Users/User.php');
-
+ 
  global $calpath,$callink;
  $calpath = 'modules/Calendar/';
  $callink = 'index.php?module=Calendar&action=';
@@ -18,9 +17,6 @@
  $image_path=$theme_path."images/";
  require_once ($theme_path."layout_utils.php");
  global $mod_strings,$app_strings,$current_user;
-
-
-
 
  echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_NAME'], true); 
 echo "\n<BR>\n";
@@ -67,9 +63,9 @@ require_once('modules/Calendar/UserCalendar.php');
     * the data display part
     */
    Function info() {
-     global $lang,$tutos,$callink,$calpath,$image_path,$mod_strings,$current_user,$adb;
+     global $lang,$tutos,$callink,$calpath,$image_path,$mod_strings,$current_user;
 ?>
-<script type="text/javascript" language="Javascript" src="include/js/general.js"></script>
+<script type="text/javascript" language="Javascript" src="include/general.js"></script>
 <script type="text/javascript" language="Javascript">
 function trim(s) {
         while (s.substring(0,1) == " ") {
@@ -128,11 +124,8 @@ function check_form()
       <tr> 
         <td valign=top><input name='subject' size='30' maxlength='255' type="text"></td>
         <input name='date_start' id='inlineCal15CallSavejscal_field' maxlength='10' type="hidden" value=""></td>
-        <input name='due_date' maxlength='10' type="hidden" value=""></td>
-
-	<input name='time_start' type="hidden" maxlength='5' value="">
-	<input name='notime' type="hidden" value="">
-	<input name='time_end' type="hidden" maxlength='5' value=""></td>
+        <input name='time_start' type="hidden" maxlength='5' value="">
+        <input name='time_end' type="hidden" maxlength='5' value=""></td>
         <script type="text/javascript">
 //		Calendar.setup ({
 //			inputField : "inlineCal15CallSavejscal_field", ifFormat : "%Y-%m-%d", showsTime : false, button : "inlineCal15CallSavejscal_trigger", singleClick : true, step : 1
@@ -284,16 +277,16 @@ function check_form()
      for ($i = -1 ; $i <24 ; $i++ ) {
        echo " <tr>\n";
 
-       
-       /*if ( $i == -1 ) {
+       /*
+       if ( $i == -1 ) {
          echo  $this->pref->menulink($callink . "app_new&t=".$this->t, "NOTIME",$mod_strings['LBL_NEW_APPNT_INFO']);
        } else {
          echo  $this->pref->menulink($callink . "app_new&start=". $this->t.sprintf("%02d",$i)."00&amp;end=".$this->t.sprintf("%02d",$i)."59" ,sprintf("%02d", $i).":00",$mod_strings['LBL_NEW_APPNT_INFO']);
-       }*/
-	  
+       }
+	   */
        if ( $i == -1 ) {
-       echo " <th id=\"time_".$this->t."\" class=\"daytime\" width=\"10%\" align=\"right\" valign=\"top\">&nbsp;\n";
-       echo  $this->pref->menulink("javascript:showCreateBox('".$this->t."')", "NOTIME",$mod_strings['LBL_NEW_APPNT_INFO']);
+        echo " <th id=\"time_".$this->t."\" class=\"daytime\" width=\"10%\" align=\"right\" valign=\"top\">&nbsp;\n";
+      //   echo  $this->pref->menulink("javascript:showCreateBox('".$this->t."')", "NOTIME",$mod_strings['LBL_NEW_APPNT_INFO']);
        } else {
 	   	 echo " <th id=\"time_".$this->t.sprintf("%02d",$i)."00\" class=\"daytime\" width=\"10%\" align=\"right\" valign=\"top\">\n";
          echo  $this->pref->menulink("javascript:showCreateBox('".$this->t.sprintf("%02d",$i)."00','".$this->t.sprintf("%02d",$i)."59')", sprintf("%02d", $i).":00",$mod_strings['LBL_NEW_APPNT_INFO']);
@@ -301,23 +294,11 @@ function check_form()
        echo "&nbsp;</th>\n";
        
        for ($c = 0 ; $c < $maxcol ; $c++ ) {
-         if ( isset ( $table[$i][$c] ) ) { 
+         if ( isset ( $table[$i][$c] ) ) {
            if ( is_object ( $table[$i][$c] ) ) {
              echo " <td class=\"line". (1+($i % 2)) ."\" valign=\"top\" rowspan=\"". $rowspan[$i][$c]."\">";
              //echo "<img height=\"1\" width=\"100%\" src=\"". $image_path ."black.png\" alt=\"--------\"/>";
-            $color = "";
-	          $username=$table[$i][$c]->creator;
-	          if ($username!=""){
-              $query="SELECT cal_color FROM users where user_name = '$username'";
-           
-  		        $result=$adb->query($query);
-  		        if($adb->getRowCount($result)!=0){
-  			         $res = $adb->fetchByAssoc($result, -1, false);
-  				       $usercolor = $res['cal_color'];
-  				       $color="style=\"background: ".$usercolor.";\"";
-  		        }
-             }
-             echo "<table border=\"0\" cellpadding=\"3\" cellspacing=\"0\" class=\"event\" $color>\n";
+             echo "<table border=\"0\" cellpadding=\"3\" cellspacing=\"0\" class=\"event\">\n";
              echo $table[$i][$c]->formatted();
              echo " </table></td>\n";
            } else if ( $table[$i][$c] = -1 ) {
@@ -442,16 +423,7 @@ function showCreateBox(start,end) {
 	var event_st_min=start.substring(10,12)
 
 	document.appSave.date_start.value=<?php echo $a;?>+"-"+<?php echo $b;?>+"-"+<?php echo $c;?>;
-	document.appSave.due_date.value=<?php echo $a;?>+"-"+<?php echo $b;?>+"-"+<?php echo $c;?>;	
-	if(!end)
-	{
-	       document.appSave.time_start.value='';
-	       document.appSave.notime.value='1';
-	}
-	else
-	{
-	       document.appSave.time_start.value=event_st_hr+":"+event_st_min
-	}
+	document.appSave.time_start.value=event_st_hr+":"+event_st_min
 
 	createBoxObj=getObj("createBox")
 	var currObj=getObj("time_"+start)

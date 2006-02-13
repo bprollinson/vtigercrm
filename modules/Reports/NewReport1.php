@@ -12,7 +12,7 @@ require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('modules/Reports/Reports.php');
 
 global $app_strings;
@@ -61,7 +61,7 @@ if(isset($_REQUEST["record"]))
 	$ogReport->getSecModuleColumnsList($secondarymodule);
 }
 ?>
-<script language="JavaScript" type="text/JavaScript" src="include/js/general.js"></script>
+<script language="JavaScript" type="text/JavaScript" src="include/general.js"></script>
 <script language="JavaScript" type="text/JavaScript">    
         function switchToStep( num )
         {
@@ -91,13 +91,7 @@ if(isset($_REQUEST["record"]))
     
         function saveAndRunReport()
         {
-            if(selectedColumnsObj.options.length == 0)
-            {
-                alert("Selected Columns cannot be empty");
-                return false;
-            }
-
-	    formSelectColumnString();
+            formSelectColumnString();
             if( trim(getObj( 'record' ).value) == "" )
             {
                 showSaveDialog();
@@ -105,6 +99,7 @@ if(isset($_REQUEST["record"]))
             }
             else
             {
+                    document.NewReport.action = "index.php?action=Save&module=Reports";
 		    document.NewReport.submit();
             }
         }       

@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportSteplast.php,v 1.17 2005/07/11 10:31:52 mickie Exp $
  * Description:  TODO: To be written.
  ********************************************************************************/
 
@@ -27,7 +27,7 @@ require_once('modules/Import/UsersLastImport.php');
 require_once('modules/Import/parse_utils.php');
 require_once('include/ListView/ListView.php');
 require_once('modules/Contacts/Contact.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
 global $mod_strings;
 global $app_list_strings;

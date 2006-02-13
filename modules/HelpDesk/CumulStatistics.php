@@ -9,21 +9,20 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
+require_once('HelpDeskUtil.php');
 require_once('XTemplate/xtpl.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('TicketStatisticsUtil.php');
 
 global $app_strings;
 global $app_list_strings;
 global $mod_strings;
+global $current_user;
 
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
-
-echo get_module_title("HelpDesk", $mod_strings['LBL_TICKETS'].": ".$mod_strings['LBL_STATISTICS'] , true);
-echo '<br>';
 
 $totTickets = getTotalNoofTickets();
 if($totTickets == 0)
@@ -45,8 +44,7 @@ if(isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['
 if(isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
 if(isset($_REQUEST['return_id'])) $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
 $xtpl->assign("THEME", $theme);
-$xtpl->assign("IMAGE_PATH", $image_path);
-$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
 $xtpl->assign("ALLOPEN", outBar($totOpenTickets, $image_path, $singleUnit));
 $xtpl->assign("ALLCLOSED", outBar($totClosedTickets, $image_path, $singleUnit));

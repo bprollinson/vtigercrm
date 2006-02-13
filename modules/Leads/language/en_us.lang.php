@@ -70,9 +70,6 @@ $mod_strings = Array(
 'LBL_ACCOUNT_NAME'=>'Account Name',
 'LBL_POTENTIAL_NAME'=>'Potential Name',
 'LBL_POTENTIAL_CLOSE_DATE'=>'Potential Close Date',
-'LBL_POTENTIAL_AMOUNT'=>'Potential Amount',
-'LBL_POTENTIAL_SALES_STAGE'=>'Potential Sales Stage',
-
 
 'NTC_DELETE_CONFIRMATION'=>'Are you sure you want to delete this record?',
 'NTC_REMOVE_CONFIRMATION'=>'Are you sure you want to remove this contact from this case?',
@@ -143,7 +140,7 @@ $mod_strings = Array(
 'Industry'=>'Industry',
 'Rating'=>'Rating',
 'No Of Employees'=>'No Of Employees',
-'Assigned To'=>'Assigned to',
+'Assigned To'=>'Assigned To',
 'Yahoo Id'=>'Yahoo Id',
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',
@@ -153,10 +150,8 @@ $mod_strings = Array(
 'Country'=>'Country',
 'State'=>'State',
 'Description'=>'Description',
-'Po Box'=>'Po Box',
 //Added for CustomView 4.2 Release
 'Name'=>'Name',
-'LBL_NEW_LEADS'=>'My New Leads',
 );
 
 ?>

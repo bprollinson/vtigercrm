@@ -12,8 +12,7 @@
 
 
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('include/utils.php');
 
 ?>
 
@@ -84,18 +83,24 @@ require_once('include/utils/UserInfoUtil.php');
                     <td class="value">
                     <select class="select" name="transfer_role_id">
             <?php
-		$allRoleDetails=getAllRoleDetails();
-		foreach($allRoleDetails as $roleId=>$roleInfoArr)
-		{
-			if($delete_role_id != $roleId)
-		    	{
-	    ?>		
-				
-                    <option value="<?php echo $roleId ?>"><?php echo $roleInfoArr[0] ?></option>
-	   <?php
-			}
-		}
-	   ?>
+	     global $adb;	
+             $sql = "select * from role";
+                  $result = $adb->query($sql);
+                  $temprow = $adb->fetch_array($result);
+                  do
+                  {
+                    $role_name=$temprow["name"];
+		    $role_id=$temprow["roleid"];
+		    if($delete_role_id 	!= $role_id)
+		    {	 
+                    ?>
+                      
+                    <option value="<?php echo $role_id ?>"><?php echo $role_name ?></option>
+                       <?php
+		     }	
+                    }while($temprow = $adb->fetch_array($result));
+                     ?>
+                    
                     </select>
                     </td>
                   </tr>

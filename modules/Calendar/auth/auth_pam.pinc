@@ -2,11 +2,11 @@
 /*
  * Copyright 1999 - 2002 by Gero Kohnert
  *
- * CVS Info:  $Id$
- * $Author$
+ * CVS Info:  $Id: auth_pam.pinc,v 1.16 2005/05/03 13:18:49 saraj Exp $
+ * $Author: saraj $
  */
 
-require_once 'modules/Calendar/auth.pinc';
+require_once 'auth.pinc';
 
 #
 # Globally diable PWLOST SUPPORT

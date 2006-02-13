@@ -35,7 +35,6 @@ $mod_strings = Array(
 'LBL_LIST_ADMIN'=>'Admin',
 //added for patch2
 'LBL_GROUP_NAME'=>'Group',
-'LBL_CURRENCY_NAME'=>'Currency',
 
 'LBL_NEW_USER_BUTTON_TITLE'=>'New User [Alt+N]',
 'LBL_NEW_USER_BUTTON_LABEL'=>'New User',
@@ -45,7 +44,6 @@ $mod_strings = Array(
 'LBL_ERROR'=>'Error:',
 'LBL_PASSWORD'=>'Password:',
 'LBL_USER_NAME'=>'User Name:',
-'LBL_CRM_ID'=>'CRM ID',
 'LBL_FIRST_NAME'=>'First Name:',
 'LBL_LAST_NAME'=>'Last Name:',
 'LBL_YAHOO_ID'=>'Yahoo ID:',
@@ -196,10 +194,6 @@ $mod_strings = Array(
 'LBL_TAB_MENU_UPDATED'=>'Tab Menu Updated! kindly go to ',
 'LBL_TO_VIEW_CHANGES'=>' to view the changes',
 
-// Added to change homepage order
-'LBL_CHANGE_HOMEPAGE_LABEL'=>'Homepage Order',
-'LBL_CHANGE_HOMEPAGE_TITLE'=>'Homepage',
-
 // Added fields in binaryfilelist.php
 'LBL_OERATION'=>'Operation',
 
@@ -268,10 +262,8 @@ $mod_strings = Array(
 'LBL_LIST_MAILSERVER_BUTTON_TITLE'=>'List Mail Server',
 'LBL_LIST_MAILSERVER_BUTTON_KEY'=>'L',
 'LBL_LIST_MAILSERVER_BUTTON_LABEL'=>'List Mail Server',
-//added for inventory terms and conditions
-'INV_TANDC'=>'Terms & Coditions',
-'INV_TERMSANDCONDITIONS'=>'Inventory Terms & Coditions',
-'LBL_INV_TERMSANDCONDITIONS'=>'Inventory Management', 
+
+
 
 
 'INVENTORYNOTIFICATION'=>'Inventory Notifications',
@@ -291,57 +283,6 @@ $mod_strings = Array(
 'LBL_USER_FIELDS'=>'User Fields',
 'LBL_NOTE_DO_NOT_REMOVE_INFO'=>'Note: Donot remove or alter the values within {  }',
 
-//Added for patch2
-'LBL_FILE_INFORMATION'=>'File Information',
-
-//Added after pathc2
-'LBL_LEAD_FIELD_ACCESS'=>'Lead Field Access',
-
-'LBL_ACCOUNT_FIELD_ACCESS'=>'Account Field Access',
-
-'LBL_CONTACT_FIELD_ACCESS'=>'Contact Field Access',
-
-'LBL_OPPORTUNITY_FIELD_ACCESS'=>'Potential Field Access',
-
-'LBL_HELPDESK_FIELD_ACCESS'=>'HelpDesk Field Access',
-
-'LBL_PRODUCT_FIELD_ACCESS'=>'Product Field Access',
-
-'LBL_NOTE_FIELD_ACCESS'=>'Note Field Access',
-
-'LBL_EMAIL_FIELD_ACCESS'=>'Email Field Access',
-
-'LBL_TASK_FIELD_ACCESS'=>'Task Field Access',
-
-'LBL_EVENT_FIELD_ACCESS'=>'Event Field Access',
-'LBL_VENDOR_FIELD_ACCESS'=>'Vendor Field Access',
-'LBL_PB_FIELD_ACCESS'=>'PriceBook Field Access',
-'LBL_QUOTE_FIELD_ACCESS'=>'Quote Field Access',
-'LBL_PO_FIELD_ACCESS'=>'Purchase Order Field Access',
-'LBL_SO_FIELD_ACCESS'=>'Sales Order Access',
-'LBL_INVOICE_FIELD_ACCESS'=>'Invoice Field Access',
-
-//given for calendar color for an user user
-'LBL_COLOR'=>'Color in Calendar',
-//added for activity view in home page
-'LBL_ACTIVITY_VIEW'=>'Default Activity View',
-//Added to change Home page order
-'LBL_HOMEPAGE_ORDER_UPDATE'=>'Update Home Page Block Order',
-'LBL_HOMEPAGE_ID'=>'Block Order',
-'ERR_INVALID_USER'=>'Invalid access--Please call from My Accounts',
-'ALVT'=>'Top Accounts',
-'PLVT'=>'Top Potentials',
-'QLTQ'=>'Top Quotes',
-'CVLVT'=>'Key Metrics',
-'HLT'=>'HelpDesk Top Tickets',
-'OLV'=>'Top Open Activities',
-'GRT'=>'Top Group Tasks',
-'OLTSO'=>'Top Sales Orders',
-'ILTI'=>'Top Invoices',
-//Added for 5.0 alpha
-'LBL_GROUP_NAME_ERROR'=>'Group Name already exists!',
-'MNL'=>'My New Leads',
-'LBL_LEAD_VIEW'=>'Default Lead View',
 );
 
 ?>

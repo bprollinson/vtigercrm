@@ -96,7 +96,7 @@ $mod_strings = Array(
 'Duration'=>'Duration',
 'Duration Minutes'=>'Duration Minutes',
 'Location'=>'Location',
-'No Time'=>'No Time',
+
 //Added for Send Reminder 4.2 release
 'Send Reminder'=>'Send Reminder',
 'LBL_YES'=>'Yes',
@@ -114,8 +114,7 @@ $mod_strings = Array(
 'Recurring Type'=> 'Recurring Type',
 //Activities - Notification Error
 'LBL_NOTIFICATION_ERROR'=>'Mail Error : Please check your outgoing mail server configuration in Settings->Outgoing Mail Server Configuration OR MailId for the present user is not Configured',
-// Mike Crowe Mod --------------------------------------------------------added for generic search
-'LBL_GENERAL_INFORMATION'=>'General Information',
+
 
 );
 

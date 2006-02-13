@@ -64,6 +64,8 @@ $app_strings = Array(
 
 'NTC_WELCOME'=>'Welcome',
 
+'NTC_SUPPORT_SUGARCRM'=>"Support the SugarCRM open source project with a donation through PayPal - it's fast, free and secure!",
+
 'NTC_NO_ITEMS_DISPLAY'=>'none',
 
 'LBL_ALT_HOT_KEY'=>'Alt+',
@@ -248,8 +250,6 @@ $app_strings = Array(
 
 'LNK_HELP'=>'Help',
 
-'LNK_VTDOCS'=>'vtiger Docs',
-
 'LNK_ABOUT'=>'About',
 
 'LNK_OUTLOOK'=>'./include/images/outlook_download.gif',
@@ -413,12 +413,6 @@ $app_strings = Array(
 'LBL_CHANGE_STATUS'=>'Change Status',
 
 'LBL_MASS_DELETE'=>'Delete',
-//added by raju
-
-'LBL_ADD_ITEM'=>'Add',
-
-
-
 
 
 
@@ -428,13 +422,7 @@ $app_strings = Array(
 
 'LBL_HISTORY'=>'History',
 
-'LBL_ATTACHMENTS'=>'Attachments',
 
-'LBL_TYPE'=>'Type',
-
-'LBL_ASSIGNED_TO'=>'Assigned To',
-
-'LBL_TIME'=>'Time',
 
 'LBL_ACTION'=>'Action',
 
@@ -442,15 +430,9 @@ $app_strings = Array(
 
 'LBL_RELATED_TO'=>'Related To',
 
-//added by raju for emails
-
-'LBL_MULTIPLE'=>'Multiple',
-
 'LBL_DUE_DATE'=>'Due Date',
 
 'LBL_LAST_MODIFIED'=>'Last Modified',
-
-'LBL_CREATED'=>'Created', // Armando Lüscher 26.09.2005 -> §visibleDescription -> Desc: Added
 
 'LBL_DESCRIPTION'=>'Description',
 
@@ -534,10 +516,7 @@ $app_strings = Array(
 
 'LBL_SELECT_PRODUCT_BUTTON_LABEL'=>'Select Product',
 
-'LBL_VIEW'=>'Filters :',
-// Mike Crowe Mod --------------------------------------------------------Added for group sort
-'LBL_GROUP_VIEW'=>'Group',
-
+'LBL_VIEW'=>'View:',
 
 'LBL_SALES_STAGE'=>'Sales Stage',
 
@@ -551,8 +530,7 @@ $app_strings = Array(
 
 'LBL_CALCULATOR'=>'Calculator',
 
-'LBL_CLOSE_WON' =>'Closed-Won',			# 'Closed Won'
-'LBL_CLOSE_LOST'=>'Closed-Lost',					# 'Closed Lost'
+
 
 'LBL_USER'=>'User',
 
@@ -676,8 +654,7 @@ $app_strings = Array(
 'Activities'=>'Activities',
 'Quotes'=>'Quotes',
 'PriceBook'=>'Price Books',
-'PurchaseOrder'=>'Purchase Orders',
-'SalesOrder'=> 'Sales Orders',
+'Orders'=>'Orders',
 'Invoice'=>'Invoice',
 
 'LBL_SELECT_TEMPLATE_TO_MAIL_MERGE'=>'Select template to Mail Merge:',
@@ -697,8 +674,6 @@ $app_strings = Array(
 'Quote Stage'=>'Quote Stage',
 'Potential Name'=>'Potential Name',
 'Total'=>'Total Amount',
-'First Name'=>'First Name',
-'Last Name'=>'Last Name',
   /* For purchase order related list in vendor */
 'LBL_PORDER_BUTTON_TITLE'=>'New Purchase Order [Alt+O]',
 'LBL_PORDER_BUTTON'=>'New Purchase Order',
@@ -753,25 +728,7 @@ $app_strings = Array(
 'LBL_SALES_ORDER_ID'=>'Sales Order Id',
 'LBL_PURCHASE_ORDER_ID'=>'Purchase Order Id',
 'LBL_EXPORT_TO_PDF'=>'Export To PDF',
-
-//Added for 4.2 Patch I
-'LBL_HOME_KEY_METRICS'=>'Key Metrics',
-'LBL_HOME_METRICS'=>'Metrics',
-'LBL_HOME_COUNT'=>'Count',
-
-//Added for 4.2 patch 2
-'LBL_JSCALENDAR_LANG'=>'en',
-'LNK_CV_EDIT'=>'Edit',
-'LNK_CV_DELETE'=>'Delete',
-'LNK_CV_CREATEVIEW'=>'New',
-//Added for 5.0
-'LBL_UPD_FIELD_ORD'=>'Update Field Order',
-'LBL_SEND_CUSTOM_MAIL_BUTTON'=>'Send Custom Mail',
-'LBL_UPDATED_TODAY'=>'Updated today',
-'LBL_UPDATED'=>'Updated',
-'LBL_DAY_AGO'=>'day ago',
-'LBL_DAYS_AGO'=>'days ago',
-
+	
 );
 
 
@@ -812,7 +769,7 @@ $app_list_strings = Array(
 
 				, 'Quotes'=>'Quotes'
 		
-				, 'PurchaseOrder'=>'PurchaseOrder'
+				, 'Orders'=>'Orders'
 
 				, 'Invoice'=>'Invoice'
 
@@ -820,11 +777,9 @@ $app_list_strings = Array(
 				
 				, 'Reports'=>'Reports'
 				
-				, 'Vendors'=>'Vendors'
-				
-				, 'PriceBooks'=>'PriceBooks'
+				, 'Vendor'=>'Vendor'
 
-				, 'SalesOrder'=>'SalesOrder'
+				, 'SalesOrder'=>'Sales Order'
 				
 				),
 

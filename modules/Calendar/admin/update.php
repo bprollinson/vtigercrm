@@ -202,6 +202,6 @@
  $l->display();
 ?>
 <!--
-    CVS Info:  $Id$
-    $Author$
+    CVS Info:  $Id: update.php,v 1.16 2005/05/03 13:18:49 saraj Exp $
+    $Author: saraj $
 -->

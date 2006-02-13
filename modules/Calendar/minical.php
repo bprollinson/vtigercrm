@@ -286,6 +286,6 @@ echo "</html>\n";
 
 ?>
 <!--
-    CVS Info:  $Id$
-    $Author$
+    CVS Info:  $Id: minical.php,v 1.17 2005/07/11 07:18:10 indigoleopard Exp $
+    $Author: indigoleopard $
 -->

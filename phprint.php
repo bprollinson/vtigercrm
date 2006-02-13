@@ -32,7 +32,7 @@ $data_print['stop_tag'] = "<!-- stopscrmprint -->";
 $data_print['default_charset'] = "utf-8";
 
 require_once("config.php");
-require_once("include/utils/utils.php");
+require_once("include/utils.php");
 
   function insert_charset_header()
  	{
@@ -96,15 +96,13 @@ else {
 ?>
 <style type="text/css" media="all">
 IMG { display: none; }
-.bodySmall{display: none;}
-input{ display:none; }
 </style>
 </head>
 <body>
-<!--a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a><br><br-->
+<a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a><br><br>
 <?php
 echo $page_str;
 ?>
-<br><br><!--a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a-->
+<br><br><a href="<?php echo $url; ?>"><< <?php echo $app_strings['LBL_BACK']; ?></a>
 </body>
 </html>

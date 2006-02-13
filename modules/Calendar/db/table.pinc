@@ -4,8 +4,8 @@
  *
  * Information about all tables indices etc for TUTOS
  *
- *  CVS Info:  $Id$
- *  $Author$
+ *  CVS Info:  $Id: table.pinc,v 1.16 2005/05/03 13:18:50 saraj Exp $
+ *  $Author: saraj $
  */
 /*
 $table['objectids'] = array(

@@ -10,7 +10,6 @@
  ********************************************************************************/
 require('include/fpdf/fpdf.php');
 require_once('modules/Orders/SalesOrder.php');
-require_once('include/utils/utils.php');
 
 $id = $_REQUEST['record'];
 global $adb;
@@ -20,8 +19,7 @@ $focus->retrieve_entity_info($_REQUEST['record'],"SalesOrder");
 $account_name = getAccountName($focus->column_fields[account_id]);
 $iData[] = $account_name;
 $iData[] = $id;
-$created_time = getDateFromDateAndTime($focus->column_fields['createdtime']);
-$iData[] = getDisplayDate($created_time[0]);
+$iData[] = date('Y-m-d');
 //newly added for Sales Order No.
 if($focus->column_fields["quote_id"] != '')
 {
@@ -34,7 +32,7 @@ else
 
 $iData[] = $qt_name;	
 
-//$iData[] = $qtname;
+$iData[] = $qtname;
 
 //setting the Customer Data
 $iCustData[] = $account_name;
@@ -52,7 +50,7 @@ $iCustData[] = $po_name;
 
 if($focus->column_fields["duedate"] != '')
 {
-	$due_date = getDisplayDate($focus->column_fields["duedate"]);
+	$due_date = $focus->column_fields["duedate"];
 }
 else
 {
@@ -68,11 +66,7 @@ if($focus->column_fields["bill_street"] != '')
 	$bdata[] = $bill_street;
 	
 }
-if($focus->column_fields["bill_pobox"] != '')
-{
-        $bill_pobox = $focus->column_fields["bill_pobox"];
-        $bdata[] = $bill_pobox;
-}
+
 if($focus->column_fields["bill_city"] != '')
 {
         $bill_city = $focus->column_fields["bill_city"];
@@ -100,7 +94,7 @@ if($focus->column_fields["bill_country"] != '')
 	$bdata[] = $bill_country;
 }
 
-for($i =0; $i <6; $i++)
+for($i =0; $i <5; $i++)
 {
 	if(sizeof($bdata) < 6)
 	{
@@ -114,11 +108,6 @@ if($focus->column_fields["ship_street"] != '')
 {
         $ship_street = $focus->column_fields["ship_street"];
 	$sdata[] = $ship_street;
-}
-if($focus->column_fields["ship_pobox"] != '')
-{
-        $ship_pobox = $focus->column_fields["ship_pobox"];
-        $sdata[] = $ship_pobox;
 }
 
 if($focus->column_fields["ship_city"] != '')
@@ -148,7 +137,7 @@ if($focus->column_fields["ship_country"] != '')
 	$sdata[] = $ship_country;
 }
 
-for($i =0; $i <6; $i++)
+for($i =0; $i <5; $i++)
 {
 	if(sizeof($sdata) < 6)
 	{
@@ -220,6 +209,8 @@ if($num_rows == 1)
 	$logo_name = $adb->query_result($result,0,"logoname");
 }
 //Getting the logo
+
+
 
 //getting the Product Data
 $query="select products.productname,products.unit_price,soproductrel.* from soproductrel inner join products on products.productid=soproductrel.productid where salesorderid=".$id;
@@ -427,8 +418,11 @@ function setTotal($price_total="",$conditions="")
 	$this->Cell(0,8,$conditions,0,0,'L',0);
 }
 }
+//$bdata = array("aaaaaaaaa","48/1,Katcherry Street","Rasipuram","Namakkal (D.T)");
+//$sdata = array("bbbbbb","48/9","","mmmm","Don City");
 $iHead = array("Company","Sales Order No.","Date","Quote Name.");
 $iCustHeadDtls = array("Customer Name","Purchase Order","Due Date");
+//$iCustData = array("Nortel Networks","usc-107565","26-05-2005");
 $iHeadDtls = array("Product Name","Quantity","List Price","Unit Price","Total");
 
 $pdf = new PDF('P','mm','A4');
@@ -441,6 +435,5 @@ $pdf->setAddress($bdata,$sdata);
 $pdf->setCustomerDetails($iCustHeadDtls,$iCustData);
 $pdf->setProductDetails($iHeadDtls,$iDataDtls);
 $pdf->setTotal($price_total,$conditions);
-$pdf->Output('SOOrder.pdf','D');
-exit;
+$pdf->Output();
 ?>

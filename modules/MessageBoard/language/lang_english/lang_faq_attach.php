@@ -6,7 +6,7 @@
  *     copyright			: (C) 2002 torgeir andrew waterhouse
  *     email				: torgeir.waterhouse@forbrukerradet.no
  *
- *     $Id$
+ *     $Id: lang_faq_attach.php,v 1.9 2005/01/04 15:04:16 saraj Exp $
  *
  ****************************************************************************/
 

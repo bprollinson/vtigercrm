@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/Save.php,v 1.5 2005/07/13 20:02:12 crouchingtiger Exp $
  * Description:  Saves an Account record and then redirects the browser to the 
  * defined return URL.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -28,20 +28,20 @@ require_once('include/database/PearDatabase.php');
 
 $local_log =& LoggerManager::getLogger('index');
 
-global $log;
+global $vtlog;
 
-$log->debug("Inside Quote Save");
+$vtlog->logthis("Inside Quote Save",'debug');
 
 $focus = new Quote();
 if(isset($_REQUEST['record']))
 {
 	$focus->id = $_REQUEST['record'];
-	$log->debug("Quote ID ".$focus->id);
+	$vtlog->logthis("Quote ID ".$focus->id,'debug');
 }
 if(isset($_REQUEST['mode']))
 {
 	$focus->mode = $_REQUEST['mode'];
-	  $log->debug("Mode is  ".$focus->mode);
+	$vtlog->logthis("Mode is  ".$focus->mode,'debug');
 }
 
 
@@ -60,23 +60,13 @@ foreach($focus->column_fields as $fieldname => $val)
 	}
 		
 }
-$log->debug("The Field Value Array -----> ".$focus->column_fields);
-$focus->save("Quotes");
+$vtlog->logthis("The Field Value Array -----> ".$focus->column_fields ,'debug');
 
-$ext_prod_arr = Array();
+$focus->save("Quotes");
 if($focus->mode == 'edit')
-{	
-	$query2  = "select * from quotesproductrel where quoteid=".$focus->id;
-	$result2 = $adb->query($query2);
-	$num_rows = $adb->num_rows($result2);
-	for($i=0; $i<$num_rows;$i++)
-	{
-		$pro_id = $adb->query_result($result2,$i,"productid");	
-		$pro_qty = $adb->query_result($result2,$i,"quantity");
-		$ext_prod_arr[$pro_id] = $pro_qty;	
-	}
+{
 	
-	 $log->debug("Deleting from quotesproductrel table ");
+	$vtlog->logthis("Deleting from quotesproductrel table ",'debug');
 	$query1 = "delete from quotesproductrel where quoteid=".$focus->id;
 	//echo $query1;
 	$adb->query($query1);
@@ -84,7 +74,8 @@ if($focus->mode == 'edit')
 }
 //Printing the total Number of rows
 $tot_no_prod = $_REQUEST['totalProductCount'];
-$log->debug("The total Product Count is  ".$tot_no_prod);
+$vtlog->logthis("The total Product Count is  ".$tot_no_prod,'debug');
+
 for($i=1; $i<=$tot_no_prod; $i++)
 {
 	$product_id_var = 'hdnProductId'.$i;
@@ -103,7 +94,7 @@ for($i=1; $i<=$tot_no_prod; $i++)
 		//echo $query;
 		$adb->query($query);
 		//Checking the re-order level and sending mail	
-		updateStk($prod_id,$qty,$focus->mode,$ext_prod_arr); 	
+		updateStk($prod_id,$qty); 	
 	}	
 }
 
@@ -127,96 +118,50 @@ if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "") $return_id = $
 
 $local_log->debug("Saved record with id of ".$return_id);
 
-function updateStk($product_id,$qty,$mode,$ext_prod_arr)
+function updateStk($product_id,$qty)
 {
-	global $log;
+	global $vtlog;
 	global $adb;
 	global $current_user;
-	 $log->debug("Inside Quote updateStk function.");
-        $log->debug("Product Id is".$product_id);
-        $log->debug("Qty is".$qty);
+	$vtlog->logthis("Inside Quote updateStk function.",'debug');
+	$vtlog->logthis("Product Id is".$product_id,'debug');
+	$vtlog->logthis("Qty is".$qty,'debug');
 
 	$prod_name = getProductName($product_id);
 	$qtyinstk= getPrdQtyInStck($product_id);
-	$log->debug("Prd Qty in Stock ".$qtyinstk);
-	if($mode == 'edit')
-	{
-		if(array_key_exists($product_id,$ext_prod_arr))
-		{
-			$old_qty = $ext_prod_arr[$product_id];
-			if($old_qty > $qty)
-			{
-				
-				$diff_qty = $old_qty - $qty;
-				$upd_qty = $qtyinstk+$diff_qty;
-				//Updating the Product Quantity
-				 //updateProductQty($product_id, $upd_qty);
-	   			 sendPrdStckMail($product_id,$upd_qty,$prod_name,$qtyinstk,$qty);
-					
-			}
-			elseif($old_qty < $qty)
-			{
-				$diff_qty = $qty - $old_qty;
-				$upd_qty = $qtyinstk-$diff_qty;
-				//updateProductQty($product_id, $upd_qty);
-				sendPrdStckMail($product_id,$upd_qty,$prod_name,$qtyinstk,$qty);
-				
-				
-			}		
-		}
-		else
-		{
-			$upd_qty = $qtyinstk-$qty;
-			//updateProductQty($product_id, $upd_qty);
-			sendPrdStckMail($product_id,$upd_qty,$prod_name,$qtyinstk,$qty);	
-				
-		}
-	}
-	else
+	$vtlog->logthis("Prd Qty in Stock ".$qtyinstk,'debug');
+	$upd_qty = $qtyinstk-$qty;
+	$vtlog->logthis("Prd upd_qty ".$upd_qty,'debug');
+	//Check for reorder level and send mail
+	$reorderlevel = getPrdReOrderLevel($product_id);
+	$vtlog->logthis("Prd reorder level ".$reorderlevel,'debug');
+	if($upd_qty < $reorderlevel)
 	{
 		
-			$upd_qty = $qtyinstk-$qty;
-			//updateProductQty($product_id, $upd_qty);
-			sendPrdStckMail($product_id,$upd_qty,$prod_name,$qtyinstk,$qty);
+		//send mail to the handler
+		$vtlog->logthis("Sending mail to handler ",'debug');
+		$handler=getPrdHandler($product_id);
+		$handler_name = getUserName($handler);
+		$vtlog->logthis("Handler Name is ".$handler_name,'debug');
+		$to_address= getUserEmail($handler);
+		$vtlog->logthis("Handler Email is ".$to_address,'debug');
+		//Get the email details from database;
+		$query = "select * from inventorynotification where notificationname='QuoteNotification'";
+		$result = $adb->query($query);
+
+		$subject = $adb->query_result($result,0,'notificationsubject');
+		$body = $adb->query_result($result,0,'notificationbody');
+
+		$subject = str_replace('{PRODUCTNAME}',$prod_name,$subject);
+		$body = str_replace('{HANDLER}',$handler_name,$body);	
+		$body = str_replace('{PRODUCTNAME}',$prod_name,$body);	
+		$body = str_replace('{CURRENTSTOCK}',$qtyinstk,$body);	
+		$body = str_replace('{QUOTEQUANTITY}',$qty,$body);	
+		$body = str_replace('{CURRENTUSER}',$current_user->user_name,$body);	
+
+		SendMailToCustomer($to_address,$current_user->id,$subject,$body);
+		
 	}
-	
-}
-
-function sendPrdStckMail($product_id,$upd_qty,$prod_name,$qtyinstk,$qty)
-{
-	global $current_user;
-	global $adb;
-	global $log;
-	$reorderlevel = getPrdReOrderLevel($product_id);
-        $log->debug("Prd reorder level ".$reorderlevel);
-	if($upd_qty < $reorderlevel)
-        {
-
-                //send mail to the handler
-		$log->debug("Sending mail to handler ");
-                $handler=getPrdHandler($product_id);
-                $handler_name = getUserName($handler);
-		$log->debug("Handler Name is ".$handler_name);
-                $to_address= getUserEmail($handler);
-		$log->debug("Handler Email is ".$to_address);
-                //Get the email details from database;
-                $query = "select * from inventorynotification where notificationname='QuoteNotification'";
-                $result = $adb->query($query);
-
-                $subject = $adb->query_result($result,0,'notificationsubject');
-                $body = $adb->query_result($result,0,'notificationbody');
-
-                $subject = str_replace('{PRODUCTNAME}',$prod_name,$subject);
-                $body = str_replace('{HANDLER}',$handler_name,$body);
-                $body = str_replace('{PRODUCTNAME}',$prod_name,$body);
-                $body = str_replace('{CURRENTSTOCK}',$qtyinstk,$body);
-                $body = str_replace('{QUOTEQUANTITY}',$qty,$body);
-                $body = str_replace('{CURRENTUSER}',$current_user->user_name,$body);
-
-                SendMailToCustomer($to_address,$current_user->id,$subject,$body);
-
-        }
-	
 }
 
 
@@ -251,8 +196,8 @@ function getPrdHandler($product_id)
 
 function SendMailToCustomer($to,$current_user_id,$subject,$contents)
 {
-	global $log;
-	$log->debug("Inside SendMailToCustomer function.");
+	global $vtlog;
+	$vtlog->logthis("Inside SendMailToCustomer function.",'debug');		
 	require_once("modules/Emails/class.phpmailer.php");
 
 	$mail = new PHPMailer();
@@ -296,8 +241,6 @@ function SendMailToCustomer($to,$current_user_id,$subject,$contents)
 		$errormsg = "Mail Could not be sent...";	
 	}
 }
- //code added for returning back to the current view after edit from list view
- if($_REQUEST['return_viewname'] == '') $return_viewname='0';
- if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&viewname=$return_viewname");
+
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 ?>

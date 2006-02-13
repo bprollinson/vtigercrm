@@ -23,12 +23,6 @@ echo '<br>';
 echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_NAME'].' : '.$mod_strings['LBL_ADD_MAIL_ACCOUNT'], true);
 echo '<br><br>';
 
-
-if($_REQUEST['problem'])
-{
-  echo '<font color=red><b>Error in incoming mail server configuration! </b></font>';
-}
-
 ?>
 
             <form action="index.php" name="massdelete">
@@ -67,7 +61,7 @@ if($_REQUEST['problem'])
 		<tr><td COLSPAN="12" class="blackLine"><IMG SRC="<?php echo $image_path;?>blank.gif"></td></tr>
 <?php
    global $current_user;
-   require_once('include/utils/UserInfoUtil.php');
+   require_once('modules/Users/UserInfoUtil.php');
 
    $result = getMailServerInfo($current_user);
    $temprow = $adb->fetch_array($result);

@@ -20,78 +20,40 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
 require_once('modules/Contacts/Contact.php');
 require_once('modules/Contacts/Forms.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
-require_once('include/utils/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('include/FormValidationUtil.php');
 
-global $log;
+global $vtlog;
 global $mod_strings;
 global $app_list_strings;
 global $app_strings;
 global $current_user;
 // Unimplemented until jscalendar language files are fixed
-
-//added for contact image
-$encode_val=$_REQUEST['encode_val'];
-$decode_val=base64_decode($encode_val);
-
- $saveimage=isset($_REQUEST['saveimage'])?$_REQUEST['saveimage']:"false";
- $errormessage=isset($_REQUEST['error_msg'])?$_REQUEST['error_msg']:"false";
- $image_error=isset($_REQUEST['image_error'])?$_REQUEST['image_error']:"false";
-//end
+// global $current_language;
+// global $default_language;
+// global $cal_codes;
 
 $focus = new Contact();
-$smarty = new vtigerCRM_Smarty;
 
 if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) 
 {
     $focus->id = $_REQUEST['record'];
     $focus->mode = 'edit';
     $focus->retrieve_entity_info($_REQUEST['record'],"Contacts");
-    $log->info("Entity info successfully retrieved for EditView.");
+	$vtlog->logthis("Entity info successfully retrieved for EditView.",'info');
     $focus->firstname=$focus->column_fields['firstname'];
     $focus->lastname=$focus->column_fields['lastname'];
 
 }
-
-if($image_error=="true")
+if(isset($_REQUEST['account_id']))
 {
-        $explode_decode_val=explode("&",$decode_val);
-        for($i=1;$i<count($explode_decode_val);$i++)
-        {
-                $test=$explode_decode_val[$i];
-                $values=explode("=",$test);
-                $field_name_val=$values[0];
-                $field_value=$values[1];
-                $focus->column_fields[$field_name_val]=$field_value;
-        }
-}
-
-if(isset($_REQUEST['account_id']) && $_REQUEST['account_id']!='' && $_REQUEST['record']=='')
-{
-        require_once('modules/Accounts/Account.php');
         $focus->column_fields['account_id'] = $_REQUEST['account_id'];
-        $acct_focus = new Account();
-        $acct_focus->retrieve_entity_info($_REQUEST['account_id'],"Accounts");
-        $focus->column_fields['fax']=$acct_focus->column_fields['fax'];
-        $focus->column_fields['otherphone']=$acct_focus->column_fields['phone'];
-        $focus->column_fields['mailingcity']=$acct_focus->column_fields['bill_city'];
-        $focus->column_fields['othercity']=$acct_focus->column_fields['ship_city'];
-        $focus->column_fields['mailingstreet']=$acct_focus->column_fields['bill_street'];
-        $focus->column_fields['otherstreet']=$acct_focus->column_fields['ship_street'];
-        $focus->column_fields['mailingstate']=$acct_focus->column_fields['bill_state'];
-        $focus->column_fields['otherstate']=$acct_focus->column_fields['ship_state'];
-        $focus->column_fields['mailingzip']=$acct_focus->column_fields['bill_code'];
-        $focus->column_fields['otherzip']=$acct_focus->column_fields['ship_code'];
-        $focus->column_fields['mailingcountry']=$acct_focus->column_fields['bill_country'];
-        $focus->column_fields['othercountry']=$acct_focus->column_fields['ship_country'];
-        $log->debug("Accountid Id from the request is ".$_REQUEST['account_id']);
-
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') 
 {
@@ -99,9 +61,36 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
 	$focus->mode = "";
 }
 
-$disp_view = getView($focus->mode);
-$smarty->assign("BLOCKS",getBlocks("Contacts",$disp_view,$mode,$focus->column_fields));
-$smarty->assign("OP_MODE",$disp_view);
+//get Block 1 Information
+$block_1 = getBlockInformation("Contacts",1,$focus->mode,$focus->column_fields);
+
+//get Address Information
+$block_2 = getBlockInformation("Contacts",2,$focus->mode,$focus->column_fields);
+
+//get Description Information
+$block_3 = getBlockInformation("Contacts",3,$focus->mode,$focus->column_fields);
+
+$block_1_header = getBlockTableHeader("LBL_CONTACT_INFORMATION");
+$block_2_header = getBlockTableHeader("LBL_ADDRESS_INFORMATION");
+$block_3_header = getBlockTableHeader("LBL_DESCRIPTION_INFORMATION");
+$block_4_header = getBlockTableHeader("LBL_CUSTOMER_PORTAL_INFORMATION");
+
+$block_4 = getBlockInformation("Contacts",4,$focus->mode,$focus->column_fields);
+
+$block_5 = getBlockInformation("Contacts",5,$focus->mode,$focus->column_fields);
+if(trim($block_5) != '')
+{
+        $cust_fld = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="formOuterBorder">';
+        $cust_fld .=  '<tr><td>';
+        $block_5_header = getBlockTableHeader("LBL_CUSTOM_INFORMATION");
+	$cust_fld .= $block_5_header;
+        $cust_fld .= '<table width="100%" border="0" cellspacing="1" cellpadding="0">';
+        $cust_fld .= $block_5;
+        $cust_fld .= '</table>';
+        $cust_fld .= '</td></tr></table>';
+        $cust_fld .='<BR>';
+}
+
 
 //needed when creating a new contact with a default account value passed in
 if (isset($_REQUEST['account_name']) && is_null($focus->account_name)) {
@@ -125,47 +114,50 @@ require_once($theme_path.'layout_utils.php');
 
 $log->info("Contact detail view");
 
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("NAME",$focus->lastname." ".$focus->firstname);
-$smarty->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
+$xtpl=new XTemplate ('modules/Contacts/EditView.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("BLOCK1", $block_1);
+$xtpl->assign("BLOCK2", $block_2);
+$xtpl->assign("BLOCK3", $block_3);
+$xtpl->assign("BLOCK4", $block_4);
+$xtpl->assign("BLOCK1_HEADER", $block_1_header);
+$xtpl->assign("BLOCK2_HEADER", $block_2_header);
+$xtpl->assign("BLOCK3_HEADER", $block_3_header);
+$xtpl->assign("BLOCK4_HEADER", $block_4_header);
+
+if (isset($focus->firstname)) $xtpl->assign("FIRST_NAME", $focus->firstname);
+else $xtpl->assign("FIRST_NAME", "");
+$xtpl->assign("LAST_NAME", $focus->lastname);
+$xtpl->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
 if(isset($cust_fld))
 {
-        $smarty->assign("CUSTOMFIELD", $cust_fld);
+        $xtpl->assign("CUSTOMFIELD", $cust_fld);
 }
-$smarty->assign("ID", $focus->id);
-$smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD","Contact");
-
+$xtpl->assign("ID", $focus->id);
 if($focus->mode == 'edit')
 {
-	$smarty->assign("UPDATEINFO",updateInfo($focus->id));
-        $smarty->assign("MODE", $focus->mode);
+        $xtpl->assign("MODE", $focus->mode);
 }
 
 if(isset($_REQUEST['activity_mode']) && $_REQUEST['activity_mode'] !='')
-        $smarty->assign("ACTIVITYMODE",$_REQUEST['activity_mode']);
+	$xtpl->assign("ACTIVITYMODE",$_REQUEST['activity_mode']);
 
 // Unimplemented until jscalendar language files are fixed
-$smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
-$smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
+// $xtpl->assign("CALENDAR_LANG", ((empty($cal_codes[$current_language])) ? $cal_codes[$default_language] : $cal_codes[$current_language]));
+$xtpl->assign("CALENDAR_LANG", "en");$xtpl->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
-if(isset($_REQUEST['campaignid']))
-$smarty->assign("campaignid",$_REQUEST['campaignid']);
-if (isset($_REQUEST['return_module']))
-$smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
-if (isset($_REQUEST['return_action']))
-$smarty->assign("RETURN_ACTION", $_REQUEST['return_action']);
-if (isset($_REQUEST['return_id']))
-$smarty->assign("RETURN_ID", $_REQUEST['return_id']);
-if (isset($_REQUEST['return_viewname']))
-$smarty->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
-$smarty->assign("THEME", $theme);
-$smarty->assign("IMAGE_PATH", $image_path);
-$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+if (isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
+if (isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
+if (isset($_REQUEST['return_id'])) $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
+
+$xtpl->assign("THEME", $theme);
+$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
 
-$contact_tables = Array('contactdetails','crmentity','contactsubdetails','contactscf','contactaddress','customerdetails'); 
+
+
+$contact_tables = Array('contactdetails','crmentity','contactsubdetails','contactscf','contactaddress'); 
 
  $tabid = getTabid("Contacts");
  $validationData = getDBValidationData($contact_tables,$tabid);
@@ -205,45 +197,15 @@ $contact_tables = Array('contactdetails','crmentity','contactsubdetails','contac
      	}
    }
  }
-$category = getParentTab();
-$smarty->assign("CATEGORY",$category);
-
-if($errormessage==2)
-{
-        $msg =$mod_strings['LBL_MAXIMUM_LIMIT_ERROR'];
-        $errormessage ="<B><font color='red'>".$msg."</font></B> <br><br>";
-}
-else if($errormessage==3)
-{
-        $msg = $mod_strings['LBL_UPLOAD_ERROR'];
-        $errormessage ="<B><font color='red'>".$msg."</font></B> <br><br>";
-
-}
-else if($errormessage=="image")
-{
-        $msg = $mod_strings['LBL_IMAGE_ERROR'];
-        $errormessage ="<B><font color='red'>".$msg."</font></B> <br><br>";
-}
-else if($errormessage =="invalid")
-{
-        $msg = $mod_strings['LBL_INVALID_IMAGE'];
-        $errormessage ="<B><font color='red'>".$msg."</font></B> <br><br>";
-}
-else
-{
-        $errormessage="";
-}
-if($errormessage!="")
-{
-        $smarty->assign("ERROR_MESSAGE",$errormessage);
-}
 
 
-$smarty->assign("VALIDATION_DATA_FIELDNAME",$fieldName);
-$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$fldDataType);
-$smarty->assign("VALIDATION_DATA_FIELDLABEL",$fieldLabel);
+$xtpl->assign("VALIDATION_DATA_FIELDNAME",$fieldName);
+$xtpl->assign("VALIDATION_DATA_FIELDDATATYPE",$fldDataType);
+$xtpl->assign("VALIDATION_DATA_FIELDLABEL",$fieldLabel);
 
-$smarty->display("salesEditView.tpl");
 
+$xtpl->parse("main");
+
+$xtpl->out("main");
 
 ?>

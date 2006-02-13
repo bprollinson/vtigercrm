@@ -23,30 +23,16 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-if(isset($_REQUEST['return_module']) && $_REQUEST['return_module']=="PriceBooks")
-{
-	$pricebook_id = $_REQUEST['pricebook_id'];
-	$product_id = $_REQUEST['record'];
-	$listprice = $_REQUEST['listprice'];
-	$return_action = "CallRelatedList";
-	$return_id = $_REQUEST['pricebook_id'];
-}
-else
-{
-	$product_id = $_REQUEST['record'];
-	$pricebook_id = $_REQUEST['pricebook_id'];
-	$listprice = getListPrice($product_id,$pricebook_id);
-	$return_action = "CallRelatedList";
-	$return_id = $_REQUEST['pricebook_id'];
-}
+$pricebook_id = $_REQUEST['pricebook_id'];
+$product_id = $_REQUEST['record'];
+$listprice = $_REQUEST['listprice'];
+
 $xtpl=new XTemplate ('modules/Products/EditListPrice.html');
 $xtpl->assign("MOD", $mod_strings);
 $xtpl->assign("APP", $app_strings);
 $xtpl->assign("PRICEBOOKID", $pricebook_id);
 $xtpl->assign("PRODUCTID", $product_id);
 $xtpl->assign("LISTPRICE", $listprice);
-$xtpl->assign("RETURN_ACTION", $return_action);
-$xtpl->assign("RETURN_ID", $return_id);
 
 $xtpl->parse("main");
 $xtpl->out("main");

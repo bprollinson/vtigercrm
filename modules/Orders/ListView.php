@@ -21,8 +21,8 @@ require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/ComboUtil.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/CustomView/CustomView.php');
 
 global $app_strings;
@@ -56,15 +56,73 @@ $sorder = $_REQUEST['sorder'];
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-	$where=Search($currentModule);
 	// we have a query
 	$url_string .="&query=true";
-	
 	if (isset($_REQUEST['subject'])) $subject = $_REQUEST['subject'];
 	if (isset($_REQUEST['vendorname'])) $vendorname = $_REQUEST['vendorname'];
 	if (isset($_REQUEST['trackingno'])) $trackingno = $_REQUEST['trackingno'];
+
+	$where_clauses = Array();
+
+//Added for Custom Field Search
+$sql="select * from field where tablename='purchaseordercf' order by fieldlabel";
+$result=$adb->query($sql);
+for($i=0;$i<$adb->num_rows($result);$i++)
+{
+        $column[$i]=$adb->query_result($result,$i,'columnname');
+        $fieldlabel[$i]=$adb->query_result($result,$i,'fieldlabel');
+	$uitype[$i]=$adb->query_result($result,$i,'uitype');
+        if (isset($_REQUEST[$column[$i]])) $customfield[$i] = $_REQUEST[$column[$i]];
+
+        if(isset($customfield[$i]) && $customfield[$i] != '')
+        {
+		if($uitype[$i] == 56)
+			$str=" purchaseordercf.".$column[$i]." = 1";
+		else
+	                $str=" purchaseordercf.".$column[$i]." like '$customfield[$i]%'";
+                array_push($where_clauses, $str);
+		$url_string .="&".$column[$i]."=".$customfield[$i];
+        }
+}
+//upto this added for Custom Field
 	
+	if(isset($subject) && $subject != "") 
+	{
+		array_push($where_clauses, "purchaseorder.subject like ".PearDatabase::quote($subject."%"));
+		$url_string .= "&subject=".$subject;
+	}
+	if(isset($vendorname) && $vendorname != "")
+	{
+		array_push($where_clauses, "vendor.vendorname like ".PearDatabase::quote("%".$vendorname."%"));
+		$url_string .= "&vendorname=".$vendorname;
+	}
+	if(isset($trackingno) && $trackingno != "")
+	{
+		array_push($where_clauses, "purchaseorder.tracking_no like ".PearDatabase::quote("%".$trackingno."%"));
+		$url_string .= "&trackingno=".$trackingno;
+	}
+	
+	$where = "";
+	foreach($where_clauses as $clause)
+	{
+		if($where != "")
+		$where .= " and ";
+		$where .= $clause;
+	}
+
+	if (!empty($assigned_user_id)) {
+		if (!empty($where)) {
+			$where .= " AND ";
+		}
+		$where .= "crmentity.smownerid IN(";
+		foreach ($assigned_user_id as $key => $val) {
+			$where .= PearDatabase::quote($val);
+			$where .= ($key == count($assigned_user_id) - 1) ? ")" : ", ";
+		}
+	}
+
 	$log->info("Here is the where clause for the list view: $where");
+
 }
 
 //<<<<cutomview>>>>>>>
@@ -82,7 +140,6 @@ if(isset($_REQUEST['viewname']) == false || $_REQUEST['viewname']=='')
 }else
 {
 	$viewid =  $_REQUEST['viewname'];
-	$oCustomView->setdefaultviewid = $viewid;
 }
 //<<<<<customview>>>>>
 
@@ -171,17 +228,17 @@ if(isPermitted('Orders',2,'') == 'yes')
 
 if($viewid == 0)
 {
-$cvHTML = '<span class="bodyText disabled">'.$app_strings['LNK_CV_EDIT'].'</span>
+$cvHTML = '<span class="bodyText disabled">Edit</span>
 <span class="sep">|</span>
-<span class="bodyText disabled">'.$app_strings['LNK_CV_DELETE'].'</span><span class="sep">|</span>
-<a href="index.php?module=Orders&action=CustomView" class="link">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>';
+<span class="bodyText disabled">Delete</span><span class="sep">|</span>
+<a href="index.php?module=Orders&action=CustomView" class="link">Create View</a>';
 }else
 {
-$cvHTML = '<a href="index.php?module=Orders&action=CustomView&record='.$viewid.'" class="link">'.$app_strings['LNK_CV_EDIT'].'</a>
+$cvHTML = '<a href="index.php?module=Orders&action=CustomView&record='.$viewid.'" class="link">Edit</a>
 <span class="sep">|</span>
-<a href="index.php?module=CustomView&action=Delete&dmodule=Orders&record='.$viewid.'" class="link">'.$app_strings['LNK_CV_DELETE'].'</a>
+<a href="index.php?module=CustomView&action=Delete&dmodule=Orders&record='.$viewid.'" class="link">Delete</a>
 <span class="sep">|</span>
-<a href="index.php?module=Orders&action=CustomView" class="link">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>';
+<a href="index.php?module=Orders&action=CustomView" class="link">Create View</a>';
 }
 	$other_text .='<td align="right">'.$app_strings[LBL_VIEW].'
                         <SELECT NAME="view" onchange="showDefaultCustomView(this)">
@@ -240,14 +297,7 @@ $view_script = "<script language='javascript'>
 
 if(isset($order_by) && $order_by != '')
 {
-	if($order_by == 'smownerid')
-        {
-                $query .= ' ORDER BY user_name '.$sorder;
-        }
-        else
-        {
-                $query .= ' ORDER BY '.$order_by.' '.$sorder;
-        }
+        $query .= ' ORDER BY '.$order_by.' '.$sorder;
 }
 
 $list_result = $adb->query($query);
@@ -269,7 +319,6 @@ else
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
 
-/*
 // Setting the record count string
 if ($navigation_array['start'] == 1)
 {
@@ -300,16 +349,6 @@ else
 		$end_rec = $noofrows;
 	}
 }
-*/
-
-
-// Setting the record count string
-//modified by rdhital
-$start_rec = $navigation_array['start'];
-$end_rec = $navigation_array['end_val']; 
-//By Raju Ends
-
-
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
 //Retreive the List View Table Header
@@ -319,8 +358,6 @@ $url_string .="&viewname=".$viewid;
 $listview_header = getListViewHeader($focus,"Orders",$url_string,$sorder,$order_by,"",$oCustomView);
 $xtpl->assign("LISTHEADER", $listview_header);
 
-$listview_header_search = getSearchListHeaderValues($focus,"Orders",$url_string,$sorder,$order_by,"",$oCustomView);
-$smarty->assign("SEARCHLISTHEADER",$listview_header_search);
 
 $listview_entries = getListViewEntries($focus,"Orders",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
 $xtpl->assign("LISTENTITY", $listview_entries);

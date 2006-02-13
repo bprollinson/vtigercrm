@@ -29,7 +29,6 @@ $mod_strings = Array(
 'LBL_MEMBER_ORG_FORM_TITLE'=>'Member Organizations',
 // Label for Top Accounts in Home Page, added for 4.2 GA
 'LBL_TOP_ACCOUNTS'=>'My Top Accounts', 
-'LBL_TOP_AMOUNT'=>'Amount',
 'LBL_LIST_ACCOUNT_NAME'=>'Account Name',
 'LBL_LIST_CITY'=>'City',
 'LBL_LIST_WEBSITE'=>'Website',
@@ -37,7 +36,6 @@ $mod_strings = Array(
 'LBL_LIST_PHONE'=>'Phone',
 'LBL_LIST_EMAIL_ADDRESS'=>'Email Address',
 'LBL_LIST_CONTACT_NAME'=>'Contact Name',
-'LBL_LIST_AMOUNT' => 'Total Opportunities',
 
 //DON'T CONVERT THESE THEY ARE MAPPINGS
 'db_name' => 'LBL_LIST_ACCOUNT_NAME',
@@ -133,23 +131,13 @@ $mod_strings = Array(
 'Assigned To'=>'Assigned To',
 'Billing Address'=>'Billing Address',
 'Shipping Address'=>'Shipping Address',
-'Billing City'=>'Billing City',
-'Shipping City'=>'Shipping City',
-'Billing State'=>'Billing State',
-'Shipping State'=>'Shipping State',
-'Billing Code'=>'Billing Code',
-'Shipping Code'=>'Shipping Code',
-'Billing Country'=>'Billing Country',
-'Shipping Country'=>'Shipping Country',
+'City'=>'City',
+'State'=>'State',
+'Code'=>'Code',
+'Country'=>'Country',
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',
 'Description'=>'Description',
-'Shipping Po Box'=>'Shipping Po Box',
-'Billing Po Box'=>'Billing Po Box',
-
-//Added after 4.2 patch 2
-'Email Opt Out'=>'Email Opt Out',
-'LBL_EMAIL_OPT_OUT'=>'Email Opt Out:',
 );
 
 ?>

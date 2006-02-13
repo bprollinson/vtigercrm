@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/include/ListView/ListView.php,v 1.16 2005/05/03 13:18:41 saraj Exp $
  * Description:  generic list view class.
  ********************************************************************************/
 require_once('include/logging.php');
@@ -470,7 +470,7 @@ function getSessionVariableName($localVarName,$varName){
 
 		$_SESSION['export_where'] = $this->query_where;
 
-		$export_link = "<a target=\"_blank\" href=\"include\export.php?module=".$this->local_current_module."\" class=\"listFormHeaderLinks\">".$this->local_app_strings['LBL_EXPORT']."</a>";
+		$export_link = "<a target=\"_blank\" href=\"export.php?module=".$this->local_current_module."\" class=\"listFormHeaderLinks\">".$this->local_app_strings['LBL_EXPORT']."</a>";
 
 		if ($_REQUEST['module']== 'Home' || 
 			$this->local_current_module == 'Import' ||

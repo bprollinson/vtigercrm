@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Faq/Faq.php,v 1.6 2005/06/15 14:17:12 mickie Exp $
  * Description:  Defines the Account SugarBean Account entity with the necessary
  * methods and variables.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -26,7 +26,7 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
 // Faq is used to store faq information.
 class Faq extends CRMEntity {
@@ -79,30 +79,21 @@ class Faq extends CRMEntity {
 				        'City'=>'bill_city',
 				      );
 
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'id';
-	var $default_sort_order = 'DESC';
 
 	function Faq() {
 		$this->log =LoggerManager::getLogger('account');
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Faq');
 	}
-
-	/**     Function to get the list of comments for the given FAQ id
-         *      @param  int  $faqid - FAQ id
-         *      @return list $list - the list of comments which are formed as boxed info with div tags.
-        **/	
+	
 	function getFAQComments($faqid)
 	{
 		global $mod_strings;
 		$sql = "select * from faqcomments where faqid=".$faqid;
 		$result = $this->db->query($sql);
 		$noofrows = $this->db->num_rows($result);
-
 		if($noofrows == 0)
 			return '';
-
 		$list .= '<div style="overflow: scroll;height:150;width:100%;">';
 		for($i=0;$i<$noofrows;$i++)
 		{

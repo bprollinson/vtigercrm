@@ -65,9 +65,9 @@ class Tracker {
     {
       global $adb;
       $this->delete_history($user_id, $item_id);
-      global $log;
-$log->info("in  track view method ".$current_module);
-        // Add a new item to the user's list
+global $vtlog;
+$vtlog->logthis("in  track view method ".$current_module,'info');
+      // Add a new item to the user's list
 
         $esc_item_id = addslashes($item_id);
         
@@ -165,7 +165,7 @@ $log->info("in  track view method ".$current_module);
             $quote = $adb->query_result($result,0,'subject');
             $item_summary = $quote;
           }
-	  elseif($current_module =='PurchaseOrder')
+	  elseif($current_module =='Orders')
           {
             $query = 'select subject from purchaseorder where purchaseorderid=' .$item_id;
             $result = $this->db->query($query);
@@ -238,8 +238,8 @@ $log->info("in  track view method ".$current_module);
             if($module_name == "" || $row[module_name] == $module_name)
             {
 		//Adding Security check
-		require_once('include/utils/utils.php');
-		require_once('include/utils/UserInfoUtil.php');
+		require_once('include/utils.php');
+		require_once('modules/Users/UserInfoUtil.php');
 		$entity_id = $row['item_id'];
 		$module = $row['module_name'];
 		//echo "module is ".$module."  id is      ".$entity_id;

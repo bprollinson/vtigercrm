@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/data/CRMEntity.php,v 1.16 2005/04/29 04:21:31 mickie Exp $
+ * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/data/CRMEntity.php,v 1.16 2005/04/29 04:21:31 rajeshkannan Exp $
  * Description:  Defines the base class for all data entities used throughout the 
  * application.  The base class including its methods and variables is designed to 
  * be overloaded with module-specific methods and variables particular to the 
@@ -23,8 +23,8 @@
 include_once('config.php');
 require_once('include/logging.php');
 require_once('data/Tracker.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('include/utils.php');
+require_once('modules/Users/UserInfoUtil.php');
 
 class CRMEntity extends SugarBean
 {
@@ -38,145 +38,90 @@ class CRMEntity extends SugarBean
    * All Rights Reserved.
    * Contributor(s): ______________________________________..
    */
-
-
- 
 	
   var $new_schema = false;
   var $new_with_id = false;
 
   function saveentity($module,$migration='')
   {
-	global $current_user, $adb;//$adb added by raju for mass mailing
-	$insertion_mode = $this->mode;
+    global $current_user;
+    $insertion_mode = $this->mode;
 
-	$this->db->println("TRANS saveentity starts");
-	$this->db->startTransaction();
+    $this->db->println("TRANS saveentity starts");
+    $this->db->startTransaction();
 	
 	// Code included by Jaguar - starts    
-	if(isset($_REQUEST['recurringtype']) && $_REQUEST['recurringtype']!='')
-		$recur_type = trim($_REQUEST['recurringtype']);
-	else
-    		$recur_type='';	
+    if(isset($_REQUEST['recurringtype']) && $_REQUEST['recurringtype']!='')
+	    $recur_type = trim($_REQUEST['recurringtype']);
+    else
+    	$recur_type='';	
 	// Code included by Jaguar - Ends
 
-	foreach($this->tab_name as $table_name)
-	{
-		if($table_name == "crmentity")
-		{
-			$this->insertIntoCrmEntity($module,$migration);
-		}
-		elseif($table_name == "salesmanactivityrel")
-		{
-			$this->insertIntoSmActivityRel($module);
-		}
-		//added by raju
-		elseif($table_name=="seactivityrel" )
-		{
-			if($module=="Emails" && $_REQUEST['smodule']!='webmails')
-			//modified by Richie as raju's implementation broke the feature for addition of webmail to crmentity.need to be more careful in future while integrating code
-			//if($_REQUEST['smodule']!='webmails' && $_REQUEST['smodule'] != '')
-			{
-				if($_REQUEST['currentid']!='')
-				{
-					$actid=$_REQUEST['currentid'];
-				}
-				else 
-				{
-					$actid=$_REQUEST['record'];
-				}
-				$parentid=$_REQUEST['parent_id'];
+    foreach($this->tab_name as $table_name)
+    {
+      if($table_name == "crmentity")
+      {
+        $this->insertIntoCrmEntity($module,$migration);
+      }
+      elseif($table_name == "salesmanactivityrel")
+      {
+        $this->insertIntoSmActivityRel($module);
+      }
+      elseif($table_name == "seticketsrel" || $table_name == "seactivityrel" || $table_name ==  "seproductsrel" || $table_name ==  "senotesrel" || $table_name == "sefaqrel")
+      {
+        if(isset($this->column_fields['parent_id']) && $this->column_fields['parent_id'] != '')
+        {
+          $this->insertIntoEntityTable($table_name, $module);
+        }
+        elseif($this->column_fields['parent_id']=='' && $insertion_mode=="edit")
+        {
+                $this->deleteRelation($table_name);
+        }
 
-				if($_REQUEST['module'] != 'Emails')
-				{
-					$mysql='insert into seactivityrel values('.$parentid.','.$actid.')';
-					$adb->query($mysql);
-				}
-				else
-				{	  
-					$myids=explode("|",$parentid);  //2@71|
-					for ($i=0;$i<(count($myids)-1);$i++)
-					{
-						$realid=explode("@",$myids[$i]);
-						$mycrmid=$realid[0];
+      }
+      elseif($table_name ==  "cntactivityrel")
+      {
+        if(isset($this->column_fields['contact_id']) && $this->column_fields['contact_id'] != '')
+        {
+          $this->insertIntoEntityTable($table_name, $module);
+        }
+        elseif($this->column_fields['contact_id'] =='' && $insertion_mode=="edit")
+        {
+          $this->deleteRelation($table_name);
+        }
 
-						$mysql='insert into seactivityrel values('.$mycrmid.','.$actid.')';
-						$adb->query($mysql);
-					}
-				}
-			}
-			else
-			{
-				if(isset($this->column_fields['parent_id']) && $this->column_fields['parent_id'] != '')
-				{
-					$this->insertIntoEntityTable($table_name, $module);
-				}
-				elseif($this->column_fields['parent_id']=='' && $insertion_mode=="edit")
-				{
-					$this->deleteRelation($table_name);
-				}
-			}			
-		}
-		elseif($table_name == "seticketsrel" || $table_name ==  "seproductsrel" || $table_name ==  "senotesrel")
-		{
-			if(isset($this->column_fields['parent_id']) && $this->column_fields['parent_id'] != '')//raju - mass mailing ends
-			{
-				$this->insertIntoEntityTable($table_name, $module);
-			}
-			elseif($this->column_fields['parent_id']=='' && $insertion_mode=="edit")
-			{
-				$this->deleteRelation($table_name);
-			}
-		}
-		elseif($table_name ==  "cntactivityrel")
-		{
-			if(isset($this->column_fields['contact_id']) && $this->column_fields['contact_id'] != '')
-			{
-				$this->insertIntoEntityTable($table_name, $module);
-			}
-			elseif($this->column_fields['contact_id'] =='' && $insertion_mode=="edit")
-			{
-				$this->deleteRelation($table_name);
-			}
-
-		}
-		elseif($table_name ==  "ticketcomments")
-		{
-                	$this->insertIntoTicketCommentTable($table_name, $module);
-		}
-		elseif($table_name ==  "faqcomments")
-		{
-                	$this->insertIntoFAQCommentTable($table_name, $module);
-		}
-		elseif($table_name == "activity_reminder")
-		{
-			if($recur_type == "--None--")
-			{
-				$this->insertIntoReminderTable($table_name,$module,"");
-			}
-		}
-		elseif($table_name == "recurringevents") // Code included by Jaguar -  starts
-		{
-			$recur_type = trim($_REQUEST['recurringtype']);
-			if($recur_type != "--None--"  && $recur_type != '')
-		      	{		   
-	      			$this->insertIntoRecurringTable($table_name,$module);
-			}		
-		}// Code included by Jaguar - Ends
-		else
-		{
-			$this->insertIntoEntityTable($table_name, $module);			
-		}
-	}
-
-
-	if($module == 'Emails' || $module == 'Notes' || $module == 'HelpDesk')
-	{
-		if(isset($_FILES['filename']['name']) && $_FILES['filename']['name']!='')
-		{
-			$this->insertIntoAttachment($this->id,$module);
-		}
-	}
+      }
+      elseif($table_name ==  "ticketcomments" && $_REQUEST['comments'] != '')
+      {
+                $this->insertIntoTicketCommentTable($table_name, $module);
+      }
+      elseif($table_name ==  "faqcomments" && $_REQUEST['comments'] != '')
+      {
+                $this->insertIntoFAQCommentTable($table_name, $module);
+      }
+      elseif($table_name == "activity_reminder")
+      {
+	      if($recur_type == "--None--")
+	      {
+		      $this->insertIntoReminderTable($table_name,$module,"");
+	      }
+      }
+      elseif($table_name == "recurringevents") // Code included by Jaguar -  starts
+      {
+		$recur_type = trim($_REQUEST['recurringtype']);
+		if($recur_type != "--None--"  && $recur_type != '')
+	      	{		   
+	      		$this->insertIntoRecurringTable($table_name,$module);
+		}		
+      }// Code included by Jaguar - Ends
+      else
+      {
+        $this->insertIntoEntityTable($table_name, $module);			
+      }
+    }
+    if($module == 'Emails' || $module == 'Notes')
+      if(isset($_FILES['filename']['name']) && $_FILES['filename']['name']!='')
+        $this->insertIntoAttachment($this->id,$module);
 
 	$this->db->completeTransaction();
         $this->db->println("TRANS saveentity ends");
@@ -189,7 +134,7 @@ class CRMEntity extends SugarBean
     // global $current_user;
     global $adb;
     //global $root_directory;
-	global $log;
+	global $vtlog;
 
     $ownerid = $user_id;
 		
@@ -203,7 +148,7 @@ class CRMEntity extends SugarBean
 
     if($module=='Emails') 
     { 
-	$log->info("module is ".$module);
+$vtlog->logthis("module is ".$module,'info');  
       $idname='emailid';      $tablename='emails';    $descname='description';}
     else     
     { 
@@ -231,180 +176,168 @@ class CRMEntity extends SugarBean
 
   function insertIntoAttachment($id,$module)
   {
-	$date_var = date('YmdHis');
-	global $current_user;
-	global $adb;
-	global $root_directory;
-	global $upload_badext;
+    $date_var = date('YmdHis');
+    global $current_user;
+    global $adb;
+    global $root_directory;
+    global $upload_badext;
 
-	$ownerid = $this->column_fields['assigned_user_id'];
-	$adb->println("insertattach ownerid=".$ownerid." mod=".$module);
-	$adb->println($this->column_fields);	
+    $ownerid = $this->column_fields['assigned_user_id'];
+    $adb->println("insertattach ownerid=".$ownerid." mod=".$module);
+    $adb->println($this->column_fields);	
 
-	if(!isset($ownerid) || $ownerid=='')
-		$ownerid = $current_user->id;
+	if(!isset($ownerid) || $ownerid=='')            $ownerid = $current_user->id;
+    $uploaddir = $root_directory ."/test/upload/" ;// set this to wherever
+    
+    // Arbitrary File Upload Vulnerability fix - Philip
+    $binFile = $_FILES['filename']['name'];
+    $ext_pos = strrpos($binFile, ".");
 
-	$uploaddir = $root_directory ."/test/upload/" ;// set this to wherever
-	// Arbitrary File Upload Vulnerability fix - Philip
-	$binFile = $_FILES['filename']['name'];
-	$ext_pos = strrpos($binFile, ".");
+    $ext = substr($binFile, $ext_pos + 1);
 
-	$ext = substr($binFile, $ext_pos + 1);
+    if (in_array($ext, $upload_badext))
+    {
+           $binFile .= ".txt";
+    }
+    // Vulnerability fix ends
 
-	if (in_array($ext, $upload_badext))
+    $filename = basename($binFile);
+    $filetype= $_FILES['filename']['type'];
+    $filesize = $_FILES['filename']['size'];
+
+    if($binFile != '')
+    {
+      if(move_uploaded_file($_FILES["filename"]["tmp_name"],$uploaddir.$binFile))
+      {
+        //                      $binFile = $_FILES['filename']['name'];
+        //                      $filename = basename($binFile);
+        //                      $filetype= $_FILES['filename']['type'];
+        //                      $filesize = $_FILES['filename']['size'];
+        if($filesize != 0)
+        {
+          $data = base64_encode(fread(fopen($uploaddir.$binFile, "r"), $filesize));
+        }
+      }
+      $current_id = $adb->getUniqueID("crmentity");
+
+      if($module=='Emails') { $idname='emailid';      $tablename='emails';    $descname='description';}
+      else                  { $idname='notesid';      $tablename='notes';     $descname='notecontent';}
+
+	$sql="update ".$tablename." set filename='".$filename."' where ".$idname."=".$id;
+      $adb->query($sql);
+
+	$sql1 = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values(".$current_id.",".$current_user->id.",".$ownerid.",'".$module." Attachment','".$this->column_fields['description']."',".$adb->formatString("crmentity","createdtime",$date_var).",".$adb->formatString("crmentity","modifiedtime",$date_var).")";
+      $adb->query($sql1);
+
+      //$this->id = $current_id;
+	$sql2="insert into attachments(attachmentsid, name, description, type, attachmentsize, attachmentcontents) values(".$current_id.",'".$filename."','".$this->column_fields[$descname]."','".$filetype."','".$filesize."',".$adb->getEmptyBlob().")";
+
+      $result=$adb->query($sql2);
+
+      if($result!=false)
+        $result = $adb->updateBlob('attachments','attachmentcontents',"attachmentsid='".$current_id."' and name='".$filename."'",$data);
+
+     if($_REQUEST['mode'] == 'edit')
+     {
+        if($id != '' && $_REQUEST['fileid'] != '')
+        {
+                $delquery = 'delete from seattachmentsrel where crmid = '.$id.' and attachmentsid = '.$_REQUEST['fileid'];
+                $adb->query($delquery);
+        }
+     }
+	if($module == 'Notes')
 	{
-		$binFile .= ".txt";
+		$query = "delete from seattachmentsrel where crmid = ".$id;
+		$adb->query($query);
 	}
-	// Vulnerability fix ends
-
-	$filename = basename($binFile);
-	$filetype= $_FILES['filename']['type'];
-	$filesize = $_FILES['filename']['size'];
-
-	if($binFile != '')
-	{
-		if(move_uploaded_file($_FILES["filename"]["tmp_name"],$uploaddir.$binFile))
-		{
-			//$binFile = $_FILES['filename']['name'];
-			//$filename = basename($binFile);
-			//$filetype= $_FILES['filename']['type'];
-			//$filesize = $_FILES['filename']['size'];
-
-			if($filesize != 0)
-			{
-				$data = base64_encode(fread(fopen($uploaddir.$binFile, "r"), $filesize));
-			}
-		}
-		$current_id = $adb->getUniqueID("crmentity");
-
-		//This is only to update the attached filename in the notes table for the Notes module
-		if($module=='Notes')
-		{
-			$sql="update notes set filename='".$filename."' where notesid = ".$id;
-			$adb->query($sql);
-		}
-
-		$sql1 = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values(".$current_id.",".$current_user->id.",".$ownerid.",'".$module." Attachment','".$this->column_fields['description']."',".$adb->formatString("crmentity","createdtime",$date_var).",".$adb->formatString("crmentity","modifiedtime",$date_var).")";
-		$adb->query($sql1);
-
-		//$this->id = $current_id;
-		$sql2="insert into attachments(attachmentsid, name, description, type, attachmentsize, attachmentcontents) values(".$current_id.",'".$filename."','".$this->column_fields[$descname]."','".$filetype."','".$filesize."',".$adb->getEmptyBlob().")";
-
-		$result=$adb->query($sql2);
-
-		if($result!=false)
-			$result = $adb->updateBlob('attachments','attachmentcontents',"attachmentsid='".$current_id."' and name='".$filename."'",$data);
-
-		if($_REQUEST['mode'] == 'edit')
-		{
-			if($id != '' && $_REQUEST['fileid'] != '')
-			{
-				$delquery = 'delete from seattachmentsrel where crmid = '.$id.' and attachmentsid = '.$_REQUEST['fileid'];
-				$adb->query($delquery);
-			}
-		}
-		if($module == 'Notes')
-		{
-			$query = "delete from seattachmentsrel where crmid = ".$id;
-			$adb->query($query);
-		}
-		$sql3='insert into seattachmentsrel values('.$id.','.$current_id.')';
-		$adb->query($sql3);
-	}
+      $sql3='insert into seattachmentsrel values('.$id.','.$current_id.')';
+      $adb->query($sql3);
+    }
   }
 
   function insertIntoCrmEntity($module,$migration='')
   {
-	global $adb;
-	global $current_user;
-	global $log;
+    global $adb;
+    global $current_user;
+    global $vtlog;	
                 
-	$date_var = date('YmdHis');
-	if($_REQUEST['assigntype'] == 'T')
-	{
-		$ownerid= 0;
-	}
-	else
-	{
-		$ownerid = $this->column_fields['assigned_user_id'];
-	}
+    $date_var = date('YmdHis');
+    if($_REQUEST['assigntype'] == 'T')
+    {
+      $ownerid= 0;
+    }
+    else
+    {
+      $ownerid = $this->column_fields['assigned_user_id'];
+    }
                 
-	//This check is done for products.
-	if($module == 'Products' || $module == 'Notes' || $module =='Faq' || $module == 'Vendors' || $module == 'PriceBooks')
-	{
-		$log->info("module is =".$module);
-		$ownerid = $current_user->id;
-	}
-	if($module == 'Events')
-	{
-		$module = 'Activities';
-	}
-	if($this->mode == 'edit')
-	{
-		$description_val = from_html($adb->formatString("crmentity","description",$this->column_fields['description']),($insertion_mode == 'edit')?true:false);
-		$sql = "update crmentity set smownerid=".$ownerid.",modifiedby=".$current_user->id.",description=".$description_val.", modifiedtime=".$adb->formatString("crmentity","modifiedtime",$date_var)." where crmid=".$this->id;
-
-		$adb->query($sql);
-		$sql1 ="delete from ownernotify where crmid=".$this->id;
-		$adb->query($sql1);
-		if($ownerid != $current_user->id)
+    //This check is done for products.
+    if($module == 'Products' || $module == 'Notes' || $module =='Faq')
+    {
+$vtlog->logthis("module is =".$module,'info');  
+      $ownerid = $current_user->id;
+    }
+    if($module == 'Events')
+    {
+      $module = 'Activities';
+    }		
+    if($this->mode == 'edit')
+    {
+	$description_val = from_html($adb->formatString("crmentity","description",$this->column_fields['description']),($insertion_mode == 'edit')?true:false);
+	$sql = "update crmentity set smownerid=".$ownerid.",modifiedby=".$current_user->id.",description=".$description_val.", modifiedtime=".$adb->formatString("crmentity","modifiedtime",$date_var)." where crmid=".$this->id;
+			
+      $adb->query($sql);
+    }
+    else
+    {
+      //if this is the create mode and the group allocation is chosen, then do the following
+      $current_id = $adb->getUniqueID("crmentity");
+  if($migration != '')
 		{
-			$sql1 = "insert into ownernotify values(".$this->id.",".$ownerid.",'')";
-			$adb->query($sql1);
-		}
-	}
-	else
-	{
-		//if this is the create mode and the group allocation is chosen, then do the following
-		$current_id = $adb->getUniqueID("crmentity");
-		$_REQUEST['currentid']=$current_id;
+		$sql = "select * from Migrator where oldid='".$this->id ."'";
+		
+      	$result = $adb->query($sql);
+	$id = $adb->query_result($result,0,"newid");
+	//get the corresponding newid for these assigned_user_id and modified_user_id
+	$modifierid = $adb->query_result($result,0,"assigned_user_id");
+	$id = $adb->query_result($result,0,"newid");
+	
+	$sql_modifierid = "select * from Migrator where oldid='".$modifierid ."'";
+      	$result_modifierid = $adb->query($sql_modifierid);
+	$modifierid = $adb->query_result($result_modifierid,0,"newid");
 
-		if($migration != '')
-		{
-			$sql = "select * from Migrator where oldid='".$this->id ."'";
+	$creatorid =$adb->query_result($result,0,"modified_user_id");
 
-			$result = $adb->query($sql);
-			$id = $adb->query_result($result,0,"newid");
-			//get the corresponding newid for these assigned_user_id and modified_user_id
-			$modifierid = $adb->query_result($result,0,"assigned_user_id");
-			$id = $adb->query_result($result,0,"newid");
+	$sql_creatorid = "select * from Migrator where oldid='".$creatorid ."'";
+      	$result_creatorid = $adb->query($sql_creatorid);
+	$creatorid = $adb->query_result($result_creatorid,0,"newid");
 
-			$sql_modifierid = "select * from Migrator where oldid='".$modifierid ."'";
-			$result_modifierid = $adb->query($sql_modifierid);
-			$modifierid = $adb->query_result($result_modifierid,0,"newid");
-
-			$creatorid =$adb->query_result($result,0,"modified_user_id");
-
-			$sql_creatorid = "select * from Migrator where oldid='".$creatorid ."'";
-			$result_creatorid = $adb->query($sql_creatorid);
-			$creatorid = $adb->query_result($result_creatorid,0,"newid");
-
-			$createdtime = $adb->query_result($result,0,"createdtime");
-			$modifiedtime = $adb->query_result($result,0,"modifiedtime");
-			$deleted = $adb->query_result($result,0,"deleted");
-			$module = $adb->query_result($result,0,"module");
-			$description_val = from_html($adb->formatString("crmentity","description",$this->column_fields['description']),($insertion_mode == 'edit')?true:false);
-			//get the values from this and set to the query below and then relax!
-			$sql = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime,deleted) values('".$id."','".$creatorid."','".$modifierid."','".$module."',".$description_val.",'".$createdtime."','".$modifiedtime ."',".$deleted.")";
-			$adb->query($sql);
-			$this->id = $id;
-		}
+	$createdtime = $adb->query_result($result,0,"createdtime");
+	$modifiedtime = $adb->query_result($result,0,"modifiedtime");
+	$deleted = $adb->query_result($result,0,"deleted");
+	$module = $adb->query_result($result,0,"module");
+	$description_val = from_html($adb->formatString("crmentity","description",$this->column_fields['description']),($insertion_mode == 'edit')?true:false);
+	//get the values from this and set to the query below and then relax!
+      $sql = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime,deleted) values('".$id."','".$creatorid."','".$modifierid."','".$module."',".$description_val.",'".$createdtime."','".$modifiedtime ."',".$deleted.")";
+      $adb->query($sql);
+      $this->id = $id;
+	     	}		
 		else
 		{
-			$description_val = from_html($adb->formatString("crmentity","description",$this->column_fields['description']),($insertion_mode == 'edit')?true:false);
-			$sql = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values('".$current_id."','".$current_user->id."','".$ownerid."','".$module."',".$description_val.",'".$date_var."','".$date_var."')";
-			$adb->query($sql);
-			$this->id = $current_id;
-		}
-	}
-
-	//$sql = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values(".$current_id.",".$current_user->id.",".$ownerid.",'".$module."','".$this->column_fields['description']."',".$adb->formatString("crmentity","createdtime",$date_var).",".$adb->formatString("crmentity","modifiedtime",$date_var).")";
-	//$adb->query($sql);
-	//echo $sql;
-	//$this->id = $current_id;
+      $description_val = from_html($adb->formatString("crmentity","description",$this->column_fields['description']),($insertion_mode == 'edit')?true:false);
+      $sql = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values('".$current_id."','".$current_user->id."','".$ownerid."','".$module."',".$description_val.",'".$date_var."','".$date_var."')";
+      $adb->query($sql);
+      $this->id = $current_id;
+                }
     }
-
-
+                                               
+	//$sql = "insert into crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values(".$current_id.",".$current_user->id.",".$ownerid.",'".$module."','".$this->column_fields['description']."',".$adb->formatString("crmentity","createdtime",$date_var).",".$adb->formatString("crmentity","modifiedtime",$date_var).")";
+      //$adb->query($sql);
+      //echo $sql;
+      //$this->id = $current_id;
+    }
+		
+  
 
   function insertIntoSmActivityRel($module)
   {
@@ -421,7 +354,7 @@ class CRMEntity extends SugarBean
     $adb->query($sql_qry);
 
   }
-  //code added by richie starts
+  //code added by shankar starts
   function constructUpdateLog($id)
   {
     global $adb;
@@ -436,6 +369,10 @@ class CRMEntity extends SugarBean
     $old_priority = $adb->query_result($tktresult,0,"priority");
     $old_severity = $adb->query_result($tktresult,0,"severity");
     $old_category = $adb->query_result($tktresult,0,"category");
+    if($_REQUEST['old_smownerid'] != $old_user_id || $old_status != $this->column_fields['ticketstatus'] || $old_priority != $this->column_fields['ticketpriorities'] || $old_severity != $this->column_fields['ticketseverities'] || $old_category != $this->column_fields['ticketcategories'] || $old_userid == 0)
+    {
+      $updatelog .= date("l dS F Y h:i:s A").' by '.$current_user->user_name.'--//--';
+    }	
     if($_REQUEST['old_smownerid'] != $old_user_id && $old_user_id != 0)
     {
       $user_name = getUserName($this->column_fields['assigned_user_id']);
@@ -443,8 +380,7 @@ class CRMEntity extends SugarBean
     }
     elseif($old_user_id == 0)
     {
-	$group_info = getGroupName($ticketid,'HelpDesk');	
-	$group_name = $group_info[0];	
+	$group_name = getGroupName($ticketid,'HelpDesk');
 	if($group_name != $_REQUEST['assigned_group_name'])
 		$updatelog .= ' Transferred to group '.$_REQUEST['assigned_group_name'].'\.';
     }
@@ -464,22 +400,17 @@ class CRMEntity extends SugarBean
     {
       $updatelog .= ' Category Changed to '.$this->column_fields['ticketcategories'].'\.';
     }
-    if($_REQUEST['old_smownerid'] != $old_user_id || $old_status != $this->column_fields['ticketstatus'] || $old_priority != $this->column_fields['ticketpriorities'] || $old_severity != $this->column_fields['ticketseverities'] || $old_category != $this->column_fields['ticketcategories'] || $old_userid == 0)
+    if($old_user_id != $this->column_fields['assigned_user_id'] || $old_status != $this->column_fields['ticketstatus'] || $old_priority != $this->column_fields['ticketpriorities'])
     {
-      $updatelog .= ' -- '.date("l dS F Y h:i:s A").' by '.$current_user->user_name.'--//--';
+      $updatelog .= '--//--';
     }
-    else
-    {
-        $update_log .= '--//--';
-    }
-
     return $updatelog;
   }
-  //code added by richie ends
+  //code added by shankar ends
   function insertIntoEntityTable($table_name, $module)
   {
-	  global $log;	
-	   $log->info("function insertIntoCrmEntity ".$module.' table name ' .$table_name);
+	  global $vtlog;	
+	  $vtlog->logthis("function insertIntoCrmEntity ".$module.' table name ' .$table_name,'info');  
 	  global $adb;
 	  $insertion_mode = $this->mode;
 
@@ -558,13 +489,13 @@ class CRMEntity extends SugarBean
 		  if($fldvalue=='') $fldvalue ="''";
 		  if($insertion_mode == 'edit')
 		  {
-			  //code by richie starts
+			  //code by shankar starts
 			  if(($table_name == "troubletickets") && ($columname == "update_log"))
 			  {
 				  $fldvalue = $this->constructUpdateLog($this->id);
 				  $fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
 			  }
-			  //code by richie ends
+			  //code by shankar ends
 
 			  if($table_name == 'notes' && $columname == 'filename' && $_FILES['filename']['name'] == '')
 			  {
@@ -610,7 +541,7 @@ class CRMEntity extends SugarBean
 		  }
 		  else
 		  {
-			  //code by richie starts
+			  //code by shankar starts
 			  if(($table_name == "troubletickets") && ($columname == "update_log"))
 			  {
 				  global $current_user;
@@ -631,7 +562,7 @@ class CRMEntity extends SugarBean
 					  $tkt_ownername = $group_name;
 				  else
 					  $tkt_ownername = getUserName($tkt_ownerid);	
-				  $fldvalue = " Ticket created. Assigned to ".$tkt_ownername." -- ".$fldvalue."--//--";
+				  $fldvalue .= "--//--Ticket created. Assigned to ".$tkt_ownername."--//--";
 				  $fldvalue = from_html($adb->formatString($table_name,$columname,$fldvalue),($insertion_mode == 'edit')?true:false);
 				  //echo ' updatevalue is ............. ' .$fldvalue;
 			  }
@@ -661,7 +592,7 @@ class CRMEntity extends SugarBean
 			*/	  
 
 			  }
-			  //code by richie ends
+			  //code by shankar ends
 			  $column .= ", ".$columname;
 			  $value .= ", ".$fldvalue."";
 		  }
@@ -682,9 +613,7 @@ class CRMEntity extends SugarBean
 			  {
 				  $date_var = date('YmdHis');
 				  //$sql = "insert into potstagehistory values('',".$this->id.",".$_REQUEST['amount'].",'".$_REQUEST['sales_stage']."',".$_REQUEST['probability'].",".$_REQUEST['expectedrevenue'].",".$adb->formatString("potstagehistory","closedate",$_REQUEST['closingdate']).",".$adb->formatString("potstagehistory","lastmodified",$date_var).")";
-				  //Changed to insert the close date based on user date format - after 4.2 patch2
-				  $closingdate = getDBInsertDateValue($_REQUEST['closingdate']);
-				  $sql = "insert into potstagehistory values('',".$this->id.",'".$_REQUEST['amount']."','".$sales_stage."','".$_REQUEST['probability']."',0,".$adb->formatString("potstagehistory","closedate",$closingdate).",".$adb->formatString("potstagehistory","lastmodified",$date_var).")";
+				  $sql = "insert into potstagehistory values('',".$this->id.",'".$_REQUEST['amount']."','".$sales_stage."','".$_REQUEST['probability']."',0,".$adb->formatString("potstagehistory","closedate",$_REQUEST['closingdate']).",".$adb->formatString("potstagehistory","lastmodified",$date_var).")";
 				  $adb->query($sql);
 			  }
 		  }
@@ -705,39 +634,11 @@ class CRMEntity extends SugarBean
 			  {
 				  updateLeadGroupRelation($this->id,$groupname);
 			  }
-                          elseif($module == 'Accounts' && $table_name == 'account')
-			  {
-				  updateAccountGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'Contacts' && $table_name == 'contactdetails')
-			  {
-				  updateContactGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'Potentials' && $table_name == 'potential')
-			  {
-				  updatePotentialGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'Quotes' && $table_name == 'quotes')
-			  {
-				  updateQuoteGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'SalesOrder' && $table_name == 'salesorder')
-			  {
-				  updateSoGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'Invoice' && $table_name == 'invoice')
-			  {
-				  updateInvoiceGroupRelation($this->id,$groupname);
-			  }
-			  elseif($module == 'PurchaseOrder' && $table_name == 'purchaseorder')
-			  {
-				  updatePoGroupRelation($this->id,$groupname);
-			  }
 			  elseif($module == 'HelpDesk' && $table_name == 'troubletickets')
 			  {
 				  updateTicketGroupRelation($this->id,$groupname);
 			  }
-			  elseif($module =='Activities' || $module =='Events' || $module == 'Emails')
+			  elseif($module =='Activities' || $module =='Events'  )
 			  {
 				 if($table_name == 'activity')
 				 {
@@ -754,39 +655,11 @@ class CRMEntity extends SugarBean
 			  {
 				  updateLeadGroupRelation($this->id,'');
 			  }
-			  elseif($module == 'Accounts' && $table_name == 'account')
-			  {
-				  updateAccountGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'Contacts' && $table_name == 'contactdetails')
-			  {
-				  updateContactGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'Potentials' && $table_name == 'potential')
-			  {
-				  updatePotentialGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'Quotes' && $table_name == 'quotes')
-			  {
-				  updateQuoteGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'SalesOrder' && $table_name == 'salesorder')
-			  {
-				  updateSoGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'Invoice' && $table_name == 'invoice')
-			  {
-				  updateInvoiceGroupRelation($this->id,'');
-			  }
-			  elseif($module == 'PurchaseOrder' && $table_name == 'purchaseorder')
-			  {
-				  updatePoGroupRelation($this->id,'');
-			  }
 			  elseif($module == 'HelpDesk' && $table_name == 'troubletickets')
 			  {
 				  updateTicketGroupRelation($this->id,'');
 			  }
-			  elseif($module =='Activities' || $module =='Events' || $module == 'Emails')
+			  elseif($module =='Activities' || $module =='Events')
 			  {
 				  if($table_name == 'activity')
                                   {
@@ -805,35 +678,10 @@ class CRMEntity extends SugarBean
 		  $groupname = $_REQUEST['assigned_group_name'];
 		  if($_REQUEST['assigntype'] == 'T' && $table_name == 'leaddetails')
 		  {
-			  insert2LeadGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'account')
-		  {
-			  insert2AccountGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'contactdetails')
-		  {
-			  insert2ContactGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'potential')
-		  {
-			  insert2PotentialGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'quotes')
-		  {
-			  insert2QuoteGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'salesorder')
-		  {
-			  insert2SoGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'invoice')
-		  {
-			  insert2InvoiceGroupRelation($this->id,$groupname);
-		  }
-		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'purchaseorder')
-		  {
-			  insert2PoGroupRelation($this->id,$groupname);
+			  if($table_name == 'leaddetails')
+			  {
+				  insert2LeadGroupRelation($this->id,$groupname);
+			  }
 		  }
 		  elseif($_REQUEST['assigntype'] == 'T' && $table_name == 'activity') 
 		  {
@@ -863,8 +711,8 @@ function deleteRelation($table_name)
 }
 function getOldFileName($notesid)
 {
-	   global $log;
-$log->info("in getOldFileName  ".$notesid);
+	global $vtlog;
+$vtlog->logthis("in getOldFileName  ".$notesid,'info');  
 	global $adb;
 	$query1 = "select * from seattachmentsrel where crmid=".$notesid;
 	$result = $adb->query($query1);
@@ -880,8 +728,8 @@ $log->info("in getOldFileName  ".$notesid);
 }
 function insertIntoTicketCommentTable($table_name, $module)
 {
-	global $log;
-	$log->info("in insertIntoTicketCommentTable  ".$table_name."    module is  ".$module);
+	global $vtlog;
+$vtlog->logthis("in insertIntoTicketCommentTable  ".$table_name."    module is  ".$module,'info');  
         global $adb;
 	global $current_user;
 
@@ -891,43 +739,37 @@ function insertIntoTicketCommentTable($table_name, $module)
 	else
 		$ownertype = 'customer';
 
-	if($_REQUEST['comments'] != '')
-	{
-		$comment = addslashes($_REQUEST['comments']);
-		$sql = "insert into ticketcomments values('',".$this->id.",'".$comment."','".$current_user->id."','".$ownertype."','".$current_time."')";
-	        $adb->query($sql);
-	}
+	$comment = addslashes($_REQUEST['comments']);
+	$sql = "insert into ticketcomments values('',".$this->id.",'".$comment."','".$current_user->id."','".$ownertype."','".$current_time."')";
+        $adb->query($sql);
 }
 function insertIntoFAQCommentTable($table_name, $module)
 {
-	 global $log;
-	$log->info("in insertIntoFAQCommentTable  ".$table_name."    module is  ".$module);
+	global $vtlog;
+$vtlog->logthis("in insertIntoFAQCommentTable  ".$table_name."    module is  ".$module,'info');  
         global $adb;
 
         $current_time = date('Y-m-d H:i:s');
 
-	if($_REQUEST['comments'] != '')
-	{
-		$comment = addslashes($_REQUEST['comments']);
-		$sql = "insert into faqcomments values('',".$this->id.",'".$comment."','".$current_time."')";
-		$adb->query($sql);
-	}
+	$comment = addslashes($_REQUEST['comments']);
+	$sql = "insert into faqcomments values('',".$this->id.",'".$comment."','".$current_time."')";
+	$adb->query($sql);
 }
 function insertIntoReminderTable($table_name,$module,$recurid)
 {
-	 global $log;
-$log->info("in insertIntoReminderTable  ".$table_name."    module is  ".$module);
+	global $vtlog;
+$vtlog->logthis("in insertIntoReminderTable  ".$table_name."    module is  ".$module,'info');  
 	if($_REQUEST['set_reminder'] == 'Yes')
 	{
-$log->debug("set reminder is set");
+$vtlog->logthis("set reminder is set",'debug');  
 		$rem_days = $_REQUEST['remdays'];
-$log->debug("rem_days is ".$rem_days);
+$vtlog->logthis("rem_days is ".$rem_days,'debug');  
 		$rem_hrs = $_REQUEST['remhrs'];
-$log->debug("rem_hrs is ".$rem_hrs);
+$vtlog->logthis("rem_hrs is ".$rem_hrs,'debug');  
 		$rem_min = $_REQUEST['remmin'];
-$log->debug("rem_minutes is ".$rem_min);
+$vtlog->logthis("rem_minutes is ".$rem_min,'debug');  
 		$reminder_time = $rem_days * 24 * 60 + $rem_hrs * 60 + $rem_min;
-$log->debug("reminder_time is ".$reminder_time);
+$vtlog->logthis("reminder_time is ".$reminder_time,'debug');  
 		if ($recurid == "")
 		{
 			if($_REQUEST['mode'] == 'edit')
@@ -953,20 +795,20 @@ $log->debug("reminder_time is ".$reminder_time);
 // Code included by Jaguar - starts 
 function insertIntoRecurringTable($table_name,$module)
 {
-	global $log;
-$log->info("in insertIntoRecurringTable  ".$table_name."    module is  ".$module);
-        global $adb;
-        $st_date = getDBInsertDateValue($_REQUEST["date_start"]);
-$log->debug("st_date ".$st_date);
-        $end_date = getDBInsertDateValue($_REQUEST["due_date"]);
-$log->debug("end_date is set ".$end_date);
-        $st=explode("-",$st_date);
-$log->debug("exploding string is ".$st);
-        $end=explode("-",$end_date);
-$log->debug("exploding string again is ".$end);
-        $type = trim($_REQUEST['recurringtype']);
-$log->debug("type is ".$type);
-        $flag="true";
+	global $vtlog;
+$vtlog->logthis("in insertIntoRecurringTable  ".$table_name."    module is  ".$module,'info');  
+	global $adb;
+	$st_date = getDBInsertDateValue($_REQUEST["date_start"]);	
+$vtlog->logthis("st_date ".$st_date,'debug');  
+	$end_date = getDBInsertDateValue($_REQUEST["due_date"]);
+$vtlog->logthis("end_date is set ".$end_date,'debug');  
+	$st=explode("-",$st_date);
+$vtlog->logthis("exploding string is ".$st,'debug');  
+	$end=explode("-",$end_date);
+$vtlog->logthis("exploding string again is ".$end,'debug');  
+	$type = trim($_REQUEST['recurringtype']);
+$vtlog->logthis("type is ".$type,'debug');  
+	$flag="true";
 
 	if($_REQUEST['mode'] == 'edit')
 	{
@@ -1096,8 +938,8 @@ $log->debug("type is ".$type);
 
   function save($module_name) 
   {
-	  global $log;
-        $log->debug("module name is ".$module_name);
+	global $vtlog;
+	$vtlog->logthis("module name is ".$module_name,'debug');  
     //GS Save entity being called with the modulename as parameter
       $this->saveentity($module_name,$migration);
   }
@@ -1178,9 +1020,9 @@ $log->debug("type is ".$type);
 
 
 				//$this->db->println("here is the bug");
-				
+			
 
-				$list[] = clone($this);//added by Richie to support PHP5
+				$list[] = $this;
 			}
 		}
 
@@ -1214,12 +1056,8 @@ $log->debug("type is ".$type);
 				 
 				 
 				
-		//clone function added to resolvoe PHP5 compatibility issue in Dashboards
-		//If we do not use clone, while using PHP5, the memory address remains fixed but the
-	//data gets overridden hence all the rows that come in bear the same value. This in turn
-//provides a wrong display of the Dashboard graphs. The data is erroneously shown for a specific month alone
-//Added by Richie
-				$list[] = clone($this);//added by Richie to support PHP5
+
+				$list[] = $this;
 			}
 		}
 
@@ -1348,7 +1186,7 @@ $log->debug("type is ".$type);
 			}	
 
 			// this copies the object into the array
-			$list[] = clone($copy);//added by Richie to support PHP5
+			$list[] = $copy;
 		}
 
 		return $list;
@@ -1515,7 +1353,7 @@ $sql='select distinct(t.topic_id), t.topic_title, c.cat_title, first.username as
  	                                         }
  	                                 }
  	 
- 	                    $list[] = clone($this);//added by Richie to support PHP5
+ 	                    $list[] = $this;
  	                         }
  	                 }
  	 

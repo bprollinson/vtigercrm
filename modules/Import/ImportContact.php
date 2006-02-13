@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportContact.php,v 1.17 2005/07/11 10:18:21 mickie Exp $
  * Description:  TODO: To be written.
  ********************************************************************************/
 include_once('config.php');
@@ -21,7 +21,7 @@ require_once('include/logging.php');
 /*
 require_once('database/DatabaseConnection.php');
 require_once('data/SugarBean.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('modules/Potentials/Opportunity.php');
 require_once('modules/Cases/Case.php');
 require_once('modules/Tasks/Task.php');
@@ -288,12 +288,7 @@ class ImportContact extends Contact {
 		}*/
 		
 		//$query = "select * from {$focus->table_name} WHERE accountname='{$acc_name}' left join crmentity on crmentity.crmid =account.accountid";
-
-		//Modified to remove the spaces at first and last in account name -- after 4.2 patch 2
-		$adb->println("Account name in csv file related to contact - to be search =>'".$acc_name."'");
-		$acc_name = trim(addslashes($acc_name));
-		$adb->println("Account name going to search in database after addslashes, trim =>'".$acc_name."'");
-
+		$acc_name = addslashes($acc_name);
 		$query = "select crmentity.deleted, account.* from account,crmentity WHERE accountname='{$acc_name}' and crmentity.crmid =account.accountid";
 
                 $this->log->info($query);

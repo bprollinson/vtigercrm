@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/HelpDesk/language/en_us.lang.php,v 1.11 2005/06/14 16:08:34 mickie Exp $
  * Description:  Defines the English language pack
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -148,15 +148,6 @@ $mod_strings = Array(
 'LBL_MORE'=>'More',
 
 'LBL_TICKETS'=>'Tickets',
-
-//Added on 09-12-2005
-'LBL_CUMULATIVE_STATISTICS'=>'Cumulative Statistics',
-
-//Added on 12-12-2005
-'LBL_CONVERT_AS_FAQ_BUTTON_TITLE'=>'Convert As FAQ',
-'LBL_CONVERT_AS_FAQ_BUTTON_KEY'=>'C',
-'LBL_CONVERT_AS_FAQ_BUTTON_LABEL'=>'Convert As FAQ',
-'Attachment'=>'Attachment',
 
 );
 

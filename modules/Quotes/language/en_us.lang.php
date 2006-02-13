@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/language/en_us.lang.php,v 1.8 2005/07/07 14:43:53 saraj Exp $
  * Description:  Defines the English language pack 
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -29,7 +29,7 @@ $mod_strings = Array(
 'LBL_MEMBER_ORG_FORM_TITLE'=>'Member Organizations',
 
 'LBL_LIST_ACCOUNT_NAME'=>'Account Name',
-'LBL_RELATED_PRODUCTS'=>'Product Details',
+'LBL_RELATED_PRODUCTS'=>'Line Items',
 'LBL_LIST_CITY'=>'City',
 'LBL_LIST_WEBSITE'=>'Website',
 'LBL_LIST_STATE'=>'State',
@@ -134,8 +134,6 @@ $mod_strings = Array(
 'Billing State'=>'Billing State',
 'Billing Code'=>'Billing Code',
 'Billing Country'=>'Billing Country',
-'Billing Po Box'=>'Billing Po Box',
-'Shipping Po Box'=>'Shipping Po Box',
 'Shipping City'=>'Shipping City',
 'Shipping State'=>'Shipping State',
 'Shipping Code'=>'Shipping Code',

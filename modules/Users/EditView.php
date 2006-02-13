@@ -23,11 +23,8 @@
 require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
 require_once('modules/Users/User.php');
-require_once('include/utils/UserInfoUtil.php');
 require_once('modules/Users/Forms.php');
 require_once('include/database/PearDatabase.php');
-require_once('modules/Activities/OpenListView.php');
-require_once('modules/Leads/ListViewTop.php');
 
 global $app_strings;
 global $app_list_strings;
@@ -149,33 +146,40 @@ if (is_admin($current_user)) {
         $ROLE_SELECT_OPTION = '<select name="user_role">';
         if($focus->id != '')
         {
-
-		$roleselectedid=fetchUserRole($focus->id);
-		$roleselected=getRoleName($roleselectedid);
-
+          $sql = "select * from role inner join user2role on user2role.roleid=role.roleid  where user2role.userid=" .$focus->id ;
+	   $result = $adb->query($sql);
+           $rolenameArray = $adb->fetch_array($result);
+           $roleselected = $rolenameArray["name"];
+	   $roleselectedid = $rolenameArray["roleid"];
+         }
+	/*
+        else
+        {
+          $sql = "select * from role";
         }
-               
-		$allRoleDetails=getAllRoleDetails();
-		foreach($allRoleDetails as $roleid=>$roleInfoArr)
-		{
-			if($roleid != 'H1')
-			{
-				$rolename=$roleInfoArr[0];
-				$selected = '';
-		        	if($roleselected != '' && $rolename == $roleselected)
-	        		{
-		                	$selected = 'selected';
-        			}
+	*/
+          
+                
+               $sql = "select * from role";
+               $result = $adb->query($sql);
+               $temprow = $adb->fetch_array($result);
+                   do
+                   {
+                    $rolename=$temprow["name"];
+                    $roleid=$temprow["roleid"]; 
+   		    $selected = '';
+		       if($roleselected != '' && $rolename == $roleselected)
+	        	{
+		                $selected = 'selected';
+        		}
         
-                    		$ROLE_SELECT_OPTION .= '<option value="'.$roleid .'" '.$selected .'>';
-                    		$ROLE_SELECT_OPTION .= $rolename;
-                    		$ROLE_SELECT_OPTION .= '</option>';
-			}
-						
-	
-		}
-		$ROLE_SELECT_OPTION .= ' </select>';
-		 
+                    $ROLE_SELECT_OPTION .= '<option value="'.$roleid .'" '.$selected .'>';
+                    $ROLE_SELECT_OPTION .= $temprow["name"];
+                    $ROLE_SELECT_OPTION .= '</option>';
+                   }while($temprow = $adb->fetch_array($result));
+                                  
+                   $ROLE_SELECT_OPTION .= ' </select>';
+                   
                    $xtpl->assign("USER_ROLE", $ROLE_SELECT_OPTION);
 
 
@@ -183,61 +187,34 @@ if (is_admin($current_user)) {
                    
         $GROUP_SELECT_OPTION = '<select name="group_name">';
 		$GROUP_SELECT_OPTION .= '<option value="">--None--</option>';
-               $sql = "select groupname from users2group inner join groups on groups.groupid=users2group.groupid where userid='" .$focus->id ."'";
+               $sql = "select groupname from users2group where userid='" .$focus->id ."'";
                   $result = $adb->query($sql);
 		$groupnameArray = $adb->fetch_array($result);
 		$groupselected = $groupnameArray["groupname"];
-		$sql2 = "select groupname from groups";
+		$sql2 = "select name from groups";
                   $result_name = $adb->query($sql2);
                   $temprow = $adb->fetch_array($result_name);
                    do
                    {
           		  $selected = '';
 
-                    $groupname=$temprow["groupname"];
+                    $groupname=$temprow["name"];
 		       if($groupselected != '' && $groupname == $groupselected)
 	        	{
 		                $selected = 'selected';
         		}
                     $GROUP_SELECT_OPTION .= '<option value="'.$groupname.'" '.$selected.'>';
-                    $GROUP_SELECT_OPTION .= $temprow["groupname"];
+                    $GROUP_SELECT_OPTION .= $temprow["name"];
                     $GROUP_SELECT_OPTION .= '</option>';
                    }while($temprow = $adb->fetch_array($result_name));
                                   
                    $GROUP_SELECT_OPTION .= ' </select>';
                    
                    $xtpl->assign("GROUP_NAME", $GROUP_SELECT_OPTION);
-	
-	$CURRENCY_SELECT_OPTION = '<select name="currency_id">';
-        if($focus->id != '')
-        {
-                $currencyselectedid=fetchCurrency($focus->id);
-                $currencyselected=getCurrencyName($currencyselectedid);
-        }
-        $allCurrency=getDisplayCurrency();
-        foreach($allCurrency as $id=>$currencyInfoArr)
-        {
-               $currencyname=$currencyInfoArr;
-               $selected = '';
-               if($currencyselected != '' && $currencyname == $currencyselected)
-               {
-                       $selected = 'selected';
-               }
-               $CURRENCY_SELECT_OPTION .= '<option value="'.$id .'" '.$selected .'>';
-               $CURRENCY_SELECT_OPTION .= $currencyname;
-               $CURRENCY_SELECT_OPTION .= '</option>';
-        }
-        $CURRENCY_SELECT_OPTION .= ' </select>';
-        $xtpl->assign("CURRENCY_NAME", $CURRENCY_SELECT_OPTION);
+
+	  
 
 }
-$xtpl->assign("ACTIVITY_VIEW", getActivityVIew($focus->activity_view));
-
-$xtpl->assign("LEAD_VIEW", getLeadVIew($focus->lead_view));
-
-		if($focus->cal_color == '') $focus->cal_color = '#E6FAD8';
-
- 		$xtpl->assign("CAL_COLOR",'<INPUT TYPE="text" readonly NAME="cal_color" SIZE="10" VALUE="'.$focus->cal_color.'" style="background-color:'.$focus->cal_color.';"> <img src="include/images/bgcolor.gif" onClick="cp2.select(document.EditView.cal_color,\'pick2\');return false;" NAME="pick2" ID="pick2" align="middle">');
 
 if (isset($default_user_name)
 	&& $default_user_name != ""

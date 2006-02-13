@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportStep3.php,v 1.18.2.1 2005/09/02 11:11:26 cooljaguar Exp $
  * Description:  TODO: To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -200,7 +200,7 @@ if ( isset( $_REQUEST['source_id']))
 
 	//$mapping_file->retrieve_entity_info( $_REQUEST['source_id'],$_REQUEST['return_module']);
 	$mapping_file->retrieve( $_REQUEST['source_id'],false);
-	$adb->println("richie : ".$mapping_file->toString());
+	$adb->println("Shankar : ".$mapping_file->toString());
 
 	$mapping_content = $mapping_file->content;
 

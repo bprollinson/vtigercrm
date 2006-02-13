@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_pipeline_by_sales_stage.php,v 1.17.2.1 2005/08/30 14:24:17 cooljaguar Exp $
  * Description:  returns HTML for client-side image map.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once('include/ComboUtil.php');
@@ -55,7 +55,7 @@ elseif (isset($_REQUEST['pbss_date_start']) && $_REQUEST['pbss_date_start'] != '
 	$log->debug($_SESSION['pbss_date_start']);
 }
 else {
-	$date_start = "2001-01-01";
+	$date_start = date("Y-m-d", time());
 }
 
 if (isset($_SESSION['pbss_date_end']) && $_SESSION['pbss_date_end'] != '' && !isset($_REQUEST['pbss_date_end'])) {

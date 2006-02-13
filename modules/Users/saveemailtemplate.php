@@ -9,34 +9,34 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
-global $log;
+global $vtlog;
 $db = new PearDatabase();
-	$log->debug("the foldername is ".$folderName);
 $folderName = $_REQUEST["foldername"];
+	  $vtlog->logthis("the foldername is ".$folderName,'debug');  
 $templateName = $_REQUEST["templatename"];
-	  $log->debug("the templatename is ".$templateName);
+	  $vtlog->logthis("the templatename is ".$templateName,'debug');  
 $templateid = $_REQUEST["templateid"];
-	  $log->debug("the templateid is ".$templateid);
+	  $vtlog->logthis("the templateid is ".$templateid,'debug');  
 $description = $_REQUEST["description"];
-	  $log->debug("the description is ".$description);
+	  $vtlog->logthis("the description is ".$description,'debug');  
 $subject = $_REQUEST["subject"];
-	  $log->debug("the subject is ".$subject);  
+	  $vtlog->logthis("the subject is ".$subject,'debug');  
 $body = $_REQUEST["body"];
-	  $log->debug("the body is ".$body);  
+	  $vtlog->logthis("the body is ".$body,'debug');  
 if ($body !='')
 {
 	$body = to_html($body);
-	  $log->info("the body value is set ");  
+	  $vtlog->logthis("the body value is set ",'info');  
 }
 if(isset($templateid) && $templateid !='')
 {
-	$log->info("the templateid is set");  
+	$vtlog->logthis("the templateid is set",'info');  
 	$sql = "update emailtemplates set foldername = '".$folderName."', templatename ='".$templateName."', subject ='".$subject."', description ='".$description."', body ='".$body."' where templateid =".$templateid;
 	$adb->query($sql);
  
-	$log->info("about to invoke the detailviewemailtemplate file");  
+	$vtlog->logthis("about to invoke the detailviewemailtemplate file",'info');  
 	header("Location:index.php?module=Users&action=detailviewemailtemplate&templateid=".$templateid);
 }
 else
@@ -44,7 +44,7 @@ else
 	$sql = "insert into emailtemplates values ('". $folderName. "','".$templateName."','".$subject."','".$description."','".$body."',0,".$db->getUniqueID('emailtemplates').")";
 	$adb->query($sql);
 
-	 $log->info("added to the db the emailtemplate");
+	$vtlog->logthis("added to the db the emailtemplate",'info');  
 	header("Location:index.php?module=Users&action=listemailtemplates");
 }
 ?>

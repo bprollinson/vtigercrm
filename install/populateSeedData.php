@@ -26,13 +26,13 @@ require_once('modules/Accounts/Account.php');
 require_once('modules/Potentials/Opportunity.php');
 require_once('modules/Activities/Activity.php');
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/language/en_us.lang.php');
 require_once('include/ComboStrings.php');
 require_once('include/ComboUtil.php');
 require_once('modules/Products/Product.php');
-require_once('modules/PriceBooks/PriceBook.php');
-require_once('modules/Vendors/Vendor.php');
+require_once('modules/Products/PriceBook.php');
+require_once('modules/Products/Vendor.php');
 require_once('modules/Faq/Faq.php');
 require_once('modules/HelpDesk/HelpDesk.php');
 
@@ -72,7 +72,7 @@ $phone = $phone; // This line is useless, but gets around a code analyzer warnin
 function create_date()
 {
 	$date = "";
-	$date .= "2006";
+	$date .= "2005";
 	$date .= "/";
 	$date .= rand(1,9);
 	$date .= "/";
@@ -281,23 +281,12 @@ for($i=0; $i<10; $i++)
 
 }
 
-	$company_count=0;
 for($i=0; $i<10; $i++)
 {
 	$lead = new Lead();
 	$lead->column_fields["firstname"] = ucfirst(strtolower($first_name_array[$i]));
 	$lead->column_fields["lastname"] = ucfirst(strtolower($last_name_array[$i]));
-
-	if($i<5)
-       	{
-        	$lead->column_fields["company"] = ucfirst(strtolower($company_name_array[$i]));
-       	}
-       	else
-       	{
-               	$lead->column_fields["company"] = ucfirst(strtolower($company_name_array[$company_count]));
-               	$company_count++;
-       	}
-
+	$lead->column_fields["company"] = ucfirst(strtolower($company_name_array[$i]));
 	$lead->column_fields["assigned_user_id"] = $assigned_user_id;
 	
 	$lead->column_fields["email"] = strtolower($lead->column_fields["firstname"])."_".strtolower($lead->column_fields["lastname"])."@company.com";
@@ -359,9 +348,10 @@ for($i=0; $i<10; $i++)
 {
 	$vendor = new Vendor();
 	$vendor->column_fields["vendorname"] = ucfirst(strtolower($first_name_array[$i]));
+	$vendor->column_fields["company_name"] = ucfirst(strtolower($company_name_array[$i]));
 	$vendor->column_fields["phone"] = create_phone_number();
 	$vendor->column_fields["email"] = strtolower($vendor->column_fields["vendorname"])."@company.com";
-	$website = str_replace($whitespace, "", strtolower(ucfirst(strtolower($company_name_array[$i]))));
+	$website = str_replace($whitespace, "", strtolower($vendor->column_fields["company_name"]));
         $vendor->column_fields["website"] = "www.".$website.".com";
 
 	$vendor->column_fields["assigned_user_id"] = $assigned_user_id;
@@ -376,7 +366,7 @@ for($i=0; $i<10; $i++)
 	$vendor->column_fields["postalcode"] = '99999';
 	$vendor->column_fields["country"] = 'USA';	
 
-	$vendor->save("Vendors");
+	$vendor->save("Vendor");
 	$vendor_ids[] = $vendor->id;
 
 
@@ -517,7 +507,7 @@ for($i=0;$i<5;$i++)
 
 
 //$severity_array=array("Minor","Major","Critical","");
-$status_array=array("Open","In Progress","Wait For Response","Open","Closed");
+$status_array=array("Open","In Progress","Wait For Response","Open","closed");
 $category_array=array("Big Problem ","Small Problem","Other Problem","Small Problem","Other Problem");
 $ticket_title_array=array("Upload Attachment problem",
 			"Individual Customization -Menu and RSS","Export Output query",
@@ -539,9 +529,6 @@ for($i=0;$i<5;$i++)
 	$helpdesk->column_fields["ticketcategories"]	= $category_array[$i];
 	//$rand_key = array_rand($s);
 	$helpdesk->column_fields["ticket_title"]	= $ticket_title_array[$i];
-	
-        $helpdesk->column_fields["assigned_user_id"] = $assigned_user_id;
-
 	
 	$helpdesk->save("HelpDesk");
 	$helpdesk_ids[] = $helpdesk->id;
@@ -615,11 +602,11 @@ for($i=0;$i<6;$i++)
 		$event->column_fields["activitytype"]	= "Meeting";	
 		$event->column_fields["due_date"]	= $recur_week_date;	
 	}
-	elseif($i>1) 
+	else
 	{
 		$event->column_fields["activitytype"]	= "Call";	
 	}
-	$event->column_fields["assigned_user_id"] = $assigned_user_id;
+
 	$event->save("Activities");
         $event_ids[] = $event->id;
 

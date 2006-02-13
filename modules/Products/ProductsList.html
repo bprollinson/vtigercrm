@@ -9,7 +9,62 @@
  ********************************************************************************/
 -->
 <!-- BEGIN: main -->
-<script language="JavaScript" type="text/javascript" src="modules/Products/Product.js"></script>
+<script language="javascript">
+function massDelete()
+{
+
+	x = document.massdelete.selected_id.length;
+	idstring = "";
+
+	if ( x == undefined)
+	{
+	
+		if (document.massdelete.selected_id.checked)
+		{
+			document.massdelete.idlist.value=document.massdelete.selected_id.value;
+			//alert(document.massdelete.idlist.value);
+		}
+		else 
+		{
+			alert("Please select atleast one entity");
+			return false;
+		}
+	}
+	else
+	{
+		xx = 0;
+		for(i = 0; i < x ; i++)
+		{
+			if(document.massdelete.selected_id[i].checked)
+			{
+				idstring = document.massdelete.selected_id[i].value +";"+idstring
+			xx++	
+			}
+		}
+		if (xx != 0)
+		{
+			document.massdelete.idlist.value=idstring;
+			//alert(document.massdelete.idlist.value);
+		}
+		else
+		{
+			alert("Please select atleast one entity");
+			return false;
+		}
+	}
+document.massdelete.action="index.php?module=Users&action=massdelete&return_module=Products&return_action=index"
+}
+</script>
+
+<script type="text/javascript" language="JavaScript">
+function clear_form(form) {
+	for (j = 0; j < form.elements.length; j++) {
+		if (form.elements[j].type == 'text' || form.elements[j].type == 'select-one') {
+			form.elements[j].value = '';
+		}
+	}
+}
+</script>
 <BR>
 <BR>
 {PRODUCTLISTHEADER}
@@ -36,12 +91,12 @@
   <td colspan="2" class="formSecHeader">Inventory Informatin :</td>
   </tr>
   <tr>
-  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=Vendors&action=EditView&return_module=Vendors&return_action=DetailView">New Vendor</a></div></TD>
-  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=Vendors&action=ListView&return_module=Vendors&return_action=DetailView">Vendors List</a></div></TD>
+  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=Products&action=VendorEditView&return_module=Products&return_action=VendorDetailView">New Vendor</a></div></TD>
+  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=Products&action=VendorListView&return_module=Products&return_action=VendorDetailView">Vendors List</a></div></TD>
   </tr>
   <tr>
-  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=PriceBooks&action=EditView&return_module=PriceBooks&return_action=DetailView">New PriceBook</a></div></TD>
-  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=PriceBooks&action=ListView&return_module=PriceBooks&return_action=DetailView">PriceBook List</a></div></TD>
+  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=Products&action=PriceBookEditView&return_module=Products&return_action=PriceBookDetailView">New PriceBook</a></div></TD>
+  <TD  class="dataLabel" width="50%" noWrap ><div align="left"><a href="index.php?module=Products&action=PriceBookListView&return_module=Products&return_action=PriceBookDetailView">PriceBook List</a></div></TD>
   </tr>
   </TABLE>
 <!-- END: main -->

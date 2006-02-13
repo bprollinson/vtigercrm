@@ -310,6 +310,6 @@
  $l->display($sch);
 ?>
 <!--
-    CVS Info:  $Id$
-    $Author$
+    CVS Info:  $Id: scheme.php,v 1.16 2005/05/03 13:18:48 saraj Exp $
+    $Author: saraj $
 -->

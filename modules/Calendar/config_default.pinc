@@ -14,8 +14,8 @@
  * config.pinc or config.php instead will never be overwritten and is
  * read AFTER config_default.pinc
  *
- *  CVS Info:  $Id$
- *  $Author$
+ *  CVS Info:  $Id: config_default.pinc,v 1.17 2005/05/03 13:18:43 saraj Exp $
+ *  $Author: saraj $
  */
 # -----------------------------------------------------------------
 #

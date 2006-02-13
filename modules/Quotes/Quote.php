@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/Quote.php,v 1.11 2005/07/15 12:12:51 mickie Exp $
  * Description:  Defines the Account SugarBean Account entity with the necessary
  * methods and variables.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -26,8 +26,8 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
-require_once('include/RelatedListView.php');
+require_once('include/utils.php');
+
 // Account is used to store account information.
 class Quote extends CRMEntity {
 	var $log;
@@ -56,7 +56,7 @@ class Quote extends CRMEntity {
 
 	var $column_fields = Array();
 
-	var $sortby_fields = Array('subject','crmid','smownerid');		
+	var $sortby_fields = Array('subject','crmid');		
 
 	// This is used to retrieve related fields from form posts.
 	var $additional_column_fields = Array('assigned_user_name', 'smownerid', 'opportunity_id', 'case_id', 'contact_id', 'task_id', 'note_id', 'meeting_id', 'call_id', 'email_id', 'parent_name', 'member_id' );
@@ -104,10 +104,6 @@ class Quote extends CRMEntity {
 	// This is the list of fields that are required.
 	var $required_fields =  array("accountname"=>1);
 
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'crmid';
-	var $default_sort_order = 'ASC';
-
 	function Quote() {
 		$this->log =LoggerManager::getLogger('quote');
 		$this->db = new PearDatabase();
@@ -115,64 +111,81 @@ class Quote extends CRMEntity {
 	}
 
 	function create_tables () {
+          /*
+		$query = 'CREATE TABLE '.$this->table_name.' ( ';
+		$query .='id char(36) NOT NULL';
+		$query .=', date_entered datetime NOT NULL';
+		$query .=', date_modified datetime NOT NULL';
+		$query .=', modified_user_id char(36) NOT NULL';
+		$query .=', assigned_user_id char(36)';
+		$query .=', name char(150)';
+		$query .=', parent_id char(36)';
+		$query .=', account_type char(25)';
+		$query .=', industry char(25)';
+		$query .=', annual_revenue char(25)';
+		$query .=', phone_fax char(25)';
+		$query .=', billing_address_street char(150)';
+		$query .=', billing_address_city char(100)';
+		$query .=', billing_address_state char(100)';
+		$query .=', billing_address_postalcode char(20)';
+		$query .=', billing_address_country char(100)';
+		$query .=', description text';
+		$query .=', rating char(25)';
+		$query .=', phone_office char(25)';
+		$query .=', phone_alternate char(25)';
+		$query .=', email1 char(100)';
+		$query .=', email2 char(100)';
+		$query .=', website char(255)';
+		$query .=', ownership char(100)';
+		$query .=', employees char(10)';
+		$query .=', sic_code char(10)';
+		$query .=', ticker_symbol char(10)';
+		$query .=', shipping_address_street char(150)';
+		$query .=', shipping_address_city char(100)';
+		$query .=', shipping_address_state char(100)';
+		$query .=', shipping_address_postalcode char(20)';
+		$query .=', shipping_address_country char(100)';
+		$query .=', deleted bool NOT NULL default 0';
+		$query .=', PRIMARY KEY ( id ) )';
+
+		
+
+		$this->db->query($query);
+	//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
+        */
+
 	}
 
 	function drop_tables () {
-   	}
+          /*
+		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
+
+		
+
+		$this->db->query($query);
+
+	//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
+        */
+	}
 
 	function get_summary_text()
 	{
 		return $this->name;
 	}
-	
 	function get_salesorder($id)
 	{
-		require_once('modules/SalesOrder/SalesOrder.php');
-        $focus = new SalesOrder();
- 
-		$button = '';
-
-		$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
-
 		$query = "select crmentity.*, salesorder.*, quotes.subject as quotename, account.accountname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid left outer join quotes on quotes.quoteid=salesorder.quoteid left outer join account on account.accountid=salesorder.accountid where crmentity.deleted=0 and salesorder.quoteid = ".$id;
-		return GetRelatedList('Quotes','SalesOrder',$focus,$query,$button,$returnset);
+		renderRelatedOrders($query,$id);	
 	}
-	
 	function get_activities($id)
-	{	
-		global $app_strings;
-		require_once('modules/Activities/Activity.php');
-        $focus = new Activity();
-
-		$button = '';
-
-        if(isPermitted("Activities",1,"") == 'yes')
-        {
-		$button .= '<input title="'.$app_strings['LBL_NEW_TASK'].'" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.return_action.value=\'DetailView\';this.form.module.value=\'Activities\';this.form.activity_mode.value=\'Task\';this.form.return_module.value=\'Quotes\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_TASK'].'">&nbsp;';
-		}
-		$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT contactdetails.contactid, contactdetails.lastname, contactdetails.firstname, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name,recurringevents.recurringtype from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid left join activitygrouprelation on activitygrouprelation.activityid=crmentity.crmid left join groups on groups.groupname=activitygrouprelation.groupname where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and (activity.status is not NULL && activity.status != 'Completed') and (activity.status is not NULL && activity.status != 'Deferred') or (activity.eventstatus !='' && activity.eventstatus = 'Planned')";
-		return GetRelatedList('Quotes','Activities',$focus,$query,$button,$returnset);
+	{
+		$query = "SELECT contactdetails.contactid, contactdetails.lastname, contactdetails.firstname, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name,recurringevents.recurringtype from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and ( activity.status is NULL || activity.status != 'Completed' ) and (  activity.eventstatus is NULL ||  activity.eventstatus != 'Held')";
+		renderRelatedActivities($query,$id);
 	}
 	function get_history($id)
 	{
-		$query = "SELECT activity.activityid, activity.subject, activity.status,
-				activity.eventstatus, activity.activitytype, contactdetails.contactid,
-				contactdetails.firstname,	contactdetails.lastname, crmentity.modifiedtime,
-				crmentity.createdtime, crmentity.description, users.user_name
-			from activity
-				inner join seactivityrel on seactivityrel.activityid=activity.activityid
-				inner join crmentity on crmentity.crmid=activity.activityid
-				left join cntactivityrel on cntactivityrel.activityid= activity.activityid
-				left join contactdetails on contactdetails.contactid= cntactivityrel.contactid
-				inner join users on crmentity.smcreatorid= users.id
-			where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task')
-  				and (activity.status = 'Completed' or activity.status = 'Deferred' or (activity.eventstatus !='Planned' and activity.eventstatus != ''))
-	 	        	and seactivityrel.crmid=".$id;
-		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
-
-		return getHistory('Quotes',$query,$id);	
+		$query = "SELECT activity.activityid, activity.subject, activity.status, activity.eventstatus, activity.activitytype, activity.description, contactdetails.contactid, contactdetails.firstname, contactdetails.lastname, crmentity.modifiedtime from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid= cntactivityrel.contactid where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task') and (activity.status='Completed' or activity.eventstatus='Held') and seactivityrel.crmid=".$id;
+		renderRelatedHistory($query,$id);
 	}
 }
 

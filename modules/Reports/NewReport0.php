@@ -12,7 +12,7 @@ require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('modules/Reports/Reports.php');
 
 global $app_strings;
@@ -29,12 +29,6 @@ global $focus_list;
 
 echo get_module_title($mod_strings['LBL_MODULE_NAME'],$mod_strings['LBL_CREATE_REPORT'], true);
 echo "\n<BR>\n";
-
-
-/** Function to get the primary module list in reports
- *  This function generates the list of primary modules in reports
- *  and returns the module in a combo HTML values
- */
 
 function getPrimaryModuleList()
 {
@@ -56,12 +50,6 @@ function getPrimaryModuleList()
 	
 	return $shtml;
 }
-
-/** Function to get the Related module list in reports
- *  This function generates the list of secondary modules in reports
- *  and returns the related module in a combo HTML values
- */
-
 function getRelatedModuleList()
 {
 	global $app_list_strings;

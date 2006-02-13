@@ -27,11 +27,19 @@ $focus = new Note();
 if(!isset($_REQUEST['record']))
 	die("A record number must be specified to delete the note.");
 
-DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
+if($_REQUEST['return_module']== 'Contacts')
+{
+	$sql = 'update notes set contact_id = 0 where notesid = '.$_REQUEST['record'];
+	$adb->query($sql);
+}
+$sql = 'delete from senotesrel where notesid = '.$_REQUEST['record']. ' and crmid = '.$_REQUEST['return_id'];
+$adb->query($sql);
 
-//code added for returning back to the current view after delete from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
+$sql_recentviewed ='delete from tracker where user_id = '.$current_user->id.' and item_id = '.$_REQUEST['record'];
+$adb->query($sql_recentviewed);
+if($_REQUEST['return_module'] == $_REQUEST['module'])
+        $focus->mark_deleted($_REQUEST['record']);
 
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&viewname=".$return_viewname);
+
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
 ?>

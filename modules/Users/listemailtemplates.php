@@ -42,7 +42,7 @@ $del="Del  ";
 $bar="  | ";
 $cnt=1;
 
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 do
 {
   $name=$temprow["name"];

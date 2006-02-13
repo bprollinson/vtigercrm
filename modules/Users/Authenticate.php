@@ -21,7 +21,6 @@
  ********************************************************************************/
 
 require_once('modules/Users/User.php');
-require_once('modules/Users/CreateUserPrivilegeFile.php');
 require_once('include/logging.php');
 //require_once('modules/Users/AccessControl.php');
 
@@ -52,7 +51,7 @@ if($focus->is_authenticated())
 	// save the user information into the session
 	// go to the home screen
 	//Security related entries start
-	require_once('include/utils/UserInfoUtil.php');
+	require_once('modules/Users/UserInfoUtil.php');
 	//$rolename = fetchUserRole($focus->id);
 	//$profilename = fetchUserProfile($focus->id);
 	$profileid = fetchUserProfileId($focus->id);	
@@ -69,11 +68,8 @@ if($focus->is_authenticated())
 	$_SESSION['access_privileges'] = $accessObj; 
 	*/
 
-	createUserPrivilegesfile($focus->id);
-        createUserSharingPrivilegesfile($focus->id);	
-		
+	
 	$_SESSION['authenticated_user_profileid'] = $profileid;
-	setGlobalProfilePermission2Session($profileid);
         setPermittedTabs2Session($profileid);
 	setPermittedActions2Session($profileid);
 	setPermittedDefaultSharingAction2Session($profileid);
@@ -86,7 +82,6 @@ if($focus->is_authenticated())
 	session_unregister('login_user_name');
 
 	$_SESSION['authenticated_user_id'] = $focus->id;
-	$_SESSION['app_unique_key'] = $application_unique_key;
 
 	// store the user's theme in the session
 	if (isset($_REQUEST['login_theme'])) {
@@ -125,9 +120,6 @@ if($focus->is_authenticated())
 	
 	$log->debug("authenticated_user_theme is $authenticated_user_theme");
 	$log->debug("authenticated_user_language is $authenticated_user_language");
-	$log->debug("authenticated_user_id is ". $focus->id);
-        $log->debug("app_unique_key is $application_unique_key");
-
 	
 // Clear all uploaded import files for this user if it exists
 

@@ -88,37 +88,14 @@
 
         <td width="20%" class="dataLabel">{MOD.LBL_GROUP_NAME}</td>
         <td width="30%">{GROUP_NAME} </td>
+ 
+      </tr>
         
      <tr>   
-	<td class="dataLabel">{MOD.LBL_ACTIVITY_VIEW}</td>
-	<td>{ACTIVITY_VIEW}</td>
-
-
-        <SCRIPT LANGUAGE="Javascript" SRC="include/js/ColorPicker2.js"></SCRIPT>
-        <SCRIPT LANGUAGE="JavaScript">
-        var cp2 = new ColorPicker('window');
-        //cp2.writeDiv();
-
-        function pickColor(color) {
-          ColorPicker_targetInput.value = color;
-          ColorPicker_targetInput.style.backgroundColor = color;
-                }
-        </SCRIPT>
-        <td width="20%" class="dataLabel"><font class="required">{APP.LBL_REQUIRED_SYMBOL}</font>{MOD.LBL_COLOR} </td>
-   <TD>
-       {CAL_COLOR}
-  </td>
-
-</tr>
-<tr><td class="dataLabel">{MOD.LBL_LEAD_VIEW}</td>
-    <td>{LEAD_VIEW}</td>
-    <td width="20%" class="dataLabel">{MOD.LBL_CURRENCY_NAME}</td>
-    <td width="30%">{CURRENCY_NAME} </td>
-</tr>
-<tr><td class="dataLabel">{MOD.LBL_ADMIN}</td>
-    <td><input name='is_admin' type="checkbox" tabindex='3' {DISABLED} {IS_ADMIN}></td>
-</tr>
-
+	<td class="dataLabel">{MOD.LBL_ADMIN}</td>
+	<td><input name='is_admin' type="checkbox" tabindex='3' {DISABLED} {IS_ADMIN}></td>
+	<td>&nbsp;</td>
+	<td>&nbsp;</td>
 </tr></table>
 </td></tr></table>
 <BR>

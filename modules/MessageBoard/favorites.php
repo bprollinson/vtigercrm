@@ -5,7 +5,7 @@
 *   begin                : Monday, Jan 20, 2003 
 *   copyright            : (C) 2003 Daniel Taylor 
 *   email                : danielt@hackermail.com 
-*   $Id$
+*   $Id: favorites.php,v 1.9 2005/01/04 15:04:11 saraj Exp $
 * 
 * 
 ***************************************************************************/ 

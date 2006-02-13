@@ -6,7 +6,7 @@
  *   copyright            : (C) 2001 The phpBB Group
  *   email                : support@phpbb.com
  *
- *   $Id$
+ *   $Id: page_header.php,v 1.9 2005/01/04 15:04:15 saraj Exp $
  *
  *
  ***************************************************************************/
@@ -511,9 +511,9 @@ function swapImage1($ocolumn,$orig_ocoloumn,$otype)
 $use_lang = ( !file_exists($phpbb_root_path . 'language/lang_' . $board_config['default_lang'] . '/lang_weblog_main.'.$phpEx) ) ? 'english' : $board_config['default_lang'];
 include_once($phpbb_root_path . 'language/lang_' . $use_lang . '/lang_weblog_main.' . $phpEx);
 
-//code by richie
+//code by Shankar
 $myEx="";
-//code by richie
+//code by Shankar
 
 //
 // The following assigns all _common_ variables that may be used at any point

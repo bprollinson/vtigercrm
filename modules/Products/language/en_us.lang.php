@@ -140,7 +140,6 @@ $mod_strings = Array(
 'Postal Code'=>'Postal Code',
 'Country'=>'Country',
 'Description'=>'Description',
-'Po Box'=>'Po Box',
 
 //Mapping for price book
 'Price Book Name'=>'Price Book Name',
@@ -172,7 +171,6 @@ $mod_strings = Array(
 'LBL_IMAGE_ERROR'=>'The given file is not of type image(.gif/.jpg/.png)',
 'LBL_INVALID_IMAGE'=>'Invalid file OR File has no data',
 
-'LBL_EMAIL'=>'Email',
 );
 
 ?>

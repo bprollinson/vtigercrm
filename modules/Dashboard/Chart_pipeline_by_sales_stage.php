@@ -20,7 +20,7 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once('include/ComboUtil.php');
@@ -55,7 +55,7 @@ elseif (isset($_REQUEST['pbss_date_start']) && $_REQUEST['pbss_date_start'] != '
 	$log->debug($_SESSION['pbss_date_start']);
 }
 else {
-	$date_start = "2001-01-01";
+	$date_start = date("Y-m-d", time());
 }
 
 if (isset($_SESSION['pbss_date_end']) && $_SESSION['pbss_date_end'] != '' && !isset($_REQUEST['pbss_date_end'])) {

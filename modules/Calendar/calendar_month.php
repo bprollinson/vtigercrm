@@ -2,8 +2,7 @@
 /**
  * Copyright 1999 - 2004 by Gero Kohnert
  */
-//global $calpath,$callink,$current_user;
-global $calpath,$callink,$current_user,$adb;
+global $calpath,$callink,$current_user;
 $callink = "index.php?module=Calendar&action=";
 include_once $calpath .'webelements.p3';
 include_once $calpath .'permission.p3';
@@ -319,26 +318,8 @@ while ( $go == 1 )
            				//echo "  <tr><td class=\"". $dinfo[color] ."\" colspan=\"3\"><img src=\"". $image_path ."black.png\" width=\"100%\" height=\"1\" alt=\"--------\"></td></tr>\n";
 	   				echo "  <tr><td height=\"2\" colspan=\"4\" class=\"eventSep\"><img src=\"". $image_path ."blank.gif\"></td></tr>\n";
          			}
-				
 				#echo "1 ".$this->user->weekstart ."<br />";
-
-                                $color = "";
-	  	                $username=$pref->callist[$idx]->creator;
-                                if ($username!=""){    
-                                $query="SELECT cal_color FROM users where user_name = '$username'"; 
-                                 
-                                $result=$adb->query($query); 
-                                if($adb->getRowCount($result)!=0)
-				{
-                                	$res = $adb->fetchByAssoc($result, -1, false); 
-                                       	$usercolor = $res['cal_color']; 
-                                       	$color="style=\"background: ".$usercolor.";\"";    
-                                 }
-                         } 
-              		 echo "\n<table class=\"event\" $color cellspacing=\"0\" cellpadding=\"0\" border=\"0\" width=\"100%\">\n";
-
          			$pref->callist[$idx]->formatted();
-				echo "\n<table>";
 				#echo "2 ".$this->user->weekstart ."<br />";
          			$a++;
        			}
@@ -372,11 +353,7 @@ while ( $go == 1 )
  		}
  		$a++;
  		$w++;
-        //	$ts += 86400;
-
-        //changed for fixing the Daylight Saving Time issue as per suggestion by Bushwack post id
-        //http://forums.vtiger.com/viewtopic.php?p=14967#14967
-        $ts = strtotime('+1 day', $ts);
+ 		$ts += 86400;
 }
 if ( $n == 1 ) 
 {
@@ -402,6 +379,6 @@ echo "<br>\n";
 
 ?>
 <!--
-    CVS Info:  $Id: calendar_month.php,v 1.4 2005/02/28 13:27:41 saraj Exp $
-    $Author: saraj $
+    CVS Info:  $Id: calendar_month.php,v 1.4 2005/02/28 13:27:41 sarajkumar Exp $
+    $Author: sarajkumar $
 -->

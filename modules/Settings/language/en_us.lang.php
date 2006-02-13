@@ -64,18 +64,6 @@ $mod_strings = Array(
 
 'LBL_NEW_FORM_TITLE'=>'New Contact',
 
-'LBL_NEW_CURRENCY'=>'New Currency',
-
-'LBL_CURRENCY_NAME'=>'Currency Name',
-
-'LBL_CURRENCY_CODE'=>'Currency Code',
-
-'LBL_CURRENCY_SYMBOL'=>'Currency Symbol',
-
-'LBL_CURRENCY_CRATE'=>'Conversion Rate',
-
-'LBL_CURRENCY_STATUS'=>'Status',
-
 
 
 'NTC_DELETE_CONFIRMATION'=>'Are you sure you want to delete this record?',
@@ -245,10 +233,7 @@ $mod_strings = Array(
 'WORDINTEGRATION'=>'Mail Merge Templates',
 
 'NOTIFICATIONSCHEDULERS'=>'Notification Schedulers',
-//currency status
-'LBL_ACTIVE'=>'Active',
 
-'LBL_INACTIVE'=>'Inactive',
 
 
 //Added fields for Title Informations -- after 4 Beta
@@ -324,18 +309,14 @@ $mod_strings = Array(
 
 'LBL_DEFAULT_ORGANIZATION_FIELDS'=>'Default Organization Fields Access',
 
-'LBL_SETTING_DEFAULT_ORGANIZATION_FIELDS'=>' - Setting Default Field Access within the Organization',
+'LBL_SETTING_DEFAULT_ORGANIZATION_FIELDS'=>'Setting Default Field Access within the Organization',
 
 'LBL_SETTING_DEFAULT_SHARING_ACCESS'=>'- Setting Default Sharing Access within the Organization',
 
 'LBL_FIELD_ACCESSIBILITY'=>'Field Accessibility',
 
 'LBL_SETTING_FIELD_ACCESSIBILITY'=>' - Setting Field Accessibility for each profiles',
-//<<<<<<<<for edit ordering blocks>>>>>>
-'LBL_FIELD_ORDERING_DESC'=>' - Edit Field Order',
 
-'LBL_FIELD_ORDERING'=>'Edit Field Blocks',
-//<<<<<<<<<<end>>>>>>>>>>>>>
 'LBL_LEAD_FIELD_ACCESS'=>'Lead Field Access',
 
 'LBL_ACCOUNT_FIELD_ACCESS'=>'Account Field Access',
@@ -496,10 +477,7 @@ $mod_strings = Array(
 'LBL_SO_FIELD_ACCESS'=>'Sales Order Access',
 'LBL_INVOICE_FIELD_ACCESS'=>'Invoice Field Access',
 'INVENTORYNOTIFICATION'=>'Inventory Notifications',
-'LBL_INVENTORY_NOTIFICATIONS'=>' - Edit Inventory Email Notifications',
-'INVENTORYTERMSANDCONDITIONS'=>'Inventory Terms & Conditions',//newly added for Inventory terms and conditions
-'LBL_INVENTORY_TERMSANDCONDITIONS'=>' - Edit Inventory Terms & Conditions',//newly added
-
+'LBL_INVENTORY_NOTIFICATIONS'=>'Edit Inventory Email Notifications',
 'LBL_INV_NOT_DESC'=>'The following is the list of notifications that are sent to the product handler regarding the demand and the current quantity in hand during the creation of a Quote, SalesOrder and Invoice.',
 
 'InvoiceNotification'=>'Product Stock Notification during Invoice Generation',
@@ -507,32 +485,22 @@ $mod_strings = Array(
 'Vendor'=>'Vendor',
 'PriceBook'=>'PriceBook',
 'Quotes'=>'Quote',
-'PurchaseOrder'=>'Purchase Order',
+'Orders'=>'Purchase Order',
 'SalesOrder'=>'SalesOrder',
 'Invoice'=>'Invoice',
 
 //For Custom Fields
 'LBL_LEAD_MAP_CUSTOM_FIELD'=>'Map Lead Custom Fields',
-'leadCustomFieldDescription'=>'Map each of your organizations lead custom fields to each of your custom account
-,contact, or potential fields. These mappings will be used when you convert leads',
+'leadCustomFieldDescription'=>'Map each of your organizations lead custom fields to each of your custom accoun
+t, contact, or potential fields. These mappings will be used when you convert leads',
 'LBL_MAPPING_INFO'=>'Mapping Information',
 'LBL_ACCOUNT_FIELD'=>'Account Field',
 'LBL_CONTACT_FIELD'=>'Contact Field',
 'LBL_POTENTIAL_FIELD'=>'Potential Field',
 'CUSTOMFIELDMAPPING'=>'Custom Field Mapping',
-'LBL_LEAD_FIELD'=>'Lead Field',
+
 //After 4.2 GA
 'LBL_TEXT_AREA'=>'Text Area',
-//for Edit ordering the blocks
-'NOTESCUSTOMFIELDS'=>'Notes Custom Fields',
-
-//Added fields after 4.2 ptach 2
-'LBL_ASSIGN_MODULE_OWNERS'=>'Assign Module Owners',
-'LBL_ASSIGN_MODULE_OWNERS_INFO'=>' - Assign Owners for each modules',
-'LBL_MODULE'=>'Module',
-'LBL_OWNER'=>'Owner',
-'LBL_MIGRATION'=>'Migrate from Previous Version',
-'LBL_MIGRATION_INFO'=>' - Migration from previous Version of vTiger'
 
 );
 

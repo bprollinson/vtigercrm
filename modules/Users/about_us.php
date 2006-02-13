@@ -3,7 +3,7 @@ global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 require_once('vtigerversion.php');
 if($patch_version !='')
 {
@@ -37,9 +37,14 @@ global $mod_strings;
 </tr>
 
 <tr>
-<td class="dataLabel" height="30 px"><font face="Helvetica, sans-serif"><b>4.2 Release Date:&nbsp;</b></td>
+<td class="dataLabel" height="30 px"><font face="Helvetica, sans-serif"><b>4.2.3 Release Date:&nbsp;</b></td>
 <td class="dataField" height="30 px">&nbsp;<?php echo $release_date; ?><span class="gensmall"> (Current version)</span></td>
-	</tr>
+</tr>
+
+<tr>
+<td class="dataLabel" height="30 px"><font face="Helvetica, sans-serif"><b>4.2 Release Date:&nbsp;</b></td>
+<td class="dataField" height="30 px">&nbsp;18-7-2005</font></td>
+</tr>
 
 <tr>
 <td class="dataLabel" height="30 px"><font face="Helvetica, sans-serif"><b>4.0.1 Release Date:&nbsp;</b></td>

@@ -11,8 +11,8 @@
 require_once('include/database/PearDatabase.php');
 require_once('XTemplate/xtpl.php');
 require_once('modules/Products/Product.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('include/ComboUtil.php');
 
 global $app_strings;
@@ -25,7 +25,7 @@ global $urlPrefix;
 
 
 global $theme;
-global $log;
+global $vtlog;
 $pricebook_id = $_REQUEST['pricebook_id'];
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -333,7 +333,7 @@ $list_body ='';
 for($i=0; $i<$num_rows; $i++)
 {
 	
-	 $log->info("Products :: Showing the List of products to be added in price book");
+	$vtlog->logthis("Products :: Showing the List of products to be added in price book","info");
 	$entity_id = $adb->query_result($list_result,$i,"crmid");
 	if(! array_key_exists($entity_id, $prod_array))
 	{

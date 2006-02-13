@@ -20,16 +20,21 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
 require_once('modules/Activities/Activity.php');
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
-require_once('include/utils/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/CustomView/CustomView.php');
 
 global $app_strings;
+global $app_list_strings;
+global $current_language;
+$current_module_strings = return_module_language($current_language, 'Activities');
+
 global $list_max_entries_per_page;
+global $urlPrefix;
 
 $log = LoggerManager::getLogger('task_list');
 
@@ -43,69 +48,186 @@ global $focus_list;
 
 if (isset($_REQUEST['current_user_only'])) $current_user_only = $_REQUEST['current_user_only'];
 
-$focus = new Activity();
-$smarty = new vtigerCRM_Smarty;
-$other_text = Array();
-
-//<<<<<<< sort ordering >>>>>>>>>>>>>
-$sorder = $focus->getSortOrder();
-$order_by = $focus->getOrderBy();
-
-$_SESSION['ACTIVITIES_ORDER_BY'] = $order_by;
-$_SESSION['ACTIVITIES_SORT_ORDER'] = $sorder;
-//<<<<<<< sort ordering >>>>>>>>>>>>>
-
-
 //<<<<cutomview>>>>>>>
-$oCustomView = new CustomView($currentModule);
+$oCustomView = new CustomView("Activities");
 $customviewcombo_html = $oCustomView->getCustomViewCombo();
-$viewid = $oCustomView->getViewId($currentModule);
-$viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+if(isset($_REQUEST['viewname']) == false)
+{
+	if($oCustomView->setdefaultviewid != "")
+	{
+		$viewid = $oCustomView->setdefaultviewid;
+	}else
+	{
+		$viewid = "0";
+	}
+}else
+{
+	$viewid =  $_REQUEST['viewname'];
+}
 //<<<<<customview>>>>>
+
+if (!isset($_REQUEST['search_form']) || $_REQUEST['search_form'] != 'false') {
+	// Stick the form header out there.
+	$search_form=new XTemplate ('modules/Activities/SearchForm.html');
+	$search_form->assign("MOD", $current_module_strings);
+	$search_form->assign("APP", $app_strings);
+
+	//viewid is given to show the actual view<<<<<<<<<<customview>>>>>>>>
+	$search_form->assign("VIEWID",$viewid);
+	//<<<<<<<customview>>>>>>>>>>
+
+	$search_form->assign("JAVASCRIPT", get_clear_form_js());
+	$search_form->assign("ALPHABETICAL",AlphabeticalSearch('Activities','index','name','true','basic',"","","","",$viewid));
+
+	if(isset($_REQUEST['query'])) {
+		if (isset($_REQUEST['name'])) $search_form->assign("NAME", $_REQUEST['name']);
+		if (isset($_REQUEST['contactname'])) $search_form->assign("CONTACT_NAME", $_REQUEST['contactname']);
+		if(isset($current_user_only)) $search_form->assign("CURRENT_USER_ONLY", "checked");
+	}
+	$search_form->parse("main");
+
+	echo get_form_header($current_module_strings['LBL_SEARCH_FORM_TITLE'], "", false);
+	$search_form->out("main");
+	echo get_form_footer();
+	echo "\n<BR>\n";
+}
 
 
 $where = "";
 
+
+$focus = new Activity();
+
+if (isset($_REQUEST['order_by'])) $order_by = $_REQUEST['order_by'];
+
 $url_string = ''; // assigning http url string
+$sorder = 'ASC';  // Default sort order
+if(isset($_REQUEST['sorder']) && $_REQUEST['sorder'] != '')
+$sorder = $_REQUEST['sorder'];
 
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-	$where=Search($currentModule);
 	// we have a query
 	$url_string .="&query=true";
-	
+	if (isset($_REQUEST['name'])) $name = $_REQUEST['name'];
+	if (isset($_REQUEST['contactname'])) $contactname = $_REQUEST['contactname'];
+	if (isset($_REQUEST['date_due'])) $date_due = $_REQUEST['date_due'];
+	if (isset($_REQUEST['status'])) $status = $_REQUEST['status'];
+
+	$where_clauses = Array();
+
+	if(isset($current_user_only) && $current_user_only != ""){
+		//fix as requested by Fredy for getting the proper behaviour in Activity Search
+		array_push($where_clauses, "crmentity.smownerid='$current_user->id'");
+		$url_string .= "&current_user_only=".$current_user_only;
+	}
+	if(isset($name) && $name != '')
+	{
+		array_push($where_clauses, "activity.subject like ".PearDatabase::quote($name.'%')."");
+		$url_string .= "&name=".$name;
+	}
+	if(isset($contactname) && $contactname != '')
+	{
+		//$contactnames = explode(" ", $contactname);
+		//foreach ($contactnames as $name) {
+		array_push($where_clauses, "(contactdetails.firstname like ".PearDatabase::quote($contactname.'%')." OR contactdetails.lastname like ".PearDatabase::quote($contactname.'%').")");
+		$url_string .= "&contactname=".$contactname;
+		//}
+	}
+	if(isset($duedate) && $duedate != '')
+	{
+		array_push($where_clauses, "activity.duedate like ".PearDatabase::quote($datedue.'%')."");
+	}
+	if(isset($status) && $status != '')
+	{
+		$each_status = explode("--", $status);
+
+		$the_where_clause = "(";
+		$val = reset($each_status);
+		do {
+			$the_where_clause .= "activity.status = ".PearDatabase::quote($val);
+			$val = next($each_status);
+			if ($val) $the_where_clause .= " OR ";
+		} while($val);
+		$the_where_clause .= ")";
+		array_push($where_clauses, $the_where_clause);
+	}
+
+	$where = "";
+	if (isset($where_clauses)) {
+		foreach($where_clauses as $clause)
+		{
+			if($where != "")
+			$where .= " and ";
+			$where .= $clause;
+		}
+	}
 	$log->info("Here is the where clause for the list view: $where");
 
 }
 
 
-if($viewnamedesc['viewname'] == 'All')
+// Buttons and View options
+/*$other_text = '<table width="100%" border="0" cellpadding="1" cellspacing="0">
+	<form name="massdelete" method="POST">
+	<tr>
+	<input name="idlist" type="hidden">
+	<input name="viewname" type="hidden">
+	<input name="change_owner" type="hidden">
+	<input name="change_status" type="hidden">
+		<td><input class="button" type="submit" value="'.$app_strings[LBL_MASS_DELETE].'" onclick="return massDelete()"/>
+   		<!--input class="button" type="submit" value="'.$app_strings[LBL_CHANGE_OWNER].'" onclick="this.form.change_owner.value=\'true\'; return changeStatus()"/>
+	       <input class="button" type="submit" value="'.$app_strings[LBL_CHANGE_STATUS].'" onclick="this.form.change_status.value=\'true\'; return changeStatus()"/--></td>
+		<td align="right">'.$app_strings[LBL_VIEW].'
+			<SELECT NAME="view" onchange="showDefaultCustomView(this)">
+				<OPTION VALUE="'.$mod_strings[MOD.LBL_ALL].'">'.$mod_strings[LBL_ALL].'</option>
+				<OPTION VALUE="'.$mod_strings[LBL_CALL].'">'.$mod_strings[LBL_CALL].'</option>
+				<OPTION VALUE="'.$mod_strings[LBL_MEETING].'">'.$mod_strings[LBL_MEETING].'</option>
+				<OPTION VALUE="'.$mod_strings[LBL_TASK].'">'.$mod_strings[LBL_TASK].'</option>
+			</SELECT>
+		</td>
+	</tr>
+	</table>';
+//*/
+if($viewid == 0)
 {
-$cvHTML = '<td><a href="index.php?module=Activities&action=CustomView">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>
-<span class="small">|</span>
-<span class="small" disabled>'.$app_strings['LNK_CV_EDIT'].'</span>
-<span class="small">|</span>
-<span class="small" disabled>'.$app_strings['LNK_CV_DELETE'].'</span></td>';
+$cvHTML = '<span class="bodyText disabled">'.$app_strings['LNK_CV_EDIT'].'</span>
+<span class="sep">|</span>
+<span class="bodyText disabled">'.$app_strings['LNK_CV_DELETE'].'</span><span class="sep">|</span>
+<a href="index.php?module=Activities&action=CustomView" class="link">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>';
 }
 else
 {
-$cvHTML = '<td><a href="index.php?module=Activities&action=CustomView">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>
-<span class="small">|</span>
-<a href="index.php?module=Activities&action=CustomView&record='.$viewid.'">'.$app_strings['LNK_CV_EDIT'].'</a>
-<span class="small">|</span>
-<a href="index.php?module=CustomView&action=Delete&dmodule=Activities&record='.$viewid.'">'.$app_strings['LNK_CV_DELETE'].'</a></td>';
+$cvHTML = '<a href="index.php?module=Activities&action=CustomView&record='.$viewid.'" class="link">'.$app_strings['LNK_CV_EDIT'].'</a>
+<span class="sep">|</span>
+<a href="index.php?module=CustomView&action=Delete&dmodule=Activities&record='.$viewid.'" class="link">'.$app_strings['LNK_CV_DELETE'].'</a>
+<span class="sep">|</span>
+<a href="index.php?module=Activities&action=CustomView" class="link">'.$app_strings['LNK_CV_CREATEVIEW'].'</a>';
 }
 
+$other_text = '<table width="100%" border="0" cellpadding="1" cellspacing="0">
+	<form name="massdelete" method="POST">
+	<tr>
+	<input name="idlist" type="hidden">
+	<input name="viewname" type="hidden" value="'.$viewid.'">
+	<input name="change_owner" type="hidden">
+	<input name="change_status" type="hidden">
+		<td>';
 if(isPermitted("Activities",2,$_REQUEST['record']) == 'yes')
 {
-	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
+	$other_text .= '<input class="button" type="submit" value="'.$app_strings[LBL_MASS_DELETE].'" onclick="return massDelete()"/>';
 }
-	$customviewstrings='<td>'.$app_strings['LBL_VIEW'].'</td>
-			<td style="padding-left:5px;padding-right:5px">
-			<SELECT NAME="viewname" class="small" onchange="showDefaultCustomView(this)">
+   	$other_text .='<!--input class="button" type="submit" value="'.$app_strings[LBL_CHANGE_OWNER].'" onclick="this.form.change_owner.value=\'true\'; return changeStatus()"/>
+	       <input class="button" type="submit" value="'.$app_strings[LBL_CHANGE_STATUS].'" onclick="this.form.change_status.value=\'true\'; return changeStatus()"/--></td>
+		<td align="right">'.$app_strings[LBL_VIEW].'
+			<SELECT NAME="view" onchange="showDefaultCustomView(this)">
+				<OPTION VALUE="0">'.$mod_strings[LBL_ALL].'</option>
 				'.$customviewcombo_html.'
-			</SELECT></td>
-			'.$cvHTML;
+			</SELECT>
+			'.$cvHTML.'
+		</td>
+	</tr>
+	</table>';
 //
 
 global  $task_title;
@@ -129,14 +251,40 @@ if(isset($where) && $where != '')
 	$list_query .= " AND " .$where;
 }
 
+/*if(isset($_REQUEST['viewname']) && $_REQUEST['viewname']!='')
+{
+	if($_REQUEST['viewname'] == 'All')
+	   {
+	           $defaultcv_criteria = '';
+      }
+     else
+    {
+          $defaultcv_criteria = $_REQUEST['viewname'];
+       }
+
+  $list_query .= " and activitytype like "."'%" .$defaultcv_criteria ."%'";
+  $viewname = $_REQUEST['viewname'];
+  $view_script = "<script language='javascript'>
+		function set_selected()
+		{
+			len=document.massdelete.view.length;
+			for(i=0;i<len;i++)
+			{
+				if(document.massdelete.view[i].value == '$viewname')
+					document.massdelete.view[i].selected = true;
+			}
+		}
+		set_selected();
+		</script>";
+}*/
 $view_script = "<script language='javascript'>
 	function set_selected()
 	{
-		len=document.massdelete.viewname.length;
+		len=document.massdelete.view.length;
 		for(i=0;i<len;i++)
 		{
-			if(document.massdelete.viewname[i].value == '$viewid')
-				document.massdelete.viewname[i].selected = true;
+			if(document.massdelete.view[i].value == '$viewid')
+				document.massdelete.view[i].selected = true;
 		}
 	}
 	set_selected();
@@ -146,26 +294,19 @@ $list_query .= ' GROUP BY crmentity.crmid'; //Appeding for the recurring event b
 
 if(isset($order_by) && $order_by != '')
 {
-	$tablename = getTableNameForField('Activities',$order_by);
-	$tablename = (($tablename != '')?($tablename."."):'');
-
-        $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
+        $list_query .= ' ORDER BY '.$order_by.' '.$sorder;
 }
 
 $list_result = $adb->query($list_query);
 
 //Constructing the list view
 
-$smarty->assign("CUSTOMVIEW", $customviewstrings);
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD",'Activity');
-$smarty->assign("BUTTONS",$other_text);
-$smarty->assign("NEW_EVENT",$app_strings['LNK_NEW_EVENT']);
-$smarty->assign("NEW_TASK",$app_strings['LNK_NEW_TASK']);
 
+echo get_form_header($current_module_strings['LBL_LIST_FORM_TITLE'],$other_text, false);
+$xtpl=new XTemplate ('modules/Activities/ListView.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("IMAGE_PATH",$image_path);
 
 //Retreiving the no of rows
 $noofrows = $adb->num_rows($list_result);
@@ -174,9 +315,6 @@ $noofrows = $adb->num_rows($list_result);
 if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
 {
 	$start = $_REQUEST['start'];
-
-	//added to remain the navigation when sort
-	$url_string = "&start=".$_REQUEST['start'];
 }
 else
 {
@@ -187,40 +325,59 @@ else
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
 
 // Setting the record count string
-//modified by rdhital
-$start_rec = $navigation_array['start'];
-$end_rec = $navigation_array['end_val']; 
-//By raju Ends
+if ($navigation_array['start'] == 1)
+{
+	if($noofrows != 0)
+	$start_rec = $navigation_array['start'];
+	else
+	$start_rec = 0;
+	if($noofrows > $list_max_entries_per_page)
+	{
+		$end_rec = $navigation_array['start'] + $list_max_entries_per_page - 1;
+	}
+	else
+	{
+		$end_rec = $noofrows;
+	}
 
-
-$record_string= $app_strings['LBL_SHOWING']." " .$start_rec." - ".$end_rec." " .$app_strings['LBL_LIST_OF'] ." ".$noofrows;
+}
+else
+{
+	if($navigation_array['next'] > $list_max_entries_per_page)
+	{
+		$start_rec = $navigation_array['next'] - $list_max_entries_per_page;
+		$end_rec = $navigation_array['next'] - 1;
+	}
+	else
+	{
+		$start_rec = $navigation_array['prev'] + $list_max_entries_per_page;
+		$end_rec = $noofrows;
+	}
+}
+$record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
 //Retreive the List View Table Header
 if($viewid !='')
 $url_string .="&viewname=".$viewid;
 
-//Cambiado code to add close button in custom field
-if (($viewid!=0)&&($viewid!="")){
-  if (!isset($oCustomView->list_fields['Close'])) $oCustomView->list_fields['Close']=array ( 'activity' => 'status' );
-  if (!isset($oCustomView->list_fields_name['Close'])) $oCustomView->list_fields_name['Close']='status';
-}
 $listview_header = getListViewHeader($focus,"Activities",$url_string,$sorder,$order_by,"",$oCustomView);
-$smarty->assign("LISTHEADER", $listview_header);
-
-$listview_header_search=getSearchListHeaderValues($focus,"Activities",$url_string,$sorder,$order_by,"",$oCustomView);
-$smarty->assign("SEARCHLISTHEADER", $listview_header_search);
+$xtpl->assign("LISTHEADER", $listview_header);
 
 $listview_entries = getListViewEntries($focus,"Activities",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
-$smarty->assign("LISTENTITY", $listview_entries);
-$smarty->assign("SELECT_SCRIPT", $view_script);
+$xtpl->assign("LISTENTITY", $listview_entries);
+$xtpl->assign("SELECT_SCRIPT", $view_script);
+
+if($order_by !='')
+$url_string .="&order_by=".$order_by;
+if($sorder !='')
+$url_string .="&sorder=".$sorder;
 
 $navigationOutput = getTableHeaderNavigation($navigation_array,$url_string,"Activities","index",$viewid);
-$smarty->assign("NAVIGATION", $navigationOutput);
-$smarty->assign("RECORD_COUNTS", $record_string);
-$category = getParentTab();
-$smarty->assign("CATEGORY",$category);
+$xtpl->assign("NAVIGATION", $navigationOutput);
+$xtpl->assign("RECORD_COUNTS", $record_string);
 
+$xtpl->parse("main");
 
+$xtpl->out("main");
 
-$smarty->display("ListView.tpl");
 ?>

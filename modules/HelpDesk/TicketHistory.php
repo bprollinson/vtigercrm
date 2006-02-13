@@ -9,8 +9,9 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
+require_once('HelpDeskUtil.php');
 require_once('XTemplate/xtpl.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
 global $app_strings;
 global $app_list_strings;
@@ -27,16 +28,19 @@ $ticketid = $_REQUEST['record'];
 $query="select title,update_log from troubletickets where ticketid=".$ticketid;
 $result=$adb->query($query);
 $update_log = $adb->query_result($result,0,"update_log");
-$splitval = split('--//--',trim($update_log,'--//--')); 
-
+$splitval = split('--//--',$update_log); 
 $noofelements= sizeof($splitval);
 $outHistory='';
 for($i=0;$i<$noofelements;$i++)
 {
-	$outHistory .= '<tr><TD  width="50%" class="dataLabel">	<div align="left" style="padding:1px">'.$splitval[$i].'</div></TD></tr>';
+	
+	$outHistory .= '<tr>';
+	$outHistory .= '<TD  class="dataLabel" width="50%" noWrap ><div align="left">'.$splitval[$i].'</div></TD></tr>';
 	$i++;
-	$outHistory .= '<tr><TD  width="50%">			<div align="left" style="padding:1px">'.$splitval[$i].'</div></TD></tr>';
+	$outHistory .= '<tr><TD  width="50%" noWrap ><div align="left">'.$splitval[$i].'</div></TD>';
+	$outHistory .= '</tr>';
 }
+
 
 $xtpl=new XTemplate ('modules/HelpDesk/TicketHistory.html');
 if ($noofelements > 15)

@@ -20,7 +20,7 @@
 
 require_once('modules/Emails/Email.php');
 require_once('include/logging.php');
-require("modules/Emails/class.phpmailer.php");
+require("class.phpmailer.php");
 require_once('include/database/PearDatabase.php');
 
 $local_log =& LoggerManager::getLogger('index');
@@ -31,21 +31,19 @@ sendmail($_REQUEST['assigned_user_id'],$current_user->user_name,$_REQUEST['name'
 
 function sendmail($to,$from,$subject,$contents,$mail_server,$mail_server_username,$mail_server_password)
 {
-	global $adb,$root_directory,$mod_strings, $log;
+global $adb,$root_directory,$mod_strings, $vtlog;
 
 	$sql = $_REQUEST['query'];
 	$result= $adb->query($sql);
 	
 	$noofrows = $adb->num_rows($result);
 
-	//$dbQuery = 'select attachments.*, activity.subject, crmentity.description  from activity inner join crmentity on crmentity.crmid = activity.activityid left join seattachmentsrel on seattachmentsrel.crmid = activity.activityid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid = '.$_REQUEST['return_id'];
-	$dbQuery = 'select attachments.*, activity.subject, crmentity.description  from activity inner join crmentity on crmentity.crmid = activity.activityid left join seattachmentsrel on seattachmentsrel.crmid = activity.activityid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid = '.PearDatabase::quote($_REQUEST['return_id']);
+	$dbQuery = 'select attachments.*, activity.subject, emails.description  from emails inner join crmentity on crmentity.crmid = emails.emailid inner join activity on activity.activityid = crmentity.crmid left join seattachmentsrel on seattachmentsrel.crmid = emails.emailid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid = '.$_REQUEST['return_id'];
 
         $result1 = $adb->query($dbQuery) or die("Couldn't get file list");
 	$temparray = $adb->fetch_array($result1);
 
-	//$notequery = 'select  attachments.*, notes.notesid, notes.filename,notes.notecontent  from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid='.$_REQUEST['return_id'];
-	$notequery = 'select  attachments.*, notes.notesid, notes.filename,notes.notecontent  from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid='.PearDatabase::quote($_REQUEST['return_id']);
+	$notequery = 'select  attachments.*, notes.notesid, notes.filename,notes.notecontent  from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid='.$_REQUEST['return_id'];
 	$result2 = $adb->query($notequery) or die("Couldn't get file list");
 
 	$mail = new PHPMailer();
@@ -54,8 +52,7 @@ function sendmail($to,$from,$subject,$contents,$mail_server,$mail_server_usernam
 
 	$DESCRIPTION = $adb->query_result($result1,0,"description");
 	$DESCRIPTION .= '<br><br>';
-	//$DESCRIPTION .= '<font color=darkgrey>'.nl2br($adb->query_result($adb->query("select * from users where user_name='".$from."'"),0,"signature")).'</font>';
-	$DESCRIPTION .= '<font color=darkgrey>'.nl2br($adb->query_result($adb->query("select * from users where user_name=".PearDatabase::quote($from)),0,"signature")).'</font>';
+	$DESCRIPTION .= '<font color=darkgrey>'.nl2br($adb->query_result($adb->query("select * from users where user_name='".$from."'"),0,"signature")).'</font>';
 
         $mail->Body    = nl2br($DESCRIPTION);
 	$initialfrom = $from;
@@ -68,21 +65,20 @@ function sendmail($to,$from,$subject,$contents,$mail_server,$mail_server_usernam
 		$mail_server_username=$adb->query_result($mailserverresult,0,'server_username');
                 $mail_server_password=$adb->query_result($mailserverresult,0,'server_password');
 		$_REQUEST['server']=$mail_server;
-		 $log->info("Mail Server is selected => '".$mail_server."'");
-                $log->info("Mail Server UserName is selected => '".$mail_server_username."'");
-                $log->info("Mail Server Password is selected => '".$mail_server_password."'");
+		$vtlog->logthis("Mail Server is selected => '".$mail_server."'",'info');
+                $vtlog->logthis("Mail Server UserName is selected => '".$mail_server_username."'",'info');
+                $vtlog->logthis("Mail Server Password is selected => '".$mail_server_password."'",'info');
 	}
 		$mail->Host = $mail_server;
 		$mail->SMTPAuth = true;
 		$mail->Username = $mail_server_username;
 		$mail->Password = $mail_server_password;
-		//$mail->From = $adb->query_result($adb->query("select * from users where user_name='".$from."'"),0,"email1");
-
-		$mail->From = $adb->query_result($adb->query("select * from users where user_name=".PearDatabase::quote($from)),0,"email1");
+		$mail->From = $adb->query_result($adb->query("select * from users where user_name='".$from."'"),0,"email1");
 		$mail->FromName = $initialfrom;
+//		$mail->AddAddress($to);
 		$mail->AddReplyTo($from);
 		$mail->WordWrap = 50;
-		$log->info("From name & id are set in mail object => '".$mail->FromName."<".$mail->From.">' ");
+		$vtlog->logthis("From name & id are set in mail object => '".$mail->FromName."<".$mail->From.">' ",'info');
 
 //store this to the hard disk and give that url
 
@@ -94,11 +90,15 @@ for($i=0;$i< $adb->num_rows($result1);$i++)
 
 	if(!@$handle = fopen($root_directory."/test/upload/".$filename,"wb")){}
 
+	//chmod("/home/rajeshkannan/test/".$fileContent,0755);
 	if(!@fwrite($handle,base64_decode($fileContent),$filesize)){}
 	if(!@fclose($handle)){}
 
+	//select 
 	$mail->AddAttachment($root_directory."/test/upload/".$filename);//temparray['filename']) // add attachments
-	 $log->info("File '".$filename."' is attached with the mail.");
+	$vtlog->logthis("File '".$filename."' is attached with the mail.",'info');
+//	$mail->IsHTML(true);
+//	$mail->AltBody = "This is the body in plain text for non-HTML mail clients";
 }
 
 for($i=0;$i< $adb->num_rows($result2);$i++)
@@ -109,11 +109,13 @@ for($i=0;$i< $adb->num_rows($result2);$i++)
 
         if(!@$handle = fopen($root_directory."/test/upload/".$filename,"wb")){}
 
+        //chmod("/home/rajeshkannan/test/".$fileContent,0755);
         if(!@fwrite($handle,base64_decode($fileContent),$filesize)){}
         if(!@fclose($handle)){}
 
+        //select
         $mail->AddAttachment($root_directory."/test/upload/".$filename);//temparray['filename']) // add attachments
-	$log->info("File '".$filename."' is attached with the mail.");
+	$vtlog->logthis("File '".$filename."' is attached with the mail.",'info');
 }
 $mail->IsHTML(true);
 $mail->AltBody = "This is the body in plain text for non-HTML mail clients";
@@ -134,14 +136,14 @@ for($i=0;$i< $noofrows;$i++)
 		$to=$adb->query_result($result,$i,"email");
 
 	$mail->AddAddress($to);
-	 $log->info("To email address is added in the mail object => '".$to."'");
+	$vtlog->logthis("To email address is added in the mail object => '".$to."'",'info');
 	$emailoptout = $adb->query_result($result,$i,"emailoptout");
 	if($emailoptout == 1 && $to != '')
 	{
 		$mail->ClearAddresses();
 		$mail->AddAddress("");
 		$emailoptout_error = true;
-	$log->info("Email opt out (contact) value is set. So To email id address cleared(empty).");
+		$vtlog->logthis("Email opt out (contact) value is set. So To email id address cleared(empty).",'info');
 	}
 
 	$j=$i+1;
@@ -159,11 +161,11 @@ for($i=0;$i< $noofrows;$i++)
 				echo '<tr><b><h3>'.$mod_strings['MESSAGE_MAIL_HAS_SENT_TO_CONTACTS'].' </h3></b></tr>';
 		}
                 echo '<center><tr align="left"><b><h3>'.$j.' . '.$to.'</h3></b></tr></center>';
-	  $log->info("Mail has been sent from vtiger system. Status => '".$mail->ErrorInfo."'");
-}
+		$vtlog->logthis("Mail has been sent from vtiger system. Status => '".$mail->ErrorInfo."'",'info');
+	}
 	else
 	{
-		$log->info("Error block : Mail sending process failed. Status => '".$mail->ErrorInfo."'");
+		$vtlog->logthis("Error block : Mail sending process failed. Status => '".$mail->ErrorInfo."'",'info');
 		$message = substr($mail->ErrorInfo,0,49);
 		$flag = false;
 		if($message=='Language string failed to load: connect_host')

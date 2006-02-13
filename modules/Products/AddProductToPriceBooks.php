@@ -10,9 +10,9 @@
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
 require_once('XTemplate/xtpl.php');
-require_once('modules/PriceBooks/PriceBook.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('modules/Products/PriceBook.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('include/ComboUtil.php');
 
 global $app_strings;
@@ -25,7 +25,7 @@ global $urlPrefix;
 
 
 global $theme;
-global $log;
+global $vtlog;
 $productid = $_REQUEST['return_id'];
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -60,7 +60,8 @@ $other_text = '<table border="0" cellpadding="1" cellspacing="0">
 //Retreive the list from Database
 
 //$list_query = $focus->get_nonproduct_pricebooks($productid);
-$list_query = getListQuery("PriceBooks");
+$list_query = getListQuery("PriceBook");
+
 $xtpl->assign("PRICEBOOKLISTHEADER", get_form_header($current_module_strings['LBL_LIST_PRICEBOOK_FORM_TITLE'], $other_text, false ));
 
 $list_query .= ' ORDER BY pricebookid DESC ';
@@ -120,8 +121,8 @@ $xtpl->assign("LISTHEADER", $list_header);
 $list_body ='';
 for($i=0; $i<$num_rows; $i++)
 {	
-
-	$log->info("Products :: Showing Price Books to be added in the product");
+	
+	$vtlog->logthis("Products :: Showing Price Books to be added in the product","info");
 	$entity_id = $adb->query_result($list_result,$i,"crmid");
 	if(! array_key_exists($entity_id, $pbk_array))
 	{

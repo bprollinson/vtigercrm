@@ -19,7 +19,7 @@
  */
 
 
-//file modified by richie
+//file modified by shankar
 
 require("modules/Emails/class.phpmailer.php");
 require("include/database/PearDatabase.php");
@@ -173,13 +173,13 @@ function MailSend($mail)
 {
         if(!$mail->Send())
         {
-        $log->fatal("error in sending mail ");   
-	$msg = $mail->ErrorInfo;
+$vtlog->logthis("error in sending mail ",'fatal');  	
+           $msg = $mail->ErrorInfo;
            //header("Location: index.php?action=$returnaction&module=".$_REQUEST['return_module']."&parent_id=$parent_id&record=".$_REQUEST['return_id']."&filename=$filename&message=$msg");
         }
 	else 
 	{
-			 $log->info("mail sent successfully! ");
+			$vtlog->logthis("mail sent successfully! ",'info');  	
 			return true;
 	}
 }
@@ -211,7 +211,7 @@ function getParentMailId($returnmodule,$parentid)
                         $mailid = $adb->query_result($adb->query($query),0,'yahooid');
         }
 
-$log->debug("mailid is  ".$mailid);
+$vtlog->logthis("mailid is  ".$mailid,'debug');  	
 	return $mailid;
 }
 

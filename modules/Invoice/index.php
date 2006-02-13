@@ -28,7 +28,7 @@
 
 /*********************************************************************************
 
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Invoice/index.php,v 1.1 2005/05/19 13:06:02 crouchingtiger Exp $
 
  * Description:  TODO To be written.
 
@@ -53,6 +53,10 @@ require_once ($theme_path."layout_utils.php");
 global $mod_strings;
 
 
+
+echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_TITLE'], true); 
+
+echo "\n<BR>\n";
 
 include ('modules/Invoice/ListView.php');
 ?>

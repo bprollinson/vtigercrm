@@ -6,7 +6,7 @@
  *   copyright            : (C) 2001 The phpBB Group
  *   email                : support@phpbb.com
  *
- *   $Id$
+ *   $Id: faq.php,v 1.9 2005/01/04 15:04:11 saraj Exp $
  *
  *
  ***************************************************************************/

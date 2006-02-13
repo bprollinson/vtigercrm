@@ -26,19 +26,15 @@ $accountname = $_REQUEST['account_name'];
 $potential_amount = $_REQUEST['potential_amount'];
 $potential_sales_stage = $_REQUEST['potential_sales_stage'];
 
-global $log;
-$log->debug("id is ".$id);
-$log->debug("assigned_user_id is ".$assigned_user_id);
-$log->debug("createpotential is ".$createpotential);
-$log->debug("close date is ".$close_date);
-$log->debug("current user id is ".$current_user_id);
-$log->debug("assigned user id is ".$assigned_user_id);
-$log->debug("accountname is ".$accountname);
-$log->debug("module is ".$module);
-
-$check_unit = explode("-",$potential_name);
-if($check_unit[1] == "")
-        $potential_name = $check_unit[0];
+global $vtlog;
+$vtlog->logthis("id is ".$id,'debug'); 
+$vtlog->logthis("assigned_user_id is ".$assigned_user_id,'debug');
+$vtlog->logthis("createpotential is ".$createpotential,'debug');
+$vtlog->logthis("close date is ".$close_date,'debug');
+$vtlog->logthis("current user id is ".$current_user_id,'debug');
+$vtlog->logthis("assigned user id is ".$assigned_user_id,'debug');
+$vtlog->logthis("accountname is ".$accountname,'debug');
+$vtlog->logthis("module is ".$module,'debug');
 
 //Retrieve info from all the tables related to leads
   $focus = new Lead();
@@ -46,6 +42,7 @@ if($check_unit[1] == "")
 
 //get all the lead related columns 
 $row = $focus->column_fields;
+
 $date_entered;
 $date_modified;
 
@@ -57,7 +54,7 @@ $crmid = $adb->getUniqueID("crmentity");
 //function for getting the custom values from leads and saving to account/contact/potential custom fields -Jag
 function getInsertValues($type,$type_id)
 {
-	global $id,$adb,$log;
+	global $id,$adb,$vtlog;
 
 	$sql_convert_lead="select * from convertleadmapping ";
 	$convert_result = $adb->query($sql_convert_lead);
@@ -66,7 +63,7 @@ function getInsertValues($type,$type_id)
 	for($i=0;$i<$noofrows;$i++)
 	{
 		$flag="false";
-		 $log->info("In convertleadmapping function");
+		$vtlog->logthis("In convertleadmapping function",'info');
 		$lead_id=$adb->query_result($convert_result,$i,"leadfid");  
 		//Getting the relatd customfields for Accounts/Contact/potential from convertleadmapping table	
 		$account_id_val=$adb->query_result($convert_result,$i,"accountfid");
@@ -75,7 +72,7 @@ function getInsertValues($type,$type_id)
 		
 		$sql_leads_column="select field.fieldid,field.columnname from field,tab where field.tabid=tab.tabid and generatedtype=2 and tab.name='Leads' and fieldid=".$lead_id; //getting the columnname for the customfield of the lead
 
-		 $log->debug("Lead's custom field coumn name is ".$sql_leads_column);
+		$vtlog->logthis("Lead's custom field coumn name is ".$sql_leads_column,'debug');
 
 		$lead_column_result = $adb->query($sql_leads_column);
 		$leads_no_rows = $adb->num_rows($lead_column_result);
@@ -85,7 +82,7 @@ function getInsertValues($type,$type_id)
 			$sql_leads_val="select ".$lead_column_name." from leadscf where leadid=".$id; //custom field value for lead
 			$lead_val_result = $adb->query($sql_leads_val);
 			$lead_value=$adb->query_result($lead_val_result,0,$lead_column_name);
-			 $log->debug("Lead's custom field value is ".$lead_value);
+			$vtlog->logthis("Lead's custom field value is ".$lead_value,'debug');
 		}	
 		//Query for getting the column name for Accounts/Contacts/Potentials if custom field for lead is mappped
 		$sql_type="select field.fieldid,field.columnname from field,tab where field.tabid=tab.tabid and generatedtype=2 and tab.name="; 
@@ -94,7 +91,7 @@ function getInsertValues($type,$type_id)
 			if($account_id_val!="" && $account_id_val!=0)	
 			{
 				$flag="true";
-				 $log->info("Getting the  Accounts custom field column name  ");
+				$vtlog->logthis("Getting the  Accounts custom field column name  ",'info');
 				$sql_type.="'Accounts' and fieldid=".$account_id_val;
 			}
 		}
@@ -103,7 +100,7 @@ function getInsertValues($type,$type_id)
 			if($contact_id_val!="" && $contact_id_val!=0)	
 			{
 				$flag="true";
-				 $log->info("Getting the  Contacts custom field column name  ");
+				$vtlog->logthis("Getting the  Contacts custom field column name  ",'info');
 				$sql_type.="'Contacts' and fieldid=".$contact_id_val;
 			}
 		}
@@ -112,8 +109,8 @@ function getInsertValues($type,$type_id)
 			if($potential_id_val!="" && $potential_id_val!=0)
                         {
 				$flag="true";
-                                  $log->info("Getting the  Potentials custom field column name  ");
-				$sql_type.="'Potentials' and fieldid=".$potential_id_val;
+				$vtlog->logthis("Getting the  Potentials custom field column name  ",'info');
+                                $sql_type.="'Potentials' and fieldid=".$potential_id_val;
                         }
 
 		}
@@ -132,8 +129,8 @@ function getInsertValues($type,$type_id)
 		}
 
 	}
-	 $log->debug("columns to be inserted are ".$type_insert_column);
-        $log->debug("columns to be inserted are ".$insert_value);
+	$vtlog->logthis("columns to be inserted are ".$type_insert_column,'debug');	
+	$vtlog->logthis("columns to be inserted are ".$insert_value,'debug');	
 	$values = array ($type_insert_column,$insert_value);
 	return $values;	
 }
@@ -141,7 +138,7 @@ function getInsertValues($type,$type_id)
 
 function getRelatedNotesAttachments($id,$accountid)
 {
-	global $adb,$log,$id;
+	global $adb,$vtlog,$id;
 
 	
 	$sql_lead_notes	="select * from senotesrel where crmid=".$id;
@@ -152,7 +149,8 @@ function getRelatedNotesAttachments($id,$accountid)
 	{
 
 		$lead_related_note_id=$adb->query_result($lead_notes_result,$i,"notesid");
-		 $log->debug("Lead related note id ".$lead_related_note_id);
+		$vtlog->logthis("Lead related note id ".$lead_related_note_id,'debug');	
+
 		$sql_delete_lead_notes="delete from senotesrel where crmid=".$id;
 		$adb->query($sql_delete_lead_notes);
 
@@ -168,7 +166,7 @@ function getRelatedNotesAttachments($id,$accountid)
         {
 						
                 $lead_related_attachment_id=$adb->query_result($lead_attachment_result,$i,"attachmentsid");
-		 $log->debug("Lead related attachment id ".$lead_related_attachment_id);
+		$vtlog->logthis("Lead related attachment id ".$lead_related_attachment_id,'debug');	
 
                 $sql_delete_lead_attachment="delete from seattachmentsrel where crmid=".$id;
                 $adb->query($sql_delete_lead_attachment);
@@ -181,7 +179,7 @@ function getRelatedNotesAttachments($id,$accountid)
 
 function getRelatedActivities($accountid,$contact_id)
 {
-	global $adb,$log,$id;	
+	global $adb,$vtlog,$id;	
 	
 	$sql_lead_activity="select * from seactivityrel where crmid=".$id;
 	$lead_activity_result = $adb->query($sql_lead_activity);
@@ -190,12 +188,12 @@ function getRelatedActivities($accountid,$contact_id)
         {
 
                 $lead_related_activity_id=$adb->query_result($lead_activity_result,$i,"activityid");
-		 $log->debug("Lead related activity id ".$lead_related_activity_id);
+		$vtlog->logthis("Lead related activity id ".$lead_related_activity_id,'debug');	
 
 		$sql_type_email="select setype from crmentity where crmid=".$lead_related_activity_id;
 		$type_email_result = $adb->query($sql_type_email);
                 $type=$adb->query_result($type_email_result,0,"setype");
-		$log->debug("type of activity id ".$type);
+		$vtlog->logthis("type of activity id ".$type,'debug');	
 
                 $sql_delete_lead_activity="delete from seactivityrel where crmid=".$id;
                 $adb->query($sql_delete_lead_activity);
@@ -270,14 +268,14 @@ $adb->query($sql_crmentity1);
 
 
 $contact_id = $crmcontactid;
-$log->debug("contact id is ".$contact_id);
+$vtlog->logthis("contact id is ".$contact_id,'debug');
 
- $sql_insert_contact = "INSERT INTO contactdetails (contactid,accountid,salutation,firstname,lastname,email,phone,mobile,title,fax,yahooid) VALUES (".$contact_id.",".$crmid.",'".$row["salutationtype"] ."','" .$row["firstname"] ."','" .$row["lastname"] ."','" .$row["email"] ."','" .$row["phone"]. "','" .$row["mobile"] ."','" .$row["designation"] ."','".$row["fax"] ."','".$row['yahooid']."')";
+ $sql_insert_contact = "INSERT INTO contactdetails (contactid,accountid,salutation,firstname,lastname,email,phone,mobile,title,fax,yahooid) VALUES (".$contact_id.",".$crmid.",'".$row["salutation"] ."','" .$row["firstname"] ."','" .$row["lastname"] ."','" .$row["email"] ."','" .$row["phone"]. "','" .$row["mobile"] ."','" .$row["title"] ."','".$row["fax"] ."','".$row['yahooid']."')";
 
 $adb->query($sql_insert_contact);
 
 
- $sql_insert_contactsubdetails = "INSERT INTO contactsubdetails (contactsubscriptionid,homephone,otherphone,leadsource) VALUES (".$contact_id.",'','','".$row['leadsource']."')";
+ $sql_insert_contactsubdetails = "INSERT INTO contactsubdetails (contactsubscriptionid,homephone,otherphone,leadsource) VALUES (".$contact_id.",'".$row["phone"] ."','" .$row["phone"] ."','".$row['leadsource']."')";
 
 $adb->query($sql_insert_contactsubdetails);
 
@@ -307,7 +305,7 @@ getRelatedActivities($acccount_id,$contact_id); //To convert relates Activites  
 
 if(! isset($createpotential) || ! $createpotential == "on")
 {
-   $log->info("createpotential is not set");
+  $vtlog->logthis("createpotential is not set",'info');
   $date_entered = date('YmdHis');
   $date_modified = date('YmdHis');
   

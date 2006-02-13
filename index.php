@@ -21,27 +21,13 @@
 
 global $entityDel;
 global $display;
-global $category;
-require_once('include/utils/utils.php');
+
+require_once('include/utils.php');
 //$phpbb_root_path='./modules/MessageBoard/';
 if (substr(phpversion(), 0, 1) == "5") {
-// while using php5, in graphs we get illegal exception
- //       ini_set("zend.ze1_compatibility_mode", "1");
+        ini_set("zend.ze1_compatibility_mode", "1");
 }
 
-if (version_compare(phpversion(), '5.0') < 0) {
-    eval('
-    function clone($object) {
-      return $object;
-    }
-    ');
-  }
-
-global $currentModule;
-//if(!isset($category))
-  //  $category=getParentTabName(1);
-//else
-  //  $category=getParentTabName($currentModule);
 function fetchPermissionDataForTabList()
 {
   $permittedTabs = $_SESSION['tab_permission_set'];
@@ -71,9 +57,24 @@ function fetchPermissionData($module,$action)
 	global $actionid;
 	global $profile_id;
 
-	require_once('include/utils/UserInfoUtil.php');
-	$tabid = getTabid($module);
-
+	require_once('modules/Users/UserInfoUtil.php');
+	//Changing the tabid if the module is vendor,pricebook or salesorder
+        if($action == 'VendorEditView' || $action == 'VendorDetailView' || $action == 'DeleteVendor' || $action == 'SaveVendor')
+        {
+                $tabid = getTabid('Vendor');
+        }
+        elseif($action == 'PriceBookEditView' || $action == 'PriceBookDetailView' || $action == 'DeletePriceBook' || $action == 'SavePriceBook')
+        {
+                $tabid = getTabid('PriceBook');
+        }
+        elseif($action == 'SalesOrderEditView' || $action == 'SalesOrderDetailView' || $action == 'DeleteSalesOrder' || $action == 'SaveSalesOrder')
+        {
+                $tabid = getTabid('SalesOrder');
+        }
+        else
+        {
+		$tabid = getTabid($module);
+	}
 	//echo 'tab id isss  '.$tabid;
 	//echo '<BR>';
 
@@ -87,7 +88,6 @@ function fetchPermissionData($module,$action)
 	$defSharingPermissionData = $_SESSION['defaultaction_sharing_permission_set'];
 	$others_permission_id = $defSharingPermissionData[$tabid];
 	
-/*
 	$i=0;
 
 	
@@ -167,12 +167,81 @@ function fetchPermissionData($module,$action)
 		return;
 	}
 
+	//checkDeletePermission($tabid);
+	//if the tabid is not present in the array then he is not permitted
+	//if the tabid is present, then check for the values of the action_permissions
+	//Check for the action mappings in the profile2standard permissions table
+	/* 
+	   echo 'module iss  '.$module;
+	   echo '<BR>';
+	   echo 'action iss  '.$action;
+	   echo '<BR>';
+	   echo sizeof($permissionData);
+	 */
+	/*
+	while($i<count($permissionData))
+	{
+		if($permissionData[$i][0] == $tabid )
+		{
+
+				
+				echo 'actionid is  '.$permissionData[$i][1];
+				echo '<BR>';
+				echo 'action permission iss  '.$permissionData[$i][2];
+				echo '<BR>';
+			 
+			$defSharingPermissionVal = $defSharingPermissionData[$tabid];
+			if($defSharingPermissionVal == 0)
+			{
+				$others_view='yes';
+				$others_create_edit='no';
+				$others_delete='no';
+			}
+			if($defSharingPermissionVal == 1)
+			{
+				$others_view='yes';
+				$others_create_edit='yes';
+				$others_delete='no';
+			}
+			if($defSharingPermissionVal == 2)
+			{
+				$others_view='yes';
+				$others_create_edit='yes';
+				$others_delete='yes';
+			}
+			if($defSharingPermissionVal == 3)
+			{
+				$others_view='no';
+				$others_create_edit='no';
+				$others_delete='no';
+			}
+
+			$accessFlag=true;
+			if($permissionData[$i][1]==$actionid)
+			{
+				$actionpermissionvalue=$permissionData[$i][2];
+				if($actionpermissionvalue != 0)
+				{
+					echo "You are not permitted to execute this operation";
+					$display = "No";
+				}
+				else
+				{
+					return;
+				}
+			}
+
+		}
+		$i++;
+	}
+	*/
+
+
 	if(!$accessFlag)
 	{
 		echo "You are not permitted to execute this operation";
 		$display = "No";
 	}
-*/
 }
 
 //we have to do this as there is no UI page for Delete. Hence, when the user clicks delete, it gets stuck halfway and the page looks ugly because the theme is not set
@@ -308,10 +377,6 @@ global $currentModule;
 if($calculate_response_time) $startTime = microtime();
 
 $log =& LoggerManager::getLogger('index');
-
-global $seclog;
-$seclog =& LoggerManager::getLogger('SECURITY');
-
 if (isset($_REQUEST['PHPSESSID'])) $log->debug("****Starting for session ".$_REQUEST['PHPSESSID']);
 else $log->debug("****Starting for new session");
 
@@ -327,55 +392,12 @@ if(isset($_REQUEST['action']))
 	$action = $_REQUEST['action'];
 }
 
-//Code added for 'Path Traversal/File Disclosure' security fix - Philip
-$is_module = false;
 if(isset($_REQUEST['module']))
 {
 	$module = $_REQUEST['module'];	
-
-	if ($dir = @opendir("./modules")) 
-	{
-		while (($file = readdir($dir)) !== false) 
-		{
-           		if ($file != ".." && $file != "." && $file != "CVS" && $file != "Attic") 
-			{
-			   	if(is_dir("./modules/".$file)) 
-				{
-					if(!($file[0] == '.')) 
-					{
-						if($file=="$module")
-						{
-							$is_module = true;
-						}					
-					}
-				}
-			}
-		}
-	}
-	if(!$is_module)
-	{
-		die("Hacking Attempt");
-	}
 }
-if($action == 'Export')
-{
-	include ('include/utils/export.php');
-}
-
-//Code added for 'Multiple SQL Injection Vulnerabilities & XSS issue' fixes - Philip
-if(isset($_REQUEST['record']) && !is_numeric($_REQUEST['record']) && $_REQUEST['record']!='')
-{
-        die("An invalid record number specified to view details.");
-}
-
 // Check to see if there is an authenticated user in the session.
-$use_current_login = false;
-if(isset($_SESSION["authenticated_user_id"]) && (isset($_SESSION["app_unique_key"]) && $_SESSION["app_unique_key"] == $application_unique_key))
-{
-        $use_current_login = true;
-}
-
-if($use_current_login)
+if(isset($_SESSION["authenticated_user_id"]))
 {
 	$log->debug("We have an authenticated user id: ".$_SESSION["authenticated_user_id"]);
 }
@@ -402,10 +424,10 @@ if(isset($action) && isset($module))
 {
 	$log->info("About to take action ".$action);
 	$log->debug("in $action");
-	if(ereg("^Save", $action) || ereg("^Delete", $action) || ereg("^Choose", $action) || ereg("^Popup", $action) || ereg("^ChangePassword", $action) || ereg("^Authenticate", $action) || ereg("^Logout", $action) || ereg("^Export",$action) || ereg("^add2db", $action) || ereg("^result", $action) || ereg("^LeadConvertToEntities", $action) || ereg("^downloadfile", $action) || ereg("^massdelete", $action) || ereg("^updateLeadDBStatus",$action) || ereg("^AddCustomFieldToDB", $action) || ereg("^updateRole",$action) || ereg("^UserInfoUtil",$action) || ereg("^deleteRole",$action) || ereg("^UpdateComboValues",$action) || ereg("^fieldtypes",$action) || ereg("^app_ins",$action) || ereg("^minical",$action) || ereg("^minitimer",$action) || ereg("^app_del",$action) || ereg("^send_mail",$action) || ereg("^populatetemplate",$action) || ereg("^TemplateMerge",$action) || ereg("^testemailtemplateusage",$action) || ereg("^saveemailtemplate",$action) || ereg("^lookupemailtemplate",$action) || ereg("^deletewordtemplate",$action) || ereg("^deleteemailtemplate",$action) || ereg("^CurrencyDelete",$action) || ereg("^deleteattachments",$action) || ereg("^MassDeleteUsers",$action) || ereg("^UpdateFieldLevelAccess",$action) || ereg("^UpdateDefaultFieldLevelAccess",$action) || ereg("^UpdateProfile",$action)  || ereg("^updateRelations",$action) || ereg("^updateNotificationSchedulers",$action) || ereg("^Star",$action) || ereg("^addPbProductRelToDB",$action) || ereg("^UpdateListPrice",$action) || ereg("^PriceListPopup",$action) || ereg("^SalesOrderPopup",$action) || ereg("^CreatePDF",$action) || ereg("^CreateSOPDF",$action) || ereg("^redirect",$action) || ereg("^webmail",$action) || ereg("^left_main",$action) || ereg("^delete_message",$action) || ereg("^mime",$action) || ereg("^move_messages",$action) || ereg("^folders_create",$action) || ereg("^imap_general",$action) || ereg("^mime",$action) || ereg("^download",$action) || ereg("^about_us",$action) || ereg("^SendMailAction",$action) || ereg("^CreateXL",$action) || ereg("^savetermsandconditions",$action) || ereg("^home_rss",$action) || ereg("^ConvertAsFAQ",$action))
+	if(ereg("^Save", $action) || ereg("^Delete", $action) || ereg("^Popup", $action) || ereg("^ChangePassword", $action) || ereg("^Authenticate", $action) || ereg("^Logout", $action) || ereg("^Export",$action) || ereg("^add2db", $action) || ereg("^result", $action) || ereg("^LeadConvertToEntities", $action) || ereg("^downloadfile", $action) || ereg("^massdelete", $action) || ereg("^updateLeadDBStatus",$action) || ereg("^AddCustomFieldToDB", $action) || ereg("^updateRole",$action) || ereg("^UserInfoUtil",$action) || ereg("^deleteRole",$action) || ereg("^UpdateComboValues",$action) || ereg("^fieldtypes",$action) || ereg("^app_ins",$action) || ereg("^minical",$action) || ereg("^minitimer",$action) || ereg("^app_del",$action) || ereg("^send_mail",$action) || ereg("^populatetemplate",$action) || ereg("^TemplateMerge",$action) || ereg("^testemailtemplateusage",$action) || ereg("^saveemailtemplate",$action) || ereg("^lookupemailtemplate",$action) || ereg("^deletewordtemplate",$action) || ereg("^deleteemailtemplate",$action) || ereg("^deleteattachments",$action) || ereg("^MassDeleteUsers",$action) || ereg("^UpdateFieldLevelAccess",$action) || ereg("^UpdateDefaultFieldLevelAccess",$action) || ereg("^UpdateProfile",$action)  || ereg("^updateRelations",$action) || ereg("^updateNotificationSchedulers",$action) || ereg("^VendorPopup",$action) || ereg("^Star",$action) || ereg("^addPbProductRelToDB",$action) || ereg("^UpdateListPrice",$action) || ereg("^PriceBookPopup",$action) || ereg("^SalesOrderPopup",$action) || ereg("^CreatePDF",$action) || ereg("^CreateSOPDF",$action) || ereg("^redirect",$action) || ereg("^webmail",$action) || ereg("^left_main",$action) || ereg("^delete_message",$action) || ereg("^mime",$action) || ereg("^move_messages",$action) || ereg("^folders_create",$action) || ereg("^imap_general",$action) || ereg("^mime",$action) || ereg("^download",$action) || ereg("^about_us",$action) || ereg("^SendMailAction",$action) || ereg("^CreateXL",$action))
 	{
 		$skipHeaders=true;
-		if(ereg("^Popup", $action) || ereg("^ChangePassword", $action) || ereg("^Export", $action) || ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^lookupemailtemplate",$action) || ereg("^about_us",$action) || ereg("^home_rss",$action))
+		if(ereg("^Popup", $action) || ereg("^ChangePassword", $action) || ereg("^Export", $action) || ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^lookupemailtemplate",$action) || ereg("^about_us",$action))
 			$skipFooters=true;
 		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action))
 		{
@@ -497,8 +519,7 @@ $lang_crm = (isset($_SESSION['authenticated_user_language'])) ? $_SESSION['authe
 $GLOBALS['request_string'] = "&module=$module&action=$action&record=$record&lang_crm=$lang_crm";
 
 $current_user = new User();
-
-if($use_current_login)
+if(isset($_SESSION['authenticated_user_id']))
 {
 	$result = $current_user->retrieve($_SESSION['authenticated_user_id']);
 	if($result == null)
@@ -519,6 +540,11 @@ else
 	$theme = $default_theme;
 }
 $log->debug('Current theme is: '.$theme);
+
+//Logging instantiation
+require_once('vtiger_logger.php');
+$vtlog = new vtiger_logger();
+//$vtlog->logthis('Enabled Logging');
 
 //Used for current record focus
 $focus = "";
@@ -544,7 +570,7 @@ $mod_strings = return_module_language($current_language, $currentModule);
 $app_list_strings['record_type_module'] = array('Account' => 'Accounts','Potential' => 'Potentials', 'Case' => 'Cases');
 
 //If DetailView, set focus to record passed in
-if($action == "DetailView")
+if($action == "DetailView" || $action == "SalesOrderDetailView" || $action == "VendorDetailView" || $action == "PriceBookDetailView")
 {
 	if(!isset($_REQUEST['record']))
 		die("A record number must be specified to view details.");
@@ -589,19 +615,25 @@ if($action == "DetailView")
 			$focus = new User();
 			break;
 		case 'Products':
-			require_once("modules/$currentModule/Product.php");
-			$focus = new Product();
+			if($action == 'DetailView')
+			{
+				require_once("modules/$currentModule/Product.php");
+				$focus = new Product();
+			}
+			elseif($action == 'VendorDetailView')
+			{
+				require_once("modules/$currentModule/Vendor.php");
+				$focus = new Vendor();
+				$actualModule = 'Vendor';
+			}
+			elseif($action == 'PriceBookDetailView')
+			{
+				require_once("modules/$currentModule/PriceBook.php");
+				$focus = new PriceBook();
+				$actualModule = 'PriceBook';
+			}
 			break;
-		case 'Vendors':
-			require_once("modules/$currentModule/Vendor.php");
-			$focus = new Vendor();
-			$actualModule = 'Vendors';
-			break;
-		case 'PriceBooks':
-			require_once("modules/$currentModule/PriceBook.php");
-			$focus = new PriceBook();
-			$actualModule = 'PriceBooks';
-			break;
+			
 		case 'HelpDesk':
 			require_once("modules/$currentModule/HelpDesk.php");
 			$focus = new HelpDesk();
@@ -614,22 +646,22 @@ if($action == "DetailView")
 			require_once("modules/$currentModule/Quote.php");
 			$focus = new Quote();
 			break;
-		case 'PurchaseOrder':
-                        require_once("modules/$currentModule/PurchaseOrder.php");
-                        $focus = new Order();
-                        break;
-                case 'SalesOrder':
-                        require_once("modules/$currentModule/SalesOrder.php");
-                        $focus = new SalesOrder();
-                        break;
-
+		case 'Orders':
+			if($action == 'DetailView')
+			{
+				require_once("modules/$currentModule/Order.php");
+				$focus = new Order();
+			}
+			elseif($action == 'SalesOrderDetailView')
+			{
+				require_once("modules/$currentModule/SalesOrder.php");
+				$focus = new SalesOrder();
+				$actualModule = 'SalesOrder';
+			}
+			break;
 		case 'Invoice':
 			require_once("modules/$currentModule/Invoice.php");
 			$focus = new Invoice();
-			break;
-		case 'Campaigns':
-			require_once("modules/$currentModule/Campaign.php");
-			$focus = new Campaign();
 			break;
 		}
 	
@@ -645,34 +677,30 @@ if($action == "DetailView")
 
 }	
 
+//Added to highlight the HelpDesk tab when create, edit or view the FAQ
+if($currentModule == 'Faq')
+        $currentModule = 'HelpDesk';
+
 // set user, theme and language cookies so that login screen defaults to last values
 if (isset($_SESSION['authenticated_user_id'])) {
-        $log->debug("setting cookie ck_login_id_vtiger to ".$_SESSION['authenticated_user_id']);
-        setcookie('ck_login_id_vtiger', $_SESSION['authenticated_user_id']);
+        $log->debug("setting cookie ck_login_id to ".$_SESSION['authenticated_user_id']);
+        setcookie('ck_login_id', $_SESSION['authenticated_user_id']);
 }
 if (isset($_SESSION['authenticated_user_theme'])) {
-        $log->debug("setting cookie ck_login_theme_vtiger to ".$_SESSION['authenticated_user_theme']);
-        setcookie('ck_login_theme_vtiger', $_SESSION['authenticated_user_theme']);
+        $log->debug("setting cookie ck_login_theme to ".$_SESSION['authenticated_user_theme']);
+        setcookie('ck_login_theme', $_SESSION['authenticated_user_theme']);
 }
 if (isset($_SESSION['authenticated_user_language'])) {
-        $log->debug("setting cookie ck_login_language_vtiger to ".$_SESSION['authenticated_user_language']);
-        setcookie('ck_login_language_vtiger', $_SESSION['authenticated_user_language']);
+        $log->debug("setting cookie ck_login_language to ".$_SESSION['authenticated_user_language']);
+        setcookie('ck_login_language', $_SESSION['authenticated_user_language']);
 }
 
 //skip headers for popups, deleting, saving, importing and other actions
 if(!$skipHeaders) {
 	$log->debug("including headers");
 	//include('themes/'.$theme.'/header.php');
-	if($use_current_login)
+	if(isset($_SESSION["authenticated_user_id"]))
 	{
-		if(isset($_REQUEST['category']) && $_REQUEST['category'] !='')
-		{
-			$category = $_REQUEST['category'];
-		}
-		else
-		{
-			$category = getParentTabFromModule($currentModule);
-		}
 		include('themes/'.$theme.'/header.php');
 	}
 	else 
@@ -705,40 +733,20 @@ else
 {
 	$theme = $default_theme;
 }
-
-//logging the security Information
-$seclog->debug('########  Module -->  '.$module.'  :: Action --> '.$action.' ::  UserID --> '.$current_user->id.'  #######');
-
 if(!$skipSecurityCheck)
 {
-	require_once('include/utils/UserInfoUtil.php');
-	if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
-	{
-		$display = isPermitted($module,$action,$_REQUEST['record']);
-	}
-	else
-	{
-		$display = isPermitted($module,$action);
-	}
-	$seclog->debug('########### Pemitted ---> '.$display.'  ##############');
-	fetchPermissionData($module,$action);
+  fetchPermissionData($module,$action);
 }
-else
+if ($display == "No")
 {
-	$seclog->debug('########### Pemitted ---> yes  ##############');
-}
-
-
-if($display == "no")
-{
-        echo "You are not permitted to execute this Operation";
+	$display == "";
 }
 else
 {
 	include($currentModuleFile);
 }
 
-	if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss' ))
+	if(!$viewAttachment)
 	{
 		echo "<!-- stopscrmprint -->";
 	}
@@ -753,83 +761,84 @@ else
         $theme = $default_theme;
 }
 
-if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss'))
+
+
+
+if(!$skipFooters)
+//include('themes/'.$theme.'/footer.php');
+	if(isset($_SESSION["authenticated_user_id"]))
+	{
+		include('themes/'.$theme.'/footer.php');
+	}
+if(!$viewAttachment)
 {
-	// Under the SPL you do not have the right to remove this copyright statement.	
-	$copyrightstatement="<style>
-		.bggray
-		{
-			background-color: #dfdfdf;
-		}
-	.bgwhite
-	{
-		background-color: #FFFFFF;
-	}
+// Under the SPL you do not have the right to remove this copyright statement.	
+$copyrightstatement="<style>
+        .bggray
+        {
+        background-color: #dfdfdf;
+        }
+        .bgwhite
+        {
+        background-color: #FFFFFF;
+        }
 	.copy
-	{
-		font-size:9px;
-		font-family: Verdana, Arial, Helvetica, Sans-serif;
-	}
-	</style>
-		<script language=javascript>
-		function LogOut(e)
-		{
-			var nav4 = window.Event ? true : false;
-			var iX,iY;
-			if (nav4)
-			{
-				iX = e.pageX;
-				iY = e.pageY;
-			}
-			else
-			{
-				iX = event.clientX + document.body.scrollLeft;
-				iY = event.clientY + document.body.scrollTop;
+        {
+        font-size:9px;
+        font-family: Verdana, Arial, Helvetica, Sans-serif;
+        }
+        </style>
+	<script language=javascript>
+         function LogOut(e)
+         {
+                 var nav4 = window.Event ? true : false;
+                 var iX,iY;
+                 if (nav4)
+                 {
+                         iX = e.pageX;
+                         iY = e.pageY;
+                 }
+                 else
+                 {
+                         iX = event.clientX + document.body.scrollLeft;
+                         iY = event.clientY + document.body.scrollTop;
 
-			}
-			if (iX <= 30 && iY < 0 )
-			{
-				w=window.open(\"index.php?action=Logout&module=Users\");
-				w.close();
-			}
-		}
-	//window.onunload=LogOut
-	</script>
-		";
+                 }
+                 if (iX <= 30 && iY < 0 )
+                 {
+                         w=window.open(\"index.php?action=Logout&module=Users\");
+                         w.close();
+                 }
+         }
+         //window.onunload=LogOut
+       </script>
+";
 
-	echo $copyrightstatement;
-	if($action != "about_us")
-	{
-		echo "<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>";
-		echo "<table width=20% border=0 cellspacing=1 cellpadding=0 class=\"bggray\" align=center><tr><td align=center>\n";
-		echo "<table width=100% border=0 cellspacing=1 cellpadding=0 class=\"bgwhite\" align=center><tr><td align=center class=\"copy\">\n";
-		
-		//echo "Click <a href='copyright.html' onclick='popup()'>Link to popup</a>";
-                echo "&copy; Click <a href ='javascript:mypopup()'>here</a> for Copyright details.<br>";
-		echo "</td></tr></table></td></tr></table>\n";
+echo $copyrightstatement;
+if($action != "about_us")
+{
+echo "<table width=60% border=0 cellspacing=1 cellpadding=0 class=\"bggray\" align=center><tr><td align=center>\n";
+echo "<table width=100% border=0 cellspacing=1 cellpadding=0 class=\"bgwhite\" align=center><tr><td align=center class=\"copy\">\n";
+echo("&copy; This software is a collective work consisting of the following major Open Source components: Apache software, MySQL server, PHP, SugarCRM, phpBB, TUTOS, phpSysinfo, SquirrelMail, and PHPMailer each licensed under a separate Open Source License. vtiger.com is not affiliated with nor endorsed by any of the above providers. See <a href='http://www.vtiger.com/copyrights/LICENSE_AGREEMENT.txt' class=\"copy\" target=\"_blank\">Copyrights </a> for details.<br>\n");
+echo "</td></tr></table></td></tr></table>\n";
 
-		echo "<table align='center'><tr><td align='center'>";
-		// Under the Sugar Public License referenced above, you are required to leave in all copyright statements in both
-		// the code and end-user application.
-		//echo("<br>&copy; 2004 <a href='http://www.sugarcrm.com' target='_blank'>SugarCRM Inc.</a> All Rights Reserved.<BR />");	
-		if($calculate_response_time)
-		{
-			$endTime = microtime();
+echo "<table align='center'><tr><td align='center'>";
+// Under the Sugar Public License referenced above, you are required to leave in all copyright statements in both
+// the code and end-user application.
+//echo("<br>&copy; 2004 <a href='http://www.sugarcrm.com' target='_blank'>SugarCRM Inc.</a> All Rights Reserved.<BR />");	
+if($calculate_response_time)
+{
+    $endTime = microtime();
 
-			$deltaTime = microtime_diff($startTime, $endTime);
-			echo('&nbsp;Server response time: '.$deltaTime.' seconds.');
-		}
-		echo "</td></tr></table>\n";
-	}
-	if(($action != 'mytkt_rss') && ($action != 'home_rss'))
-	{
-	?>
-		<script>
-			var userDateFormat = "<? echo $current_user->date_format ?>";
-		</script>
-<?php
-	}
-	if(!$skipFooters)
-	include('themes/'.$theme.'/footer.php');
+    $deltaTime = microtime_diff($startTime, $endTime);
+    echo('&nbsp;Server response time: '.$deltaTime.' seconds.');
 }
+echo "</td></tr></table>\n";
+}
+}
+
+
 ?>
+<script>
+var userDateFormat = "<? echo $current_user->date_format ?>";
+</script>

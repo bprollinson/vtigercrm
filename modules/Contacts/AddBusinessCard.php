@@ -13,9 +13,6 @@
 <link rel="stylesheet" type="text/css" media="all" href="jscalendar/calendar-win2k-cold-1.css">
 <?php
 	echo get_module_title($_REQUEST["module"],"Add Business Card",true);
-	//Added to get the appoinment date as user date format
-	$calendar_dateformat = parse_calendardate($app_strings['NTC_DATE_FORMAT']);
-	$current_date = getNewDisplayDate($current_date);
 ?>
 <form name="AddBusinessCard" action='index.php' method='post'>
   <input type="hidden" name="module" value="Contacts">
@@ -38,7 +35,7 @@ function toggleDisplay(id){
   <script type="text/javascript" src="jscalendar/calendar.js"></script>
   <script type="text/javascript" src="jscalendar/lang/calendar-en.js"></script>
   <script type="text/javascript" src="jscalendar/calendar-setup.js"></script>
-  <script type="text/javascript" src="include/js/general.js"></script>
+  <script type="text/javascript" src="include/general.js"></script>
   <table width="70%" cellpadding="0" cellspacing="1" border="0" class="formOuterBorder">
     <tbody>
       <tr> 
@@ -153,11 +150,8 @@ function toggleDisplay(id){
             </tr>
             <tr> 
               <td><FONT class="required">*</FONT><?php echo $mod_strings['LBL_START_DATE'] ?>&nbsp;<font size="1"><em><?php echo $app_strings['NTC_DATE_FORMAT'] ?></em></font><br> 
-                <input name='Appointmentsdate_start' id='jscal_field_Appointmentsdate_start' maxlength='10' type="text" value="<?php echo $current_date; ?>" size="10"> 
-                <img src="themes/blue/images/calendar.gif" id="jscal_trigger_Appointmentsdate_start"></td>
-		<script type="text/javascript">
-			Calendar.setup ({inputField : "jscal_field_Appointmentsdate_start",ifFormat : "<?php echo $calendar_dateformat; ?>", showsTime : false, button : "jscal_trigger_Appointmentsdate_start", singleClick : true, step : 1})
-		</script>
+                <input name='Appointmentsdate_start' id='jscal_field' maxlength='10' type="text" value="2005-02-17" size="10"> 
+                <img src="themes/blue/images/calendar.gif" id="jscal_trigger"></td>
             </tr>
             <tr> 
               <td></td>
@@ -165,7 +159,11 @@ function toggleDisplay(id){
             <tr> 
               <td><FONT class="required">*</FONT><?php echo $mod_strings['LBL_START_TIME'] ?>&nbsp;<font size="1"><em>(24:00)</em></font><br>
 			  <input name='Appointmentstime_start' type="text" maxlength='5' value="06:12" size="5"> 
-</td>
+                <script type="text/javascript">
+Calendar.setup ({
+  inputField : "jscal_field", ifFormat : "%Y-%m-%d", showsTime : false, button : "jscal_trigger", singleClick : true, step : 1
+    });
+</script></td>
             </tr>
             <tr> 
 				<td><?php echo $mod_strings['LBL_DESCRIPTION'] ?><br>
@@ -210,13 +208,10 @@ function formValidate(form)
 		return false;
 	}
 	dateflag = dateValidate("Appointmentsdate_start","Start Date","D~M");
-	if (dateflag == false)
-        {
-                return false;
-        }
 	timeflag = timeValidate("Appointmentstime_start","Start Time","OTH");
-	if (timeflag == false)
+	if (dateflag == "false" || timeflag == "false")
 	{
+		alert("Date or Time may not correct.");
 		return false;
 	}
 

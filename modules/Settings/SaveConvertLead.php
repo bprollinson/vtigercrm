@@ -11,7 +11,7 @@
  ********************************************************************************/
 
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
 //echo"<h3> In Save</h3>";
 	
@@ -47,6 +47,6 @@ require_once('include/utils/utils.php');
 
 		$adb->query($update_sql);
 	}
-	 header("Location: index.php?module=Settings&action=ListLeadCustomFieldMapping");
+	 header("Location: index.php?module=Settings&action=CustomFieldList&fld_module=Leads");
 	
 ?>

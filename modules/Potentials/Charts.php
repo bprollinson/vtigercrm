@@ -21,7 +21,7 @@ require_once('config.php');
 require_once('include/logging.php');
 require_once('modules/Potentials/Opportunity.php');
 require_once("jpgraph/src/jpgraph.php");
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 
 
@@ -74,7 +74,7 @@ class jpgraph {
 	 * Contributor(s): ______________________________________..
 	 */
 	function outcome_by_month($date_start='1971-10-15', $date_end='2071-10-15', $user_id=array('1'), $cache_file_name='a_file', $refresh=false) {
-		global $app_strings,$lang_crm, $app_list_strings, $current_module_strings,$current_user, $log, $charset, $tmp_dir;
+		global $app_strings,$lang_crm, $app_list_strings, $current_module_strings, $log, $charset, $tmp_dir;
 		global $theme;
 		include_once ("jpgraph/src/jpgraph_bar.php");
 
@@ -88,8 +88,6 @@ class jpgraph {
 		$log->debug("graph object created");
 
 		$graph->SetScale("textlin");
-		$currencyid=fetchCurrency($current_user->id);
-                $curr_symbol=getCurrencySymbol($currencyid);
 
 		if (!file_exists($cache_file_name) || !file_exists($cache_file_name.'.map') || $refresh == true) {
 			$font = calculate_font_family($lang_crm);
@@ -223,7 +221,7 @@ class jpgraph {
 				$bplot[$index]->value->SetFont($font,FS_NORMAL,8);
 				//$bplot->value->SetAlign('left','center');
 				$bplot[$index]->value->SetColor("white");
-				$bplot[$index]->value->SetFormat($curr_symbol.'%d');
+				$bplot[$index]->value->SetFormat(getCurrencySymbol().'%d');
 				$bplot[$index]->SetValuePos('max');
 
 				//set client side image map URL's
@@ -268,7 +266,7 @@ class jpgraph {
 			$graph->SetBackgroundGradient('#E5E5E5','white',GRAD_HOR,BGRAD_PLOT);
 
 			// Setup title
-			$title = $current_module_strings['LBL_TOTAL_PIPELINE'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$title = $current_module_strings['LBL_TOTAL_PIPELINE'].getCurrencySymbol().$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
 			$graph->title->Set($title);
 			$graph->title->SetColor($font_color);
 			$graph->title->SetFont($font,FS_BOLD,11);
@@ -300,7 +298,7 @@ class jpgraph {
 
 			// First make the labels look right
 			$graph->yaxis->SetLabelAlign('left','top');
-			$graph->yaxis->SetLabelFormat($curr_symbol.'%d');
+			$graph->yaxis->SetLabelFormat(getCurrencySymbol().'%d');
 			$graph->yaxis->SetLabelSide(SIDE_RIGHT);
 
 			// The fix the tick marks
@@ -310,7 +308,7 @@ class jpgraph {
 			$graph->yaxis->SetTitleSide(SIDE_RIGHT);
 			$graph->yaxis->SetTitleMargin(35);
 
-			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE'];
+			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].getCurrencySymbol().$current_module_strings['LBL_OPP_SIZE_VALUE'];
 			$graph->footer->right->SetColor($font_color);
 			$graph->footer->right->Set($subtitle);
 			$graph->footer->right->SetFont($font,FS_NORMAL,8);
@@ -511,7 +509,7 @@ class jpgraph {
 				$bplot[$index]->value->SetFont($font,FS_NORMAL,7);
 				//$bplot->value->SetAlign('left','center');
 				$bplot[$index]->value->SetColor("white");
-				$bplot[$index]->value->SetFormat($curr_symbol.'%d');
+				$bplot[$index]->value->SetFormat(getCurrencySymbol().'%d');
 				$bplot[$index]->SetValuePos('max');
 
 				//set client side image map URL's
@@ -558,7 +556,7 @@ class jpgraph {
 			$graph->SetBackgroundGradient('#E5E5E5','white',GRAD_HOR,BGRAD_PLOT);
 
 			// Setup title
-			$title = $current_module_strings['LBL_ALL_OPPORTUNITIES'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$title = $current_module_strings['LBL_ALL_OPPORTUNITIES'].getCurrencySymbol().$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
 			$graph->title->Set($title);
 			$graph->title->SetColor($font_color);
 			$graph->title->SetFont($font,FS_BOLD,11);
@@ -589,7 +587,7 @@ class jpgraph {
 
 			// First make the labels look right
 			$graph->yaxis->SetLabelAlign('left','top');
-			$graph->yaxis->SetLabelFormat($curr_symbol.'%d');
+			$graph->yaxis->SetLabelFormat(getCurrencySymbol().'%d');
 			$graph->yaxis->SetLabelSide(SIDE_RIGHT);
 
 			// The fix the tick marks
@@ -599,7 +597,7 @@ class jpgraph {
 			$graph->yaxis->SetTitleSide(SIDE_RIGHT);
 			$graph->yaxis->SetTitleMargin(35);
 
-			$subtitle = $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE']; 
+			$subtitle = $current_module_strings['LBL_OPP_SIZE'].getCurrencySymbol().$current_module_strings['LBL_OPP_SIZE_VALUE']; 
 			$graph->footer->right->SetColor($font_color);
 			$graph->footer->right->Set($subtitle);
 			$graph->footer->right->SetFont($font,FS_NORMAL,8);
@@ -784,7 +782,7 @@ class jpgraph {
 				$bplot[$index]->value->SetFont($font,FS_NORMAL,8);
 				//$bplot->value->SetAlign('left','center');
 				$bplot[$index]->value->SetColor("white");
-				$bplot[$index]->value->SetFormat($curr_symbol.'%d');
+				$bplot[$index]->value->SetFormat(getCurrencySymbol().'%d');
 				$bplot[$index]->SetValuePos('max');
 
 				//set client side image map URL's
@@ -832,7 +830,7 @@ class jpgraph {
 
 
 			// Setup title
-			$title = $current_module_strings['LBL_TOTAL_PIPELINE'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$title = $current_module_strings['LBL_TOTAL_PIPELINE'].getCurrencySymbol().$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
 			$graph->title->Set($title);
 			$graph->title->SetColor($font_color);
 			$graph->title->SetFont($font,FS_BOLD,11);
@@ -860,7 +858,7 @@ class jpgraph {
 			// First make the labels look right
 			$graph->yaxis->SetColor($font_color);
 			$graph->yaxis->SetLabelAlign('center','top');
-			$graph->yaxis->SetLabelFormat($curr_symbol.'%d');
+			$graph->yaxis->SetLabelFormat(getCurrencySymbol().'%d');
 			$graph->yaxis->SetLabelSide(SIDE_RIGHT);
 
 			// The fix the tick marks
@@ -870,7 +868,7 @@ class jpgraph {
 			$graph->yaxis->SetTitleSide(SIDE_RIGHT);
 			$graph->yaxis->SetTitleMargin(35);
 
-			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE']; 
+			$subtitle .= $current_module_strings['LBL_OPP_SIZE'].getCurrencySymbol().$current_module_strings['LBL_OPP_SIZE_VALUE']; 
 			$graph->footer->right->Set($subtitle);
 			$graph->footer->right->SetColor($font_color);
 			$graph->footer->right->SetFont($font,FS_NORMAL,8);
@@ -1017,7 +1015,7 @@ class jpgraph {
 			$graph->SetShadow();
 
 			// Setup title
-			$title = $current_module_strings['LBL_TOTAL_PIPELINE'].$curr_symbol.$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
+			$title = $current_module_strings['LBL_TOTAL_PIPELINE'].getCurrencySymbol().$total.$app_strings['LBL_THOUSANDS_SYMBOL'];
 			$graph->title->Set($title);
 			$graph->title->SetColor($font_color);
 			$graph->title->SetFont($font,FS_BOLD,11);
@@ -1030,7 +1028,7 @@ class jpgraph {
 			$graph->legend->SetColor($font_color);
 			$graph->legend->SetFont($font,FS_NORMAL,12);
 
-			$subtitle = $current_module_strings['LBL_OPP_SIZE'].$curr_symbol.$current_module_strings['LBL_OPP_SIZE_VALUE'];
+			$subtitle = $current_module_strings['LBL_OPP_SIZE'].getCurrencySymbol().$current_module_strings['LBL_OPP_SIZE_VALUE'];
 			$graph->footer->left->Set($subtitle);
 			$graph->footer->left->SetColor($font_color);
 			$graph->footer->left->SetFont($font,FS_NORMAL,8);
@@ -1044,7 +1042,7 @@ class jpgraph {
 			$p1->value->SetFont($font,FS_NORMAL,12);
 			$p1->SetLegends($visible_legends);
 			$p1->SetLabelType(PIE_VALUE_ABS);
-			$p1->value->SetFormat($curr_symbol.'%d');
+			$p1->value->SetFormat(getCurrencySymbol().'%d');
 
 			//set client side image map URL's
 			$p1->SetCSIMTargets($aTargets,$aAlts);

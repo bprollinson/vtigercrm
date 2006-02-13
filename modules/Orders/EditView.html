@@ -79,7 +79,6 @@
 			<input type="hidden" name="return_id" value="{RETURN_ID}">
 
 			<input type="hidden" name="return_action" value="{RETURN_ACTION}">
-			<input type="hidden" name="return_viewname" value="{RETURN_VIEWNAME}">
 
 			<input type="hidden" name="totalProductCount">
 
@@ -139,17 +138,17 @@
   <div id="productList"> 
     <table width="100%" border="0" cellspacing="0" cellpadding="0" class="formBorder">
       <tr class="moduleListTitle" height="20" id="tablehead"> 
-        <td width="30%" style="padding:3px;"><font color="red">*</font>{APP.LBL_PRODUCT}</td>
+        <td width="20%" style="padding:3px;"><font color="red">*</font>{APP.LBL_PRODUCT}</td>
         <td WIDTH='1' class='blackLine'><IMG SRC='{IMAGE_PATH}blank.gif'></td>
-        <td width="15%" style="padding:3px;"><font color="red">*</font>{APP.LBL_QTY}</td>
+        <td width="12%" style="padding:3px;"><font color="red">*</font>{APP.LBL_QTY}</td>
         <td WIDTH='1' class='blackLine'><IMG SRC='{IMAGE_PATH}blank.gif'></td>
         <td width="15%" style="padding:3px;">{APP.LBL_UNIT_PRICE}</td>
         <td WIDTH='1' class='blackLine'><IMG SRC='{IMAGE_PATH}blank.gif'></td>
-        <td width="20%" style="padding:3px;"><font color="red">*</font>{APP.LBL_LIST_PRICE}</td>
+        <td width="16%" style="padding:3px;"><font color="red">*</font>{APP.LBL_LIST_PRICE}</td>
         <td WIDTH='1' class='blackLine'><IMG SRC='{IMAGE_PATH}blank.gif'></td>
-        <td width="15%" style="padding:3px;"><div align="center">{APP.LBL_TOTAL}</div></td>
+        <td width="20%" style="padding:3px;"><div align="center">{APP.LBL_TOTAL}</div></td>
         <td WIDTH='1' class='blackLine'><IMG SRC='{IMAGE_PATH}blank.gif'></td>
-        <td width="5%" style="padding:3px;">&nbsp;</td>
+        <td width="15" style="padding:3px;"></td>
       </tr>
       <tr id="tableheadline">
         <td colspan="12" height="1" class="blackLine"><IMG SRC="{IMAGE_PATH}blank.gif"></td>
@@ -231,7 +230,7 @@ function productPickList(currObj) {
 function priceBookPickList(currObj) {
 	var trObj=currObj.parentNode.parentNode
 	var rowId=parseInt(trObj.id.substr(trObj.id.indexOf("w")+1,trObj.id.length))
-	window.open("index.php?module=PriceBooks&action=Popup&html=Popup_picker&form=EditView&popuptype=inventory_pb&fldname=txtListPrice"+rowId+"&productid="+getObj("hdnProductId"+rowId).value,"priceBookWin","width=600,height=400,resizable=1,scrollbars=1,top=150,left=200");
+	window.open("index.php?module=Products&action=PriceBookPopup&html=Popup_picker&form=EditView&popuptype=inventory_pb&fldname=txtListPrice"+rowId+"&productid="+getObj("hdnProductId"+rowId).value,"priceBookWin","width=600,height=400,resizable=1,scrollbars=1,top=150,left=200");
 }
 
 function getProdListBody() {
@@ -438,8 +437,6 @@ function copyAddressRight(form) {
 
 	form.ship_country.value = form.bill_country.value;
 
-	form.ship_pobox.value = form.bill_pobox.value;
-	
 	return true;
 
 }
@@ -456,8 +453,6 @@ function copyAddressLeft(form) {
 
 	form.bill_country.value = form.ship_country.value;
 
-	form.bill_pobox.value = form.ship_pobox.value;
-	
 	return true;
 
 }

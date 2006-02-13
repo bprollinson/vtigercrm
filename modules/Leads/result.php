@@ -10,16 +10,16 @@
  ********************************************************************************/
 
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once 'Excel/reader.php';
 require_once('modules/Users/User.php');
 require_once('include/database/PearDatabase.php');
 
 $data = new Spreadsheet_Excel_Reader();
 $data->setOutputEncoding('CP1251');
-global $log;
+global $vtlog;
 $filename = $HTTP_GET_VARS['filename'];
-$log->info("filename is ".$filename);
+$vtlog->logthis("filename is ".$filename,'info');  
 //$filename = $_REQUEST['filename'];
 $data->read($filename);
 
@@ -27,51 +27,51 @@ $data->read($filename);
 
 $firstname = $HTTP_POST_VARS['First_Name'];
 
-$log->info("firstname is ".$firstname);
+$vtlog->logthis("firstname is ".$firstname,'info');  
 $lastname = $HTTP_POST_VARS['Last_Name'];
 
-$log->info("lastname is ".$lastname);
+$vtlog->logthis("lastname is ".$lastname,'info');  
 $phone = $HTTP_POST_VARS['Phone'];
-$log->info("phone is ".$phone);
+$vtlog->logthis("phone is ".$phone,'info');  
 $mobile = $HTTP_POST_VARS['Mobile'];
-$log->info("mobile is ".$mobile);
+$vtlog->logthis("mobile is ".$mobile,'info');  
 
 $company = $HTTP_POST_VARS['Company'];
-$log->info("company is ".$company);
+$vtlog->logthis("company is ".$company,'info');  
 //echo $company;
 
 $fax = $HTTP_POST_VARS['Fax'];
-$log->info("fax is ".$fax);
+$vtlog->logthis("fax is ".$fax,'info');  
 
 $designation = $HTTP_POST_VARS['Designation'];
 
-$log->info("designation is ".$designation);
+$vtlog->logthis("designation is ".$designation,'info');  
 $email = $HTTP_POST_VARS['Email'];
 
-$log->info("email is ".$email);
+$vtlog->logthis("email is ".$email,'info');  
 $salutation = $HTTP_POST_VARS['Salutation'];
 //not being used
 
-$log->info("salutation is  ".$salutation);
+$vtlog->logthis("salutation is  ".$salutation,'info');  
 //echo 'LeadSource';
 $leadsource = $HTTP_POST_VARS['LeadSource'];
 
-$log->info("leadsource is ".$leadsource);  
+$vtlog->logthis("leadsource is ".$leadsource,'info');  
 $website = $HTTP_POST_VARS['Website'];
-$log->info("website is ".$website);  
+$vtlog->logthis("website is ".$website,'info');  
 //echo 'Industry';
 $industry = $HTTP_POST_VARS['Industry'];
-$log->info("industry is ".$industry);
+$vtlog->logthis("industry is ".$industry,'info');  
 //echo $industry;
 
 //echo 'LeadStatus';
 $leadstatus = $HTTP_POST_VARS['LeadStatus'];
-$log->info("leadstatus is ".$leadstatus);  
+$vtlog->logthis("leadstatus is ".$leadstatus,'info');  
 //echo $leadstatus;
 
 //echo 'AnnualRevenue';
 $annualrevenue = $HTTP_POST_VARS['Annual_Revenue'];
-$log->info("annualrevenue is ".$annualrevenue);  
+$vtlog->logthis("annualrevenue is ".$annualrevenue,'info');  
 //echo $annualrevenue;
 
 

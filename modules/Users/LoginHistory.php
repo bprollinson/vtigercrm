@@ -14,7 +14,7 @@ include_once('config.php');
 require_once('include/logging.php');
 require_once('data/SugarBean.php');
 #require_once('data/CRMEntity.php');
-#require_once('include/utils/utils.php');
+#require_once('include/utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
@@ -125,20 +125,12 @@ class LoginHistory extends SugarBean {
   	{
 		// Determine if the account name is present in the where clause.
 	//	$query = "SELECT * from loginhistory order by login_time";
-		global $current_user;
+
 		$query = "SELECT user_name,user_ip,".$this->db->getDBDateString("login_time")." login_time,".$this->db->getDBDateString("logout_time")." logout_time,status FROM $this->table_name ";
-		if($where != "")
-		{
-			if(!is_admin($current_user))
-			$where .=" and user_name = '".$current_user->user_name."'";
-			$query .= "where ($where)";
-		}
-		else
-		{
-			if(!is_admin($current_user))
-			$query .= "where user_name = '".$current_user->user_name."'";
-		}
 		
+		if($where != "")
+			$query .= "where ($where)";
+
 		if(!empty($order_by))
 			$query .= " ORDER BY $order_by";
 

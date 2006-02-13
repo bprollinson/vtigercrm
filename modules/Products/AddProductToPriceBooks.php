@@ -10,9 +10,9 @@
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
 require_once('XTemplate/xtpl.php');
-require_once('modules/PriceBooks/PriceBook.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('modules/Products/PriceBook.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('include/ComboUtil.php');
 
 global $app_strings;
@@ -25,7 +25,7 @@ global $urlPrefix;
 
 
 global $theme;
-global $log;
+global $vtlog;
 $productid = $_REQUEST['return_id'];
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -60,7 +60,8 @@ $other_text = '<table border="0" cellpadding="1" cellspacing="0">
 //Retreive the list from Database
 
 //$list_query = $focus->get_nonproduct_pricebooks($productid);
-$list_query = getListQuery("PriceBooks");
+$list_query = getListQuery("PriceBook");
+
 $xtpl->assign("PRICEBOOKLISTHEADER", get_form_header($current_module_strings['LBL_LIST_PRICEBOOK_FORM_TITLE'], $other_text, false ));
 
 $list_query .= ' ORDER BY pricebookid DESC ';
@@ -84,28 +85,13 @@ for($i=0; $i<$num_prod_rows; $i++)
 	$pbk_array[$pbkid] = $pbkid;
 }
 
-$field_name_array=array();
-for($i=0; $i<$num_rows; $i++)
-{	
-	
-	$entity_id = $adb->query_result($list_result,$i,"crmid");
-	if(! array_key_exists($entity_id, $pbk_array))
-	{
-		$field_name=$entity_id."_listprice";
-		$field_name_array[]="'".$field_name."'";
-	}
-}
-
-$xtpl->assign("FIELD_NAME_ARRAY",implode(",",$field_name_array));
-
-
 //Retreive the List View Table Header
 
 
 $list_header = '';
 $list_header .= '<tr class="moduleListTitle" height=20>';
 $list_header .= '<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
-$list_header .='<td WIDTH="1" class="moduleListTitle" style="padding:0px 3px 0px 3px;"><input type="checkbox" name="selectall" onClick=\'toggleSelect(this.checked,"selected_id");updateAllListPrice("'.$unit_price.'") \'></td>';
+$list_header .='<td WIDTH="1" class="moduleListTitle" style="padding:0px 3px 0px 3px;"><input type="checkbox" name="selectall" onClick=toggleSelect(this.checked,"selected_id")></td>';
 $list_header .= '<td WIDTH="1" class="blackLine" NOWRAP><IMG SRC="{IMAGE_PATH}blank.gif"></td>';
 $list_header .= '<td class="moduleListTitle" height="21" style="padding:0px 3px 0px 3px;">'.$mod_strings['LBL_PRICEBOOK'].'</td>';
 $list_header .='<td WIDTH="1" class="blackLine" NOWRAP><IMG SRC="{IMAGE_PATH}blank.gif"></td>';
@@ -120,8 +106,8 @@ $xtpl->assign("LISTHEADER", $list_header);
 $list_body ='';
 for($i=0; $i<$num_rows; $i++)
 {	
-
-	$log->info("Products :: Showing Price Books to be added in the product");
+	
+	$vtlog->logthis("Products :: Showing Price Books to be added in the product","info");
 	$entity_id = $adb->query_result($list_result,$i,"crmid");
 	if(! array_key_exists($entity_id, $pbk_array))
 	{

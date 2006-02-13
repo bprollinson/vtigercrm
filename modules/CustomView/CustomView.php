@@ -17,7 +17,7 @@ $image_path=$theme_path."images/";
 require_once('include/database/PearDatabase.php');
 require_once ($theme_path."layout_utils.php");
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
 global $adv_filter_options;
 
@@ -36,23 +36,21 @@ class CustomView extends CRMEntity{
 
 
 
-	var $module_list = Array("Leads"=>Array("Information"=>13,"Address"=>15,"Description"=>16,"Custom Information"=>14),
-				 "Contacts"=>Array("Information"=>4,"Address"=>7,"Description"=>8,"Custom Information"=>5),
-				 "Accounts"=>Array("Information"=>9,"Address"=>11,"Description"=>12,"Custom Information"=>10),
-				 "Potentials"=>Array("Information"=>1,"Description"=>3,"Custom Information"=>2),
-				 "Activities"=>Array("Information"=>19,"Description"=>20),
- 		                 "Campaigns"=>Array("Information"=>76,"Description"=>77),
-				 "Products"=>Array("Information"=>31,"Description"=>36,"Custom Information"=>34),
-				 "Vendors"=>Array("Information"=>44,"Address"=>46,"Description"=>47,"Custom Information"=>45),
-				 "PriceBooks"=>Array("Information"=>48,"Description"=>50,"Custom Information"=>49),
-				 "Notes"=>Array("Information"=>17,"Description"=>18),
-				 "Emails"=>Array("Information"=>'21,22,23',"Description"=>24),
-				 "HelpDesk"=>Array("Information"=>'25,26',"Description"=>28,"Custom Information"=>27),
-				 "Quotes"=>Array("Information"=>51,"Address"=>53,"Description"=>56,"Custom Information"=>52),
-				 "PurchaseOrder"=>Array("Information"=>57,"Address"=>59,"Description"=>62,"Custom Information"=>58),
-				 "SalesOrder"=>Array("Information"=>63,"Address"=>65,"Description"=>68,"Custom Information"=>64),
-				 "Faq"=>Array("Information"=>37,38,39),
-				 "Invoice"=>Array("Information"=>69,"Address"=>71,"Description"=>74,"Custom Information"=>70)
+	var $module_list = Array("Leads"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Contacts"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Accounts"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Potentials"=>Array("Information"=>1,"Description"=>2,"Custom Information"=>5),
+				 "Activities"=>Array("Information"=>1,"Description"=>2),
+				 "Products"=>Array("Information"=>1,"Description"=>2,"Custom Information"=>5),
+				 "Vendor"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "PriceBook"=>Array("Information"=>1,"Description"=>2,"Custom Information"=>5),
+				 "Notes"=>Array("Information"=>1,"Description"=>3),
+				 "Emails"=>Array("Information"=>'1,2',"Description"=>4),
+				 "HelpDesk"=>Array("Information"=>'1,2',"Description"=>3,"Custom Information"=>5),
+				 "Quotes"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Orders"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "SalesOrder"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Invoice"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5)
 				);
 
 
@@ -72,64 +70,9 @@ class CustomView extends CRMEntity{
 
 	function CustomView($module="")
 	{
-		global $current_user,$adb;
 		$this->customviewmodule = $module;
 		$this->escapemodule[] =	$module."_";
 		$this->escapemodule[] = "_";
-		$this->smownerid = $current_user->id;
-	}
-
-	// Mike Crowe Mod --------------------------------------------------------getViewId
-	function getViewId($module)
-	{
-    		global $adb;
-		if(isset($_REQUEST['viewname']) == false)
-		{
-			if (isset($_SESSION["cv$module"]) && $_SESSION["cv$module"]!='')
-			{
-				$viewid = $_SESSION["cv$module"];
-			}
-			elseif($this->setdefaultviewid != "")
-			{
-				$viewid = $this->setdefaultviewid;
-			}else
-			{
-				$query="select cvid from customview where viewname='All' and entitytype='".$module."'";
-				$cvresult=$adb->query($query);
-				$viewid = $adb->query_result($cvresult,0,'cvid');;
-			}
-		}
-		else
-		{
-			$viewid =  $_REQUEST['viewname'];
-		}
-		$_SESSION["cv$module"] = $viewid;
-		return $viewid;
-	}
-	
-	// Mike Crowe Mod --------------------------------------------------------getGroupId
-	function getGroupId($module)
-	{
-		if(isset($_REQUEST['gname']) == false)
-		{
-			if ( isset($_SESSION["cg$module"]) )
-			{
-				$groupid = $_SESSION["cg$module"];
-			}
-			elseif($this->setdefaultgroupid != "")
-			{
-				$groupid = $this->setdefaultgroupid;
-			}else
-			{
-				$groupid = "0";
-			}
-		}
-		else
-		{
-			$groupid =  $_REQUEST['gname'];
-		}
-		$_SESSION["cg$module"] = $groupid;
-		return $groupid;
 	}
 
 	// to get the available customviews for a module
@@ -157,7 +100,7 @@ class CustomView extends CRMEntity{
                 $tabid = getTabid($this->customviewmodule);
                 $ssql = "select customview.* from customview inner join tab on tab.name = customview.entitytype";
                 $ssql .= " where tab.tabid=".$tabid;
-                //echo $ssql;
+		//echo $ssql;
                 $result = $adb->query($ssql);
                 while($cvrow=$adb->fetch_array($result))
                 {
@@ -187,17 +130,6 @@ class CustomView extends CRMEntity{
 
 		$result = $adb->query($sql);
                 $noofrows = $adb->num_rows($result);
-		//Added on 14-10-2005 -- added ticket id in list
-                if($module == 'HelpDesk' && $block == 25)
-                {
-                        $module_columnlist['crmentity:crmid::HelpDesk_Ticket ID:I'] = 'Ticket ID';
-                }
-		//Added to include activity type in activity customview list
-                if($module == 'Activities' && $block == 19)
-                {
-                        $module_columnlist['activity:activitytype::Activities_Activity Type:C'] = 'Activity Type';
-                }
-
                 for($i=0; $i<$noofrows; $i++)
                 {
                         $fieldtablename = $adb->query_result($result,$i,"tablename");
@@ -216,13 +148,6 @@ class CustomView extends CRMEntity{
 				{
 					$fieldlabel = "Related to";
 				}
-				if($fieldlabel == "Start Date & Time")
-                                {
-                                        $fieldlabel = "Start Date";
-					  if($module == 'Activities' && $block == 19)
-				               $module_columnlist['activity:time_start::Activities_Start Time:I'] = 'Start Time';
-
-                                }
                         $fieldlabel1 = str_replace(" ","_",$fieldlabel);
                         $optionvalue = $fieldtablename.":".$fieldcolname.":".$fieldname.":".$module."_".$fieldlabel1.":".$fieldtypeofdata;
                         $module_columnlist[$optionvalue] = $fieldlabel;
@@ -608,19 +533,8 @@ class CustomView extends CRMEntity{
 				if($value != "")
 				{
 					$list = explode(":",$value);
-					//$sqllist[] = $list[0].".".$list[1];
-					//Added For getting status for Activities -Jaguar
-					$sqllist_column = $list[0].".".$list[1];
-                                        if($this->customviewmodule == "Activities")
-                                        {
-                                                if($list[1] == "status")
-                                                {
-                                                        $sqllist_column = "case when (activity.status not like '') then activity.status else activity.eventstatus end as activitystatus";
-                                                }
-                                        }
-	                                $sqllist[] = $sqllist_column;
-				
-					//Ends
+					$sqllist[] = $list[0].".".$list[1];
+
 					$tablefield[$list[0]] = $list[1];
 					$fieldlabel = trim(str_replace($this->escapemodule," ",$list[3]));
 					$this->list_fields[$fieldlabel] = $tablefield;
@@ -645,13 +559,13 @@ class CustomView extends CRMEntity{
 				if($columnname == "columnname")
 				{
 					$filtercolumn = $value;
-				}elseif($columnname == "stdfilter")
+				}elseif($columnname = "stdfilter")
 				{
 					$filtertype = $value;
-				}elseif($columnname == "startdate")
+				}elseif($columnname = "startdate")
 				{
 					$startdate = $value;
-				}elseif($columnname == "enddate")
+				}elseif($columnname = "enddate")
 				{
 					$enddate = $value;
 				}
@@ -698,15 +612,7 @@ class CustomView extends CRMEntity{
 							$advfiltersql[] = " (".$advorsqls.") ";
 						}else
 						{
-							//Added for getting activity Status -Jaguar
-							 if($this->customviewmodule == "Activities" && $columns[1] == "status")
-                                                        {
-                                                                $advfiltersql[] = "case when (activity.status not like '') then activity.status else activity.eventstatus end".$this->getAdvComparator($advfltrow["comparator"],trim($advfltrow["value"]));
-                                                        }
-                                                        else
-							{
-								$advfiltersql[] = $this->getRealValues($columns[0],$columns[1],$advfltrow["comparator"],trim($advfltrow["value"]));
-							}
+							$advfiltersql[] = $this->getRealValues($columns[0],$columns[1],$advfltrow["comparator"],trim($advfltrow["value"]));
 						}
 					}
 				}
@@ -753,15 +659,7 @@ class CustomView extends CRMEntity{
 		}
 		else if($fieldname == "crmid" || $fieldname == "parent_id")
 		{
-			//Added on 14-10-2005 -- for HelpDesk
-			if($this->customviewmodule == 'HelpDesk' && $fieldname == "crmid")
-			{
-				$value = $tablename.".".$fieldname.$this->getAdvComparator($comparator,$value);
-			}
-			else
-			{
-				$value = $tablename.".".$fieldname." in (".$this->getSalesEntityId($value).") ";
-			}
+			$value = $tablename.".".$fieldname." in (".$this->getSalesEntityId($value).") ";
 		}
 		else
 		{
@@ -772,8 +670,8 @@ class CustomView extends CRMEntity{
 	
 	function getSalesEntityId($setype)
 	{
-                global $log;
-                $log->info("in getSalesEntityId ".$setype);
+		global $vtlog;
+		$vtlog->logthis("in getSalesEntityId ".$setype,'info');
 		global $adb;
 		$sql = "select crmid from crmentity where setype='".$setype."' and deleted = 0";
 		$result = $adb->query($sql);
@@ -793,8 +691,8 @@ class CustomView extends CRMEntity{
 
 	function getSoId($so_name)
 	{
-		global $log;
-                $log->info("in getSoId ".$so_name);
+		global $vtlog;
+		$vtlog->logthis("in getSoId ".$so_name,'info');
 		global $adb;
 		if($so_name != '')
 		{
@@ -807,8 +705,9 @@ class CustomView extends CRMEntity{
 
 	function getProductId($product_name)
 	{
-		global $log;
-                $log->info("in getProductId ".$product_name);
+
+		global $vtlog;
+		$vtlog->logthis("in getProductId ".$product_name,'info');
 		global $adb;
 		if($product_name != '')
 		{
@@ -821,8 +720,8 @@ class CustomView extends CRMEntity{
 
 	function getQuoteId($quote_name)
 	{
-		global $log;
-                $log->info("in getQuoteId ".$quote_name);
+		global $vtlog;
+		$vtlog->logthis("in getQuoteId ".$quote_name,'info');
 		global $adb;
 		if($quote_name != '')
 		{
@@ -835,8 +734,8 @@ class CustomView extends CRMEntity{
 
 	function getPotentialId($pot_name)
 	{
-		 global $log;
-                $log->info("in getPotentialId ".$pot_name);
+		global $vtlog;
+		$vtlog->logthis("in getPotentialId ".$pot_name,'info');
 		global $adb;
 		if($pot_name != '')
 		{
@@ -848,8 +747,8 @@ class CustomView extends CRMEntity{
 	}
 	function getVendorId($vendor_name)
 	{
-		 global $log;
-                $log->info("in getVendorId ".$vendor_name);
+		global $vtlog;
+		$vtlog->logthis("in getVendorId ".$vendor_name,'info');
 		global $adb;
 		if($vendor_name != '')
 		{
@@ -862,8 +761,8 @@ class CustomView extends CRMEntity{
 	
 	function getContactId($contact_name)
 	{
-		global $log;
-                $log->info("in getContactId ".$contact_name);
+		global $vtlog;
+		$vtlog->logthis("in getContactId ".$contact_name,'info');
 		global $adb;
 		if($contact_name != '')
 		{
@@ -876,8 +775,9 @@ class CustomView extends CRMEntity{
 
 	function getAccountId($account_name)
 	{
-		 global $log;
-                $log->info("in getAccountId ".$account_name);
+		global $vtlog;
+		$vtlog->logthis("in getAccountId ".$account_name,'info');
+
 		global $adb;
 		if($account_name != '')
 		{

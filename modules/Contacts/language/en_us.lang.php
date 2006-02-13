@@ -21,8 +21,6 @@
  ********************************************************************************/
 
 $mod_strings = Array(
-// Mike Crowe Mod --------------------------------------------------------Added for general search
-'LBL_GENERAL_INFORMATION'=>'General Information',
 'LBL_MODULE_NAME'=>'Contacts',
 'LBL_INVITEE'=>'Direct Reports',
 'LBL_MODULE_TITLE'=>'Contacts: Home',
@@ -96,7 +94,6 @@ $mod_strings = Array(
 'LBL_POSTAL_CODE'=>'Postal Code:',
 'LBL_COUNTRY'=>'Country:',
 'LBL_DESCRIPTION_INFORMATION'=>'Description Information',
-'LBL_IMAGE_INFORMATION'=>'Contact Image Information:',
 'LBL_ADDRESS_INFORMATION'=>'Address Information',
 'LBL_DESCRIPTION'=>'Description:',
 'LBL_CONTACT_ROLE'=>'Role:',
@@ -162,17 +159,10 @@ $mod_strings = Array(
 'Modified Time'=>'Modified Time',
 'Mailing Street'=>'Mailing Street',
 'Other Street'=>'Other Street',
-'Mailing City'=>'Mailing City',
-'Mailing State'=>'Mailing State',
-'Mailing Zip'=>'Mailing Zip',
-'Mailing Country'=>'Mailing Country',
-'Mailing Po Box'=>'Mailing Po Box',
-'Other Po Box'=>'Other Po Box',
-'Other City'=>'Other City',
-'Other State'=>'Other State',
-'Other Zip'=>'Other Zip',
-'Other Country'=>'Other Country',
-'Contact Image'=>'Contact Image',
+'City'=>'City',
+'State'=>'State',
+'Zip'=>'Zip',
+'Country'=>'Country',
 'Description'=>'Description',
 
 // Added fields for Add Business Card
@@ -194,11 +184,6 @@ $mod_strings = Array(
 //Added for 4.2 Release -- CustomView
 'Name'=>'Name',
 'LBL_ALL'=>'All',
-'LBL_MAXIMUM_LIMIT_ERROR'=>'Sorry, the uploaded file exceeds the maximum filesize limit. Please try a file smaller than 800000 bytes',
-'LBL_UPLOAD_ERROR'=>'Problems in file upload. Please try again!',
-'LBL_IMAGE_ERROR'=>'The given file is not of type image(.gif/.jpg/.png)',
-'LBL_INVALID_IMAGE'=>'Invalid file OR File has no data',
-
 );
 
 ?>

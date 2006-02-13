@@ -13,8 +13,8 @@ require_once("data/Tracker.php");
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/Rss/Rss.php');
 global $app_strings;
 global $app_list_strings;
@@ -59,18 +59,6 @@ if(isset($_REQUEST[record]))
 {
 	$rss_html = $oRss->getStarredRssHTML();
 }
-if($currentModule == "Rss")
-{
-	require_once("modules/".$currentModule."/Forms.php");
-	if (function_exists('get_rssfeeds_form'))
-	{
-		$rss_form->assign("RSSFEEDS_TITLE","<br><div style='float:left'><a href='javascript:openPopUp(\"addRssFeedIns\",this,\"index.php?action=Popup&module=Rss\",\"addRssFeedWin\",350,150,\"menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes\");' title='".$app_strings['LBL_ADD_RSS_FEEDS']."'>Add<img src='".$image_path."/addrss.gif' border=0 align=absmiddle></a>&nbsp;</div>");
-		$rss_form->assign("RSSFEEDS", get_rssfeeds_form());
-	}
-}
-
-
-
 //$all_rss_html = $oRss->getAllRssFeeds();
 //$stared_rss_html = $oRss->getStaredRssFeeds();
 //$crm_rss_html = $oRss->getCRMRssFeeds();

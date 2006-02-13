@@ -2,8 +2,8 @@
 /*
  * Copyright 2001 by Gero Kohnert
  *
- *  CVS Info:  $Id$
- *  $Author$
+ *  CVS Info:  $Id: holiday_au.pinc,v 1.16 2005/05/03 13:18:52 saraj Exp $
+ *  $Author: saraj $
  *  contributed by "Hugh Blandford" <hugh at island.net.au>
  *
  * Type = 0   day is displayed but not marked

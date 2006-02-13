@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/CustomView/language/en_us.lang.php,v 1.3 2005/07/18 08:34:44 venkatraj Exp $
  * Description:  Defines the English language pack for the Account module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -34,7 +34,6 @@ $mod_strings = Array(
 'LBL_SF_ENDDATE'=>'End Date',
 'LBL_AF_HDR1'=>'Set the search conditions to further restrict the list.',
 'LBL_AF_HDR2'=>'You can use &quot;or&quot; filters by entering multiple items in the third column.',
-'LBL_AF_HDR3'=>'You can enter up to 10 items, separated by commas. For example: CA, NY, TX, FL searches for CA or NY or TX or FL.',
-'LBL_AF_HDR4'=>'If "Activity Type" is selected, give any one of the following values "Call","Meeting" or "Task".');
+'LBL_AF_HDR3'=>'You can enter up to 10 items, separated by commas. For example: CA, NY, TX, FL searches for CA or NY or TX or FL.',);
 
 ?>

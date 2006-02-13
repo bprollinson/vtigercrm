@@ -27,20 +27,18 @@
 </head>
 <body leftmargin="0" topmargin="0" marginheight="0" marginwidth="0" {ONLOAD}>
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
-<tr class="topBand">
-<td width="99%"><table width="98%" border="0" cellspacing="0" cellpadding="0">
-<tr>
-<td><table width="100%" border="0" cellspacing="0" cellpadding="0">
-<tr>
-<td valign="center">
-<div align="top"><a href="http://www.vtiger.com"><img src="{IMAGE_PATH}/vtiger.jpg" alt="vtigercrm" border="0"></a>
-</div>
-</td>
-<td><div align="right"><font size="1" color="#000000"><strong>{APP.NTC_WELCOME}
-{CURRENT_USER}</strong></font>&nbsp; <font size="1">[{DATE}]</font></div></td> 
-
-    <td><div align="right"><a href="index.php?module=Users&action=DetailView&record={CURRENT_USER_ID}"><img src="{IMAGE_PATH}/user.gif" hspace="3" align="absmiddle" border="0">{APP.LBL_MY_ACCOUNT}</a>
-  		{ADMIN_LINK}&nbsp;<a href="modules/Help/vtigerCRM_docs/index.html" target="_blank"><img src="{IMAGE_PATH}/vtigerDevDocs.gif" hspace="3" align="absmiddle" border="0">{APP.LNK_VTDOCS}</a>&nbsp;<a href="http://www.vtiger.com/products/crm/document.html" target="_blank"><img src="{IMAGE_PATH}/help.gif" hspace="3" align="absmiddle" border="0">{APP.LNK_HELP}</a>&nbsp;
+  <tr> 
+    <td width="80" height="75" valign="bottom"> 
+      <div align="center"><a href="http://www.vtiger.com"><img src="{IMAGE_PATH}/vtiger.jpg" alt="vigercrm" border="0"></a> 
+      </div></td>
+    <td><table height="75" width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr> 
+          <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td><div align="right"><font size="1">{APP.NTC_WELCOME} {CURRENT_USER}</font>&nbsp;&nbsp; 
+              <font size="1">[{DATE}]</font></div></td>
+                <td><div align="right"><a href="index.php?module=Users&action=DetailView&record={CURRENT_USER_ID}"><img src="{IMAGE_PATH}/user.gif" hspace="3" align="absmiddle" border="0">{APP.LBL_MY_ACCOUNT}</a>
+  		{ADMIN_LINK}&nbsp;<a href="http://www.vtiger.com/products/crm/document.html" target="_blank"><img src="{IMAGE_PATH}/help.gif" hspace="3" align="absmiddle" border="0">{APP.LNK_HELP}</a>&nbsp;
 		 <a class="toplink" href="javascript:openwin()"><img src="{IMAGE_PATH}/aboutus.gif" hspace="3" align="absmiddle" border="0">{APP.LNK_WEARE}</a>
 <script>
 function openwin()
@@ -87,8 +85,8 @@ function openwin()
       </table></td>
   </tr>
 </table>
-<script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
-<script language="JavaScript" type="text/javascript" src="include/js/scroller.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/general.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/scroller.js"></script>
 <table width="100%" cellspacing="0" cellpadding="0" border="0">
   <tbody>
   	<tr>
@@ -123,7 +121,7 @@ function openwin()
 		 <!-- END: dropdown_sub_menu_item -->
 	</table>
 </div>
-<script language="JavaScript" type="text/javascript" src="include/js/submenu.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/submenu.js"></script>
 <!--<a class="moduleMenu" href="{DELETED_ITEMS_URL}">{DELETED_ITEMS_LABEL}&nbsp;</a>-->
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top:2">
   <tr>

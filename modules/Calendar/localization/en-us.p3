@@ -1,5 +1,5 @@
 <?php
-# $Id$
+# $Id: en-us.p3,v 1.16 2005/05/03 13:18:52 saraj Exp $
 #
 setlocale(LC_TIME,'en_US');
 $tutos['df'] = 1;

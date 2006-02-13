@@ -27,10 +27,36 @@ $focus = new Activity();
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
+$sql_recentviewed ='delete from tracker where user_id = '.$current_user->id.' and item_id = '.$_REQUEST['record'];
+$adb->query($sql_recentviewed);
+if($_REQUEST['return_module'] == 'Contacts')
+{
+   $sql = 'delete from cntactivityrel where contactid = '.$_REQUEST['return_id'].' and activityid = '.$_REQUEST['record'];
+   $adb->query($sql);
+}
+else
+{
+	$sql= 'delete from seactivityrel where activityid='.$_REQUEST['record'];
+	$adb->query($sql);
+}
 
- //code added for returning back to the current view after delete from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&viewname=".$return_viewname);
+if($_REQUEST['return_module'] == 'HelpDesk')
+{
+   $sql = 'delete from seticketsrel where ticketid = '.$_REQUEST['return_id'].' and crmid = '.$_REQUEST['record'];
+   $adb->query($sql);
+}
+
+if($_REQUEST['module'] == $_REQUEST['return_module'])
+        $focus->mark_deleted($_REQUEST['record']);
+
+ $activity_id=$_REQUEST['record'];
+
+ $sql = 'delete from activity_reminder where activity_id='.$activity_id;
+ $adb->query($sql);
+
+ $sql = 'delete  from recurringevents where activityid='.$activity_id;	
+ $adb->query($sql);
+
+
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']);
 ?>

@@ -21,8 +21,8 @@ require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/ComboUtil.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/CustomView/CustomView.php');
 
 global $app_strings;
@@ -58,7 +58,7 @@ if(isset($_REQUEST['viewname']) == false || $_REQUEST['viewname']=='')
 }
 $focus = new SalesOrder();
 
-//echo get_form_header($current_module_strings['LBL_MY_TOP_SO'],$other_text, false);
+echo get_form_header($current_module_strings['LBL_MY_TOP_SO'],$other_text, false);
 $xtpl=new XTemplate ('modules/Orders/ListTopSalesOrder.html');
 global $theme;
 $theme_path="themes/".$theme."/";
@@ -66,7 +66,6 @@ $image_path=$theme_path."images/";
 $xtpl->assign("MOD", $mod_strings);
 $xtpl->assign("APP", $app_strings);
 $xtpl->assign("IMAGE_PATH",$image_path);
-$xtpl->assign("MYTOPSO",$current_module_strings['LBL_MY_TOP_SO']);
 
 //Retreive the list from Database
 //<<<<<<<<<customview>>>>>>>>>
@@ -138,12 +137,6 @@ $xtpl->assign("LISTENTITY", $listview_entries);
 
 
 $xtpl->parse("main");
-
-// Mike Crowe Mod --------------------------------------------------------
-if ( ($display_empty_home_blocks && $noofrows == 0 ) || ($noofrows>0) )
 $xtpl->out("main");
-else 
-	echo "<em>".$current_module_strings['NTC_NONE_SCHEDULED']."</em>";
-if ( !$display_empty_home_blocks) echo "<BR>";
-// Mike Crowe Mod --------------------------------------------------------
+
 ?>

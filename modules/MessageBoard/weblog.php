@@ -6,7 +6,7 @@
  *   copyright            : (C) 2003 Hyperion
  *   email                : vinng86@hotmail.com
  *
- *   $Id$
+ *   $Id: weblog.php,v 1.9 2005/01/04 15:04:13 saraj Exp $
  *
  *   modified from Smartor's portal.php by hyperion -
  *      http://www.phpbb.com/phpBB/profile.php?mode=viewprofile&u=6288 *

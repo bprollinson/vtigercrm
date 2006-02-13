@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Rss/Forms.php,v 1.3 2005/06/29 17:20:13 venkatraj Exp $
  * Description:  Contains a variety of utility functions specific to this module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -32,7 +32,7 @@ global $app_strings;
 global $image_path;
 
 $the_script='
-<script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/general.js"></script>
 <script type="text/javascript" language="Javascript">
 function toggleRSSFolder(id) {
 	if (document.getElementById(id+"_feeds").style.display=="none") {

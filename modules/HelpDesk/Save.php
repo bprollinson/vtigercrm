@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/HelpDesk/Save.php,v 1.8 2005/04/25 05:21:46 Mickie Exp $
+ * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/HelpDesk/Save.php,v 1.8 2005/04/25 05:21:46 rajeshkannan Exp $
  * Description:  Saves an Account record and then redirects the browser to the 
  * defined return URL.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -45,6 +45,8 @@ foreach($focus->column_fields as $fieldname => $val)
 		
 }
 
+
+//$focus->saveentity("HelpDesk");
 $focus->save("HelpDesk");
 $return_id = $focus->id;
 
@@ -59,35 +61,25 @@ if($_REQUEST['mode'] == 'edit')
 else
 	$reply = '';
 
-$subject = '[ Ticket ID : '.$focus->id.' ] '.$reply.$_REQUEST['ticket_title'];
-$bodysubject = ' Ticket ID : '.$focus->id.'<br> Subject : '.$_REQUEST['ticket_title'];
+$_REQUEST['name'] = '[ Ticket ID : '.$focus->id.' ] '.$reply.$_REQUEST['ticket_title'];
+$bodysubject = ' Subject : '.$focus->id.' : '.$_REQUEST['ticket_title'].'<br><br>';
 
-$emailoptout = 0;
-
-//To get the emailoptout field value and then decide whether send mail about the tickets or not
 if($focus->column_fields['parent_id'] != '')
 {
-	$parent_module = getSalesEntityType($focus->column_fields['parent_id']);
+	$query = "select * from crmentity where crmid=".$focus->column_fields['parent_id'];
+	$parent_module = $adb->query_result($adb->query($query),0,'setype');
 	if($parent_module == 'Contacts')
 	{
-		$result = $adb->query("select * from contactdetails where contactid=".$focus->column_fields['parent_id']);
+		$sql = "select * from contactdetails where contactid=".$focus->column_fields['parent_id'];
+		$result = $adb->query($sql);
 		$emailoptout = $adb->query_result($result,0,'emailoptout');
 		$contactname = $adb->query_result($result,0,'firstname').' '.$adb->query_result($result,0,'lastname');
-		$parentname = $contactname;
 		$contact_mailid = $adb->query_result($result,0,'email');
 	}
-	if($parent_module == 'Accounts')
-	{
-		$result = $adb->query("select * from account where accountid=".$focus->column_fields['parent_id']);
-		$emailoptout = $adb->query_result($result,0,'emailoptout');
-		$parentname = $adb->query_result($result,0,'accountname');
-	}
 }
-
-//Get the status of the portal user. if the customer is active then send the portal link in the mail
 if($contact_mailid != '')
 {
-	$sql = "select * from portalinfo where user_name='".$contact_mailid."'";
+	$sql = "select * from PortalInfo where user_name='".$contact_mailid."'";
 	$isactive = $adb->query_result($adb->query($sql),0,'isactive');
 }
 if($isactive == 1)
@@ -96,15 +88,18 @@ if($isactive == 1)
 	$bodydetails .= 'There is a reply to <b>'.$_REQUEST['ticket_title'].'</b> in the "Customer Portal" at VTiger.';
 	$bodydetails .= "You can use the following link to view the replies made:<br>";
 
-	$bodydetails .= "<a href='".$PORTAL_URL."/general.php?action=UserTickets&ticketid=".$focus->id."&fun=detail'>Ticket Details</a>";
+	//Provide your customer portal url
+	$PORTAL_URL = "<customerportal-url:port>";//e.g : vtigercrm:90/customerportal
+
+	$bodydetails .= "<a href='http://".$PORTAL_URL."/general.php?action=UserTickets&ticketid=".$focus->id."&fun=detail'>Ticket Details</a>";
 	$bodydetails .= "<br><br>Thanks,<br><br> Vtiger Support Team ";
 
-	$email_body = $bodysubject.'<br><br>'.$bodydetails;
+	$_REQUEST['description'] = $bodysubject.$bodydetails;
 }
 else
 {
 	$desc = 'Ticket ID : '.$focus->id.'<br> Ticket Title : '.$reply.$_REQUEST['ticket_title'];
-	$desc .= "<br><br>Dear ".$parentname.",<br><br>The Ticket is replied and the details are : <br>";
+	$desc .= "<br><br>Dear ".$contactname.",<br><br>The Ticket is replied and the details are : <br>";
 	$desc .= "<br> Status : ".$focus->column_fields['ticketstatus'];
 	$desc .= "<br> Category : ".$focus->column_fields['ticketcategories'];
 	$desc .= "<br> Severity : ".$focus->column_fields['ticketseverities'];
@@ -113,56 +108,26 @@ else
 	$desc .= '<br><br>Solution : <br>'.$focus->column_fields['solution'];
 	$desc .= getTicketComments($focus->id);
 
-	$email_body = $desc;
+	$_REQUEST['description'] = $desc;
 }
+//$_REQUEST['parent_id'] = $_REQUEST['contact_id'];
 $_REQUEST['return_id'] = $return_id;
 
 if($_REQUEST['product_id'] != '' && $focus->id != '' && $_REQUEST['mode'] != 'edit')
 {
         $sql = 'insert into seticketsrel values('.$_REQUEST['product_id'].' , '.$focus->id.')';
         $adb->query($sql);
-
-	if($_REQUEST['return_module'] == 'Products')
-	        $return_id = $_REQUEST['product_id'];
+        $return_id = $_REQUEST['product_id'];
 }
 
-//send mail to the assigned to user and the parent to whom this ticket is assigned
-require_once('modules/Emails/mail.php');
-$user_emailid = getUserEmailId('id',$focus->column_fields['assigned_user_id']);
-if($user_emailid != '')
-{
-	$mail_status = send_mail('HelpDesk',$user_emailid,$HELPDESK_SUPPORT_NAME,$HELPDESK_SUPPORT_EMAIL_ID,$subject,$email_body);
-	$mail_status_str = $user_emailid."=".$mail_status."&&&";
-}
-else
-{
-	$mail_status_str = "'".$to_email."'=0&&&";
-}
-//added condition to check the emailoptout(this is for contacts and accounts.)
 if($emailoptout == 0)
 {
-	//send mail to parent
-	if($_REQUEST['parent_id'] != '' && $_REQUEST['parent_type'] != '')
-        {
-                $parentmodule = $_REQUEST['parent_type'];
-                $parentid = $_REQUEST['parent_id'];
-
-		$parent_email = getParentMailId($parentmodule,$parentid);	
-		$mail_status = send_mail('HelpDesk',$parent_email,$HELPDESK_SUPPORT_NAME,$HELPDESK_SUPPORT_EMAIL_ID,$subject,$email_body);
-		$mail_status_str .= $parent_email."=".$mail_status."&&&";
-        }
+	require_once('modules/Emails/send_mail.php');
 }
 else
 {
-	$adb->println("'".$parentname."' is not want to get the email about the ticket details as emailoptout is selected");
+	header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 }
-
-$mail_error_status = getMailErrorString($mail_status_str);
-
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&$mail_error_status&viewname=$return_viewname");
 
 function getTicketComments($ticketid)
 {

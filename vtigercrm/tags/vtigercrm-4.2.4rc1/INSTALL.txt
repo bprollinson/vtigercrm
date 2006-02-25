@@ -1,0 +1,15 @@
+vtigerCRM Installation
+----------------------
+
+Please refer to the following URLs for installation procedures in various operating systems:
+
+ * Linux: http://vtiger.com/products/crm/help/vtiger_CRM_Installation_Guide_Linux.pdf
+ * Windows: http://vtiger.com/products/crm/help/vtiger_CRM_Installation_Guide_Windows.pdf
+ * LAMP: "Installing Only vtiger CRM" section in vtiger CRM Installation Guide Linux
+ * WAMP: "Installing Only vtiger CRM" section in vtiger CRM Installation Guide Windows
+ * User Manual: http://www.vtiger.com/wiki/index.php/Vtiger_CRM_-_User_Guide (vtiger Community based documentation) 
+ * vtiger Outlook Plugin: http://vtiger.com/products/crm/help/vtiger_Outlook_Plugin_User_Guide.pdf
+ * vitger Office Plugin: http://vtiger.com/products/crm/help/vtiger_Office_Plugin_User_Guide.pdf
+ * vtiger Thunderbird Extension: http://vtiger.com/products/crm/help/vtiger_Thunderbird_Extension_User_Guide.pdf
+ * vtiger Customer Portal: http://vtiger.com/products/crm/help/vtiger_Customer_Portal_User_Guide.pdf
+

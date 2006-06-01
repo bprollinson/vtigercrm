@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fckselection_ie.js
  * 	Active selection functions. (IE specific implementation)
  * 
@@ -38,15 +36,10 @@ FCKSelection.GetSelectedElement = function()
 
 FCKSelection.GetParentElement = function()
 {
-	switch ( this.GetType() )
-	{
-		case 'Control' :
-			return FCKSelection.GetSelectedElement().parentElement ;
-		case 'None' :
-			return ;
-		default :
-			return FCK.EditorDocument.selection.createRange().parentElement() ;
-	}
+	if ( this.GetType() == 'Control' )
+		return FCKSelection.GetSelectedElement().parentElement ;
+	else
+		return FCK.EditorDocument.selection.createRange().parentElement() ;
 }
 
 FCKSelection.SelectNode = function( node )
@@ -132,19 +125,3 @@ FCKSelection.Delete = function()
 
 	return oSel ;
 }
-// START iCM Modifications
-/*
-// Move the cursor position (the selection point) to a specific offset within a specific node
-// If no offset specified, the start of the node is assumed
-FCKSelection.SetCursorPosition = function ( oNode, nOffset )
-{
-	if ( typeof nOffset == "undefined" ) nOffset = 0 ;
-
-	FCK.Selection.SelectNode( oNode ) ; // Doesn't handle offsets currently but offset always zero at mo
-	FCK.Selection.Collapse( true ) ;
-	
-	oNode.scrollIntoView( false );	
-}
-*/
-// END iCM Modifications
-

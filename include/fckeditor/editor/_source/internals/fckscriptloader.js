@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fckscriptloader.js
  * 	Defines the FCKScriptLoader object that is used to dynamically load
  * 	scripts in the editor.
@@ -65,55 +63,92 @@ FCKScriptLoader.CheckQueue = function()
 	}
 }
 
-FCKScriptLoader.LoadFile = function( filePath ) 
+if ( FCKBrowserInfo.IsSafari )
 {
-	//window.status = ( 'Loading ' + filePath + '...' ) ;
-
-	// Dynamically load the file (it can be a CSS or a JS)
-	var e ;
-	
-	// If it is a CSS
-	if ( filePath.lastIndexOf( '.css' ) > 0 )
+	FCKScriptLoader.LoadFile = function( filePath ) 
 	{
-		e = document.createElement( 'LINK' ) ;
-		e.rel	= 'stylesheet' ;
-		e.type	= 'text/css' ;
-	}
-	// It it is a JS
-	else
-	{
-		e = document.createElement( "script" ) ;
-			e.type	= "text/javascript" ;
-	}
-	
-	// Add the new object to the HEAD.
-	document.getElementsByTagName("head")[0].appendChild( e ) ; 
-
-	// Start downloading it.
-	if ( e.tagName == 'LINK' )
-	{
-		// IE must wait for the file to be downloaded.
-		if ( FCKBrowserInfo.IsIE )
-			e.onload = FCKScriptLoader_OnLoad ;
-		// Gecko doens't fire any event when the CSS is loaded, so we 
-		// can't wait for it.
+		if ( filePath.lastIndexOf( '.css' ) > 0 )
+		{
+			this.CheckQueue() ;
+			return ;
+		}
+		
+		var oXmlRequest = new XMLHttpRequest() ;
+		
+		// Load the script synchronously.
+		oXmlRequest.open( "GET", filePath, false ) ;
+		oXmlRequest.send( null ) ;
+		
+		// Evaluate the script.
+		if ( oXmlRequest.status == 200 )
+		{
+			try
+			{
+				eval( oXmlRequest.responseText ) ;
+			}
+			catch ( e )
+			{
+				alert( 'Error parsing ' + filePath + ': ' + e.message ) ;
+			}
+		}
 		else
-			FCKScriptLoader.CheckQueue() ;
+			alert( 'Error loading ' + filePath ) ;
 			
-		e.href = filePath ;
-	}
-	else
-	{
-		// Gecko fires the "onload" event and IE fires "onreadystatechange"
-		e.onload = e.onreadystatechange = FCKScriptLoader_OnLoad ;
-		e.src = filePath ;
+		this.CheckQueue() ;
 	}
 }
-
-function FCKScriptLoader_OnLoad()
+else
 {
-	// Gecko doesn't have a "readyState" property
-	if ( this.tagName == 'LINK' || !this.readyState || this.readyState == 'loaded' )
-		// Load the next script available in the queue
-		FCKScriptLoader.CheckQueue() ;
+	FCKScriptLoader.LoadFile = function( filePath ) 
+	{
+		//window.status = ( 'Loading ' + filePath + '...' ) ;
+
+		// Dynamically load the file (it can be a CSS or a JS)
+		var e ;
+		
+		// If is a CSS
+		if ( filePath.lastIndexOf( '.css' ) > 0 )
+		{
+			e = document.createElement( 'LINK' ) ;
+			e.rel	= 'stylesheet' ;
+			e.type	= 'text/css' ;
+		}
+		// It is a JS
+		else
+		{
+			e = document.createElement( "script" ) ;
+				e.type	= "text/javascript" ;
+		}
+		
+		// Add the new object to the HEAD.
+		document.getElementsByTagName("head")[0].appendChild( e ) ; 
+
+		// Start downloading it.
+		if ( e.tagName == 'LINK' )
+		{
+			// IE must wait for the file to be downloaded.
+			if ( FCKBrowserInfo.IsIE )
+				e.onload = FCKScriptLoader_OnLoad ;
+			// Gecko doens't fire any event when the CSS is loaded, so we 
+			// can't wait for it.
+			else
+				FCKScriptLoader.CheckQueue() ;
+				
+			e.href = filePath ;
+		}
+		else
+		{
+			// Gecko fires the "onload" event and IE fires "onreadystatechange"
+			e.onload = e.onreadystatechange = FCKScriptLoader_OnLoad ;
+			e.src = filePath ;
+		}
+	}
+
+	function FCKScriptLoader_OnLoad()
+	{
+		// Gecko doesn't have a "readyState" property
+		if ( this.tagName == 'LINK' || !this.readyState || this.readyState == 'loaded' )
+			// Load the next script available in the queue
+			FCKScriptLoader.CheckQueue() ;
+	}
 }

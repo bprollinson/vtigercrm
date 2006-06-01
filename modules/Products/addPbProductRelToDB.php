@@ -12,7 +12,7 @@
  ********************************************************************************/
 
 global $adb;	
-global $log;
+global $vtlog;
 require_once('include/database/PearDatabase.php');
 $idlist = $_POST['idlist'];
 $returnmodule=$_REQUEST['return_module'];
@@ -24,16 +24,14 @@ if(isset($_REQUEST['pricebook_id']) && $_REQUEST['pricebook_id']!='')
 	$storearray = explode(";",$idlist);
 	foreach($storearray as $id)
 	{
-		if($id != '') {
-			$lp_name = $id.'_listprice';
-			$list_price = $_REQUEST[$lp_name];
-			//Updating the pricebook product rel table
-			 $log->info("Products :: Inserting products to price book");
-			$query= "insert into pricebookproductrel (pricebookid,productid,listprice) values(".$pricebook_id.",".$id.",".$list_price.")";
-			$adb->query($query);
-		}
+		$lp_name = $id.'_listprice';
+		$list_price = $_REQUEST[$lp_name];
+		//Updating the pricebook product rel table
+		$vtlog->logthis("Products :: Inserting products to price book","info");
+		$query= "insert into pricebookproductrel (pricebookid,productid,listprice) values(".$pricebook_id.",".$id.",".$list_price.")";
+		$adb->query($query);
 	}
-	header("Location: index.php?module=PriceBooks&action=CallRelatedList&record=".$pricebook_id);
+	header("Location: index.php?module=Products&action=PriceBookDetailView&record=".$pricebook_id);
 }
 elseif(isset($_REQUEST['product_id']) && $_REQUEST['product_id']!='')
 {
@@ -41,16 +39,14 @@ elseif(isset($_REQUEST['product_id']) && $_REQUEST['product_id']!='')
 	$storearray = explode(";",$idlist);
 	foreach($storearray as $id)
 	{
-		if($id != '') {
-			$lp_name = $id.'_listprice';
-			$list_price = $_REQUEST[$lp_name];
-			//Updating the pricebook product rel table
-			 $log->info("Products :: Inserting PriceBooks to Product");
-			$query= "insert into pricebookproductrel (pricebookid,productid,listprice) values(".$id.",".$productid.",".$list_price.")";
-			$adb->query($query);
-		}
+		$lp_name = $id.'_listprice';
+		$list_price = $_REQUEST[$lp_name];
+		//Updating the pricebook product rel table
+		$vtlog->logthis("Products :: Inserting PriceBooks to Product","info");
+		$query= "insert into pricebookproductrel (pricebookid,productid,listprice) values(".$id.",".$productid.",".$list_price.")";
+		$adb->query($query);
 	}
-	header("Location: index.php?module=Products&action=CallRelatedList&record=".$productid);
+	header("Location: index.php?module=Products&action=DetailView&record=".$productid);
 }
 
 ?>

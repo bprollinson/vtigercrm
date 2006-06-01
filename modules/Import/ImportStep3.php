@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportStep3.php,v 1.18.2.1 2005/09/02 11:11:26 cooljaguar Exp $
  * Description:  TODO: To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
 require_once('modules/Import/ImportContact.php');
 require_once('modules/Import/ImportAccount.php');
@@ -32,7 +32,6 @@ require_once('modules/Import/ImportMap.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/CustomFieldUtil.php');
 require_once('modules/Import/ImportProduct.php');
-require_once('include/utils/CommonUtils.php');
 
 @session_unregister('column_position_to_field');
 @session_unregister('totalrows');
@@ -66,7 +65,7 @@ $max_lines = 3;
 
 $has_header = 0;
 
-if ( isset($_REQUEST['has_header']))
+if ( isset( $_REQUEST['has_header']))
 {
 	$has_header = 1;
 }
@@ -74,6 +73,10 @@ if ( isset($_REQUEST['has_header']))
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
+
+
+
+$log->info($mod_strings['LBL_MODULE_NAME']." Upload Step 3");
 
 if (!is_uploaded_file($_FILES['userfile']['tmp_name']) )
 {
@@ -126,35 +129,35 @@ else if ( $ret_value == -3 )
 
 
 $rows = $ret_value['rows'];
+
 $ret_field_count = $ret_value['field_count'];
+//echo 'my return field count i s ' .$ret_field_count;
+$xtpl=new XTemplate ('modules/Import/ImportStep3.html');
 
-$smarty =  new vtigerCRM_Smarty;
+$xtpl->assign("TMP_FILE", $tmp_file_name );
 
-$smarty->assign("TMP_FILE", $tmp_file_name );
+$xtpl->assign("SOURCE", $_REQUEST['source'] );
 
-$smarty->assign("SOURCE", $_REQUEST['source'] );
+$source_to_name = array( 'outlook'=>$mod_strings['LBL_MICROSOFT_OUTLOOK'],
+'act'=>$mod_strings['LBL_ACT'],
+'salesforce'=>$mod_strings['LBL_SALESFORCE'],
+'custom'=>$mod_strings['LBL_CUSTOM'],
+'other'=>$mod_strings['LBL_CUSTOM'],
+);
 
-$source_to_name = array( 
-			'outlook'=>$mod_strings['LBL_MICROSOFT_OUTLOOK'],
-			'act'=>$mod_strings['LBL_ACT'],
-			'salesforce'=>$mod_strings['LBL_SALESFORCE'],
-			'custom'=>$mod_strings['LBL_CUSTOM'],
-			'other'=>$mod_strings['LBL_CUSTOM'],
-		      );
+$xtpl->assign("SOURCE_NAME", $source_to_name[$_REQUEST['source']] );
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
 
-$smarty->assign("SOURCE_NAME", $source_to_name[$_REQUEST['source']] );
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
+if (isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
 
-if (isset($_REQUEST['return_module'])) $smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
-if (isset($_REQUEST['return_action'])) $smarty->assign("RETURN_ACTION", $_REQUEST['return_action']);
+if (isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
 
-$smarty->assign("THEME", $theme);
-$smarty->assign("IMAGE_PATH", $image_path);
-$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+$xtpl->assign("THEME", $theme);
 
-$smarty->assign("HEADER", $app_strings['LBL_IMPORT']." ". $mod_strings['LBL_MODULE_NAME']);
-$smarty->assign("HASHEADER", $has_header);
+$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+
+$xtpl->assign("HEADER", $app_strings['LBL_IMPORT']." ". $mod_strings['LBL_MODULE_NAME']);
 
 
 if (! isset( $_REQUEST['module'] ) || $_REQUEST['module'] == 'Contacts')
@@ -180,27 +183,24 @@ else if ( $_REQUEST['module'] == 'Products')
 
 
 
-$total_num_rows=sizeof($rows);	
-$firstrow = $rows[0];
-if($total_num_rows >1 )
-{
-	$secondrow = $rows[1];
-}		
-if($total_num_rows >2)
-{
-	$thirdrow = $rows[2];
-}
+//if ($has_header)
+//{
+//	$firstrow = array_shift($rows);
+//} 
+//else
+//{
+	$firstrow = $rows[0];
+//}
 
-	
 $field_map = $outlook_contacts_field_map;
 
-/*if ( isset( $_REQUEST['source_id']))
+if ( isset( $_REQUEST['source_id']))
 {
 	$mapping_file = new ImportMap();
 
 	//$mapping_file->retrieve_entity_info( $_REQUEST['source_id'],$_REQUEST['return_module']);
 	$mapping_file->retrieve( $_REQUEST['source_id'],false);
-	$adb->println("richie : ".$mapping_file->toString());
+	$adb->println("Shankar : ".$mapping_file->toString());
 
 	$mapping_content = $mapping_file->content;
 
@@ -217,22 +217,6 @@ $field_map = $outlook_contacts_field_map;
 		}
 	}
 }
-*/
-	$mapping_file = new ImportMap();
-	$saved_map_lists = $mapping_file->getSavedMappingsList($_REQUEST['return_module']);
-	$map_list_combo = '<select name="source" id="saved_source" disabled onchange="getImportSavedMap(this)">';
-	$map_list_combo .= '<OPTION value="-1" selected>--Select--</OPTION>';
-	if(is_array($saved_map_lists))
-	{
-		foreach($saved_map_lists as $mapid => $mapname)
-		{
-			$map_list_combo .= '<OPTION value='.$mapid.'>'.$mapname.'</OPTION>';
-		}
-	}
-	$map_list_combo .= '</select>';
-	$smarty->assign("SAVED_MAP_LISTS",$map_list_combo);
-
-
 
 if ( count($mapping_arr) > 0)
 {
@@ -281,7 +265,7 @@ else if ($_REQUEST['source'] == 'salesforce')
 }
 else if ($_REQUEST['source'] == 'outlook')
 {
-	$smarty->assign("IMPORT_FIRST_CHECKED", " CHECKED");
+	$xtpl->assign("IMPORT_FIRST_CHECKED", " CHECKED");
 	if ($_REQUEST['module'] == 'Contacts')
 	{
 		$field_map = $outlook_contacts_field_map;
@@ -298,31 +282,42 @@ $start_at = 0;
 
 if ( $has_header)
 {
+	$xtpl->parse("main.table.toprow.headercell");
 	$add_one = 0;
 	$start_at = 1;
 } 
 
 for($row_count = $start_at; $row_count < count($rows); $row_count++ )
 {
-	$smarty->assign("ROWCOUNT", $row_count + $add_one);
+	$xtpl->assign("ROWCOUNT", $row_count + $add_one);
+	$xtpl->parse("main.table.toprow.topcell");
 }
+
+$xtpl->parse("main.table.toprow");
 
 $list_string_key = strtolower($_REQUEST['module']);
 $list_string_key .= "_import_fields";
 
 $translated_column_fields = $mod_list_strings[$list_string_key];
 
+//$adb->println("IMP3 : trans before");
+//$adb->println($translated_column_fields);
+
 // adding custom fields translations
+
 getCustomFieldTrans($_REQUEST['module'],&$translated_column_fields);
+
+$adb->println("IMP3 : trans");
+$adb->println($translated_column_fields);
+
 
 $cnt=1;
 for($field_count = 0; $field_count < $ret_field_count; $field_count++)
 {
 
-	$smarty->assign("COLCOUNT", $field_count + 1);
+	$xtpl->assign("COLCOUNT", $field_count + 1);
 	$suggest = "";
 
-	/*
 	if ($has_header && isset( $field_map[$firstrow[$field_count]] ) )
 	{
 		$suggest = $field_map[$firstrow[$field_count]];	
@@ -331,7 +326,6 @@ for($field_count = 0; $field_count < $ret_field_count; $field_count++)
 	{
 		$suggest = $field_map[$field_count];	
 	}
-	*/
 
 	if($_REQUEST['module']=='Accounts')
 	{
@@ -360,148 +354,93 @@ for($field_count = 0; $field_count < $ret_field_count; $field_count++)
  	}
 
 	
-	$smarty->assign("FIRSTROW",$firstrow);
-	$smarty->assign("SECONDROW",$secondrow);
-	$smarty->assign("THIRDROW",$thirdrow);
-	$smarty_array[$field_count + 1] = getFieldSelect(	$focus->importable_fields,
-							$field_count,
+//echo 'xxxxxxxxxxxxxxxxxxxx';
+//print_r($focus->importable_fields);
+//print_r($focus->column_fields);
+/*
+	$xtpl->assign("SELECTFIELD", getFieldSelect(	$focus->importable_fields,
+							$requiredfieldval,
+							$focus1->required_fields,
+							$suggest,
+							$focus1->column_fields,
+							$tablename
+						   ));
+*/
+	$xtpl->assign("SELECTFIELD", getFieldSelect(	$focus->importable_fields,
+							$field_count,//requiredfieldval,
 							$focus1->required_fields,
 							$suggest,
 							$translated_column_fields,
 							$tablename
-						   );
+						   ));
+
+/*		getFieldSelect(	$focus->importable_fields,
+				$field_count,
+				$focus->required_fields,
+				$suggest,
+				$translated_column_fields,
+				$_REQUEST['module']
+				));
+*/
+	$xtpl->parse("main.table.row.headcell");
 
 	$pos = 0;
 
 	foreach ( $rows as $row ) 
 	{
+		if ($cnt%2==0)
+			$xtpl->assign("ROWCLASS","evenListRow");
+		else
+			$xtpl->assign("ROWCLASS","oddListRow");
 		
 		if( isset($row[$field_count]) && $row[$field_count] != '')
 		{
-			$smarty->assign("CELL",htmlspecialchars($row[$field_count]));
-//			$smarty->parse("main.table.row.cell");
+			$xtpl->assign("CELL",htmlspecialchars($row[$field_count]));
+			$xtpl->parse("main.table.row.cell");
 		} 
 		else
 		{
-//			$smarty->parse("main.table.row.cellempty");
+			$xtpl->parse("main.table.row.cellempty");
 		}
-
+		
 		$cnt++;
 	}
+
+	$xtpl->parse("main.table.row");
+
 }
-@session_unregister('import_has_header');
-@session_unregister('import_firstrow');
-@session_unregister('import_field_map');
-@session_unregister('import_module_object_column_fields');
-@session_unregister('import_module_field_count');
-@session_unregister('import_module_object_required_fields');
-@session_unregister('import_module_translated_column_fields');
-$_SESSION['import_has_header'] = $has_header;
-$_SESSION['import_firstrow'] = $firstrow;
-$_SESSION['import_field_map'] = $field_map;
-$_SESSION['import_module_object_column_fields'] = $focus->importable_fields;
-$_SESSION['import_module_field_count'] = $field_count;
-$_SESSION['import_module_object_required_fields'] = $focus1->required_fields;
-$_SESSION['import_module_translated_column_fields'] = $translated_column_fields;
 
-
-//echo '<pre>Default array ==> '; print_r($smarty_array); echo '</pre>';
-
-$smarty->assign("SELECTFIELD",$smarty_array);
-$smarty->assign("ROW", $row);
-//$xtpl->parse("main.table");
+$xtpl->parse("main.table");
 
 $module_key = "LBL_".strtoupper($_REQUEST['module'])."_NOTE_";
 
 for ($i = 1;isset($mod_strings[$module_key.$i]);$i++)
 {
-	$smarty->assign("NOTETEXT", $mod_strings[$module_key.$i]);
-	//$xtpl->parse("main.note");
+	$xtpl->assign("NOTETEXT", $mod_strings[$module_key.$i]);
+	$xtpl->parse("main.note");
 }
+
 
 
 if($has_header)
 {
-	$smarty->assign("HAS_HEADER", 'on');
+	$xtpl->assign("HAS_HEADER", 'on');
 } 
 else
 {
-	$smarty->assign("HAS_HEADER", 'off');
+	$xtpl->assign("HAS_HEADER", 'off');
 }
 
 
-$smarty->assign("MODULE", $_REQUEST['module']);
+$xtpl->assign("MODULE", $_REQUEST['module']);
+//$xtpl->assign("JAVASCRIPT", get_validate_import_fields_js($focus->required_fields,$translated_column_fields) );
 
-$category = getParenttab();
-$smarty->assign('CATEGORY' , $category);
+$xtpl->assign("JAVASCRIPT2", get_readonly_js() );
 
-$smarty->assign("JAVASCRIPT2", get_readonly_js() );
 
-$smarty->display('ImportStep2.tpl');
+$xtpl->parse("main");
+
+$xtpl->out("main");
+
 
 ?>
-<script language="javascript" type="text/javascript">
-function validate_import_map()
-{
-	var tagName;
-	var count = 0;
-	var field_count = "<?php echo $field_count; ?>";
-	var required_fields = new Array();
-	var required_fields_name = new Array();
-	var seq_string = '';
-
-	<?php 
-		foreach($focus->required_fields as $name => $index)
-		{
-			?>
-			required_fields[count] = "<?php echo $name; ?>";
-			required_fields_name[count] = "<?php echo $translated_column_fields[$name]; ?>";
-			count = count + 1;
-			<?php 
-		} 
-	?>		
-	for(loop_count = 0; loop_count<field_count;loop_count++)
-	{
-		tagName = document.getElementById('colnum'+loop_count);
-		optionData = tagName.options[tagName.selectedIndex].value;
-
-		if(optionData != -1)
-		{
-			tmp = seq_string.indexOf(optionData);
-			if(tmp == -1)
-			{
-				seq_string = seq_string + optionData;
-			}
-			else
-			{
-				//if a field mapped more than once, alert the user and return
-				alert("'"+tagName.options[tagName.selectedIndex].text+"' is mapped more than once. Please check the mapping.");
-				return false;
-			}
-		}
-
-	}
-
-	//check whether the mandatory fields have been mapped.
-	for(inner_loop = 0; inner_loop<required_fields.length;inner_loop++)
-	{
-		if(seq_string.indexOf(required_fields[inner_loop]) == -1)
-		{
-			alert('Please map the mandatory field "'+required_fields_name[inner_loop]+'"');
-			return false;
-		}
-	}
-
-	//This is to check whether the save map name has been given or not when save map check box is checked
-	if(document.getElementById("save_map").checked == true)
-	{
-		if(trim(document.getElementById("save_map_as").value) == '')
-		{
-			alert("Please Enter Save Map Name");
-			return false;
-		}
-	}
-
-	return true;
-}
-</script>

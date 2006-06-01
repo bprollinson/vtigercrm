@@ -12,29 +12,28 @@
 require_once('include/database/PearDatabase.php');
 require_once('modules/Leads/Lead.php');
 //Getting the Parameters from the ConvertLead Form
-$id = $_REQUEST["record"];
+$id = (int)$_REQUEST["record"];
 
 
 $module = $_REQUEST["module"];
-$assigned_user_id = $_REQUEST["smowerid"];
 $createpotential = $_REQUEST["createpotential"];
-$potential_name = $_REQUEST["potential_name"];
+$potential_name = $adb->quote($_REQUEST["potential_name"]);
 $close_date = getDBInsertDateValue($_REQUEST["closedate"]);
-$current_user_id = $_REQUEST["current_user_id"];
-$assigned_user_id = $_REQUEST["assigned_user_id"];
-$accountname = $_REQUEST['account_name'];
-$potential_amount = $_REQUEST['potential_amount'];
-$potential_sales_stage = $_REQUEST['potential_sales_stage'];
+$current_user_id = (int)$_REQUEST["current_user_id"];
+$assigned_user_id = (int)$_REQUEST["assigned_user_id"];
+$accountname = $adb->quote($_REQUEST['account_name']);
+$potential_amount = (int)$_REQUEST['potential_amount'];
+$potential_sales_stage = $adb->quote($_REQUEST['potential_sales_stage']);
 
-global $log;
-$log->debug("id is ".$id);
-$log->debug("assigned_user_id is ".$assigned_user_id);
-$log->debug("createpotential is ".$createpotential);
-$log->debug("close date is ".$close_date);
-$log->debug("current user id is ".$current_user_id);
-$log->debug("assigned user id is ".$assigned_user_id);
-$log->debug("accountname is ".$accountname);
-$log->debug("module is ".$module);
+global $vtlog;
+$vtlog->logthis("id is ".$id,'debug'); 
+$vtlog->logthis("assigned_user_id is ".$assigned_user_id,'debug');
+$vtlog->logthis("createpotential is ".$createpotential,'debug');
+$vtlog->logthis("close date is ".$close_date,'debug');
+$vtlog->logthis("current user id is ".$current_user_id,'debug');
+$vtlog->logthis("assigned user id is ".$assigned_user_id,'debug');
+$vtlog->logthis("accountname is ".$accountname,'debug');
+$vtlog->logthis("module is ".$module,'debug');
 
 $check_unit = explode("-",$potential_name);
 if($check_unit[1] == "")
@@ -49,16 +48,16 @@ $row = $focus->column_fields;
 $date_entered;
 $date_modified;
 
-$date_entered = date('YmdHis');
-$date_modified = date('YmdHis');
+$date_entered =  $adb->database->DBTimeStamp(date('YmdHis'));
+$date_modified = $adb->database->DBTimeStamp(date('YmdHis'));
 
 $crmid = $adb->getUniqueID("crmentity");
 
 //function for getting the custom values from leads and saving to account/contact/potential custom fields -Jag
 function getInsertValues($type,$type_id)
 {
-	global $id,$adb,$log;
-	$log->debug("Entering getInsertValues(".$type.",".$type_id.") method ...");
+	global $id,$adb,$vtlog;
+
 	$sql_convert_lead="select * from convertleadmapping ";
 	$convert_result = $adb->query($sql_convert_lead);
 	$noofrows = $adb->num_rows($convert_result);
@@ -66,7 +65,7 @@ function getInsertValues($type,$type_id)
 	for($i=0;$i<$noofrows;$i++)
 	{
 		$flag="false";
-	 	$log->info("In convertleadmapping function");
+		$vtlog->logthis("In convertleadmapping function",'info');
 		$lead_id=$adb->query_result($convert_result,$i,"leadfid");  
 		//Getting the relatd customfields for Accounts/Contact/potential from convertleadmapping table	
 		$account_id_val=$adb->query_result($convert_result,$i,"accountfid");
@@ -75,7 +74,7 @@ function getInsertValues($type,$type_id)
 		
 		$sql_leads_column="select field.fieldid,field.columnname from field,tab where field.tabid=tab.tabid and generatedtype=2 and tab.name='Leads' and fieldid=".$lead_id; //getting the columnname for the customfield of the lead
 
-		 $log->debug("Lead's custom field coumn name is ".$sql_leads_column);
+		$vtlog->logthis("Lead's custom field coumn name is ".$sql_leads_column,'debug');
 
 		$lead_column_result = $adb->query($sql_leads_column);
 		$leads_no_rows = $adb->num_rows($lead_column_result);
@@ -85,7 +84,7 @@ function getInsertValues($type,$type_id)
 			$sql_leads_val="select ".$lead_column_name." from leadscf where leadid=".$id; //custom field value for lead
 			$lead_val_result = $adb->query($sql_leads_val);
 			$lead_value=$adb->query_result($lead_val_result,0,$lead_column_name);
-			 $log->debug("Lead's custom field value is ".$lead_value);
+			$vtlog->logthis("Lead's custom field value is ".$lead_value,'debug');
 		}	
 		//Query for getting the column name for Accounts/Contacts/Potentials if custom field for lead is mappped
 		$sql_type="select field.fieldid,field.columnname from field,tab where field.tabid=tab.tabid and generatedtype=2 and tab.name="; 
@@ -94,7 +93,7 @@ function getInsertValues($type,$type_id)
 			if($account_id_val!="" && $account_id_val!=0)	
 			{
 				$flag="true";
-				 $log->info("Getting the  Accounts custom field column name  ");
+				$vtlog->logthis("Getting the  Accounts custom field column name  ",'info');
 				$sql_type.="'Accounts' and fieldid=".$account_id_val;
 			}
 		}
@@ -103,7 +102,7 @@ function getInsertValues($type,$type_id)
 			if($contact_id_val!="" && $contact_id_val!=0)	
 			{
 				$flag="true";
-				 $log->info("Getting the  Contacts custom field column name  ");
+				$vtlog->logthis("Getting the  Contacts custom field column name  ",'info');
 				$sql_type.="'Contacts' and fieldid=".$contact_id_val;
 			}
 		}
@@ -112,8 +111,8 @@ function getInsertValues($type,$type_id)
 			if($potential_id_val!="" && $potential_id_val!=0)
                         {
 				$flag="true";
-                                  $log->info("Getting the  Potentials custom field column name  ");
-				$sql_type.="'Potentials' and fieldid=".$potential_id_val;
+				$vtlog->logthis("Getting the  Potentials custom field column name  ",'info');
+                                $sql_type.="'Potentials' and fieldid=".$potential_id_val;
                         }
 
 		}
@@ -132,18 +131,17 @@ function getInsertValues($type,$type_id)
 		}
 
 	}
-	 $log->debug("columns to be inserted are ".$type_insert_column);
-        $log->debug("columns to be inserted are ".$insert_value);
+	$vtlog->logthis("columns to be inserted are ".$type_insert_column,'debug');	
+	$vtlog->logthis("columns to be inserted are ".$insert_value,'debug');	
 	$values = array ($type_insert_column,$insert_value);
-	$log->debug("Exiting getInsertValues method ...");
 	return $values;	
 }
 //function Ends
 
 function getRelatedNotesAttachments($id,$accountid)
 {
-	global $adb,$log,$id;
-	$log->debug("Entering getRelatedNotesAttachments(".$id.",".$accountid.") method ...");
+	global $adb,$vtlog,$id;
+
 	
 	$sql_lead_notes	="select * from senotesrel where crmid=".$id;
 	$lead_notes_result = $adb->query($sql_lead_notes);
@@ -153,7 +151,8 @@ function getRelatedNotesAttachments($id,$accountid)
 	{
 
 		$lead_related_note_id=$adb->query_result($lead_notes_result,$i,"notesid");
-		 $log->debug("Lead related note id ".$lead_related_note_id);
+		$vtlog->logthis("Lead related note id ".$lead_related_note_id,'debug');	
+
 		$sql_delete_lead_notes="delete from senotesrel where crmid=".$id;
 		$adb->query($sql_delete_lead_notes);
 
@@ -169,7 +168,7 @@ function getRelatedNotesAttachments($id,$accountid)
         {
 						
                 $lead_related_attachment_id=$adb->query_result($lead_attachment_result,$i,"attachmentsid");
-		 $log->debug("Lead related attachment id ".$lead_related_attachment_id);
+		$vtlog->logthis("Lead related attachment id ".$lead_related_attachment_id,'debug');	
 
                 $sql_delete_lead_attachment="delete from seattachmentsrel where crmid=".$id;
                 $adb->query($sql_delete_lead_attachment);
@@ -177,14 +176,13 @@ function getRelatedNotesAttachments($id,$accountid)
                 $sql_insert_account_attachment="insert into seattachmentsrel(crmid,attachmentsid) values (".$accountid.",".$lead_related_attachment_id.")";                        
                 $adb->query($sql_insert_account_attachment);
         }
-	$log->debug("Exiting getRelatedNotesAttachments method ...");
 	
 }
 
 function getRelatedActivities($accountid,$contact_id)
 {
-	global $adb,$log,$id;	
-	$log->debug("Entering getRelatedActivities(".$accountid.",".$contact_id.") method ...");
+	global $adb,$vtlog,$id;	
+	
 	$sql_lead_activity="select * from seactivityrel where crmid=".$id;
 	$lead_activity_result = $adb->query($sql_lead_activity);
         $noofrows = $adb->num_rows($lead_activity_result);
@@ -192,12 +190,12 @@ function getRelatedActivities($accountid,$contact_id)
         {
 
                 $lead_related_activity_id=$adb->query_result($lead_activity_result,$i,"activityid");
-		 $log->debug("Lead related activity id ".$lead_related_activity_id);
+		$vtlog->logthis("Lead related activity id ".$lead_related_activity_id,'debug');	
 
 		$sql_type_email="select setype from crmentity where crmid=".$lead_related_activity_id;
 		$type_email_result = $adb->query($sql_type_email);
                 $type=$adb->query_result($type_email_result,0,"setype");
-		$log->debug("type of activity id ".$type);
+		$vtlog->logthis("type of activity id ".$type,'debug');	
 
                 $sql_delete_lead_activity="delete from seactivityrel where crmid=".$id;
                 $adb->query($sql_delete_lead_activity);
@@ -215,26 +213,30 @@ function getRelatedActivities($accountid,$contact_id)
 			 $sql_insert_account_activity="insert into seactivityrel(crmid,activityid) values (".$contact_id.",".$lead_related_activity_id.")";                                                                                     $adb->query($sql_insert_account_activity);
 		}
         }
-	$log->debug("Exiting getRelatedActivities method ...");
+
 	
 }
 
-$sql_crmentity = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,createdtime,modifiedtime,deleted,description) values(".$crmid.",".$current_user_id.",".$assigned_user_id.",'Accounts',1,".$date_entered.",".$date_modified.",0,'".$row['description']."')";
+
+$adb->database->StartTrans();
+//$sql_crmentity = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,createdtime,modifiedtime,deleted) values(".$crmid.",".$current_user_id.",".$current_user_id.",'Accounts',1,".$date_entered.",".$date_modified.",0)";
+$sql_crmentity = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,createdtime,modifiedtime,deleted,description) values(".$crmid.",".$current_user_id.",".$assigned_user_id.",'Accounts',1,".$date_entered.",".$date_modified.",0,".$adb->quote($row['description']).")";
 
 $adb->query($sql_crmentity);
 
-
-$sql_insert_account = "INSERT INTO account (accountid,accountname,industry,annualrevenue,phone,fax,rating,email1,website,employees) VALUES (".$crmid.",'".$accountname ."','".$row["industry"] ."','" .$row["annualrevenue"] ."','" .$row["phone"] ."','".$row["fax"] ."','" .$row["rating"] ."','" .$row["email"] ."','" .$row["website"] ."','" .$row["noofemployees"] ."')";
+$annualrevenue = $row['annualrevenue'] == "" ? 'null' : $adb->quote($row['annualrevenue']);
+$noofemployees = $row['noofemployees'] == "" ? 'null' : $adb->quote($row['noofemployees']);
+$sql_insert_account = "INSERT INTO account (accountid,accountname,industry,annualrevenue,phone,fax,rating,email1,website,employees) VALUES (".$crmid.",".$accountname .",".$adb->quote($row["industry"]).",".$annualrevenue."," .$adb->quote($row["phone"]) .",".$adb->quote($row["fax"]) ."," .$adb->quote($row["rating"]) ."," .$adb->quote($row["email"]) ."," .$adb->quote($row["website"]) ."," .$noofemployees .")";
 
 
 $adb->query($sql_insert_account);
 
-$sql_insert_accountbillads = "INSERT INTO accountbillads (accountaddressid,city,code,country,state,street) VALUES (".$crmid.",'".$row["city"] ."','" .$row["code"] ."','" .$row["country"] ."','".$row["state"] ."','" .$row["lane"]."')";
+$sql_insert_accountbillads = "INSERT INTO accountbillads (accountaddressid,city,code,country,state,street) VALUES (".$crmid.",".$adb->quote($row["city"]) ."," .$adb->quote($row["code"]) ."," .$adb->quote($row["country"]) .",".$adb->quote($row["state"]) ."," .$adb->quote($row["lane"]).")";
 
  $adb->query($sql_insert_accountbillads);
 
 
-$sql_insert_accountshipads = "INSERT INTO accountshipads (accountaddressid,city,code,country,state,street) VALUES (".$crmid.",'".$row["city"] ."','" .$row["code"] ."','" .$row["country"] ."','".$row["state"] ."','" .$row["lane"]."')";
+$sql_insert_accountshipads = "INSERT INTO accountshipads (accountaddressid,city,code,country,state,street) VALUES (".$crmid.",".$adb->quote($row["city"]) ."," .$adb->quote($row["code"]) ."," .$adb->quote($row["country"]) .",".$adb->quote($row["state"]) ."," .$adb->quote($row["lane"]).")";
 
 
  $adb->query($sql_insert_accountshipads);
@@ -260,28 +262,28 @@ $adb->query($sql_insert_accountcustomfield);
 $acccount_id=$crmid;
 getRelatedNotesAttachments($id,$crmid); //To Convert Related Notes & Attachments -Jaguar
 
- $date_entered = date('YmdHis');
- $date_modified = date('YmdHis');
+ $date_entered = $adb->database->DBTimeStamp(date('YmdHis'));
+ $date_modified = $adb->database->DBTimeStamp(date('YmdHis'));
 
 $crmcontactid = $adb->getUniqueID("crmentity");
-$sql_crmentity1 = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,deleted,description,createdtime) values(".$crmcontactid.",".$current_user_id.",".$assigned_user_id.",'Contacts',0,0,'".$row['description']."','".$date_entered."')";
+$sql_crmentity1 = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,deleted,description,createdtime,modifiedtime) values(".$crmcontactid.",".$current_user_id.",".$assigned_user_id.",'Contacts',0,0,".$adb->quote($row['description']).",".$date_entered.",".$date_modified.")";
 
 $adb->query($sql_crmentity1);
 
 
 $contact_id = $crmcontactid;
-$log->debug("contact id is ".$contact_id);
+$vtlog->logthis("contact id is ".$contact_id,'debug');
 
- $sql_insert_contact = "INSERT INTO contactdetails (contactid,accountid,salutation,firstname,lastname,email,phone,mobile,title,fax,yahooid) VALUES (".$contact_id.",".$crmid.",'".$row["salutationtype"] ."','" .$row["firstname"] ."','" .$row["lastname"] ."','" .$row["email"] ."','" .$row["phone"]. "','" .$row["mobile"] ."','" .$row["designation"] ."','".$row["fax"] ."','".$row['yahooid']."')";
+ $sql_insert_contact = "INSERT INTO contactdetails (contactid,accountid,salutation,firstname,lastname,email,phone,mobile,title,fax,yahooid) VALUES (".$contact_id.",".$crmid.",".$adb->quote($row["salutation"]) ."," .$adb->quote($row["firstname"]) ."," .$adb->quote($row["lastname"]) ."," .$adb->quote($row["email"]) ."," .$adb->quote($row["phone"]). "," .$adb->quote($row["mobile"]) ."," .$adb->quote($row["designation"]) .",".$adb->quote($row["fax"]) .",".$adb->quote($row['yahooid']).")";
 
 $adb->query($sql_insert_contact);
 
 
- $sql_insert_contactsubdetails = "INSERT INTO contactsubdetails (contactsubscriptionid,homephone,otherphone,leadsource) VALUES (".$contact_id.",'','','".$row['leadsource']."')";
+$sql_insert_contactsubdetails = "INSERT INTO contactsubdetails (contactsubscriptionid,homephone,otherphone,leadsource) VALUES (".$contact_id.",'','','".$adb->quote($row['leadsource'])."')";
 
 $adb->query($sql_insert_contactsubdetails);
 
- $sql_insert_contactaddress = "INSERT INTO contactaddress (contactaddressid,mailingcity,mailingstreet,mailingstate,mailingcountry,mailingzip) VALUES (".$contact_id.",'".$row["city"] ."','" .$row["lane"] ."','".$row['state']."','" .$row["country"] ."','".$row['code']."')";
+ $sql_insert_contactaddress = "INSERT INTO contactaddress (contactaddressid,mailingcity,mailingstreet,mailingstate,mailingcountry,mailingzip) VALUES (".$contact_id.",".$adb->quote($row["city"]) ."," .$adb->quote($row["lane"]) .",".$adb->quote($row['state'])."," .$adb->quote($row["country"]) .",".$adb->quote($row['code']).")";
 
 $adb->query($sql_insert_contactaddress);
 
@@ -307,13 +309,13 @@ getRelatedActivities($acccount_id,$contact_id); //To convert relates Activites  
 
 if(! isset($createpotential) || ! $createpotential == "on")
 {
-   $log->info("createpotential is not set");
-  $date_entered = date('YmdHis');
-  $date_modified = date('YmdHis');
+  $vtlog->logthis("createpotential is not set",'info');
+  $date_entered = $adb->database->DBTimeStamp(date('YmdHis'));
+  $date_modified = $adb->database->DBTimeStamp(date('YmdHis'));
   
 
   $oppid = $adb->getUniqueID("crmentity");
-  $sql_crmentity = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,deleted,createdtime,description) values(".$oppid.",".$current_user_id.",".$assigned_user_id.",'Potentials',0,0,'".$date_entered."','".$row['description']."')";
+  $sql_crmentity = "insert into crmentity(crmid,smcreatorid,smownerid,setype,presence,deleted,createdtime,modifiedtime,description) values(".$oppid.",".$current_user_id.",".$assigned_user_id.",'Potentials',0,0,".$date_entered.",".$date_entered.",".$adb->quote($row['description']).")";
   
   $adb->query($sql_crmentity);
 
@@ -323,7 +325,7 @@ if(! isset($createpotential) || ! $createpotential == "on")
 		$potential_amount=0;
         }
 
-	$sql_insert_opp = "INSERT INTO potential (potentialid,accountid,potentialname,leadsource,closingdate,sales_stage,amount) VALUES (".$oppid.",".$crmid .",'".$potential_name."','".$row['leadsource']."','".$close_date."','".$potential_sales_stage."',".$potential_amount.")";
+	$sql_insert_opp = "INSERT INTO potential (potentialid,accountid,potentialname,leadsource,closingdate,sales_stage,amount) VALUES (".$oppid.",".$crmid .",".$potential_name.",".$adb->quote($row['leadsource']).",'".$close_date."',".$potential_sales_stage.",".$potential_amount.")";
 
 	$adb->query($sql_insert_opp);
 
@@ -357,6 +359,7 @@ $adb->query($sql_delete_tracker);
 //Updating the deleted status
 $sql_update_converted = "UPDATE leaddetails SET converted = 1 where leadid='" .$id ."'";
 $adb->query($sql_update_converted); 
+$adb->database->CompleteTrans();
 
 header("Location: index.php?action=DetailView&module=Accounts&record=$crmid");
 

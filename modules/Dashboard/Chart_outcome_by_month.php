@@ -13,11 +13,11 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_outcome_by_month.php,v 1.17.2.1 2005/08/30 14:24:17 cooljaguar Exp $
  * Description:  returns HTML for client-side image map.
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once("modules/Dashboard/Forms.php");
@@ -102,8 +102,10 @@ $log->debug($ids);
 $cache_file_name = $id_hash."_outcome_by_month_".$current_language."_".crc32($date_start.$date_end).".png";
 $log->debug("cache file name is: $cache_file_name");
 
-if(isPermitted('Potentials','index')=="yes")
-{
+if (substr(phpversion(), 0, 1) == "5") { // php5 }
+	echo "<em>Charts not supported in PHP 5.</em>";
+}
+else {
 $draw_this = new jpgraph();
 echo $draw_this->outcome_by_month($date_start, $date_end, $ids, $tmp_dir.$cache_file_name, $refresh);
 echo "<P><font size='1'><em>".$current_module_strings['LBL_MONTH_BY_OUTCOME_DESC']."</em></font></P>";
@@ -160,10 +162,5 @@ else {
 [<a href="index.php?module=<?php echo $currentModule;?>&action=<?php echo $action;?>&obm_edit=true"><?php echo $current_module_strings['LBL_EDIT'];?></a>]
 </FONT></div>
 <?php } 
-}
-else
-{
-	echo $mod_strings['LBL_NO_PERMISSION'];	
-}
 echo get_validate_chart_js();
-?>
+}?>

@@ -10,75 +10,37 @@
 *
  ********************************************************************************/
 
-require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
 
-$idlist= $_REQUEST['idlist'];
-$leadstatusval = $_REQUEST['leadval'];
+
+
+require_once('include/database/PearDatabase.php');
+
+$idlist= $_POST['idlist'];
+$leadstatusval = $_POST['leadval'];
 $idval=$_REQUEST['user_id'];
-$viewid = $_REQUEST['viewname'];
-$return_module = $_REQUEST['return_module'];
-global $current_user;
+
 global $adb;
 $storearray = explode(";",$idlist);
-
-$ids_list = array();
 
 $date_var = date('YmdHis');
 if(isset($_REQUEST['user_id']) && $_REQUEST['user_id']!='')
 {
 	foreach($storearray as $id)
 	{
-		if(isPermitted($return_module,'EditView',$id) == 'yes')
-		{
-			if($id != '') {
-				$sql = "update crmentity set modifiedby=".$current_user->id.",smownerid='" .$idval ."', modifiedtime=".$adb->formatString("crmentity","modifiedtime",$date_var)." where crmid='" .$id."'";
-				$result = $adb->query($sql);
-			}
-		}
-		else
-		{
-			$ids_list[] = $id;
-		}
+		$sql = "update crmentity set smownerid='" .$idval ."', modifiedtime=".$adb->formatString("crmentity","modifiedtime",$date_var)." where crmid='" .$id."'";
+		$result = $adb->query($sql);
 	}
 }
 elseif(isset($_REQUEST['leadval']) && $_REQUEST['leadval']!='')
 {
 	foreach($storearray as $id)
 	{
-		if(isPermitted($return_module,'EditView',$id) == 'yes')
-		{
-			if($id != '') {
-				$sql = "update leaddetails set leadstatus='" .$leadstatusval ."' where leadid='" .$id."'";
-				$result = $adb->query($sql);
-				$query = "update crmentity set modifiedby=".$current_user->id.",modifiedtime=".$adb->formatString("crmentity","modifiedtime",$date_var)." where crmid=".$id;
-				$result1 = $adb->query($query);
-			}
-		}
-		else
-		{
-			$ids_list[] = $id;
-		}
-
+		$sql = "update leaddetails set leadstatus='" .$leadstatusval ."' where leadid='" .$id."'";
+		$result = $adb->query($sql);
+		$query = "update crmentity set modifiedtime=".$adb->formatString("crmentity","modifiedtime",$date_var)." where crmid=".$id;
+		$result1 = $adb->query($query);
 	}
 }
-$ret_owner = getEntityName($return_module,$ids_list);
-if(count($ret_owner) > 0)
-{
-       $errormsg = implode(',',$ret_owner);
-}else
-{
-       $errormsg = '';
-}
-
-if($return_module == 'Calendar')
-{
-	header("Location: index.php?module=$return_module&action=index");
-}
-else
-{
-	header("Location: index.php?module=$return_module&action=".$return_module."Ajax&file=ListView&ajax=changestate&viewname=".$viewid."&errormsg=".$errormsg);
-}
-				
-
+header("Location: index.php?module=Leads&action=index");
 ?>
+

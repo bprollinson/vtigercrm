@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: it.js
  * 	Italian language file.
  * 
@@ -85,8 +83,6 @@ Find				: "Trova",
 Replace				: "Sostituisci",
 SpellCheck			: "Correttore ortografico",
 UniversalKeyboard	: "Tastiera univerale",
-PageBreakLbl		: "Interruzione di pagina",
-PageBreak			: "Inserisci interruzione di pagina",
 
 Form			: "Modulo",
 Checkbox		: "Checkbox",
@@ -108,22 +104,21 @@ InsertCell			: "Inserisci cella",
 DeleteCells			: "Elimina celle",
 MergeCells			: "Unisce celle",
 SplitCell			: "Dividi celle",
-TableDelete			: "Cancella Tabella",
-CellProperties		: "Proprietà cella",
-TableProperties		: "Proprietà tabella",
-ImageProperties		: "Proprietà immagine",
-FlashProperties		: "Proprietà Oggetto Flash",
+CellProperties		: "Propriet cella",
+TableProperties		: "Propriet tabella",
+ImageProperties		: "Propriet immagine",
+FlashProperties		: "Propriet Oggetto Flash",
 
-AnchorProp			: "Proprietà ancora",
-ButtonProp			: "Proprietà bottone",
-CheckboxProp		: "Proprietà checkbox",
-HiddenFieldProp		: "Proprietà campo nascosto",
-RadioButtonProp		: "Proprietà radio button",
-ImageButtonProp		: "Proprietà bottone immagine",
-TextFieldProp		: "Proprietà campo di testo",
-SelectionFieldProp	: "Proprietà menu di selezione",
-TextareaProp		: "Proprietà area di testo",
-FormProp			: "Proprietà modulo",
+AnchorProp			: "Propriet ancora",
+ButtonProp			: "Propriet bottone",
+CheckboxProp		: "Propriet checkbox",
+HiddenFieldProp		: "Propriet campo nascosto",
+RadioButtonProp		: "Propriet radio button",
+ImageButtonProp		: "Propriet bottone immagine",
+TextFieldProp		: "Propriet campo di testo",
+SelectionFieldProp	: "Propriet menu di selezione",
+TextareaProp		: "Propriet area di testo",
+FormProp			: "Propriet modulo",
 
 FontFormats			: "Normale;Formattato;Indirizzo;Titolo 1;Titolo 2;Titolo 3;Titolo 4;Titolo 5;Titolo 6;Paragrafo (DIV)",
 
@@ -131,14 +126,11 @@ FontFormats			: "Normale;Formattato;Indirizzo;Titolo 1;Titolo 2;Titolo 3;Titolo 
 ProcessingXHTML		: "Elaborazione XHTML in corso. Attendere prego...",
 Done				: "Completato",
 PasteWordConfirm	: "Il testo da incollare sembra provenire da Word. Desideri pulirlo prima di incollare?",
-NotCompatiblePaste	: "Questa funzione è disponibile solo per Internet Explorer 5.5 o superiore. Desideri incollare il testo senza pulirlo?",
+NotCompatiblePaste	: "Questa funzione  disponibile solo per Internet Explorer 5.5 o superiore. Desideri incollare il testo senza pulirlo?",
 UnknownToolbarItem	: "Elemento della barra strumenti sconosciuto \"%1\"",
 UnknownCommand		: "Comando sconosciuto \"%1\"",
 NotImplemented		: "Commando non implementato",
 UnknownToolbarSet	: "La barra di strumenti \"%1\" non esiste",
-NoActiveX			: "Le impostazioni di sicurezza del tuo browser potrebbero limitare alcune funzionalità dell'editor. Devi abilitare l'opzione \"Esegui controlli e plug-in ActiveX\". Potresti avere errori e notare funzionalità mancanti.",
-BrowseServerBlocked : "Non è possibile aprire la finestra di espolorazione risorse. Verifica che tutti i blocca popup siano bloccati.",
-DialogBlocked		: "Non è possibile aprire la finestra di dialogo. Verifica che tutti i blocca popup siano bloccati.",
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -168,7 +160,7 @@ DlgGenLinkCharset	: "Set di caretteri della risorsa collegata",
 DlgGenStyle			: "Stile",
 
 // Image Dialog
-DlgImgTitle			: "Proprietà immagine",
+DlgImgTitle			: "Propriet immagine",
 DlgImgInfoTab		: "Informazioni immagine",
 DlgImgBtnUpload		: "Invia al server",
 DlgImgURL			: "URL",
@@ -196,7 +188,7 @@ DlgImgAlertUrl		: "Devi inserire l'URL per l'immagine",
 DlgImgLinkTab		: "Collegamento",
 
 // Flash Dialog
-DlgFlashTitle		: "Proprietà Oggetto Flash",
+DlgFlashTitle		: "Propriet Oggetto Flash",
 DlgFlashChkPlay		: "Avvio Automatico",
 DlgFlashChkLoop		: "Cicla",
 DlgFlashChkMenu		: "Abilita Menu di Flash",
@@ -267,7 +259,7 @@ DlgSmileyTitle		: "Inserisci emoticon",
 DlgSpecialCharTitle	: "Seleziona carattere speciale",
 
 // Table Dialog
-DlgTableTitle		: "Proprietà tabella",
+DlgTableTitle		: "Propriet tabella",
 DlgTableRows		: "Righe",
 DlgTableColumns		: "Colonne",
 DlgTableBorder		: "Dimensione bordo",
@@ -283,7 +275,6 @@ DlgTableHeight		: "Altezza",
 DlgTableCellSpace	: "Spaziatura celle",
 DlgTableCellPad		: "Padding celle",
 DlgTableCaption		: "Intestazione",
-DlgTableSummary		: "Indice",
 
 // Table Cell Dialog
 DlgCellTitle		: "Propriet cella",
@@ -345,10 +336,10 @@ ColorAutomatic	: "Automatico",
 ColorMoreColors	: "Altri colori...",
 
 // Document Properties
-DocProps		: "Proprietà del Documento",
+DocProps		: "Propriet del Documento",
 
 // Anchor Dialog
-DlgAnchorTitle		: "Proprietà ancora",
+DlgAnchorTitle		: "Propriet ancora",
 DlgAnchorName		: "Nome ancora",
 DlgAnchorErrorName	: "Inserici il nome dell'ancora",
 
@@ -418,11 +409,11 @@ DlgHiddenName	: "Nome",
 DlgHiddenValue	: "Valore",
 
 // Bulleted List Dialog
-BulletedListProp	: "Proprietà lista puntata",
-NumberedListProp	: "Proprietà lista numerata",
+BulletedListProp	: "Propriet lista puntata",
+NumberedListProp	: "Propriet lista numerata",
 DlgLstType			: "Tipo",
 DlgLstTypeCircle	: "Tondo",
-DlgLstTypeDisc		: "Disco",
+DlgLstTypeDisk		: "Disco",
 DlgLstTypeSquare	: "Quadrato",
 DlgLstTypeNumbers	: "Numeri (1, 2, 3)",
 DlgLstTypeLCase		: "Caratteri minuscoli (a, b, c)",
@@ -468,7 +459,7 @@ DlgDocPreview		: "Anteprima",
 // Templates Dialog
 Templates			: "Modelli",
 DlgTemplatesTitle	: "Contenuto dei modelli",
-DlgTemplatesSelMsg	: "Seleziona il modello da aprire nell'editor<br>(il contenuto attuale verrà eliminato):",
+DlgTemplatesSelMsg	: "Seleziona il modello da aprire nell'editor<br>(il contenuto attuale verr eliminato):",
 DlgTemplatesLoading	: "Caricamento modelli in corso. Attendere prego...",
 DlgTemplatesNoTpl	: "(Nessun modello definito)",
 

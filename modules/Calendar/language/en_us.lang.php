@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Calendar/language/en_us.lang.php,v 1.16 2005/05/03 13:18:50 saraj Exp $
  * Description:  Defines the English apmt_locationuage pack
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -28,18 +28,6 @@ $mod_strings = Array(
 'LBL_CONTACT'=>'Contact:',
 'LBL_SAVE'=>'Save',
 'LBL_RESET'=>'Cancel',
-'LBL_LIST_USER_NAME'=>'User Name',
-'LBL_LIST_NAME'=>'Name',
-'LBL_CALENDAR_SHARED'=>'Calendar currently shared with',
-'LBL_CALENDAR_SHARING'=>'Share calendar with',
-'LBL_SHARING_OPTION'=>'Can see my calendar?',
-'LBL_LIST_TOOLS'=>'Tools',
-'LBL_SETTINGS'=>'Settings',
-'LBL_CALSETTINGS'=>'Calendar Settings',
-'LBL_USE24'=>'Use 24 hours format',
-'LBL_CALSTART'=>'Start my calendar time at',
-'LBL_TIMESETTINGS'=>'Time Settings',
-'LBL_OPENCAL'=>'Open Calendar',
 
 'LBL_CALL' => 'Call',
 'LBL_MEET' => 'Meeting',
@@ -68,7 +56,7 @@ $mod_strings = Array(
 'LBL_SM_SAT' => 'Sat',
 'LBL_SM_SUN' => 'Sun',
 
-'LBL_DATE_TITLE' => 'Day %d, %A',
+'LBL_DATE_TITLE' => '%A, %d. %B %Y',
 
 'LBL_WEEK' => 'Week',
 'LBL_WEEK_BUTTON_KEY' => 'W',
@@ -93,12 +81,6 @@ $mod_strings = Array(
 'LBL_MON_BUTTON_TITLE' => 'Month [Alt+M]',
 'LBL_PREV_MON' => 'Previous Month',
 'LBL_NEXT_MON' => 'Next Month',
-
-'LBL_YEAR'=>'Year',
-'LBL_YEAR_BUTTON_KEY'=>'Y',
-'LBL_MON_BUTTON_TITLE'=>'Year [Alt+Y]',
-'LBL_PREV_YEAR'=>'Previous Year',
-'LBL_NEXT_YEAR' => 'Next Year',
 
 'LBL_APP_LOCATION' => 'Location',
 'LBL_APP_IGNORE_TIME' => 'ignore above times',
@@ -138,110 +120,12 @@ $mod_strings = Array(
 "November",
 "December",
 ),
-
-'cal_weekdays_short'=>array(
-"Sun",
-"Mon",
-"Tue",
-"Wed",
-"Thu",
-"Fri",
-"Sat",
-),
-'cal_weekdays_long'=>array(
-"Sunday",
-"Monday",
-"Tuesday",
-"Wednesday",
-"Thursday",
-"Friday",
-"Saturday",
-),
-'cal_month_short'=>array(
-"",
-"Jan",
-"Feb",
-"Mar",
-"Apr",
-"May",
-"Jun",
-"Jul",
-"Aug",
-"Sep",
-"Oct",
-"Nov",
-"Dec",
-),
-
-'LBL_EVENTS'=>'Events',
-'LBL_TODOS'=>'Todos',
-'LBL_TODO'=>'To Do',
-'LBL_TIME'=>'Time',
-'LBL_ADD_EVENT'=>'Add Event',
-'LBL_ADDCALL'=>'Add Call',
-'LBL_ADDMEETING'=>'Add Meeting',
-'LBL_ADDTODO'=>'Add Todo',
-'LBL_INVITE'=>'Invite',
-'LBL_REMINDER'=>'Reminder',
-'LBL_SENDREMINDER'=>'Send Reminder',
-'LBL_BEFOREEVENT'=>'before the event starts',
-'LBL_BEFORETASK'=>'before the task starts',
-'LBL_REPEAT'=>'Repeat',
-'LBL_EVENTTYPE'=>'Event Type',
-'LBL_EVENTNAME'=>'Event Name',
-'LBL_EVENTSTAT'=>'Event starts at',
-'LBL_EVENTEDAT'=>'Event ends on',
-'LBL_HRVIEW'=>'Hour View',
-'LBL_LISTVIEW'=>'List View',
-'LBL_TOTALEVENTS'=>'Total Events :',
-'LBL_TOTALTODOS'=>'Total Todos :',
-'LBL_EVTDTL'=>'Event Details',
-'LBL_ACTION'=>'Actions',
-'LBL_CURSTATUS'=>'Current Status',
-'LBL_STATUS'=>'Status',
-'LBL_PENDING'=>'Pending',
-'LBL_MORE'=>'More',
-'LBL_VIEW'=>'View',
-'LBL_EDIT'=>'Edit',
-'LBL_EVERYDAY'=>'Every Day',
-'LBL_EVERYWEEK'=>'Every Week',
-'LBL_EVERYMON'=>'Every Month',
-'LBL_REPEATEVENT'=>'Repeat Event',
-
-'LBL_INVITE_INST1'=>'To invite, select the users from the "Available Users" list and click the "Add" button.',
-'LBL_INVITE_INST2'=>'To remove, select the users in the "Selected Users" list and the click "Remove" button.',
-'LBL_SELUSR_INFO'=>' Selected users will receive an email about the Event.',
-'LBL_CALSHAREMESSAGE'=>'Share my calendar with the following selected users',
-'LBL_CALSHARE'=>'Calendar Sharing',
-'LBL_SEL_USERS'=>'Selected Users',
-'LBL_AVL_USERS'=>'Available Users',
-'LBL_ADD_BUTTON'=>'Add',
-'LBL_RMV_BUTTON'=>'Remove',
-'LBL_RMD_ON'=>'Remind on',
-'LBL_SDRMD'=>'Send Reminder to',
-'LBL_ENABLE_REPEAT'=>'Enable Repeat',
-'LBL_REPEAT_ONCE'=>'Repeat once in every',
-'LBL_ADD_TODO'=>'Create Todo',
-'LBL_TODONAME'=>'To Do',
-'LBL_TODODATETIME'=>'Time & Date',
-
-
-
-
-
 //DON'T CONVERT THESE THEY ARE MAPPINGS
 'db_last_name' => 'LBL_LIST_LAST_NAME',
 'db_first_name' => 'LBL_LIST_FIRST_NAME',
 'db_title' => 'LBL_LIST_TITLE',
 'db_email1' => 'LBL_LIST_EMAIL_ADDRESS',
 'db_email2' => 'LBL_LIST_EMAIL_ADDRESS',
-'LBL_COMPLETED'=>'Mark Completed',
-'LBL_DEFERRED'=>'Mark Deferred',
-'LBL_HELD'=>'Mark Held',
-'LBL_NOTHELD'=>'Mark Not Held',
-'LBL_POSTPONE'=>'Postpone',
-'LBL_CHANGEOWNER'=>'Change Owner',
-'LBL_DEL'=>'Delete',
 //END DON'T CONVERT
 	
 );

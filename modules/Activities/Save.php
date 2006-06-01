@@ -28,6 +28,13 @@ require_once("config.php");
 require_once('include/database/PearDatabase.php');
 
 $local_log =& LoggerManager::getLogger('index');
+global $vtlog;
+if($_REQUEST['sendnotification'] == 'on')
+{
+$vtlog->logthis("send notification is on",'info');  
+	include("modules/Emails/send_mail.php");
+	send_mail('users',$_REQUEST['assigned_user_id'],$current_user->user_name,$_REQUEST['subject'],$_REQUEST['description'],$mail_server,$mail_server_username,$mail_server_password,$filename);
+}
 
 $focus = new Activity();
 
@@ -46,7 +53,7 @@ elseif($activity_mode == 'Events')
 if(isset($_REQUEST['record']))
 {
 	$focus->id = $_REQUEST['record'];
-$local_log->debug("id is ".$id);
+$vtlog->logthis("id is ".$id,'debug');  	
 }
 if(isset($_REQUEST['mode']))
 {
@@ -80,15 +87,13 @@ else
 		{
 			$value = $_REQUEST[$fieldname];
 			$focus->column_fields[$fieldname] = $value;
-			if(($fieldname == 'notime') && ($focus->column_fields[$fieldname]))
-			{	
-				$focus->column_fields['time_start'] = '';
-				$focus->column_fields['duration_hours'] = '';
-				$focus->column_fields['duration_minutes'] = '';
-			}	
 		}
 		
 	}
+
+	//print_r($focus->column_fields);
+
+	//$focus->saveentity($tab_type);
 	$focus->save($tab_type);
 	$return_id = $focus->id;
 }
@@ -114,76 +119,5 @@ if($_REQUEST['mode'] != 'edit' && (($_REQUEST['return_module'] == 'HelpDesk') ||
 $activemode = "";
 if($activity_mode != '') $activemode = "&activity_mode=".$activity_mode;
 
-//Added code to send mail to the assigned to user about the details of the activity if sendnotification = on and assigned to user
-if($_REQUEST['sendnotification'] == 'on' && $_REQUEST['assigntype'] == 'U')
-{
-	global $current_user;
-	$local_log->info("send notification is on");
-        require_once("modules/Emails/mail.php");
-        $to_email = getUserEmailId('id',$_REQUEST['assigned_user_id']);
-
-	$subject = $_REQUEST['activity_mode'].' : '.$_REQUEST['subject'];
-	$description = getActivityDetails($_REQUEST['description']);
-
-        $mail_status  = send_mail('Activities',$to_email,$current_user->user_name,'',$subject,$description);
-}
-
-//code added to send mail to the invitees
-if(isset($_REQUEST['inviteesid']) && $_REQUEST['inviteesid']!='')
-{
-	global $current_user;
-	$local_log->info("send notification is on");
-	require_once("modules/Emails/mail.php");
-	$selected_users_string =  $_REQUEST['inviteesid'];
-	$invitees_array = explode(';',$selected_users_string);
-	$subject = $_REQUEST['activity_mode'].' : '.$_REQUEST['subject'];
-	$description = getActivityDetails($_REQUEST['description']);
-	foreach($invitees_array as $inviteeid)
-	{
-		if($inviteeid != '')
-		{
-			$to_email = getUserEmailId('id',$inviteeid);
-			$mail_status  = send_mail('Activities',$to_email,$current_user->user_name,'',$subject,$description);
-		}
-	}
-}
-if(isset($_REQUEST['view']) && $_REQUEST['view']!='') $view='&view='.$_REQUEST['view'];
-if(isset($_REQUEST['hour']) && $_REQUEST['hour']!='') $hour='&hour='.$_REQUEST['hour'];
-if(isset($_REQUEST['day']) && $_REQUEST['day']!='') $day='&day='.$_REQUEST['day'];
-if(isset($_REQUEST['month']) && $_REQUEST['month']!='') $month='&month='.$_REQUEST['month'];
-if(isset($_REQUEST['year']) && $_REQUEST['year']!='') $year='&year='.$_REQUEST['year'];
-
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-if($_REQUEST['start'] !='')$page='&start='.$_REQUEST['start'];
-if($_REQUEST['allflag'] !='All')
-	$page.='&allflag=All';	
-else
-	$page.='&allflag=Normal';
-header("Location: index.php?action=$return_action&module=$return_module$view$hour$day$month$year&record=$return_id$activemode&viewname=$return_viewname$page");
-
-//Function to get the activity details for mail body
-function getActivityDetails($description)
-{
-	global $log;
-	$log->debug("Entering getActivityDetails(".$description.") method ...");
-	global $adb;
-
-	$reply = (($_REQUEST['mode'] == 'edit')?'Replied':'Created');
-	$name = getUserName($_REQUEST['assigned_user_id']);
-	$status = (($_REQUEST['activity_mode']=='Task')?($_REQUEST['taskstatus']):($_REQUEST['eventstatus']));
-
-	$list = 'Dear '.$name.',';
-	$list .= '<br><br> There is an activity('.$_REQUEST['activity_mode'].')'.$reply.'. The details are :';
-	$list .= '<br>Subject : '.$_REQUEST['subject'];
-	$list .= '<br>Status : '.$status;
-	$list .= '<br>Priority : '.$_REQUEST['taskpriority'];
-	$list .= '<br>Related to : '.$_REQUEST['parent_name'];
-	$list .= '<br>Contact : '.$_REQUEST['contact_name'];
-	$list .= '<br><br> Description : '.$description;
-
-	$log->debug("Exiting getActivityDetails method ...");
-	return $list;
-}
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id$activemode");
 ?>

@@ -13,14 +13,13 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportStep4.php,v 1.18.2.1 2005/09/02 11:11:26 cooljaguar Exp $
  * Description:  TODO: To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('modules/Import/ImportContact.php');
 require_once('modules/Import/ImportAccount.php');
@@ -90,7 +89,7 @@ if ( isset( $_REQUEST['has_header']) && $_REQUEST['has_header'] == 'on')
 {
 	$has_header = 1;
 }
-if($_REQUEST['modulename'] != '')
+if(isset( $_REQUEST['modulename']) && $_REQUEST['modulename'] != '')
 	$_REQUEST['module'] = $_REQUEST['modulename'];
 
 if (! isset( $_REQUEST['module'] ) || $_REQUEST['module'] == 'Contacts')
@@ -119,7 +118,6 @@ require_once('include/CustomFieldUtil.php');
 $custFldArray = getCustomFieldArray($_REQUEST['module']);
 p("IMP 4: custFldArray");
 p($custFldArray);
-
 //Initializing  an empty Array to store the custom field Column Name and Value
 $resCustFldArray = Array();
 
@@ -130,12 +128,11 @@ foreach ($_REQUEST as $name=>$value)
 	p("name=".$name." value=".$value);
 	// only look for var names that start with "colnum"
 	if ( strncasecmp( $name, "colnum", 6) != 0 )
-	{	
+	{
 		continue;
 	}
 	if ($value == "-1")
 	{
-		
 		continue;
 	}
 
@@ -153,6 +150,7 @@ foreach ($_REQUEST as $name=>$value)
 
 	}
 
+	
 	p("user_field=".$user_field." if=".$focus->importable_fields[$user_field]);
 	
 	// match up the "official" field to the user 
@@ -162,6 +160,7 @@ foreach ($_REQUEST as $name=>$value)
 		p("user_field SET=".$user_field);
 		// now mark that we've seen this field
 		$field_to_pos[$user_field] = $pos;
+
 		$col_pos_to_field[$pos] = $user_field;
 	}
 }
@@ -240,23 +239,21 @@ if($xrows != '')
 {
 	$datarows = $xrows;
 }
-if($_REQUEST['skipped_record_count'] != '')
+if(isset($_SESSION['skipped_record_count']) && $_REQUEST['skipped_record_count'] != '')
 	$skipped_record_count = $_REQUEST['skipped_record_count'];
 else
 	$_REQUEST['skipped_record_count'] = 0;
 
-if($_REQUEST['noofrows'] != '')
+if(isset($_REQUEST['noofrows']) && $_REQUEST['noofrows'] != '')
 	$totalnoofrows = $_REQUEST['noofrows'];
 else
 	$totalnoofrows = count($datarows);
 
-$loopcount = ($totalnoofrows/$RECORDCOUNT)+1;
-
-if($_REQUEST['startval'] != '')
+if(isset($_REQUEST['startval']) && $_REQUEST['startval'] != '')
 	$START = $_REQUEST['startval'];
 else
 	$START = $_SESSION['startval'];
-if($_REQUEST['recordcount'] != '')
+if(isset($_REQUEST['recordcount']) && $_REQUEST['recordcount'] != '')
 	$RECORDCOUNT = $_REQUEST['recordcount'];
 else
 	$RECORDCOUNT = $_SESSION['recordcount'];
@@ -268,18 +265,17 @@ if(($START+$RECORDCOUNT) > $totalnoofrows)
 
 if($totalnoofrows > $RECORDCOUNT && $START < $totalnoofrows)
 {
-	$rows1 = Array();
-	for($j=$START;$j<$START+$RECORDCOUNT;$j++)
-	{
-		$rows1[] = $datarows[$j];
-	}
+		$rows1 = Array();
+		for($j=$START;$j<$START+$RECORDCOUNT;$j++)
+		{
+			$rows1[] = $datarows[$j];
+		}
+		$res = InsertImportRecords($datarows,$rows1,$focus,$ret_field_count,$col_pos_to_field,$START,$RECORDCOUNT,$_REQUEST['module'],$totalnoofrows,$skipped_record_count);
 
-	$res = InsertImportRecords($datarows,$rows1,$focus,$ret_field_count,$col_pos_to_field,$START,$RECORDCOUNT,$_REQUEST['module'],$totalnoofrows,$skipped_record_count);
+if($START != 0)
+	echo '<b>'.$res.'</b>';
 
-	if($START != 0)
-		echo '<b>'.$res.'</b>';
-
-	$count = $_REQUEST['count'];
+		$count = $_REQUEST['count'];
 }
 else
 {
@@ -299,8 +295,11 @@ if ( isset($_REQUEST['save_map']) && $_REQUEST['save_map'] == 'on'
 
 	if( $has_header)
 	{
+
+
 		foreach($col_pos_to_field as $pos=>$field_name)
 		{
+	
 			if ( isset($firstrow[$pos]) &&  isset( $field_name))
 			{
 				$header_to_field[ $firstrow[$pos] ] = $field_name;
@@ -319,8 +318,10 @@ if ( isset($_REQUEST['save_map']) && $_REQUEST['save_map'] == 'on'
 
 	$mapping_file = new ImportMap();
 
-	//$query_arr = array('assigned_user_id'=>$current_user->id,'name'=>$mapping_file_name);
-	//$mapping_file->retrieve_by_string_fields($query_arr, false);
+	$query_arr = array('assigned_user_id'=>$current_user->id,'name'=>$mapping_file_name);
+
+	
+	$mapping_file->retrieve_by_string_fields($query_arr, false);
 
 	$result = $mapping_file->save_map( $current_user->id,
 					$mapping_file_name,

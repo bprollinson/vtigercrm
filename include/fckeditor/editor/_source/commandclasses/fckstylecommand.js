@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fckstylecommand.js
  * 	FCKStyleCommand Class: represents the "Style" command.
  * 
@@ -29,14 +27,10 @@ var FCKStyleCommand = function()
 
 FCKStyleCommand.prototype.Execute = function( styleName, styleComboItem )
 {
-	FCKUndo.SaveUndoStep() ;
-
 	if ( styleComboItem.Selected )
 		styleComboItem.Style.RemoveFromSelection() ;
 	else
 		styleComboItem.Style.ApplyToSelection() ;
-
-	FCKUndo.SaveUndoStep() ;
 
 	FCK.Focus() ;
 	
@@ -50,11 +44,13 @@ FCKStyleCommand.prototype.GetState = function()
 	if ( FCKSelection.GetType() == 'Control' )
 	{
 		var e = FCKSelection.GetSelectedElement() ;
-		if ( e )
-			return this.StylesLoader.StyleGroups[ e.tagName ] ? FCK_TRISTATE_OFF : FCK_TRISTATE_DISABLED ;
+			if ( e )
+				return this.StylesLoader.StyleGroups[ e.tagName ] ? FCK_TRISTATE_OFF : FCK_TRISTATE_DISABLED ;
+			else
+				FCK_TRISTATE_OFF ;
 	}
-
-	return FCK_TRISTATE_OFF ;
+	else
+		return FCK_TRISTATE_OFF ;
 }
 
 FCKStyleCommand.prototype.GetActiveStyles = function()

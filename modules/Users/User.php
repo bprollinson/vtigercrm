@@ -12,14 +12,6 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________.
  ********************************************************************************/
-
-/*********************************************
- * With modifications by
- * Daniel Jabbour
- * iWebPress Incorporated, www.iwebpress.com
- * djabbour - a t - iwebpress - d o t - com
- ********************************************/
-
 /*********************************************************************************
  * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/modules/Users/User.php,v 1.10 2005/04/19 14:40:48 ray Exp $
  * Description: TODO:  To be written.
@@ -31,7 +23,6 @@
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
-require_once('include/utils/UserInfoUtil.php');
 
 // User is used to store customer information.
 class User extends SugarBean {
@@ -41,10 +32,6 @@ class User extends SugarBean {
 	var $id;
 	var $user_name;
 	var $user_password;
-	var $cal_color;
-	var $hour_format;
-	var $start_hour;
-	var $end_hour;
 	var $first_name;
 	var $last_name;
 	var $date_entered;
@@ -54,7 +41,6 @@ class User extends SugarBean {
 	var $phone_home;
 	var $phone_mobile;
 	var $phone_work;
-	var $currency_id;
 	var $phone_other;
 	var $phone_fax;
 	var $email1;
@@ -77,8 +63,6 @@ class User extends SugarBean {
 	var $error_string;
 	var $is_admin;
 	var $date_format;
-	var $deleted;
-	var $homeorder;
 	
 	var $reports_to_name;
 	var $reports_to_id;
@@ -90,19 +74,9 @@ class User extends SugarBean {
 
 	var $object_name = "User";
 	var $user_preferences;
-	var $activity_view;
-	var $lead_view;
-	var $tagcloud;
-	var $imagename;
-	var $defhomeview;
-	//var $sortby_fields = Array('user_name','email1','last_name','is_admin','status');	
 	var $column_fields = Array("id"
 		,"user_name"
 		,"user_password"
-		,"cal_color"
-		,"hour_format"
-		,"start_hour"
-		,"end_hour"
 		,"first_name"
 		,"last_name"
 		,"description"
@@ -112,7 +86,6 @@ class User extends SugarBean {
 		,"title"
 		,"department"
 		,"is_admin"
-		,"currency_id"
 		,"phone_home"
 		,"phone_mobile"
 		,"phone_work"
@@ -135,11 +108,6 @@ class User extends SugarBean {
 		,"weekstart"
 		,"status"
 		,"date_format"
-		,"activity_view"
-		,"lead_view"
-		,"tagcloud"
-		,"imagename"
-		,"defhomeview"
 		);
 
 	var $encodeFields = Array("first_name", "last_name", "description");
@@ -148,21 +116,9 @@ class User extends SugarBean {
 	var $additional_column_fields = Array('reports_to_name');		
 	
 	// This is the list of fields that are in the lists.
-	var $list_fields = Array('id', 'first_name', 'last_name', 'user_name', 'status', 'department', 'yahoo_id', 'is_admin', 'email1', 'phone_work');
-	//commented as we get issues with sugarbean
-	/*
-	var $list_fields = Array(
-		'UserName'=>Array('users'=>'user_name'),
-		'Role'=>Array(''=>''),
-		'Email'=>Array('users'=>'email1'),
-		'Name'=>Array('users'=>'last_name'),
-		'Admin'=>Array('users'=>'is_admin'),
-		'Status'=>Array('users'=>'status'),
-		'Tools'=>Array(''=>''),
-	);*/	
+	var $list_fields = Array('id', 'first_name', 'last_name', 'user_name', 'status', 'department', 'yahoo_id', 'is_admin', 'email1', 'phone_work');	
 		
 	var $default_order_by = "user_name";
-	var $default_sort_order = 'ASC';
 
 	var $record_id;
 	var $new_schema = true;
@@ -190,6 +146,21 @@ class User extends SugarBean {
 
 			
 	}
+	function resetPreferences(){
+		if(!isset($this->user_preferences)){
+				if(isset($_SESSION["USER_PREFERENCES"])){
+					$this->user_preferences = $_SESSION["USER_PREFERENCES"];
+					foreach($this->user_preferences as $key => $val){
+						unset($_SESSION[$key]);	
+					}
+				}
+		}
+		unset($this->user_preferences);
+		unset ($_SESSION["USER_PREFERENCES"]);
+		$query = "UPDATE $this->table_name SET user_preferences=NULL where id='$this->id'";	
+		$result =& $this->db->query($query);
+		$this->log->debug("RESETING: PREFERENCES ROWS AFFECTED WHILE UPDATING USER PREFERENCES:".$this->db->getAffectedRowCount($result));
+	}
 	
 	function savePreferecesToDB(){
 		$data = base64_encode(serialize($this->user_preferences));
@@ -211,8 +182,73 @@ class User extends SugarBean {
 		}
 		
 	}
+	function getPreference($name){
+		if(array_key_exists($name,$this->user_preferences ))
+			return $this->user_preferences[$name];
+		return '';
+	}
+	function create_tables () {
+		/*$query = 'CREATE TABLE '.$this->table_name.' ( ';
+		$query .= 'id char(36) NOT NULL';
+		$query .= ', user_name varchar(20)';
+		$query .= ', user_password varchar(30)';
+		$query .= ', user_hash char(32)';
+		$query .= ', first_name varchar(30)';
+		$query .= ', last_name varchar(30)';
+		$query .= ', reports_to_id char(36)';
+		$query .= ', is_admin char(3) default 0';
+		$query .= ', description text';
+		$query .= ', date_entered datetime NOT NULL';
+		$query .= ', date_modified datetime NOT NULL';
+		$query .= ', modified_user_id char(36) NOT NULL';
+		$query .= ', title varchar(50)';
+		$query .= ', department varchar(50)';
+		$query .= ', phone_home varchar(50)';
+		$query .= ', phone_mobile varchar(50)';
+		$query .= ', phone_work varchar(50)';
+		$query .= ', phone_other varchar(50)';
+		$query .= ', phone_fax varchar(50)';
+		$query .= ', email1 varchar(100)';
+		$query .= ', email2 varchar(100)';
+		$query .= ', yahoo_id varchar(100)';
+		$query .= ', status varchar(25)';
+		$query .= ', address_street varchar(150)';
+		$query .= ', address_city varchar(100)';
+		$query .= ', address_state varchar(100)';
+		$query .= ', address_country varchar(25)';
+		$query .= ', address_postalcode varchar(9)';
+		$query .= ', user_preferences TEXT';
+		$query .= ', tz varchar(30)';
+		$query .= ', holidays varchar(60)';
+		$query .= ', namedays varchar(60)';
+		$query .= ', workdays varchar(30)';
+		$query .= ', weekstart int(11)';
+		$query .= ', deleted bool NOT NULL default 0';
+		$query .= ', PRIMARY KEY ( ID )';
+		$query .= ', KEY ( user_name )';
+		$query .= ', KEY ( user_password ))';
 	
+		$this->db->query($query, true);
+
+	//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
+	*/
 	
+	}
+
+	function drop_tables () {
+		/*$query = 'DROP TABLE IF EXISTS '.$this->table_name;
+		$this->db->query($query, true);	*/
+		
+
+	//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
+
+	}
+	
+	function get_summary_text()
+	{
+		return "$this->first_name $this->last_name";
+	}
+
 	/**
 	* @return string encrypted password for storage in DB and comparison against DB password.
 	* @param string $user_name - Must be non null and at least 2 characters
@@ -270,54 +306,6 @@ class User extends SugarBean {
 		}
 		
 	}
-/**
-	 * Checks the config.php AUTHCFG value for login type and forks off to the proper module
-	 *
-	 * @param string $user_password - The password of the user to authenticate
-	 * @return true if the user is authenticated, false otherwise
-	 */
-	function doLogin($user_password) {
-		global $AUTHCFG;
-	
-		switch (strtoupper($AUTHCFG['authType'])) {
-			case 'LDAP':
-				$this->log->debug("Using LDAP authentication");
-				require_once('modules/Users/authTypes/LDAP.php');
-				$result = ldapAuthenticate($this->user_name, $user_password);
-				if ($result == NULL) {
-					return false;
-				} else {
-					return true;
-				}
-				break;
-				
-			case 'AD':
-				$this->log->debug("Using Active Directory authentication");
-				require_once('modules/Users/authTypes/adLDAP.php');
-				$adldap = new adLDAP();
-				if ($adldap->authenticate($this->user_name,$user_password)) {
-					return true;
-				} else {
-					return false;
-				}
-				break;
-				
-			default:
-				$this->log->debug("Using integrated/SQL authentication");
-				$encrypted_password = $this->encrypt_password($user_password);
-				$query = "SELECT * from $this->table_name where user_name='$this->user_name' AND user_password='$encrypted_password'";
-				$result = $this->db->requireSingleResult($query, false);
-				if (empty($result)) {
-					return false;
-				} else {
-					return true;
-				}
-				break;
-		}
-		return false;
-	}
-
-
 	/** 
 	 * Load a user based on the user_name in $this
 	 * @return -- this if load was successul and null if load failed.
@@ -346,18 +334,15 @@ class User extends SugarBean {
 		if($this->validation_check('aW5jbHVkZS9pbWFnZXMvcG93ZXJlZF9ieV9zdWdhcmNybS5naWY=' , '3d49c9768de467925daabf242fe93cce') == -1)$validation = -1;
 		if($this->authorization_check('aW5kZXgucGhw' , 'PEEgaHJlZj0naHR0cDovL3d3dy5zdWdhcmNybS5jb20nIHRhcmdldD0nX2JsYW5rJz48aW1nIGJvcmRlcj0nMCcgc3JjPSdpbmNsdWRlL2ltYWdlcy9wb3dlcmVkX2J5X3N1Z2FyY3JtLmdpZicgYWx0PSdQb3dlcmVkIEJ5IFN1Z2FyQ1JNJz48L2E+', 1) == -1)$validation = -1;
 		$encrypted_password = $this->encrypt_password($user_password);
-	
-		$authCheck = false;
-		$authCheck = $this->doLogin($user_password);
-		
-		if(!$authCheck)
+			
+		$query = "SELECT * from $this->table_name where user_name='$this->user_name' AND user_password='$encrypted_password'";
+		$result = $this->db->requireSingleResult($query, false);
+		if(empty($result))
 		{
 			$this->log->warn("User authentication for $this->user_name failed");
 			return null;
 		}
 		
-		$query = "SELECT * from $this->table_name where user_name='$this->user_name'";
-		$result = $this->db->requireSingleResult($query, false);
 
 		// Get the fields for the user
 		$row = $this->db->fetchByAssoc($result);
@@ -377,11 +362,11 @@ class User extends SugarBean {
 		// now fill in the fields.
 		foreach($this->column_fields as $field)
 		{
-			//$this->log->info($field);
+			$this->log->info($field);
 			
 			if(isset($row[$field]))
 			{
-				$this->log->debug("=".$row[$field]);
+				$this->log->info("=".$row[$field]);
 	
 				$this->$field = $row[$field];
 			}
@@ -389,6 +374,7 @@ class User extends SugarBean {
 		$this->loadPreferencesFromDB($row['user_preferences']);
 		
 		
+		$this->fill_in_additional_detail_fields();
 		if ($this->status != "Inactive") $this->authenticated = true;
 		
 		unset($_SESSION['loginattempts']);
@@ -422,7 +408,7 @@ class User extends SugarBean {
 
 		if (!is_admin($current_user)) {
 			//check old password first
-			$query = "SELECT user_name FROM $this->table_name WHERE id='$this->id'";
+			$query = "SELECT user_name FROM $this->table_name WHERE user_password='$encrypted_password' AND id='$this->id'";
 			$result =$this->db->query($query, true);	
 			$row = $this->db->fetchByAssoc($result);
 			$this->log->debug("select old password query: $query");
@@ -450,6 +436,29 @@ class User extends SugarBean {
 		return $this->authenticated;
 	}
 	
+	function fill_in_additional_list_fields()
+	{
+		$this->fill_in_additional_detail_fields();	
+	}
+	
+	function fill_in_additional_detail_fields()
+	{
+		//$query = "SELECT u1.first_name, u1.last_name from users as u1, users as u2 where u1.id = u2.reports_to_id AND u2.id = '$this->id' and u1.deleted=0";
+		$query = "SELECT u1.first_name, u1.last_name from users u1, users u2 where u1.id = u2.reports_to_id AND u2.id = '$this->id' and u1.deleted=0";
+		$result =$this->db->query($query, true, "Error filling in additional detail fields") ;
+		
+		$row = $this->db->fetchByAssoc($result);
+		$this->log->debug("additional detail query results: $row");
+		
+		if($row != null)
+		{
+			$this->reports_to_name = stripslashes($row['first_name'].' '.$row['last_name']);
+		}
+		else 
+		{
+			$this->reports_to_name = '';
+		}		
+	}
 
 	function retrieve_user_id($user_name)
 	{
@@ -497,113 +506,21 @@ class User extends SugarBean {
 		
 		return $verified;
 	}
-	
-	function getColumnNames_User()
-  {
-  	
-  	$mergeflds = array("FIRSTNAME","LASTNAME","USERNAME","YAHOOID","TITLE","OFFICEPHONE","DEPARTMENT",
-											 "MOBILE","OTHERPHONE","FAX","EMAIL",
-											 "HOMEPHONE","OTHEREMAIL","PRIMARYADDRESS",
-											 "CITY","STATE","POSTALCODE","COUNTRY");	
-  	return $mergeflds;
-  }
-		//function added for the listview of users for 5.0 beta
-	function getUserListViewHeader()
-	{
-		global $mod_strings;
-		$header_array=array($mod_strings['LBL_LIST_USER_NAME'],$mod_strings['LBL_USER_ROLE'],$mod_strings['LBL_LIST_EMAIL'],$mod_strings['LBL_LIST_NAME'],$mod_strings['LBL_LIST_ADMIN'],$mod_strings['LBL_STATUS'],$mod_strings['LBL_LIST_TOOLS']);
-		return $header_array;
+	function get_list_view_data(){
+		$user_fields = $this->get_list_view_array();
+		if ($this->is_admin == 'on') $user_fields['IS_ADMIN'] = 'X';
+		return $user_fields;	
 	}
+	function list_view_parse_additional_sections(&$list_form, $xTemplateSection){
 
-	function getUserListViewEntries($navigation_array,$sorder='',$orderby='')
-	{
-		global $theme;
-		global $adb, $current_user;	
-	    	$theme_path="themes/".$theme."/";
-	    	$image_path=$theme_path."images/";
-		if($sorder != '' && $orderby !='')
-			$list_query = ' SELECT * from users where deleted=0 order by '.$orderby.' '.$sorder; 	
-		else
-			$list_query = "SELECT * from users where deleted=0 order by ".$this->default_order_by." ".$this->default_sort_order;
-		$result =$adb->query($list_query);
-		$entries_list = array();
-		$roleinfo = getAllRoleDetails();
-		
-		for($i = $navigation_array['start'];$i <= $navigation_array['end_val']; $i++)
-		{
-			$entries=array();
-			$id=$adb->query_result($result,$i-1,'id');
-			
-			$entries[]='<a href="index.php?action=DetailView&module=Users&parenttab=Settings&record='.$id.'">'.$this->db->query_result($result,$i-1,'user_name').'</a>';
-
-                        $rolecode= fetchUserRole($adb->query_result($result,$i-1,'id'));
-                        $entries[]='<a href="index.php?action=RoleDetailView&module=Users&parenttab=Settings&roleid='.$rolecode.'">'.$roleinfo[$rolecode][0];
-
-			$entries[]='<a href="mailto:'.$adb->query_result($result,$i-1,'email1').'">'.$adb->query_result($result,$i-1,'email1').' </a>';
-
-			$entries[]='<a href="index.php?action=DetailView&module=Users&parenttab=Settings&record='.$id.'">'. $this->db->query_result($result,$i-1,'last_name').' '.$adb->query_result($result,$i-1,'first_name').'</a>';
-
-			$entries[]=$adb->query_result($result,$i-1,'is_admin');
-			$entries[]=$adb->query_result($result,$i-1,'status');
-			if($adb->query_result($result,$i-1,'user_name') == 'admin' || $adb->query_result($result,$i-1,'user_name') == 'standarduser' )
-			{
-			      $entries[]='<a href="index.php?action=EditView&return_action=ListView&return_module=Users&module=Users&parenttab=Settings&record='.$id.'"><img src="'.$image_path.'editfield.gif" border="0" alt="Edit" title="Edit"/></a>&nbsp;&nbsp;';
-	                }
-			elseif($adb->query_result($result,$i-1,'id') == $current_user->id)
-                        {
-                              $entries[]='<a href="index.php?action=EditView&return_action=ListView&return_module=Users&module=Users&parenttab=Settings&record='.$id.'"><img src="'.$image_path.'editfield.gif" border="0" alt="Edit" title="Edit"/></a>&nbsp;&nbsp;';
-	                }
-		        else
-			  
-	    	              $entries[]='<a href="index.php?action=EditView&return_action=ListView&return_module=Users&module=Users&parenttab=Settings&record='.$id.'"><img src="'.$image_path.'editfield.gif" border="0" alt="Edit" title="Edit"/></a>&nbsp;&nbsp;<img src="'.$image_path.'delete.gif" onclick="deleteUser('.$id.')" border="0"  alt="Delete" title="Delete"/></a>';
-
-			$entries_list[]=$entries;
-													
-		}
-		return $entries_list;
-	}
-	function fill_in_additional_list_fields()
-	{
-		$this->fill_in_additional_detail_fields();	
-	}
-	
-	function fill_in_additional_detail_fields()
-	{
-		//$query = "SELECT u1.first_name, u1.last_name from users as u1, users as u2 where u1.id = u2.reports_to_id AND u2.id = '$this->id' and u1.deleted=0";
-		$query = "SELECT u1.first_name, u1.last_name from users u1, users u2 where u1.id = u2.reports_to_id AND u2.id = '$this->id' and u1.deleted=0";
-		$result =$this->db->query($query, true, "Error filling in additional detail fields") ;
-		
-		$row = $this->db->fetchByAssoc($result);
-		$this->log->debug("additional detail query results: $row");
-		
-		if($row != null)
-		{
-			$this->reports_to_name = stripslashes($row['first_name'].' '.$row['last_name']);
-		}
-		else 
-		{
-			$this->reports_to_name = '';
-		}		
-	}
-
-	function retrieveCurrentUserInfoFromFile($userid)
-	{
-		require('user_privileges/user_privileges_'.$userid.'.php');
-		foreach($this->column_fields as $field)
-                {
-                        if(isset($user_info[$field]))
-                        {
-                                $this->$field = $user_info[$field];
-                        }
-                }
-		return $this;
+		if($list_form->exists($xTemplateSection.".row.yahoo_id") && isset($this->yahoo_id) && $this->yahoo_id != '')
+			$list_form->parse($xTemplateSection.".row.yahoo_id");
+		elseif ($list_form->exists($xTemplateSection.".row.no_yahoo_id"))
+				$list_form->parse($xTemplateSection.".row.no_yahoo_id");
+		return $list_form;
 		
 	}
-
 	
 }
-
-	
-
 
 ?>

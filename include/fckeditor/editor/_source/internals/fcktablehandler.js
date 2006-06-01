@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fcktablehandler.js
  * 	Manage table operations.
  * 
@@ -62,16 +60,10 @@ FCKTableHandler.DeleteTable = function( table )
 	// If no table has been passed as a parameer,
 	// then get the table where the selection is placed in.	
 	if ( !table )
-	{
-		var table = FCKSelection.GetSelectedElement() ;
-		if ( !table || table.tagName != 'TABLE' )
-			table = FCKSelection.MoveToAncestorNode("TABLE") ;
-	}
+		table = FCKSelection.MoveToAncestorNode("TABLE") ;
 	if ( !table ) return ;
 
 	// Delete the table.
-	FCKSelection.SelectNode( table ) ;
-	FCKSelection.Collapse();
 	table.parentNode.removeChild( table ) ;
 }
 
@@ -79,9 +71,6 @@ FCKTableHandler.InsertColumn = function()
 {
 	// Get the cell where the selection is placed in.
 	var oCell = FCKSelection.MoveToAncestorNode("TD") ;
-	if ( !oCell )
-	    oCell =  FCKSelection.MoveToAncestorNode("TH") ;
-
 	if ( !oCell ) return ;
 	
 	// Get the cell's table.
@@ -100,27 +89,33 @@ FCKTableHandler.InsertColumn = function()
 		if ( oRow.cells.length < iIndex )
 			continue ;
 		
-		oCell = oRow.cells[iIndex-1].cloneNode(false) ;
-		
+		// Create the new cell element to be added.
+		oCell = FCK.EditorDocument.createElement('TD') ;
 		if ( FCKBrowserInfo.IsGecko )
-			oCell.innerHTML = FCKBrowserInfo.IsGecko ? GECKO_BOGUS : '' ;
+			oCell.innerHTML = '<br _moz_editor_bogus_node="TRUE">' ;
+//		oCell.innerHTML = '&nbsp;' ;
 		
 		// Get the cell that is placed in the new cell place.
 		var oBaseCell = oRow.cells[iIndex] ;
 
 		// If the cell is available (we are not in the last cell of the row).
 		if ( oBaseCell )
-			oRow.insertBefore( oCell, oBaseCell ) ;	// Insert the new cell just before of it.
+		{
+			// Insert the new cell just before of it.
+			oRow.insertBefore( oCell, oBaseCell ) ;
+		}
 		else
-			oRow.appendChild( oCell ) ;				// Append the cell at the end of the row.
+		{
+			// Append the cell at the end of the row.
+			oRow.appendChild( oCell ) ;
+		}
 	}
 }
 
 FCKTableHandler.DeleteColumns = function()
 {
 	// Get the cell where the selection is placed in.
-	var oCell = FCKSelection.MoveToAncestorNode('TD') || FCKSelection.MoveToAncestorNode('TH') ;
-
+	var oCell = FCKSelection.MoveToAncestorNode("TD") ;
 	if ( !oCell ) return ;
 	
 	// Get the cell's table.	
@@ -159,11 +154,11 @@ FCKTableHandler.InsertCell = function( cell )
 	// Create the new cell element to be added.
 	var oNewCell = FCK.EditorDocument.createElement("TD");
 	if ( FCKBrowserInfo.IsGecko )
-		oNewCell.innerHTML = GECKO_BOGUS ;
+		oNewCell.innerHTML = '<br _moz_editor_bogus_node="TRUE">' ;
 //	oNewCell.innerHTML = "&nbsp;" ;
 
 	// If it is the last cell in the row.
-	if ( oCell.cellIndex == oCell.parentNode.cells.length - 1 )
+	if ( oCell.cellIndex == oCell.parentNode.cells.lenght - 1 )
 	{
 		// Add the new cell at the end of the row.
 		oCell.parentNode.appendChild( oNewCell ) ;
@@ -269,7 +264,7 @@ FCKTableHandler.SplitCell = function()
 FCKTableHandler._GetCellIndexSpan = function( tableMap, rowIndex, cell )
 {
 	if ( tableMap.length < rowIndex + 1 )
-		return null ;
+		return ;
 	
 	var oRow = tableMap[ rowIndex ] ;
 	
@@ -278,8 +273,6 @@ FCKTableHandler._GetCellIndexSpan = function( tableMap, rowIndex, cell )
 		if ( oRow[c] == cell )
 			return c ;
 	}
-	
-	return null ;
 }
 
 // Get the cells available in a collumn of a TableMap.
@@ -357,7 +350,7 @@ FCKTableHandler.ClearRow = function( tr )
 	for ( var i = 0 ; i < aCells.length ; i++ ) 
 	{
 		if ( FCKBrowserInfo.IsGecko )
-			aCells[i].innerHTML = GECKO_BOGUS ;
+			aCells[i].innerHTML = '<br _moz_editor_bogus_node="TRUE">' ;
 		else
 			aCells[i].innerHTML = '' ;
 	}

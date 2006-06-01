@@ -12,164 +12,107 @@
 
 
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
 
-global $adb;
-global $theme;
-$theme_path="themes/".$theme."/";
-$image_path=$theme_path."images/";
-$smarty = new vtigerCRM_Smarty;
-$Err_msg;
-$parentGroupArray=Array();
-if(isset($_REQUEST['groupId']) && $_REQUEST['groupId'] != '')
-{	
-	$mode = 'edit';
-	$groupId=$_REQUEST['groupId'];
-	$groupInfo=getGroupInfo($groupId);
-	require_once('include/utils/GetParentGroups.php');
-	$parGroups = new GetParentGroups();
-	$parGroups->parent_groups[]=$groupId;
-	$parGroups->getAllParentGroups($groupId);
-	$parentGroupArray=$parGroups->parent_groups;	
-	
-
-}
-else
-{
-	$mode = 'create';
-	if(isset($_REQUEST['error']) && ($_REQUEST['error']=='true'))
-	{
-		$Err_msg = "<center><font color='red'><b>".$mod_strings['LBL_GROUP_NAME_ERROR']."</b></font></center>";
-		$groupInfo[] = $_REQUEST['groupname'];
-		$groupInfo[] = $_REQUEST['desc'];
-	}
-}
-			
-
-//Constructing the Role Array
-$roleDetails=getAllRoleDetails();
-$i=0;
-$roleIdStr="";
-$roleNameStr="";
-$userIdStr="";
-$userNameStr="";
-$grpIdStr="";
-$grpNameStr="";
-
-foreach($roleDetails as $roleId=>$roleInfo)
-{
-	if($i !=0)
-	{
-		if($i !=1)
-		{
-			$roleIdStr .= ", ";
-			$roleNameStr .= ", ";
-		}
-
-		$roleName=$roleInfo[0];
-		$roleIdStr .= "'".$roleId."'";
-		$roleNameStr .= "'".$roleName."'"; 
-	}
-	
-	$i++;	
-}
-
-//Constructing the User Array
-$l=0;
-$userDetails=getAllUserName();
-foreach($userDetails as $userId=>$userInfo)
-{
-		if($l !=0)
-		{
-			$userIdStr .= ", ";
-			$userNameStr .= ", ";
-		}
-
-		$userIdStr .= "'".$userId."'";
-		$userNameStr .= "'".$userInfo."'";
-	
-	$l++;	
-}
-
-//Constructing the Group Array
-$m=0;
-$grpDetails=getAllGroupName();
-foreach($grpDetails as $grpId=>$grpName)
-{
-	if(! in_array($grpId,$parentGroupArray))
-	{
-		if($m !=0)
-		{
-			$grpIdStr .= ", ";
-			$grpNameStr .= ", ";
-		}
-
-		$grpIdStr .= "'".$grpId."'";
-		$grpNameStr .= "'".$grpName."'";
-	
-	$m++;
-	}	
-}
-if($mode == 'edit')
-{
-	$member=array();
-	$groupMemberArr=$groupInfo[2];
-	foreach($groupMemberArr as $memberType=>$memberValue)
-	{
-		foreach($memberValue as $memberId)
-		{
-			if($memberType == 'groups')
-			{
-				$memberName=fetchGroupName($memberId);
-				$memberDisplay="Group::";
-			}
-			elseif($memberType == 'roles')
-			{
-				$memberName=getRoleName($memberId);
-				$memberDisplay="Roles::";
-			}
-			elseif($memberType == 'rs')
-			{
-				$memberName=getRoleName($memberId);
-				$memberDisplay="RoleAndSubordinates::";
-			}
-			elseif($memberType == 'users')
-			{
-				$memberName=getUserName($memberId);
-				$memberDisplay="User::";
-			}
-			$member[]=$memberType.'::'.$memberId;
-			$member[]=$memberDisplay.$memberName;
-		}
-	}	
-	$smarty->assign("MEMBER", array_chunk($member,2));
-}		
-$smarty->assign("MOD", return_module_language($current_language,'Settings'));
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("CMOD", $mod_strings);
-
-//for javascript
-$smarty->assign("ROLEIDSTR",$roleIdStr);
-$smarty->assign("ROLENAMESTR",$roleNameStr);
-$smarty->assign("USERIDSTR",$userIdStr);
-$smarty->assign("USERNAMESTR",$userNameStr);
-$smarty->assign("GROUPIDSTR",$grpIdStr);
-$smarty->assign("GROUPNAMESTR",$grpNameStr);
-
-$smarty->assign("RETURN_ACTION",$_REQUEST['returnaction']);
-$smarty->assign("GROUPID",$groupId);
-$smarty->assign("MODE",$mode);
-
-
-			
-//echo $Err_msg;
-
-$smarty->assign("GROUPNAME",$groupInfo[0]);
-				
-				
-$smarty->assign("DESCRIPTION",$groupInfo[1]);
-				
-		
-$smarty->display("GroupEditView.tpl");
 ?>
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <title>Role Details</title>
+<!--meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"-->
+</head>
+<body>
+
+            <script language="javascript" src="include/general.js"></script>
+    <script language="javascript">
+    function validate()
+    {
+        if( !emptyCheck( "groupName", "Group Name" ) )
+            return false;    
+            
+        return true;
+    }
+    
+    function cancelNewRoleCreation( roleId )
+    {
+    
+    }
+    
+             </script>
+            <div class="bodyText mandatory"> </div>
+            <form name="newRoleForm" action="index.php" onSubmit="return validate()">
+                    <input type="hidden" name="module" value="Users">
+                    <input type="hidden" name="action" value="UserInfoUtil">
+             <input type="hidden" name="actiontype" value="createnewgroup">
+              <table width="100%" border="0" cellpadding="0"
+ cellspacing="0">
+                <tbody>
+                  <tr>
+                    <td class="moduleTitle hline"><?php echo $mod_strings['LBL_CREATE_NEW_GROUP']; ?></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p></p>
+              <table width="40%" border="0" cellpadding="0"
+ cellspacing="0">
+                <tbody>
+                  <tr>
+                    <td>
+                    <div><font class="required"><?php echo $app_strings['LBL_REQUIRED_SYMBOL'];?></font><?php echo $mod_strings['LBL_INDICATES_REQUIRED_FIELD']; ?></div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <table width="40%" border="0" cellpadding="5"
+ cellspacing="1" class="formOuterBorder">
+                <tbody>
+                  <tr>
+                    <td class="formSecHeader" colspan="2"><?php echo $mod_strings['LBL_NEW_GROUP']; ?></td>
+                  </tr>
+                  <tr>
+                    <td class="dataLabel mandatory"><font class="required"><?php echo $app_strings['LBL_REQUIRED_SYMBOL'];?></font>  <?php echo $mod_strings['LBL_GROUP_NAME']; ?></td>
+                    <td class="value"><input class="textField" type="text" name="groupName"></td>
+                  </tr>
+ <tr>
+                    <td class="dataLabel mandatory"><?php echo $mod_strings['LBL_DESCRIPTION'];?></td>
+                    <td class="value"><input class="textArea" type="text" name="groupDescription"></td>
+                  </tr>
+             <?php
+             $sql = "select name from groups";
+/*
+                  $result = mysql_query($sql);
+                  $temprow = mysql_fetch_array($result);
+                  do
+                  {
+                    $name=$temprow["name"];
+                    ?>
+                      
+                    <option value="<?php echo $name ?>"><?php echo $temprow["name"] ?></option>
+                       <?php
+                    }while($temprow = mysql_fetch_array($result));
+*/
+                     ?>
+                    
+                    </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <p></p>
+              <table width="40%" border="0" cellpadding="0"
+ cellspacing="0">
+                <tbody>
+                  <tr>
+                    <td>
+                     <div align="center">
+                   
+ <input type="submit" class="button" name="save" value="<?php echo $app_strings['LBL_SAVE_BUTTON_LABEL'];?>" tabindex="2">
+  <input name="cancel" class="button" type="button" value="<?php echo $app_strings['LBL_CANCEL_BUTTON_LABEL'];?>" onclick="window.history.back()">
+</form> </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+</body>
+</html>

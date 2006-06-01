@@ -27,7 +27,7 @@ require_once('modules/Users/User.php');
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('XTemplate/xtpl.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/ListView/ListView.php');
 
 global $mod_strings;
@@ -63,24 +63,17 @@ $image_path = 'themes/'.$theme.'/images';
 // Start the output
 ////////////////////////////////////////////////////////
 if (!isset($_REQUEST['html'])) {
-	if($_REQUEST['popuptype'] != 'set_return_emails')
-		$form =new XTemplate ('modules/Users/Popup_picker.html');
-	else
-		$form =new XTemplate ('modules/Users/Popup_picker_emails.html');
+	$form =new XTemplate ('modules/Users/Popup_picker.html');
+	$form->assign("POPUPTYPE",$_REQUEST['popuptype']);
 	$log->debug("using file modules/Users/Popup_picker.html");
 }
 else {
-	if($_REQUEST['popuptype'] != 'set_return_emails')
-		$form =new XTemplate ('modules/Users/'.$_REQUEST['html'].'.html');
-	else
-		$form =new XTemplate ('modules/Users/Popup_picker_emails.html');
+	$form =new XTemplate ('modules/Users/'.$_REQUEST['html'].'.html');
 	$log->debug("using file modules/Users/".$_REQUEST['html'].'.html');
 	$log->debug("_REQUEST['html'] is ".$_REQUEST['html']);
 }
-	$form->assign("POPUPTYPE",$_REQUEST['popuptype']);
 
 $form->assign("MOD", $mod_strings);
-$form->assign("IMAGE_PATH", $image_path);
 $form->assign("APP", $app_strings);
 
 // the form key is required
@@ -95,13 +88,12 @@ if(isset($_REQUEST['form_submit']) && $_REQUEST['popuptype'] == 'detailview' && 
 	$the_javascript  = "<script type='text/javascript' language='JavaScript'>\n";
 	$the_javascript .= "function set_return(user_id, user_name) {\n";
 	//$the_javascript .= 'opener.document.location.href="index.php?module='.$return_module.'&action=updateRelations&entityid="+user_id+"&parid='.$recordid.'"; \n';
-	$the_javascript .= "	window.opener.document.form.user_id.value = user_id; \n";
-	$the_javascript .= "	window.opener.document.form.return_module.value = window.opener.document.form.return_module.value; \n";
+	$the_javascript .= "	window.opener.document.DetailView.user_id.value = user_id; \n";
+	$the_javascript .= "	window.opener.document.DetailView.return_module.value = window.opener.document.DetailView.return_module.value; \n";
 	//$the_javascript .= "	window.opener.document.DetailView.return_action.value = 'DetailView'; \n";
-	$the_javascript .= "	window.opener.document.form.return_id.value = window.opener.document.form.record.value; \n";
-	$the_javascript .= "   window.opener.document.form.module.value = window.opener.document.form.return_module.value; \n";
-	$the_javascript .= "	window.opener.document.form.action.value = 'updateRelations'; \n";
-	$the_javascript .= "	window.opener.document.form.submit(); \n";
+	$the_javascript .= "	window.opener.document.DetailView.return_id.value = window.opener.document.DetailView.record.value; \n";
+	$the_javascript .= "	window.opener.document.DetailView.action.value = 'updateRelations'; \n";
+	$the_javascript .= "	window.opener.document.DetailView.submit(); \n";
 	$the_javascript .= "}\n";
 	$the_javascript .= "</script>\n";
 }
@@ -113,10 +105,6 @@ elseif ($_REQUEST['form'] == 'UsersEditView')
 	$the_javascript .= "	window.opener.document.EditView.reports_to_id.value = user_id;\n";
 	$the_javascript .= "}\n";
 	$the_javascript .= "</script>\n";
-}
-elseif($_REQUEST['popuptype'] == 'set_return_emails')
-{
-	$the_javascript = "<script type='text/javascript' src='include/js/Mail.js'></script>";	
 }
 else // ($_REQUEST['form'] == 'EditView') 
 {
@@ -166,7 +154,6 @@ $button .= "<tr><td>&nbsp;</td>";
 $button .= "<td><input title='".$app_strings['LBL_CANCEL_BUTTON_TITLE']."' accessyKey='".$app_strings['LBL_CANCEL_BUTTON_KEY']."' class='button' LANGUAGE=javascript onclick=\"window.close()\" type='submit' name='button' value='  ".$app_strings['LBL_CANCEL_BUTTON_LABEL']."  '></td>\n";
 $button .= "</tr></form></table>\n";
 */
-
 $ListView = new ListView();
 $ListView->setXTemplate($form);
 $ListView->setHeaderTitle($mod_strings['LBL_LIST_FORM_TITLE']);
@@ -178,3 +165,11 @@ $ListView->processListView($seed_object, "main", "USER");
 
 
 ?>
+
+	<tr><td COLSPAN=7><?php echo get_form_footer(); ?></td></tr>
+</form>
+	</table>
+</td></tr></tbody></table>
+</td></tr>
+
+<?php insert_popup_footer(); ?>

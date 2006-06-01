@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fck_2.js
  * 	This is the second part of the "FCK" object creation. This is the main
  * 	object that represents an editor instance.
@@ -22,11 +20,11 @@
 // wich named commands must be handled separately.
 FCK.RedirectNamedCommands = new Object() ;
 
-FCK.ExecuteNamedCommand = function( commandName, commandParameter, noRedirect )
+FCK.ExecuteNamedCommand = function( commandName, commandParameter )
 {
 	FCKUndo.SaveUndoStep() ;
 
-	if ( !noRedirect && FCK.RedirectNamedCommands[ commandName ] != null )
+	if ( FCK.RedirectNamedCommands[ commandName ] != null )
 		FCK.ExecuteRedirectedNamedCommand( commandName, commandParameter ) ;
 	else
 	{
@@ -34,8 +32,6 @@ FCK.ExecuteNamedCommand = function( commandName, commandParameter, noRedirect )
 		FCK.EditorDocument.execCommand( commandName, false, commandParameter ) ; 
 		FCK.Events.FireEvent( 'OnSelectionChange' ) ;
 	}
-	
-	FCKUndo.SaveUndoStep() ;
 }
 
 FCK.GetNamedCommandState = function( commandName )
@@ -116,9 +112,9 @@ FCK.PasteFromWord = function()
 
 FCK.Preview = function()
 {
-	var iWidth	= FCKConfig.ScreenWidth * 0.8 ;
-	var iHeight	= FCKConfig.ScreenHeight * 0.7 ;
-	var iLeft	= ( FCKConfig.ScreenWidth - iWidth ) / 2 ;
+	var iWidth	= screen.width * 0.8 ;
+	var iHeight	= screen.height * 0.7 ;
+	var iLeft	= ( screen.width - iWidth ) / 2 ;
 	var oWindow = window.open( '', null, 'toolbar=yes,location=no,status=yes,menubar=yes,scrollbars=yes,resizable=yes,width=' + iWidth + ',height=' + iHeight + ',left=' + iLeft ) ;
 	
 	var sHTML ;
@@ -126,7 +122,7 @@ FCK.Preview = function()
 	if ( FCKConfig.FullPage )
 	{
 		if ( FCK.TempBaseTag.length > 0 )
-			sHTML = FCK.GetXHTML().replace( FCKRegexLib.HeadOpener, '$&' + FCK.TempBaseTag ) ;
+			sHTML = FCK.GetXHTML().replace( FCKRegexLib.HeadCloser, FCK.TempBaseTag + '</head>' ) ;
 		else
 			sHTML = FCK.GetXHTML() ;
 	}
@@ -161,13 +157,10 @@ FCK.SwitchEditMode = function()
 	{
 		if ( FCKBrowserInfo.IsIE )
 			FCKUndo.SaveUndoStep() ;
-
-		// EnableXHTML and EnableSourceXHTML has been deprecated
-//		document.getElementById('eSourceField').value = ( FCKConfig.EnableXHTML && FCKConfig.EnableSourceXHTML ? FCK.GetXHTML( FCKConfig.FormatSource ) : FCK.GetHTML( FCKConfig.FormatSource ) ) ;
-		document.getElementById('eSourceField').value = FCK.GetXHTML( FCKConfig.FormatSource ) ;
+		document.getElementById('eSourceField').value = ( FCKConfig.EnableXHTML && FCKConfig.EnableSourceXHTML ? FCK.GetXHTML( FCKConfig.FormatSource ) : FCK.GetHTML( FCKConfig.FormatSource ) ) ;
 	}
 	else
-		FCK.SetHTML( document.getElementById('eSourceField').value, true ) ;
+		FCK.SetHTML( FCK.GetHTML(), true ) ;
 
 	// Updates the actual mode status.
 	FCK.EditMode = bWYSIWYG ? FCK_EDITMODE_SOURCE : FCK_EDITMODE_WYSIWYG ;
@@ -201,5 +194,4 @@ FCK.InsertElementAndGetIt = function( e )
 			return aEls[i] ;
 		}
 	}
-	return null ;
 }

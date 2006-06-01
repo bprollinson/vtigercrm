@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: sv.js
  * 	Swedish language file.
  * 
@@ -38,15 +36,15 @@ Print				: "Skriv ut",
 SelectAll			: "Markera allt",
 RemoveFormat		: "Radera formatering",
 InsertLinkLbl		: "Länk",
-InsertLink			: "Infoga/Redigera länk",
+InsertLink			: "Infoga/Editera länk",
 RemoveLink			: "Radera länk",
-Anchor				: "Infoga/Redigera ankarlänk",
+Anchor				: "Infoga/Editera ankarlänk",
 InsertImageLbl		: "Bild",
-InsertImage			: "Infoga/Redigera bild",
+InsertImage			: "Infoga/Editera bild",
 InsertFlashLbl		: "Flash",
-InsertFlash			: "Infoga/Redigera Flash",
+InsertFlash			: "Infoga/Editera Flash",
 InsertTableLbl		: "Tabell",
-InsertTable			: "Infoga/Redigera tabell",
+InsertTable			: "Infoga/Editera tabell",
 InsertLineLbl		: "Linje",
 InsertLine			: "Infoga horisontal linje",
 InsertSpecialCharLbl: "Utökade tecken",
@@ -84,9 +82,7 @@ Source				: "Källa",
 Find				: "Sök",
 Replace				: "Ersätt",
 SpellCheck			: "Stavningskontroll",
-UniversalKeyboard	: "Universellt tangentbord",
-PageBreakLbl		: "Page Break",	//MISSING
-PageBreak			: "Insert Page Break",	//MISSING
+UniversalKeyboard	: "Universalt tangentbord",
 
 Form			: "Formulär",
 Checkbox		: "Kryssruta",
@@ -99,7 +95,7 @@ SelectionField	: "Flervalslista",
 ImageButton		: "Bildknapp",
 
 // Context Menu
-EditLink			: "Redigera länk",
+EditLink			: "Editera länk",
 InsertRow			: "Infoga rad",
 DeleteRows			: "Radera rad",
 InsertColumn		: "Infoga kolumn",
@@ -108,7 +104,6 @@ InsertCell			: "Infoga cell",
 DeleteCells			: "Radera celler",
 MergeCells			: "Sammanfoga celler",
 SplitCell			: "Separera celler",
-TableDelete			: "Delete Table",	//MISSING
 CellProperties		: "Cellegenskaper",
 TableProperties		: "Tabellegenskaper",
 ImageProperties		: "Bildegenskaper",
@@ -136,9 +131,6 @@ UnknownToolbarItem	: "Okänt verktygsfält \"%1\"",
 UnknownCommand		: "Okänt kommando \"%1\"",
 NotImplemented		: "Kommandot finns ej",
 UnknownToolbarSet	: "Verktygsfält \"%1\" finns ej",
-NoActiveX			: "You browser's security settings could limit some features of the editor. You must enable the option \"Run ActiveX controls and plug-ins\". You may experience errors and notice missing features.",	//MISSING
-BrowseServerBlocked : "The resources browser could not be opened. Make sure that all popup blockers are disabled.",	//MISSING
-DialogBlocked		: "It was not possible to open the dialog window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -221,7 +213,7 @@ DlgLnkAnchorSel		: "Välj ett ankare",
 DlgLnkAnchorByName	: "efter ankarnamn",
 DlgLnkAnchorById	: "efter objektid",
 DlgLnkNoAnchors		: "&lt;Inga ankare kunde hittas&gt;",
-DlgLnkEMail			: "E-postadress",
+DlgLnkEMail			: "E-post adress",
 DlgLnkEMailSubject	: "Ämne",
 DlgLnkEMailBody		: "Innehåll",
 DlgLnkUpload		: "Ladda upp",
@@ -283,7 +275,6 @@ DlgTableHeight		: "Höjd",
 DlgTableCellSpace	: "Cellavstånd",
 DlgTableCellPad		: "Cellutfyllnad",
 DlgTableCaption		: "Rubrik",
-DlgTableSummary		: "Summary",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Cellegenskaper",
@@ -335,9 +326,9 @@ PasteAsText		: "Klistra in som vanlig text",
 PasteFromWord	: "Klistra in från Word",
 
 DlgPasteMsg2	: "Var god och klistra in Er text i rutan nedan genom att använda (<STRONG>Ctrl+V</STRONG>) klicka sen på <STRONG>OK</STRONG>.",
-DlgPasteIgnoreFont		: "Ignorera typsnittsdefinitioner",
-DlgPasteRemoveStyles	: "Radera Stildefinitioner",
-DlgPasteCleanBox		: "Töm rutans innehåll",
+DlgPasteIgnoreFont		: "Ignorera typsnitts definitioner",
+DlgPasteRemoveStyles	: "Radera Stil definitioner",
+DlgPasteCleanBox		: "Upprensningsruta",
 
 
 // Color Picker
@@ -393,7 +384,7 @@ DlgSelectOpAvail	: "Befintliga val",
 DlgSelectOpText		: "Text",
 DlgSelectOpValue	: "Värde",
 DlgSelectBtnAdd		: "Lägg till",
-DlgSelectBtnModify	: "Redigera",
+DlgSelectBtnModify	: "Editera",
 DlgSelectBtnUp		: "Upp",
 DlgSelectBtnDown	: "Ner",
 DlgSelectBtnSetValue : "Markera som valt värde",
@@ -422,19 +413,19 @@ BulletedListProp	: "Egenskaper för punktlista",
 NumberedListProp	: "Egenskaper för numrerad lista",
 DlgLstType			: "Typ",
 DlgLstTypeCircle	: "Cirkel",
-DlgLstTypeDisc		: "Disc",	//MISSING
+DlgLstTypeDisk		: "Skiva",
 DlgLstTypeSquare	: "Ruta",
 DlgLstTypeNumbers	: "Nummer (1, 2, 3)",
 DlgLstTypeLCase		: "Gemener (a, b, c)",
 DlgLstTypeUCase		: "Versaler (A, B, C)",
 DlgLstTypeSRoman	: "Små romerska siffror (i, ii, iii)",
-DlgLstTypeLRoman	: "Stora romerska siffror (I, II, III)",
+DlgLstTypeLRoman	: "Stora romerska siffror (I,II,II)",
 
 // Document Properties Dialog
 DlgDocGeneralTab	: "Allmän",
 DlgDocBackTab		: "Bakgrund",
 DlgDocColorsTab		: "Färg och marginal",
-DlgDocMetaTab		: "Metadata",
+DlgDocMetaTab		: "Meta data",
 
 DlgDocPageTitle		: "Sidtitel",
 DlgDocLangDir		: "Språkriktning",

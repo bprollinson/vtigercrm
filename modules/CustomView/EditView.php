@@ -8,6 +8,7 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
+require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
 
 global $mod_strings;
@@ -16,7 +17,7 @@ global $app_strings;
 global $current_user;
 $focus = 0;
 global $theme;
-global $log;
+global $vtlog;
 
 //<<<<<>>>>>>
 global $oCustomView;
@@ -28,245 +29,233 @@ $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 require_once('modules/CustomView/CustomView.php');
 
-$cv_module = $_REQUEST['module'];
+$submodule = array('VENDOR'=>'Vendor','PRICEBOOK'=>'PriceBook','PRODUCTS'=>'Products','PO'=>'Orders','SO'=>'SalesOrder');
 
+if(isset($_REQUEST['smodule']) && $_REQUEST['smodule'] != '')
+{
+      $cv_module = $submodule[$_REQUEST['smodule']];
+}
+else
+{
+      $cv_module = $_REQUEST['module'];
+}
+
+//$cv_module = $_REQUEST['module'];
 $recordid = $_REQUEST['record'];
 
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("CATEGORY", $_REQUEST['parenttab']);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("IMAGE_PATH", $image_path);
-$smarty->assign("MODULE",$cv_module);
-$smarty->assign("CVMODULE", $cv_module);
-$smarty->assign("CUSTOMVIEWID",$recordid);
-$smarty->assign("DATAFORMAT",$current_user->date_format);
+$xtpl=new XTemplate ('modules/CustomView/EditView.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("IMAGE_PATH", $image_path);
+$xtpl->assign("MODULE",$cv_module);
+$xtpl->assign("CVMODULE", $cv_module);
+$xtpl->assign("CUSTOMVIEWID",$recordid);
+$xtpl->assign("DATAFORMAT",$current_user->date_format);
 if($recordid == "")
 {
-	$oCustomView = new CustomView();
-	$modulecollist = $oCustomView->getModuleColumnsList($cv_module);
-	$log->info('CustomView :: Successfully got ColumnsList for the module'.$cv_module);
+        $oCustomView = new CustomView();
+        $modulecollist = $oCustomView->getModuleColumnsList($cv_module);
+	$vtlog->logthis('CustomView :: Successfully got ColumnsList for the module'.$cv_module,'info');
 	if(isset($modulecollist))
 	{
-		$choosecolhtml = getByModule_ColumnsHTML($cv_module,$modulecollist);
+        	$choosecolhtml = getByModule_ColumnsHTML($cv_module,$modulecollist);
 	}
-	//step2
-	$stdfilterhtml = $oCustomView->getStdFilterCriteria();
-	$log->info('CustomView :: Successfully got StandardFilter for the module'.$cv_module);
-	$stdfiltercolhtml = getStdFilterHTML($cv_module);
-	$stdfilterjs = $oCustomView->getCriteriaJS();
+        //step2
+        $stdfilterhtml = $oCustomView->getStdFilterCriteria();
+	$vtlog->logthis('CustomView :: Successfully got StandardFilter for the module'.$cv_module,'info');
+        $stdfiltercolhtml = getStdFilterHTML($cv_module);
+        $stdfilterjs = $oCustomView->getCriteriaJS();
 
-	//step4
-	$advfilterhtml = getAdvCriteriaHTML();
-	for($i=1;$i<10;$i++)
+        //step4
+        $advfilterhtml = getAdvCriteriaHTML();
+	for($i=1;$i<11;$i++)
 	{
-		$smarty->assign("CHOOSECOLUMN".$i,$choosecolhtml);
+		$xtpl->assign("CHOOSECOLUMN".$i,$choosecolhtml);
 	}
-	$log->info('CustomView :: Successfully got AdvancedFilter for the module'.$cv_module);
+	$vtlog->logthis('CustomView :: Successfully got AdvancedFilter for the module'.$cv_module,'info');
 	for($i=1;$i<6;$i++)
 	{
-		$smarty->assign("FOPTION".$i,$advfilterhtml);
-		$smarty->assign("BLOCK".$i,$choosecolhtml);
+		$xtpl->assign("FOPTION".$i,$advfilterhtml);
+        	$xtpl->assign("BLOCK".$i,$choosecolhtml);
 	}
 
-	$smarty->assign("STDFILTERCOLUMNS",$stdfiltercolhtml);
-	$smarty->assign("STDFILTERCRITERIA",$stdfilterhtml);
-	$smarty->assign("STDFILTER_JAVASCRIPT",$stdfilterjs);
+	$xtpl->assign("STDFILTERCOLUMNS",$stdfiltercolhtml);
+	$xtpl->assign("STDFILTERCRITERIA",$stdfilterhtml);
+	$xtpl->assign("STDFILTER_JAVASCRIPT",$stdfilterjs);
 
-	$smarty->assign("MANDATORYCHECK",implode(",",$oCustomView->mandatoryvalues));
-	$smarty->assign("SHOWVALUES",implode(",",$oCustomView->showvalues));
+	$xtpl->assign("MANDATORYCHECK",implode(",",$oCustomView->mandatoryvalues));
+	$xtpl->assign("SHOWVALUES",implode(",",$oCustomView->showvalues));
 }
 else
 {
 	$oCustomView = new CustomView();
 
 	$customviewdtls = $oCustomView->getCustomViewByCvid($recordid);
-	$log->info('CustomView :: Successfully got ViewDetails for the Viewid'.$recordid);
+	$vtlog->logthis('CustomView :: Successfully got ViewDetails for the Viewid'.$recordid,'info');
+
 	$modulecollist = $oCustomView->getModuleColumnsList($cv_module);
 	$selectedcolumnslist = $oCustomView->getColumnsListByCvid($recordid);
-	$log->info('CustomView :: Successfully got ColumnsList for the Viewid'.$recordid);
+	$vtlog->logthis('CustomView :: Successfully got ColumnsList for the Viewid'.$recordid,'info');
 
-	$smarty->assign("VIEWNAME",$customviewdtls["viewname"]);
+	$xtpl->assign("VIEWNAME",$customviewdtls["viewname"]);
 
 	if($customviewdtls["setdefault"] == 1)
 	{
-		$smarty->assign("CHECKED","checked");
+		$xtpl->assign("CHECKED","checked");
 	}
 	if($customviewdtls["setmetrics"] == 1)
-	{
-		$smarty->assign("MCHECKED","checked");
-	}
+        {
+                $xtpl->assign("MCHECKED","checked");
+        }
 	for($i=1;$i<10;$i++)
-	{
-		$choosecolhtml = getByModule_ColumnsHTML($cv_module,$modulecollist,$selectedcolumnslist[$i-1]);
-		$smarty->assign("CHOOSECOLUMN".$i,$choosecolhtml);
-	}
+        {
+           $choosecolhtml = getByModule_ColumnsHTML($cv_module,$modulecollist,$selectedcolumnslist[$i-1]);
+	   $xtpl->assign("CHOOSECOLUMN".$i,$choosecolhtml);
+        }
 
 	$stdfilterlist = $oCustomView->getStdFilterByCvid($recordid);
-	$log->info('CustomView :: Successfully got Standard Filter for the Viewid'.$recordid);
+	$vtlog->logthis('CustomView :: Successfully got Standard Filter for the Viewid'.$recordid,'info');
 	$stdfilterhtml = $oCustomView->getStdFilterCriteria($stdfilterlist["stdfilter"]);
-	$stdfiltercolhtml = getStdFilterHTML($cv_module,$stdfilterlist["columnname"]);
-	$stdfilterjs = $oCustomView->getCriteriaJS();
+        $stdfiltercolhtml = getStdFilterHTML($cv_module,$stdfilterlist["columnname"]);
+        $stdfilterjs = $oCustomView->getCriteriaJS();
 
 	if(isset($stdfilterlist["startdate"]) && isset($stdfilterlist["enddate"]))
 	{
-		$smarty->assign("STARTDATE",$stdfilterlist["startdate"]);
-		$smarty->assign("ENDDATE",$stdfilterlist["enddate"]);
+		$xtpl->assign("STARTDATE",$stdfilterlist["startdate"]);
+		$xtpl->assign("ENDDATE",$stdfilterlist["enddate"]);
 	}
 
 	$advfilterlist = $oCustomView->getAdvFilterByCvid($recordid);
-	$log->info('CustomView :: Successfully got Advanced Filter for the Viewid'.$recordid,'info');
+	$vtlog->logthis('CustomView :: Successfully got Advanced Filter for the Viewid'.$recordid,'info');
 	for($i=1;$i<6;$i++)
-	{
-		$advfilterhtml = getAdvCriteriaHTML($advfilterlist[$i-1]["comparator"]);
+        {
+                $advfilterhtml = getAdvCriteriaHTML($advfilterlist[$i-1]["comparator"]);
 		$advcolumnhtml = getByModule_ColumnsHTML($cv_module,$modulecollist,$advfilterlist[$i-1]["columnname"]);
-		$smarty->assign("FOPTION".$i,$advfilterhtml);
-		$smarty->assign("BLOCK".$i,$advcolumnhtml);
-		$smarty->assign("VALUE".$i,$advfilterlist[$i-1]["value"]);
-	}
+		$xtpl->assign("FOPTION".$i,$advfilterhtml);
+                $xtpl->assign("BLOCK".$i,$advcolumnhtml);
+		$xtpl->assign("VALUE".$i,$advfilterlist[$i-1]["value"]);
+        }
 
-	$smarty->assign("STDFILTERCOLUMNS",$stdfiltercolhtml);
-	$smarty->assign("STDFILTERCRITERIA",$stdfilterhtml);
-	$smarty->assign("STDFILTER_JAVASCRIPT",$stdfilterjs);
+	$xtpl->assign("STDFILTERCOLUMNS",$stdfiltercolhtml);
+        $xtpl->assign("STDFILTERCRITERIA",$stdfilterhtml);
+        $xtpl->assign("STDFILTER_JAVASCRIPT",$stdfilterjs);
 
-	$smarty->assign("MANDATORYCHECK",implode(",",$oCustomView->mandatoryvalues));
-	$smarty->assign("SHOWVALUES",implode(",",$oCustomView->showvalues));
-
+	$xtpl->assign("MANDATORYCHECK",implode(",",$oCustomView->mandatoryvalues));
+	$xtpl->assign("SHOWVALUES",implode(",",$oCustomView->showvalues));
+	
 	$cactionhtml = "<input name='customaction' class='button' type='button' value='Create Custom Action' onclick=goto_CustomAction('".$cv_module."');>";
 
 	if($cv_module == "Leads" || $cv_module == "Accounts" || $cv_module == "Contacts")
 	{
-		$smarty->assign("CUSTOMACTIONBUTTON",$cactionhtml);
+		$xtpl->assign("CUSTOMACTIONBUTTON",$cactionhtml);
 	}
 }
 
-$smarty->assign("RETURN_MODULE", $cv_module);
-$smarty->assign("RETURN_ACTION", "index");
+$xtpl->assign("RETURN_MODULE", $cvmodule);
+$xtpl->assign("RETURN_ACTION", "index");
 
-$smarty->display("CustomView.tpl");
+$xtpl->parse("main");
+$xtpl->out("main");
 
 //step2
 function getByModule_ColumnsHTML($module,$columnslist,$selected="")
 {
 	global $oCustomView;
 	global $app_list_strings;
-	$advfilter = array();
+	
 	$mod_strings = return_module_language($current_language,$module);
 
 	foreach($oCustomView->module_list[$module] as $key=>$value)
-	{
-		$advfilter = array();			
-		$label = $app_list_strings['moduleList'][$module]." ".$key;
-		if(isset($columnslist[$module][$key]))
-		{
-			foreach($columnslist[$module][$key] as $field=>$fieldlabel)
-			{
-				if(isset($mod_strings[$fieldlabel]))
-				{
-					if($selected == $field)
-					{
-						$advfilter_option['value'] = $field;
-						$advfilter_option['text'] = $mod_strings[$fieldlabel];
-						$advfilter_option['selected'] = "selected";
-					}else
-					{
-						$advfilter_option['value'] = $field;
-						$advfilter_option['text'] = $mod_strings[$fieldlabel];
-						$advfilter_option['selected'] = "";
-					}
-				}else
-				{
-					if($selected == $field)
-					{
-						$advfilter_option['value'] = $field;
-						$advfilter_option['text'] = $fieldlabel;
-						$advfilter_option['selected'] = "selected";
-					}else
-					{
-						$advfilter_option['value'] = $field;
-						$advfilter_option['text'] = $fieldlabel;
-						$advfilter_option['selected'] = "";
-					}
-				}
-				$advfilter[] = $advfilter_option;
-			}
-			$advfilter_out[$label]= $advfilter;
-		}
-	}
-	return $advfilter_out;
+        {
+            $shtml .= "<optgroup label=\"".$app_list_strings['moduleList'][$module]." ".$key."\" class=\"select\" style=\"border:none\">";
+	    if(isset($columnslist[$module][$key]))
+	    {
+            foreach($columnslist[$module][$key] as $field=>$fieldlabel)
+            {
+		    if(isset($mod_strings[$fieldlabel]))
+		    {
+			    if($selected == $field)
+			    {
+				    $shtml .= "<option selected value=\"".$field."\">".$mod_strings[$fieldlabel]."</option>";
+			    }else
+			    {
+				    $shtml .= "<option value=\"".$field."\">".$mod_strings[$fieldlabel]."</option>";
+			    }
+		    }else
+		    {
+			    if($selected == $field)
+			    {
+				    $shtml .= "<option selected value=\"".$field."\">".$fieldlabel."</option>";
+			    }else
+			    {
+				    $shtml .= "<option value=\"".$field."\">".$fieldlabel."</option>";
+			    }
+		    }
+            }
+	    }
+        }
+        return $shtml;
 }
 //step2
 
 //step3
 function getStdFilterHTML($module,$selected="")
 {
-	global $app_list_strings;
-	global $oCustomView;
-	$stdfilter = array();
-	$result = $oCustomView->getStdCriteriaByModule($module);
+        global $app_list_strings;
+        global $oCustomView;
+	//print_r($mod_strings);
+        $result = $oCustomView->getStdCriteriaByModule($module);
 	$mod_strings = return_module_language($current_language,$module);
 
-	if(isset($result))
-	{
-		foreach($result as $key=>$value)
-		{
-			if(isset($mod_strings[$value]))
+        if(isset($result))
+        {
+                foreach($result as $key=>$value)
+                {
+                        if(isset($mod_strings[$value]))
 			{
-				if($key == $selected)
-				{
-					$filter['value'] = $key;
-					$filter['text'] = $app_list_strings['moduleList'][$module]." - ".$mod_strings[$value];
-					$filter['selected'] = "selected";
-				}else
-				{
-					$filter['value'] = $key;
-					$filter['text'] = $app_list_strings['moduleList'][$module]." - ".$mod_strings[$value];
-					$filter['selected'] ="";
-				}
+			if($key == $selected)
+                        {
+                        $shtml .= "<option selected value=\"".$key."\">".$app_list_strings['moduleList'][$module]." - ".$mod_strings[$value]."</option>";
+                        }else
+                        {
+                        $shtml .= "<option value=\"".$key."\">".$app_list_strings['moduleList'][$module]." - ".$mod_strings[$value]."</option>";
+                        }
 			}else
 			{
-				if($key == $selected)
-				{
-					$filter['value'] = $key;
-					$filter['text'] = $app_list_strings['moduleList'][$module]." - ".$value;
-					$filter['selected'] = 'selected';
-				}else
-				{
-					$filter['value'] = $key;
-					$filter['text'] = $app_list_strings['moduleList'][$module]." - ".$value;
-					$filter['selected'] ='';
-				}
+			if($key == $selected)
+                        {
+                   	$shtml .= "<option selected value=\"".$key."\">".$app_list_strings['moduleList'][$module]." - ".$value."</option>";
+                        }else
+                        {
+                        $shtml .= "<option value=\"".$key."\">".$app_list_strings['moduleList'][$module]." - ".$value."</opt
+ion>";
+                        }
 			}
-			$stdfilter[]=$filter;
-		}
-	}
+                }
+        }
 
-	return $stdfilter;
+        return $shtml;
 }
 //step3
 
 //step4
 function getAdvCriteriaHTML($selected="")
 {
-	global $adv_filter_options;
-	global $app_list_strings;
-	$AdvCriteria = array();
-	foreach($adv_filter_options as $key=>$value)
-	{
-		if($selected == $key)
-		{
-			$advfilter_criteria['value'] = $key;
-			$advfilter_criteria['text'] = $value; 
-			$advfilter_criteria['selected'] = "selected";
-		}else
-		{
-			$advfilter_criteria['value'] = $key;
-			$advfilter_criteria['text'] = $value;
-			$advfilter_criteria['selected'] = "";
-		}
-		$AdvCriteria[] = $advfilter_criteria;
-	}
+         global $adv_filter_options;
+	 global $app_list_strings;
 
-	return $AdvCriteria;
+         foreach($adv_filter_options as $key=>$value)
+         {
+                if($selected == $key)
+                {
+                        $shtml .= "<option selected value=\"".$key."\">".$value."</option>";
+                }else
+                {
+                        $shtml .= "<option value=\"".$key."\">".$value."</option>";
+                }
+         }
+
+         return $shtml;
 }
 //step4
 

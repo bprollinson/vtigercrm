@@ -1,4 +1,4 @@
-<?php
+<?
 /*********************************************************************************
  * The contents of this file are subject to the vtiger CRM Public License Version 1.0
  * ("License"); You may not use this file except in compliance with the License
@@ -8,7 +8,9 @@
  * All Rights Reserved.
  *
  ********************************************************************************/
+
 $patch_version = '';
 $modified_database = '';
-$vtiger_current_version = '5.0.0';
+$vtiger_version = '4.2.4';
+$release_date = '1 June 2006';
 ?>

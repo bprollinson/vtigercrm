@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header:  
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Reports/language/en_us.lang.php,v 1.2.2.2 2005/08/09 13:14:03 venkatraj Exp $
  * Description:  Defines the English language pack for the Account module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -78,43 +78,7 @@ $mod_strings = Array(
 //Added for 4.2 Patch I
 'LBL_EXPORTXL_BUTTON'=>'Export To Excel',
 
-//Added for 5 Beta
-'LBL_NO_PERMISSION'=>'Your profile dosen\'t allow you view the reports for one of the  module(s)',
-'LBL_SELECT_COLUMNS_TO_GENERATE_REPORTS'=>'Select columns to generate reports',
-'LBL_AVAILABLE_FIELDS'=>'Available Fields',
-'LBL_SELECTED_FIELDS'=>'Selected Fields',
-'LBL_CALCULATIONS'=>'Calculations',
-'LBL_SELECT_COLUMNS_TO_TOTAL'=>'Select columns to Total',
-'LBL_SELECT_FILTERS_TO_STREAMLINE_REPORT_DATA'=>'Select Filters to Streamline Report Data',
-'LBL_SELECT_FILTERS'=>'Filters',
-'LBL_SELECT_COLUMNS_TO_GROUP_REPORTS'=>'Select columns to group reports',
-'LBL_BACK_TO_REPORTS'=>'Back to Reports',
-'LBL_SELECT_ANOTHER_REPORT'=>'Select Another Report',
-'LBL_SELECT_COLUMN'=>'Select Column',
-'LBL_SELECT_TIME'=>'Select Time',
-'LBL_PRINT_REPORT'=>'Print Report',
-'LBL_CLICK_HERE'=>'Click Here',
-'LBL_TO_ADD_NEW_GROUP'=>'to add new group',
-'LBL_CREATE_NEW'=>'Create New',
-'LBL_REPORT_DETAILS'=>'Report Details',
-'LBL_RELATIVE_MODULE'=>'Relative Module',
-'LBL_REPORT_TYPE'=>'Report Type',
-'LBL_REPORT_DETAILS'=>'Report Details',
-'LBL_TYPE_THE_NAME'=>'Type the Name',
-'LBL_DESCRIPTION_FOR_REPORT'=>'Description for the report',
-'LBL_REPORT_NAME'=>'Report Name',
-'LBL_DESCRIPTION'=>'Description',
-'LBL_TOOLS'=>'Tools',
-'LBL_AND'=>'and',
-'LBL_ADD_NEW_GROUP'=>'Add New Group',
-'LBL_REPORT_MODULE'=>'Report Module',
-'LBL_SELECT_RELATIVE_MODULE_FOR_REPORT'=>'Select Relative Module for Report',
-'LBL_SELECT_REPORT_TYPE_BELOW'=>'Select Report type Below',
-'LBL_TABULAR_FORMAT'=>'Tabular Format',
-'LBL_TABULAR_REPORTS_ARE_SIMPLEST'=>'Tabular Reports are the simplest and fastest way of getting your data',
-'LBL_SUMMARY_REPORT_VIEW_DATA_WITH_SUBTOTALS'=>'Summary reports allow you to view your data along with subtotals and other summary information',
-'LBL_FILTERS'=>'Filters',
 
-)
+);
 
 ?>

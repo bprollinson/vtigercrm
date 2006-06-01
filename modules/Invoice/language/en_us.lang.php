@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Invoice/language/en_us.lang.php,v 1.13 2005/07/13 08:49:52 saraj Exp $
  * Description:  Defines the English language pack 
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -23,7 +23,7 @@
 $mod_strings = Array(
 'LBL_MODULE_NAME'=>'Invoice',
 'LBL_SO_MODULE_NAME'=>'Invoice',
-'LBL_RELATED_PRODUCTS'=>'Product Details',
+'LBL_RELATED_PRODUCTS'=>'Line Items',
 'LBL_MODULE_TITLE'=>'Invoice: Home',
 'LBL_SEARCH_FORM_TITLE'=>'Invoice Search',
 'LBL_LIST_FORM_TITLE'=>'Invoice List',
@@ -120,7 +120,6 @@ $mod_strings = Array(
 'Quote Name'=>'Quote Name',
 'Vendor Name'=>'Vendor Name',
 'Invoice Terms'=>'Invoice Terms',
-'Contact Name'=>'Contact Name',//to include contact name field in Invoice
 'Invoice Date'=>'Invoice Date',
 'Sub Total'=>'Sub Total',
 'Due Date'=>'Due Date',
@@ -138,8 +137,6 @@ $mod_strings = Array(
 'Billing State'=>'Billing State',
 'Billing Code'=>'Billing Code',
 'Billing Country'=>'Billing Country',
-'Billing Po Box'=>'Billing Po Box',
-'Shipping Po Box'=>'Shipping Po Box',
 'Shipping City'=>'Shipping City',
 'Shipping State'=>'Shipping State',
 'Shipping Code'=>'Shipping Code',
@@ -172,7 +169,7 @@ $mod_strings = Array(
 'LBL_INVOICE_NAME'=>'Invoice Name:',
 'Purchase Order'=>'Purchase Order',
 'Status'=>'Status',
-'Id'=>'Invoice Id',
+
 );
 
 ?>

@@ -241,6 +241,7 @@ function CloseTag($tag)
         $this->Ln();
     }
     if($tag=='TABLE') { // TABLE-END
+        //$this->Ln();
         $this->tableborder=0;
     }
 
@@ -315,6 +316,7 @@ if($columnlength > 0 && $columnlength <= 4)
         $pdf = new Html2PDF('L','mm','A3');
 }
 
+//$pdf=new Html2PDF('L','mm','A3');
 $pdf->AddPage();
 
 $pdf->SetFillColor(224,235,255);
@@ -370,7 +372,7 @@ if(isset($arr_val))
 	$count = 0;
 	foreach($arr_val[0] as $key=>$value)
 	{
-		$headerHTML .= '<td width="'.$col_width[$count].'" bgcolor="#DDDDDD">'.$key.'</td>';
+		$headerHTML .= '<td width="'.$col_width[$count].'" bgcolor="#a2c8f3">'.$key.'</td>';
 		$count = $count + 1;
 	}
 	

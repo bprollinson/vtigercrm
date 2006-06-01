@@ -9,13 +9,16 @@
 *
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once('modules/Settings/Forms.php');
 
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
-global $current_user;
+
+echo '<br>';
+echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_NAME'].' : '.$mod_strings['LBL_ADD_MAIL_ACCOUNT'], true);
+echo '<br><br>';
 
 global $adb;
 global $theme;
@@ -23,69 +26,51 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-$smarty = new vtigerCRM_Smarty;
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("IMAGE_PATH", $image_path);
+$xtpl=new XTemplate ('modules/Settings/AddMailAccount.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("POP_SELECT", "CHECKED");
 
 if(isset($_REQUEST['record']) && $_REQUEST['record']!='')
 {
-	$sql = "select * from mail_accounts where user_id=".$_REQUEST['record'];
+	$sql = "select * from mail_accounts where account_id=".$_REQUEST['record'];
 	$result = $adb->query($sql);
 	$rowcount = $adb->num_rows($result);
-	
 	if ($rowcount!=0)
 	{
 		while($temprow = $adb->fetchByAssoc($result))
 		{
-			$smarty->assign("DISPLAYNAME", $temprow['display_name']);
-			$smarty->assign("ID", $temprow['user_id']);
-			$smarty->assign("EMAIL", $temprow['mail_id']);
-			$smarty->assign("ACCOUNTNAME", $temprow['account_name']);
-			$smarty->assign($temprow['mail_protocol'],$temprow['mail_protocol']);
-			$smarty->assign("SERVERUSERNAME", $temprow['mail_username']);
-			$smarty->assign("SERVERPASSWORD", $temprow['mail_password']);
-			$smarty->assign("SERVERNAME", $temprow['mail_servername']);
-			$smarty->assign("RECORD_ID", $temprow['account_id']);
-			$smarty->assign("BOX_REFRESH", $temprow['box_refresh']);
-			$smarty->assign("MAILS_PER_PAGE", $temprow['mails_per_page']);
-			$smarty->assign("EDIT", "TRUE");
-
-			if(strtolower($temprow['mail_protocol']) == "imap")
-				$smarty->assign("IMAP", "CHECKED");
-			if(strtolower($temprow['mail_protocol']) == "imap2")
-				$smarty->assign("IMAP2", "CHECKED");
-			if(strtolower($temprow['mail_protocol']) == "imap4")
-				$smarty->assign("IMAP4", "CHECKED");
-			if(strtolower($temprow['mail_protocol']) == "imap4rev1")
-				$smarty->assign("IMAP4R1", "CHECKED");
-			if(strtolower($temprow['mail_protocol']) == "pop3")
-				$smarty->assign("POP3", "CHECKED");
-
-			if(strtolower($temprow['ssltype']) == "notls")
-				$smarty->assign("NOTLS", "CHECKED");
-			if(strtolower($temprow['ssltype']) == "tls")
-				$smarty->assign("TLS", "CHECKED");
-
-			if(strtolower($temprow['sslmeth']) == "validate-cert")
-				$smarty->assign("VALIDATECERT", "CHECKED");
-			if(strtolower($temprow['sslmeth']) == "novalidate-cert")
-				$smarty->assign("NOVALIDATECERT", "CHECKED");
-
-			if($temprow['int_mailer'] == "1")
-				$smarty->assign("INT_MAILER_USE", "CHECKED");
-			else
-				$smarty->assign("INT_MAILER_NOUSE", "CHECKED");
-
+			$xtpl->assign("DISPLAYNAME", $temprow['display_name']);
+			$xtpl->assign("EMAIL", $temprow['mail_id']);
+			$xtpl->assign("ACCOUNTNAME", $temprow['account_name']);
+			$xtpl->assign($temprow['mail_protocol'],$temprow['mail_protocol']);
+			$xtpl->assign("SERVERUSERNAME", $temprow['mail_username']);
+			$xtpl->assign("SERVERPASSWORD", $temprow['mail_password']);
+			$xtpl->assign("SERVERNAME", $temprow['mail_servername']);
+			$xtpl->assign("RECORD_ID", $temprow['account_id']);
+			$xtpl->assign("EDIT", "TRUE");
 		}
 	}
 }	
 
-$smarty->assign("RETURN_MODULE","Settings");
-$smarty->assign("RETURN_ACTION","index");
-$smarty->assign("JAVASCRIPT", get_validate_record_js());
-$smarty->assign("USERID", $current_user->id);
+/*$sql="select * from systems where server_type = 'email'";
+$result = $adb->query($sql);
+$mail_server = $adb->query_result($result,0,'server');
+$mail_server_username = $adb->query_result($result,0,'server_username');
+$mail_server_password = $adb->query_result($result,0,'server_password');
+*/
 
-$smarty->display('AddMailAccount.tpl');
+$xtpl->assign("RETURN_MODULE","Settings");
+$xtpl->assign("RETURN_ACTION","index");
+$xtpl->assign("JAVASCRIPT", get_validate_record_js());
+/*if (isset($mail_server))
+	$xtpl->assign("MAILSERVER",$mail_server);
+if (isset($mail_server_username))
+	$xtpl->assign("USERNAME",$mail_server_username);
+if (isset($mail_server_password))
+	$xtpl->assign("PASSWORD",$mail_server_password);
+*/
+$xtpl->parse("main");
+$xtpl->out("main");
 
 ?>

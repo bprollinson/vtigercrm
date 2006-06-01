@@ -14,8 +14,8 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
-require_once('include/RelatedListView.php');
+require_once('include/utils.php');
+
 
 class Product extends CRMEntity {
 	var $log;
@@ -42,8 +42,8 @@ class Product extends CRMEntity {
         );
 
 
-	var $tab_name = Array('crmentity','products','productcf','seproductsrel','producttaxrel','attachments');
-	var $tab_name_index = Array('crmentity'=>'crmid','products'=>'productid','productcf'=>'productid','seproductsrel'=>'productid','producttaxrel'=>'productid','attachments'=>'attachmentsid');
+	var $tab_name = Array('crmentity','products','productcf','seproductsrel');
+	var $tab_name_index = Array('crmentity'=>'crmid','products'=>'productid','productcf'=>'productid','seproductsrel'=>'productid');
 	var $column_fields = Array();
 
 	var $sortby_fields = Array('productname','productcode','commissionrate');		  
@@ -83,451 +83,231 @@ class Product extends CRMEntity {
 	var $combofieldNames = Array('manufacturer'=>'manufacturer_dom'
                       ,'productcategory'=>'productcategory_dom');
 
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'productname';
-	var $default_sort_order = 'ASC';
 
 	function Product() {
 		$this->log =LoggerManager::getLogger('product');
-		$this->log->debug("Entering Product() method ...");
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Products');
-		$this->log->debug("Exiting Product method ...");
 	}
 
-	function get_attachments($id)
-	{
-		global $log;
-		$log->debug("Entering get_attachments(".$id.") method ...");
-		// Armando Lüscher 18.10.2005 -> §visibleDescription
-		// Desc: Inserted crmentity.createdtime, notes.notecontent description, users.user_name
-		// Inserted inner join users on crmentity.smcreatorid= users.id
-		$query = "SELECT notes.title, 'Notes      ' AS ActivityType,
-				notes.filename, attachments.type  AS FileType,
-				crm2.modifiedtime AS lastmodified,
-				seattachmentsrel.attachmentsid AS attachmentsid,
-				notes.notesid AS crmid, crmentity.createdtime,
-				notes.notecontent AS description,
-				users.user_name
-			FROM notes
-			INNER JOIN senotesrel
-				ON senotesrel.notesid = notes.notesid
-			INNER JOIN crmentity
-				ON crmentity.crmid = senotesrel.crmid
-			INNER JOIN crmentity AS crm2
-				ON crm2.crmid = notes.notesid
-				AND crm2.deleted = 0
-			LEFT JOIN seattachmentsrel
-				ON seattachmentsrel.crmid = notes.notesid
-			LEFT JOIN attachments
-				ON seattachmentsrel.attachmentsid = attachments.attachmentsid
-			INNER JOIN users
-				ON crmentity.smcreatorid = users.id
-			WHERE crmentity.crmid = ".$id."
-		UNION ALL
-			SELECT attachments.description AS title,
-				'Attachments' AS ActivityType,
-				attachments.name AS filename,
-				attachments.type AS FileType,
-				crm2.modifiedtime AS lastmodified,
-				attachments.attachmentsid AS attachmentsid,
-				seattachmentsrel.attachmentsid AS crmid,
-				crmentity.createdtime,
-				attachments.description, users.user_name
-			FROM attachments
-			INNER JOIN seattachmentsrel
-				ON seattachmentsrel.attachmentsid = attachments.attachmentsid
-			INNER JOIN crmentity
-				ON crmentity.crmid = seattachmentsrel.crmid
-			INNER JOIN crmentity AS crm2
-				ON crm2.crmid = attachments.attachmentsid
-			INNER JOIN users
-				ON crmentity.smcreatorid = users.id
-			WHERE crmentity.crmid = ".$id;	
+  function get_summary_text()
+        {
+                return $this->name;
+        }
 
-		$log->debug("Exiting get_attachments method ...");
-        	return getAttachmentsAndNotes('Products',$query,$id);
-		}
+  		
+	function get_attachments($id)
+        {
+	
+		$query = "select notes.title,'Notes      ' ActivityType, notes.filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, seattachmentsrel.attachmentsid attachmentsid, notes.notesid crmid from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0 left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid=".$id;
+                $query .= ' union all ';
+                $query .= "select attachments.description title ,'Attachments'  ActivityType, attachments.name  filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, attachments.attachmentsid attachmentsid, seattachmentsrel.attachmentsid crmid from attachments inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid inner join crmentity on crmentity.crmid= seattachmentsrel.crmid inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid where crmentity.crmid=".$id;	
+
+		renderRelatedAttachments($query,$id);
+        }
 
 	function get_opportunities($id)
-	{
-		global $log;
-		$log->debug("Entering get_opportunities(".$id.") method ...");
-		$query = "SELECT potential.potentialid, potential.potentialname,
-				potential.potentialtype, products.productid,
-				products.productname, products.qty_per_unit,
-				products.unit_price, products.expiry_date
-			FROM potential
-			INNER JOIN products
-				ON potential.productid = products.productid
-			LEFT JOIN potentialgrouprelation
-				ON potential.potentialid = potentialgrouprelation.potentialid
-			LEFT JOIN groups
-				ON groups.groupname = potentialgrouprelation.groupname
-			WHERE crmentity.deleted = 0
-			AND products.productid = ".$id;
-		$log->debug("Exiting get_opportunities method ...");
+        {
+		$query = 'select potential.potentialid, potential.potentialname, potential.potentialtype,  products.productid, products.productname, products.qty_per_unit, products.unit_price, products.expiry_date from potential inner join products on potential.productid = products.productid where products.productid='.$id;
           renderRelatedPotentials($query);
         }
 
 	function get_tickets($id)
+        {
+		//$query = 'select users.user_name, users.id, products.productid,products.productname, troubletickets.ticketid, troubletickets.parent_id, troubletickets.title, troubletickets.status, troubletickets.priority, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from products  inner join seticketsrel on seticketsrel.crmid = products.productid inner join troubletickets on troubletickets.ticketid = seticketsrel.ticketid inner join crmentity on crmentity.crmid = troubletickets.ticketid left join users on users.id=crmentity.smownerid where products.productid= '.$id.' and crmentity.deleted=0';
+		$query = "select users.user_name, users.id, products.productid,products.productname, troubletickets.ticketid, troubletickets.parent_id, troubletickets.title, troubletickets.status, troubletickets.priority, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from troubletickets inner join crmentity on crmentity.crmid = troubletickets.ticketid left join products on products.productid=troubletickets.product_id left join users on users.id=crmentity.smownerid where crmentity.deleted=0 and products.productid=".$id;
+          renderRelatedTickets($query,$id);
+        }
+
+	function get_meetings($id)
 	{
-		global $log;
-		$log->debug("Entering get_tickets(".$id.") method ...");
-		global $mod_strings;
-		require_once('modules/HelpDesk/HelpDesk.php');
-		$focus = new HelpDesk();
-
-		$button = '';
-
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT users.user_name, users.id,
-				products.productid, products.productname,
-				troubletickets.ticketid,
-				troubletickets.parent_id, troubletickets.title,
-				troubletickets.status, troubletickets.priority,
-				crmentity.crmid, crmentity.smownerid,
-				crmentity.modifiedtime
-			FROM troubletickets
-			INNER JOIN crmentity
-				ON crmentity.crmid = troubletickets.ticketid
-			LEFT JOIN products
-				ON products.productid = troubletickets.product_id
-			LEFT JOIN users
-				ON users.id = crmentity.smownerid
-			LEFT JOIN ticketgrouprelation
-				ON troubletickets.ticketid = ticketgrouprelation.ticketid
-			LEFT JOIN groups
-				ON groups.groupname = ticketgrouprelation.groupname
-			WHERE crmentity.deleted = 0
-			AND products.productid = ".$id;
-	$log->debug("Exiting get_tickets method ...");
-		return GetRelatedList('Products','HelpDesk',$focus,$query,$button,$returnset);
+		$query = "SELECT meetings.name,meetings.location,meetings.date_start from meetings inner join seactivityrel on seactivityrel.activityid=meetings.meetingid and seactivityrel.crmid=".$id."";
+		renderRelatedMeetings($query);
 	}
-
 
 	function get_activities($id)
 	{
-		global $log;
-		$log->debug("Entering get_activities(".$id.") method ...");
-		global $app_strings;
-	
-		require_once('modules/Activities/Activity.php');
-
-        	//if($this->column_fields['contact_id']!=0 && $this->column_fields['contact_id']!='')
-        	$focus = new Activity();
-
-		$button = '';
-
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT contactdetails.lastname,
-				contactdetails.firstname,
-				contactdetails.contactid,
-				activity.*,
-				seactivityrel.*,
-				crmentity.crmid, crmentity.smownerid,
-				crmentity.modifiedtime,
-				users.user_name,
-				recurringevents.recurringtype
-			FROM activity
-			INNER JOIN seactivityrel
-				ON seactivityrel.activityid = activity.activityid
-			INNER JOIN crmentity
-				ON crmentity.crmid=activity.activityid
-			LEFT JOIN cntactivityrel
-				ON cntactivityrel.activityid = activity.activityid
-			LEFT JOIN contactdetails
-				ON contactdetails.contactid = cntactivityrel.contactid
-			LEFT JOIN users
-				ON users.id = crmentity.smownerid
-			LEFT OUTER JOIN recurringevents
-				ON recurringevents.activityid = activity.activityid
-			LEFT JOIN activitygrouprelation
-				ON activitygrouprelation.activityid = crmentity.crmid
-			LEFT JOIN groups
-				ON groups.groupname = activitygrouprelation.groupname
-			WHERE seactivityrel.crmid=".$id."
-			AND (activitytype = 'Task'
-				OR activitytype = 'Call'
-				OR activitytype = 'Meeting')";
-		$log->debug("Exiting get_activities method ...");
-		return GetRelatedList('Products','Activities',$focus,$query,$button,$returnset);
+		//$query = "SELECT activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join users on users.id=crmentity.smownerid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting')";
+		$query = "SELECT contactdetails.lastname, contactdetails.firstname, contactdetails.contactid, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name,recurringevents.recurringtype from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting')";
+		renderRelatedActivities($query,$id);
 	}
 	function get_quotes($id)
-	{
-		global $log;
-		$log->debug("Entering get_quotes(".$id.") method ...");	
-		global $app_strings;
-		require_once('modules/Quotes/Quote.php');	
-		$focus = new Quote();
-	
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT crmentity.*,
-				quotes.*,
-				potential.potentialname,
-				account.accountname,
-				quotesproductrel.productid
-			FROM quotes
-			INNER JOIN crmentity
-				ON crmentity.crmid = quotes.quoteid
-			INNER JOIN quotesproductrel
-				ON quotesproductrel.quoteid = quotes.quoteid
-			LEFT OUTER JOIN account
-				ON account.accountid = quotes.accountid
-			LEFT OUTER JOIN potential
-				ON potential.potentialid = quotes.potentialid
-			LEFT JOIN quotegrouprelation
-				ON quotes.quoteid = quotegrouprelation.quoteid
-			LEFT JOIN groups
-				ON groups.groupname = quotegrouprelation.groupname
-			WHERE crmentity.deleted = 0
-			AND quotesproductrel.productid = ".$id;
-		$log->debug("Exiting get_quotes method ...");
-		return GetRelatedList('Products','Quotes',$focus,$query,$button,$returnset);
+ 	{
+		$query = "select crmentity.*, quotes.*,potential.potentialname,account.accountname,quotesproductrel.productid from quotes inner join crmentity on crmentity.crmid=quotes.quoteid inner join quotesproductrel on quotesproductrel.quoteid=quotes.quoteid left outer join account on account.accountid=quotes.accountid left outer join potential on potential.potentialid=quotes.potentialid where crmentity.deleted=0 and quotesproductrel.productid=".$id;
+		renderRelatedQuotes($query,$id,$this->column_fields['contact_id'],$this->column_fields['parent_id']);
 	}
 	function get_purchase_orders($id)
 	{
-		global $log;
-		$log->debug("Entering get_purchase_orders(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/PurchaseOrder/PurchaseOrder.php');
-		$focus = new Order();
-
-		$button = '';
-
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT crmentity.*,
-				purchaseorder.*,
-				products.productname,
-				poproductrel.productid
-			FROM purchaseorder
-			INNER JOIN crmentity
-				ON crmentity.crmid = purchaseorder.purchaseorderid
-			INNER JOIN poproductrel
-				ON poproductrel.purchaseorderid = purchaseorder.purchaseorderid
-			INNER JOIN products
-				ON products.productid = poproductrel.productid
-			LEFT JOIN pogrouprelation
-				ON purchaseorder.purchaseorderid = pogrouprelation.purchaseorderid
-			LEFT JOIN groups
-				ON groups.groupname = pogrouprelation.groupname
-			WHERE crmentity.deleted = 0
-			AND products.productid = ".$id;
-		$log->debug("Exiting get_purchase_orders method ...");
-		return GetRelatedList('Products','PurchaseOrder',$focus,$query,$button,$returnset);
-	}
+		$query = "select crmentity.*, purchaseorder.*,products.productname,poproductrel.productid from purchaseorder inner join crmentity on crmentity.crmid=purchaseorder.purchaseorderid inner join poproductrel on poproductrel.purchaseorderid=purchaseorder.purchaseorderid inner join products on products.productid=poproductrel.productid where crmentity.deleted=0 and products.productid=".$id;
+	      	renderProductPurchaseOrders($query,$id,$this->column_fields['vendor_id'],$this->column_fields['contact_id']);
+        }
 	function get_salesorder($id)
 	{
-		global $log;
-		$log->debug("Entering get_salesorder(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/SalesOrder/SalesOrder.php');
-        $focus = new SalesOrder();
- 
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT crmentity.*,
-				salesorder.*,
-				products.productname AS productname,
-				account.accountname
-			FROM salesorder
-			INNER JOIN crmentity
-				ON crmentity.crmid = salesorder.salesorderid
-			INNER JOIN soproductrel
-				ON soproductrel.salesorderid = salesorder.salesorderid
-			INNER JOIN products
-				ON products.productid = soproductrel.productid
-			LEFT OUTER JOIN account
-				ON account.accountid = salesorder.accountid
-			LEFT JOIN sogrouprelation
-				ON salesorder.salesorderid = sogrouprelation.salesorderid
-			LEFT JOIN groups
-				ON groups.groupname = sogrouprelation.groupname
-			WHERE crmentity.deleted = 0
-			AND products.productid = ".$id;
-		$log->debug("Exiting get_salesorder method ...");
-		return GetRelatedList('Products','SalesOrder',$focus,$query,$button,$returnset);
+		$query = "select crmentity.*, salesorder.*, products.productname as productname, account.accountname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid inner join soproductrel on soproductrel.salesorderid=salesorder.salesorderid inner join products on products.productid=soproductrel.productid left outer join account on account.accountid=salesorder.accountid where crmentity.deleted=0 and products.productid = ".$id;
+		renderProductSalesOrders($query,$id,$this->column_fields['contact_id'],$this->column_fields['parent_id']);	
 	}
 	function get_invoices($id)
 	{
-		global $log;
-		$log->debug("Entering get_invoices(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/Invoice/Invoice.php');
-		$focus = new Invoice();
-
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT crmentity.*,
-				invoice.*,
-				invoiceproductrel.quantity,
-				account.accountname
-			FROM invoice
-			INNER JOIN crmentity
-				ON crmentity.crmid = invoice.invoiceid
-			LEFT OUTER JOIN account
-				ON account.accountid = invoice.accountid
-			INNER JOIN invoiceproductrel
-				ON invoiceproductrel.invoiceid = invoice.invoiceid
-			LEFT JOIN invoicegrouprelation
-				ON invoice.invoiceid = invoicegrouprelation.invoiceid
-			LEFT JOIN groups
-				ON groups.groupname = invoicegrouprelation.groupname
-			WHERE crmentity.deleted = 0
-			AND invoiceproductrel.productid = ".$id;
-		$log->debug("Exiting get_invoices method ...");
-		return GetRelatedList('Products','Invoice',$focus,$query,$button,$returnset);
+		$query = "select crmentity.*, invoice.*, invoiceproductrel.quantity, account.accountname from invoice inner join crmentity on crmentity.crmid=invoice.invoiceid left outer join account on account.accountid=invoice.accountid inner join invoiceproductrel on invoiceproductrel.invoiceid=invoice.invoiceid where crmentity.deleted=0 and invoiceproductrel.productid=".$id;
+		renderRelatedInvoices($query,$id,$this->column_fields['parent_id']);
 	}
 	function get_product_pricebooks($id)
-	{     
-		global $log;
-		$log->debug("Entering get_product_pricebooks(".$id.") method ...");
-		global $mod_strings;
-		require_once('modules/PriceBooks/PriceBook.php');
-		$focus = new PriceBook();
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT crmentity.crmid,
-				pricebook.*,
-				pricebookproductrel.productid as prodid
-			FROM pricebook
-			INNER JOIN crmentity
-				ON crmentity.crmid = pricebook.pricebookid
-			INNER JOIN pricebookproductrel
-				ON pricebookproductrel.pricebookid = pricebook.pricebookid
-			WHERE crmentity.deleted = 0
-			AND pricebookproductrel.productid = ".$id; 
-		$log->debug("Exiting get_product_pricebooks method ...");
-		return GetRelatedList('Products','PriceBooks',$focus,$query,$button,$returnset);
+        {                                                                                                                     
+       	 	$query = 'select crmentity.crmid, pricebook.*,pricebookproductrel.productid as prodid from pricebook inner join crmentity on crmentity.crmid=pricebook.pricebookid inner join pricebookproductrel on pricebookproductrel.pricebookid=pricebook.pricebookid where crmentity.deleted=0 and pricebookproductrel.productid='.$id; 
+	 	renderProductRelatedPriceBooks($query,$id);                                                                  
 	}
-
 	function product_novendor()
 	{
-		global $log;
-		$log->debug("Entering product_novendor() method ...");
-		$query = "SELECT products.productname, crmentity.deleted
-			FROM products
-			INNER JOIN crmentity
-				ON crmentity.crmid = products.productid
-			WHERE crmentity.deleted = 0
-			AND products.vendor_id = ''";
+		$query = "SELECT products.productname,crmentity.deleted from products inner join crmentity on crmentity.crmid=products.productid where crmentity.deleted=0 and products.vendor_id=''";
 		$result=$this->db->query($query);
-		$log->debug("Exiting product_novendor method ...");
 		return $this->db->num_rows($result);
 	}
 	
+ //method added to construct the query to fetch the custom fields
+	function constructCustomQueryAddendum()
+	{
+		global $adb;
+		//get all the custom fields created
+		$sql1 = "select columnname,fieldlabel from field where generatedtype=2 and tabid=14";
+		$result = $adb->query($sql1);
+		$numRows = $adb->num_rows($result);
+		//select accountscf.columnname fieldlabel,accountscf.columnname fieldlabel
+		$sql3 = "select ";
+		for($i=0; $i < $numRows;$i++)
+		{
+			$columnName = $adb->query_result($result,$i,"columnname");
+			$fieldlable = $adb->query_result($result,$i,"fieldlabel");
+			//construct query as below
+			if($i == 0)
+			{
+				$sql3 .= "productcf.".$columnName. " '" .$fieldlable."'";
+			}
+			else
+			{
+				$sql3 .= ", productcf.".$columnName. " '" .$fieldlable."'";
+			}
+
+		}
+		return $sql3;
+
+	}
+
+
+	//check if the custom table exists or not in the first place
+	function checkIfCustomTableExists()
+	{
+		//$result = mysql_query("select * from accountcf");
+		//$testrow = mysql_num_fields($result);
+		$result = $this->db->query("select * from productcf");
+		$testrow = $this->db->num_fields($result);
+		if($testrow > 1)
+		{
+			$exists=true;
+		}
+		else
+		{
+			$exists=false;
+		}
+		return $exists;
+	}
+
+
 	
 	function create_export_query(&$order_by, &$where)
 	{
-		global $log;
-		$log->debug("Entering create_export_query(".$order_by.",".$where.") method ...");
-		if($this->checkIfCustomTableExists('productcf'))
+		if($this->checkIfCustomTableExists())
 		{
 
-		$query = $this->constructCustomQueryAddendum('productcf','Products') ."    
-				products.productid AS productid,
-				products.productname AS productname,
-				products.productcode AS productcode,
-				products.productcategory AS productcategory,
-				products.manufacturer AS manufacturer,
-				products.product_description AS product_description,
-				products.qty_per_unit AS qty_per_unit,
-				products.unit_price AS unit_price,
-				products.weight AS weight,
-				products.pack_size AS pack_size,
-				DATE_FORMAT(products.start_date, '%Y-%M-%D') AS start_date,
-				DATE_FORMAT(products.expiry_date, '%Y-%M-%D') AS expiry_date,
-				products.cost_factor AS cost_factor,
-				products.commissionrate AS commissionrate,
-				products.commissionmethod AS commissionmethod,
-				products.discontinued AS discontinued,
-				products.sales_start_date AS sales_start_date,
-				products.sales_end_date AS sales_end_date,
-				products.usageunit AS usageunit,
-				products.serialno AS serialno,
-				products.currency AS currency,
-				products.reorderlevel AS reorderlevel,
-				products.website AS website,
-				products.taxclass AS taxclass,
-				products.mfr_part_no AS mfr_part_no,
-				products.vendor_part_no AS vendor_part_no,
-				products.qtyinstock AS qtyinstock,
-				products.productsheet AS productsheet,
-				products.qtyindemand AS qtyindemand
-			FROM ".$this->entity_table."
-			INNER JOIN products
-				ON crmentity.crmid = products.productid
-			INNER JOIN users
-				ON users.id = crmentity.smownerid 
-			LEFT JOIN productcf
-				ON productcf.productid = products.productid";
+			$query = $this->constructCustomQueryAddendum() . 
+				",    
+				products.productid productid,
+			products.productname productname,
+			products.productcode productcode,
+			products.productcategory productcategory,
+			products.manufacturer manufacturer,
+			products.product_description product_description,
+			products.qty_per_unit qty_per_unit,
+			products.unit_price unit_price,
+			products.weight weight,
+			products.pack_size pack_size,
+			DATE_FORMAT(products.start_date, '%Y-%M-%D') AS start_date,
+			DATE_FORMAT(products.expiry_date, '%Y-%M-%D') AS expiry_date,
+			products.cost_factor cost_factor,
+			products.commissionrate commissionrate,
+			products.commissionmethod commissionmethod,
+			products.discontinued discontinued,
+			products.sales_start_date AS sales_start_date,
+			products.sales_end_date AS sales_end_date,
+			products.usageunit AS usageunit,
+			products.serialno AS serialno,
+			products.currency AS currency,
+			products.reorderlevel AS reorderlevel,
+			products.website AS website,
+			products.taxclass AS taxclass,
+			products.mfr_part_no AS mfr_part_no,
+			products.vendor_part_no AS vendor_part_no,
+			products.qtyinstock AS qtyinstock,
+			products.productsheet AS productsheet,
+			products.qtyindemand AS qtyindemand
+				FROM ".$this->entity_table."
+				INNER JOIN products ON
+				crmentity.crmid = products.productid
+				INNER JOIN users on users.id=crmentity.smownerid 
+				LEFT JOIN productcf ON
+				productcf.productid = products.productid";
 
 		}
 		else
 		{
-			$query = "SELECT products.productid AS productid,
-				products.productname AS productname,
-				products.productcode AS productcode,
-				products.productcategory AS productcategory,
-				products.manufacturer AS manufacturer,
-				products.product_description AS product_description,
-				products.qty_per_unit AS qty_per_unit,
-				products.unit_price AS unit_price,
-				products.weight AS weight,
-				products.pack_size AS pack_size,
-				DATE_FORMAT(products.start_date, '%Y-%M-%D') AS start_date,
-				DATE_FORMAT(products.expiry_date, '%Y-%M-%D') AS expiry_date,
-				products.cost_factor AS cost_factor,
-				products.commissionrate AS commissionrate,
-				products.commissionmethod AS commissionmethod,
-				products.discontinued AS discontinued,
-				products.sales_start_date AS sales_start_date,
-				products.sales_end_date AS sales_end_date,
-				products.usageunit AS usageunit,
-				products.serialno AS serialno,
-				products.currency AS currency,
-				products.reorderlevel AS reorderlevel,
-				products.website AS website,
-				products.taxclass AS taxclass,
-				products.mfr_part_no AS mfr_part_no,
-				products.vendor_part_no AS vendor_part_no,
-				products.qtyinstock AS qtyinstock,
-				products.productsheet AS productsheet,
-				products.qtyindemand AS qtyindemand
-			FROM ".$this->table_name ."
-			INNER JOIN crmentity
-				ON crmentity.crmid = products.productid 
-			INNER JOIN users
-				ON users.id=crmentity.smownerid ";
+			$query = "SELECT
+				products.productid productid,
+			products.productname productname,
+			products.productcode productcode,
+			products.productcategory productcategory,
+			products.manufacturer manufacturer,
+			products.product_description product_description,
+			products.qty_per_unit qty_per_unit,
+			products.unit_price unit_price,
+			products.weight weight,
+			products.pack_size pack_size,
+			DATE_FORMAT(products.start_date, '%Y-%M-%D') AS start_date,
+			DATE_FORMAT(products.expiry_date, '%Y-%M-%D') AS expiry_date,
+			products.cost_factor cost_factor,
+			products.commissionrate commissionrate,
+			products.commissionmethod commissionmethod,
+			products.discontinued discontinued,
+			products.sales_start_date AS sales_start_date,
+			products.sales_end_date AS sales_end_date,
+			products.usageunit AS usageunit,
+			products.serialno AS serialno,
+			products.currency AS currency,
+			products.reorderlevel AS reorderlevel,
+			products.website AS website,
+			products.taxclass AS taxclass,
+			products.mfr_part_no AS mfr_part_no,
+			products.vendor_part_no AS vendor_part_no,
+			products.qtyinstock AS qtyinstock,
+			products.productsheet AS productsheet,
+			products.qtyindemand AS qtyindemand
+			FROM ".$this->table_name ." INNER JOIN crmentity on 
+			crmentity.crmid = products.productid 
+			INNER JOIN users on users.id=crmentity.smownerid ";
 
 		}
 	
-		  $where_auto = " users.status = 'Active'
-                        AND crmentity.deleted = 0 ";
+		  $where_auto = " users.status='Active'
+                        AND crmentity.deleted=0 ";
 
 
 
 		 if($where != "")
-                        $query .= " WHERE ($where) AND ".$where_auto;
+                        $query .= " where ($where) AND ".$where_auto;
                 else
-                        $query .= " WHERE ".$where_auto;
+                        $query .= " where ".$where_auto;
 
                 if(!empty($order_by))
                         $query .= " ORDER BY $order_by";
 
-		$log->debug("Exiting create_export_query method ...");
                 return $query;
 
 	}

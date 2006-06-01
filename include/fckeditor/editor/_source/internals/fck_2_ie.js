@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fck_2_ie.js
  * 	This is the second part of the "FCK" object creation. This is the main
  * 	object that represents an editor instance.
@@ -53,7 +51,7 @@ FCK.Paste = function()
 	else if ( FCKConfig.AutoDetectPasteFromWord )
 	{
 		var sHTML = FCK.GetClipboardHTML() ;
-		var re = /<\w[^>]*(( class="?MsoNormal"?)|(="mso-))/gi ;
+		var re = /<\w[^>]* class="?MsoNormal"?/gi ;
 		if ( re.test( sHTML ) )
 		{
 			if ( confirm( FCKLang["PasteWordConfirm"] ) )

@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: lt.js
  * 	Lithuanian language file.
  * 
@@ -85,8 +83,6 @@ Find				: "Rasti",
 Replace				: "Pakeisti",
 SpellCheck			: "Rašybos tikrinimas",
 UniversalKeyboard	: "Universali klaviatūra",
-PageBreakLbl		: "Page Break",	//MISSING
-PageBreak			: "Insert Page Break",	//MISSING
 
 Form			: "Forma",
 Checkbox		: "Žymimasis langelis",
@@ -108,7 +104,6 @@ InsertCell			: "Įterpti langelį",
 DeleteCells			: "Šalinti langelius",
 MergeCells			: "Sujungti langelius",
 SplitCell			: "Skaidyti langelius",
-TableDelete			: "Delete Table",	//MISSING
 CellProperties		: "Langelio savybės",
 TableProperties		: "Lentelės savybės",
 ImageProperties		: "Vaizdo savybės",
@@ -136,9 +131,6 @@ UnknownToolbarItem	: "Nežinomas mygtukų juosta elementas \"%1\"",
 UnknownCommand		: "Nežinomas komandos vardas \"%1\"",
 NotImplemented		: "Komanda nėra įgyvendinta",
 UnknownToolbarSet	: "Mygtukų juostos rinkinys \"%1\" neegzistuoja",
-NoActiveX			: "You browser's security settings could limit some features of the editor. You must enable the option \"Run ActiveX controls and plug-ins\". You may experience errors and notice missing features.",	//MISSING
-BrowseServerBlocked : "The resources browser could not be opened. Make sure that all popup blockers are disabled.",	//MISSING
-DialogBlocked		: "It was not possible to open the dialog window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -283,7 +275,6 @@ DlgTableHeight		: "Aukštis",
 DlgTableCellSpace	: "Tarpas tarp langelių",
 DlgTableCellPad		: "Trapas nuo langelio rėmo iki teksto",
 DlgTableCaption		: "Antraštė",
-DlgTableSummary		: "Summary",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Langelio savybės",
@@ -422,7 +413,7 @@ BulletedListProp	: "Suženklinto sąrašo savybės",
 NumberedListProp	: "Numeruoto sąrašo savybės",
 DlgLstType			: "Tipas",
 DlgLstTypeCircle	: "Apskritimas",
-DlgLstTypeDisc		: "Disc",	//MISSING
+DlgLstTypeDisk		: "Diskas",
 DlgLstTypeSquare	: "Kvadratas",
 DlgLstTypeNumbers	: "Skaičiai (1, 2, 3)",
 DlgLstTypeLCase		: "Mažosios raidės (a, b, c)",

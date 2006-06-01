@@ -8,140 +8,74 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('include/utils/utils.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('XTemplate/xtpl.php');
+require_once('include/utils.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
+
+echo '<form action="index.php" method="post" name="new" id="form">';
+echo get_module_title("Security", "Default Organisation Sharing Privileges", true);
 
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-$smarty = new vtigerCRM_Smarty;
+$xtpl=new XTemplate ('modules/Users/OrgSharingDetailView.html');
 
 $defSharingPermissionData = getDefaultSharingAction();
-$access_privileges = array();
+$output .= '<input type="hidden" name="module" value="Users">';
+$output .= '<input type="hidden" name="action" value="OrgSharingEditView">';
+$output .= '<br><input title="Edit" accessKey="C" class="button" type="submit" name="Edit" value="'.$mod_strings['LBL_EDIT_PERMISSIONS'].'"><br><br>';
+$output .= '<TABLE width="60%" border=0 cellPadding=5 cellSpacing=1 class="FormBorder">';
+$output .= '<tr>';
+$output .= '<td class="moduleListTitle" height="20" style="padding:0px 3px 0px 3px;"><b>'.$mod_strings['LBL_ORG_SHARING_PRIVILEGES'].'</b></td>';
+$output .= '<td class="moduleListTitle" height="20" style="padding:0px 3px 0px 3px;"><b>Access Privilege</b></td>';
+$output .=  '</tr>';
+
 $row=1;
 foreach($defSharingPermissionData as $tab_id => $def_perr)
 {
 
 	$entity_name = getTabname($tab_id);
-	if($tab_id == 6)
-    {
-    	$cont_name = getTabname(4);
-        $entity_name .= ' & '.$cont_name;
-    }
-
-	$entity_perr = getDefOrgShareActionName($def_perr);
-
-	$access_privileges[] = $entity_name;
-	$access_privileges[] = $entity_perr;
-	if($entity_perr != 'Private')	
-		$access_privileges[] = $mod_strings['LBL_USR_CAN_ACCESS'] .str_replace('Public:','',$mod_strings[$entity_perr]). $mod_strings['LBL_USR_OTHERS'] . $app_strings[$entity_name];
-	else
-	        $access_privileges[] = $mod_strings['LBL_USR_CANNOT_ACCESS'] . $app_strings[$entity_name];
-	$row++;
-}
-$access_privileges=array_chunk($access_privileges,3);
-$smarty->assign("DEFAULT_SHARING", $access_privileges);
-
-$custom_access = array();
-//Lead Sharing
-$custom_access['Leads'] = getSharingRuleList('Leads');
-
-//Account Sharing
-$custom_access['Accounts'] = getSharingRuleList('Accounts');
-
-//Potential Sharing
-$custom_access['Potentials'] = getSharingRuleList('Potentials');
-
-//HelpDesk Sharing
-$custom_access['HelpDesk'] = getSharingRuleList('HelpDesk');
-
-//Email Sharing
-$custom_access['Emails'] = getSharingRuleList('Emails');
-
-//Campaign Sharing
-$custom_access['Campaigns'] = getSharingRuleList('Campaigns');
-
-//Quotes Sharing
-$custom_access['Quotes'] = getSharingRuleList('Quotes');
-
-//Purchase Order Sharing
-$custom_access['PurchaseOrder'] = getSharingRuleList('PurchaseOrder');
-
-//Sales Order Sharing
-$custom_access['SalesOrder'] = getSharingRuleList('SalesOrder');
-
-//Invoice Sharing
-$custom_access['Invoice'] = getSharingRuleList('Invoice');
-
-
-
-$smarty->assign("MODSHARING", $custom_access);
-
-function getSharingRuleList($module)
-{
-	global $adb;
-
-	$tabid=getTabid($module);
-	$dataShareTableArray=getDataShareTableandColumnArray();
-	
-	$i=1;
-	$access_permission = array();
-	foreach($dataShareTableArray as $table_name => $colName)
-	{
-
-		$colNameArr=explode("::",$colName);
-		$query = "select ".$table_name.".* from ".$table_name." inner join datashare_module_rel on ".$table_name.".shareid=datashare_module_rel.shareid where datashare_module_rel.tabid=".$tabid;
-		$result=$adb->query($query);
-		$num_rows=$adb->num_rows($result);
-
-		$share_colName=$colNameArr[0];
-		$share_modType=getEntityTypeFromCol($share_colName);
-
-		$to_colName=$colNameArr[1];
-		$to_modType=getEntityTypeFromCol($to_colName);
-
-		for($j=0;$j<$num_rows;$j++)
+	if($entity_name != "Notes" && $entity_name != "Products" && $entity_name != "Faq" && $entity_name != "Vendor" && $entity_name != "PriceBook" && $entity_name != 'Events' && $entity_name != 'SalesOrder')
+	{	
+		if($def_perr == 0)
 		{
-			$shareid=$adb->query_result($result,$j,"shareid");
-			$share_id=$adb->query_result($result,$j,$share_colName);
-			$to_id=$adb->query_result($result,$j,$to_colName);
-			$permission = $adb->query_result($result,$j,'permission');
-
-			$share_ent_disp = getEntityDisplayLink($share_modType,$share_id);
-			$to_ent_disp = getEntityDisplayLink($to_modType,$to_id);
-
-			if($permission == 0)
-			{
-				$perr_out = 'Read Only';
-			}
-			elseif($permission == 1)
-			{
-				$perr_out = 'Read / Write';
-			}
-
-			$access_permission [] = $shareid;
-			$access_permission [] = $share_ent_disp;
-			$access_permission [] = $to_ent_disp;
-			$access_permission [] = $perr_out;
-
-			$i++;
+			$entity_perr = $mod_strings['LBL_READ_ONLY'];
 		}
-	
+		elseif($def_perr == 1)
+		{
+			$entity_perr = $mod_strings['LBL_EDIT_CREATE_ONLY'];
+		}	
+		elseif($def_perr == 2)
+		{
+			$entity_perr = $mod_strings['LBL_READ_CREATE_EDIT_DEL'];
+		}
+		elseif($def_perr == 3)
+		{
+			$entity_perr = $mod_strings['LBL_PRIVATE'];
+		}
+
+		if ($row%2==0)
+			$output .=   '<tr class="evenListRow">';
+		else
+			$output .=   '<tr class="oddListRow">';
+
+		$output .=   '<TD width="40%" height="21" noWrap style="padding:0px 3px 0px 3px;">'.$entity_name.'</TD>';
+		$output .=  '<TD width="60%" height="21" noWrap style="padding:0px 3px 0px 3px;">'.$entity_perr.'</TD>';
+		$output .=  '</tr>';
+
+		$row++;
 	}
-	if(is_array($access_permission))
-		$access_permission = array_chunk($access_permission,4);
-	return $access_permission;
 }
 
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("CMOD", $mod_strings);
-$smarty->assign("MOD", return_module_language($current_language,'Settings'));
 
-$smarty->display("OrgSharingDetailView.tpl");
+$output .=  '</TABLE></form><br>';
+
+$xtpl->assign("DEFAULT_SHARING", $output);
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->parse("main");
+$xtpl->out("main");
 ?>

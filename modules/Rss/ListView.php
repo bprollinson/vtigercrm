@@ -8,13 +8,13 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
+require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
-require_once('Smarty_setup.php');
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/Rss/Rss.php');
 global $app_strings;
 global $app_list_strings;
@@ -29,33 +29,24 @@ global $theme;
 global $cache_dir;
 // focus_list is the means of passing data to a ListView.
 global $focus_list;
-global $adb;
 
-$oRss = new vtigerRSS();
-if(isset($_REQUEST[folders]) && $_REQUEST[folders] == 'true')
-{
-	require_once("modules/".$currentModule."/Forms.php");
-	echo get_rssfeeds_form();
-	die;
-}
 if(isset($_REQUEST[record]))
 {
 	$recordid = $_REQUEST[record];
 }
 
-$rss_form = new vtigerCRM_Smarty;
+$rss_form=new XTemplate ('modules/Rss/ListView.html');
 $rss_form->assign("MOD", $mod_strings);
 $rss_form->assign("APP", $app_strings);
-$rss_form->assign("IMAGE_PATH",$image_path);
-$rss_form->assign("MODULE", $currentModule);
-$rss_form->assign("CATEGORY", getParenttab());
+$rss_form->assign("IMAGEPATH",$image_path);
 
 //<<<<<<<<<<<<<<lastrss>>>>>>>>>>>>>>>>>>//
 //$url = 'http://forums/rss.php?name=forums&file=rss';
 //$url = 'http://forums/weblog_rss.php?w=202';
+$oRss = new vtigerRSS();
 if(isset($_REQUEST[record]))
 {
-    $recordid = $_REQUEST[record];
+        $recordid = $_REQUEST[record];
 	$url = $oRss->getRssUrlfromId($recordid);
 	if($oRss->setRSSUrl($url))
 	{
@@ -64,31 +55,26 @@ if(isset($_REQUEST[record]))
 	{
         	$rss_html = "<strong>No RSS Feeds are selected</strong>";
 	}
-	$rss_form->assign("TITLE",gerRssTitle($recordid));
-	$rss_form->assign("ID",$recordid);
 }else
 {
-	$rss_form->assign("TITLE",gerRssTitle());
 	$rss_html = $oRss->getStarredRssHTML();
-	$query = "select rssid from rss where starred=1";
-	$result = $adb->query($query);
-	$recordid = $adb->query_result($result,0,'rssid');
-	$rss_form->assign("ID",$recordid);
-	$rss_form->assign("DEFAULT",'yes');
 }
-if($currentModule == "Rss")
-{
-	require_once("modules/".$currentModule."/Forms.php");
-	if (function_exists('get_rssfeeds_form'))
-	{
-		$rss_form->assign("RSSCATEG", $oRss->getRsscategory_html());
-		$rss_form->assign("RSSFEEDS", get_rssfeeds_form());
-	}
-}
+//$all_rss_html = $oRss->getAllRssFeeds();
+//$stared_rss_html = $oRss->getStaredRssFeeds();
+//$crm_rss_html = $oRss->getCRMRssFeeds();
+//$category_rss_html = $oRss->getRSSCategoryHTML();
+//$top_stared_rss_html = $oRss->getTopStarredRSSFeeds();
+//print_r($rss_hdr_html);
+//$rss_form->assign("TOPSTARSSFEEDS",$top_stared_rss_html);
+//$rss_form->assign("RSSHEADERDETAILS",$rss_hdr_html);
 $rss_form->assign("RSSDETAILS",$rss_html);
+//$rss_form->assign("ALLRSSFEEDS",$all_rss_html);
+//$rss_form->assign("STAREDFEEDS",$stared_rss_html);
+//$rss_form->assign("CRMRSSFEEDS",$crm_rss_html);
+//$rss_form->assign("CATEGORYFEEDS",$category_rss_html);
 //<<<<<<<<<<<<<<lastrss>>>>>>>>>>>>>>>>>>//
-if(isset($_REQUEST['directmode']) && $_REQUEST['directmode'] == 'ajax')
-	$rss_form->display("RssFeeds.tpl");
-else
-	$rss_form->display("Rss.tpl");
+
+$rss_form->parse("main");
+$rss_form->out("main");
+
 ?>

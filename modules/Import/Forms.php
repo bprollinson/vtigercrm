@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/Forms.php,v 1.16 2005/05/03 13:18:55 saraj Exp $
  * Description:  Contains a variety of utility functions used to display UI 
  * components such as form headers and footers.  Intended to be modified on a per 
  * theme basis.
@@ -188,7 +188,7 @@ echo '<br> translated fields : ';print_r($translated_fields);
 	require_once('include/database/PearDatabase.php');
 	global $adb;
 
-	$output = "<select id=\"colnum" . $colnum ."\" name=\"colnum" . $colnum ."\">\n";
+	$output = "<select name=\"colnum" . $colnum ."\">\n";
 	$output .= "<option value=\"-1\">". $mod_strings['LBL_DONT_MAP'] . "</option>";
 
 	$count = 0;

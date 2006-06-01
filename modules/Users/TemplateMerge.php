@@ -8,7 +8,7 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 require_once('modules/Emails/templates/testemailtemplateusage.php');
 $replacedString = substituteTokens("".$_REQUEST["templatename"],$globals);
 ?>
@@ -19,7 +19,7 @@ $replacedString = substituteTokens("".$_REQUEST["templatename"],$globals);
 </form>
 <script language="javascript">
 opener.document.EditView.description.value=document.frmrepstr.repstr.value
-//opener.oFCKeditor.ReplaceTextarea() ;
+opener.oFCKeditor.ReplaceTextarea() ;
 window.close()
 </script>
 

@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Rss/language/en_us.lang.php,v 1.1 2005/05/20 07:12:23 venkatraj Exp $
  * Description:  Defines the English language pack for the Account module.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -30,15 +30,6 @@ $mod_strings = Array(
 
 'LBL_STARRED_RSS'=>'Starred Feeds',
 'LBL_POP_CRM_RSS'=>'Popular CRM Related Feeds',
-'LBL_ALL_RSS_FEEDS'=>'All RSS Feeds',
-
-'LBL_CATEGORY'=>'Category :',
-'LBL_FEED'=>'Feed :',
-'LBL_ADD_RSS_FEED'=>'Add Rss Feed',
-'LBL_DELETE_BUTTON'=>'Delete',
-'LBL_SET_DEFAULT_BUTTON'=>'Set As Default',
-'LBL_FEEDS_LIST'=>'Feeds list from :'
-
-
+'LBL_ALL_RSS_FEEDS'=>'All RSS Feeds'
 );
 ?>

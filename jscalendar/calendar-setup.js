@@ -19,7 +19,7 @@
  * than modifying calendar.js itself).
  */
 
-// $Id$
+// $Id: calendar-setup.js,v 1.16 2005/05/03 13:18:42 saraj Exp $
 
 /**
  *  This function "patches" an input field (or other element) to use a calendar

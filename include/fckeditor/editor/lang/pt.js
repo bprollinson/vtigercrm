@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: pt.js
  * 	Portuguese language file.
  * 
@@ -43,8 +41,8 @@ RemoveLink			: "Eliminar Hiperligação",
 Anchor				: " Inserir/Editar Âncora",
 InsertImageLbl		: "Imagem",
 InsertImage			: "Inserir/Editar Imagem",
-InsertFlashLbl		: "Flash",
-InsertFlash			: "Inserir/Editar Flash",
+InsertFlashLbl		: "Flash",	//MISSING
+InsertFlash			: "Insert/Edit Flash",	//MISSING
 InsertTableLbl		: "Tabela",
 InsertTable			: "Inserir/Editar Tabela",
 InsertLineLbl		: "Linha",
@@ -85,8 +83,6 @@ Find				: "Procurar",
 Replace				: "Substituir",
 SpellCheck			: "Verificação Ortográfica",
 UniversalKeyboard	: "Teclado Universal",
-PageBreakLbl		: "Page Break",	//MISSING
-PageBreak			: "Insert Page Break",	//MISSING
 
 Form			: "Formulário",
 Checkbox		: "Caixa de Verificação",
@@ -108,18 +104,17 @@ InsertCell			: "Inserir Célula",
 DeleteCells			: "Eliminar Célula",
 MergeCells			: "Unir Células",
 SplitCell			: "Dividir Célula",
-TableDelete			: "Delete Table",	//MISSING
 CellProperties		: "Propriedades da Célula",
 TableProperties		: "Propriedades da Tabela",
 ImageProperties		: "Propriedades da Imagem",
-FlashProperties		: "Propriedades do Flash",
+FlashProperties		: "Flash Properties",	//MISSING
 
 AnchorProp			: "Propriedades da Âncora",
 ButtonProp			: "Propriedades do Botão",
 CheckboxProp		: "Propriedades da Caixa de Verificação",
 HiddenFieldProp		: "Propriedades do Campo Escondido",
 RadioButtonProp		: "Propriedades do Botão de Opção",
-ImageButtonProp		: "Propriedades do Botão de imagens",
+ImageButtonProp		: " Propriedades do Botão de imagens",
 TextFieldProp		: "Propriedades do Campo de Texto",
 SelectionFieldProp	: "Propriedades da Caixa de Combinação",
 TextareaProp		: "Propriedades da Área de Texto",
@@ -136,9 +131,6 @@ UnknownToolbarItem	: "Item de barra desconhecido \"%1\"",
 UnknownCommand		: "Nome de comando desconhecido \"%1\"",
 NotImplemented		: "Comando não implementado",
 UnknownToolbarSet	: "Nome de barra \"%1\" não definido",
-NoActiveX			: "You browser's security settings could limit some features of the editor. You must enable the option \"Run ActiveX controls and plug-ins\". You may experience errors and notice missing features.",	//MISSING
-BrowseServerBlocked : "The resources browser could not be opened. Make sure that all popup blockers are disabled.",	//MISSING
-DialogBlocked		: "It was not possible to open the dialog window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -147,8 +139,8 @@ DlgBtnClose			: "Fechar",
 DlgBtnBrowseServer	: "Navegar no Servidor",
 DlgAdvancedTag		: "Avançado",
 DlgOpOther			: "&lt;Outro&gt;",
-DlgInfoTab			: "Informação",
-DlgAlertUrl			: "Por favor introduza o URL",
+DlgInfoTab			: "Info",	//MISSING
+DlgAlertUrl			: "Please insert the URL",	//MISSING
 
 // General Dialogs Labels
 DlgGenNotSet		: "&lt;Não definido&gt;",
@@ -196,14 +188,14 @@ DlgImgAlertUrl		: "Por favor introduza o URL da imagem",
 DlgImgLinkTab		: "Hiperligação",
 
 // Flash Dialog
-DlgFlashTitle		: "Propriedades do Flash",
-DlgFlashChkPlay		: "Reproduzir automaticamente",
-DlgFlashChkLoop		: "Loop",
-DlgFlashChkMenu		: "Permitir Menu do Flash",
-DlgFlashScale		: "Escala",
-DlgFlashScaleAll	: "Mostrar tudo",
-DlgFlashScaleNoBorder	: "Sem Limites",
-DlgFlashScaleFit	: "Tamanho Exacto",
+DlgFlashTitle		: "Flash Properties",	//MISSING
+DlgFlashChkPlay		: "Auto Play",	//MISSING
+DlgFlashChkLoop		: "Loop",	//MISSING
+DlgFlashChkMenu		: "Enable Flash Menu",	//MISSING
+DlgFlashScale		: "Scale",	//MISSING
+DlgFlashScaleAll	: "Show all",	//MISSING
+DlgFlashScaleNoBorder	: "No Border",	//MISSING
+DlgFlashScaleFit	: "Exact Fit",	//MISSING
 
 // Link Dialog
 DlgLnkWindowTitle	: "Hiperligação",
@@ -250,8 +242,8 @@ DlgLnkPopHeight		: "Altura",
 DlgLnkPopLeft		: "Posição Esquerda",
 DlgLnkPopTop		: "Posição Direita",
 
-DlnLnkMsgNoUrl		: "Por favor introduza a hiperligação URL",
-DlnLnkMsgNoEMail	: "Por favor introduza o endereço de e-mail",
+DlnLnkMsgNoUrl		: "Por favor insira a hiperligação URL",
+DlnLnkMsgNoEMail	: "Por favor insira o endereço de e-mail",
 DlnLnkMsgNoAnchor	: "Por favor seleccione uma referência",
 
 // Color Dialog
@@ -283,7 +275,6 @@ DlgTableHeight		: "Altura",
 DlgTableCellSpace	: "Esp. e/células",
 DlgTableCellPad		: "Esp. interior",
 DlgTableCaption		: "Título",
-DlgTableSummary		: "Summary",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Propriedades da Célula",
@@ -334,10 +325,10 @@ PasteErrorCopy	: "A configuração de segurança do navegador não permite a exe
 PasteAsText		: "Colar como Texto Simples",
 PasteFromWord	: "Colar do Word",
 
-DlgPasteMsg2	: "Por favor, cole dentro da seguinte caixa usando o teclado (<STRONG>Ctrl+V</STRONG>) e prima <STRONG>OK</STRONG>.",
-DlgPasteIgnoreFont		: "Ignorar da definições do Tipo de Letra ",
-DlgPasteRemoveStyles	: "Remover as definições de Estilos",
-DlgPasteCleanBox		: "Caixa de Limpeza",
+DlgPasteMsg2	: "Please paste inside the following box using the keyboard (<STRONG>Ctrl+V</STRONG>) and hit <STRONG>OK</STRONG>.",	//MISSING
+DlgPasteIgnoreFont		: "Ignore Font Face definitions",	//MISSING
+DlgPasteRemoveStyles	: "Remove Styles definitions",	//MISSING
+DlgPasteCleanBox		: "Clean Up Box",	//MISSING
 
 
 // Color Picker
@@ -422,7 +413,7 @@ BulletedListProp	: "Propriedades da Marca",
 NumberedListProp	: "Propriedades da Numeração",
 DlgLstType			: "Tipo",
 DlgLstTypeCircle	: "Circulo",
-DlgLstTypeDisc		: "Disc",	//MISSING
+DlgLstTypeDisk		: "Disco",
 DlgLstTypeSquare	: "Quadrado",
 DlgLstTypeNumbers	: "Números (1, 2, 3)",
 DlgLstTypeLCase		: "Letras Minúsculas (a, b, c)",

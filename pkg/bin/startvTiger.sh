@@ -96,7 +96,7 @@ if [ $exit_status -ne 0 ]; then
 		echo ""
 		#chown -R nobody .
 		#chgrp -R nobody .
-		./bin/mysqld --skip-bdb --log-queries-not-using-indexes --log-slow-admin-statements --log-error --low-priority-updates --log-slow-queries=vtslowquery.log --basedir=$MYSQL_HOME --datadir=$MYSQL_HOME/data --socket=$mysql_socket --tmpdir=$MYSQL_HOME/tmp --user=root --port=$mysql_port --default-table-type=INNODB > /dev/null &
+		./bin/mysqld_safe --basedir=$MYSQL_HOME --datadir=$MYSQL_HOME/data --socket=$mysql_socket --tmpdir=$MYSQL_HOME/tmp --user=root --port=$mysql_port --default-table-type=INNODB > /dev/null &
 		sleep 8
 		echo "select 1"| ./bin/mysql --user=$mysql_username --password=$mysql_password  --port=$mysql_port --socket=$mysql_socket > /dev/null
 		if [ $? -ne 0 ]; then
@@ -111,20 +111,20 @@ if [ $exit_status -ne 0 ]; then
 		
 fi
 echo ""
-echo "Checking if the vtigercrm5_beta database already exists"
+echo "Checking if the vtigercrm4_2_4 database already exists"
 echo ""
-echo "select 1" | ./bin/mysql --user=$mysql_username --password=$mysql_password  --port=$mysql_port --socket=$mysql_socket -D vtigercrm5_beta >/dev/null
+echo "select 1" | ./bin/mysql --user=$mysql_username --password=$mysql_password  --port=$mysql_port --socket=$mysql_socket -D vtigercrm4_2_4 >/dev/null
 if [ $? -ne 0 ]; then
 	echo ""
-	echo "Database vtigercrm5_beta does not exist. Creating database vtigercrm5_beta"
+	echo "Database vtigercrm4_2_4 does not exist. Creating database vtigercrm4_2_4"
 	echo ""
-	./bin/mysql --user=$mysql_username --password=$mysql_password  --port=$mysql_port --socket=$mysql_socket -e "create database if not exists vtigercrm5_beta"
+	./bin/mysql --user=$mysql_username --password=$mysql_password  --port=$mysql_port --socket=$mysql_socket -e "create database if not exists vtigercrm4_2_4"
 fi
 
 host=`hostname`
 echo "*****************************************************************************************************"
 if [ $apache_bundled == 'false' ];then
-	echo "Please access the product at http://${host}:<apache port>/vtigerCRM5_beta/vtigerCRM"
+	echo "Please access the product at http://${host}:<apache port>/vtigerCRM4_2/vtigerCRM"
 else
 	echo "Please access the product at http://${host}:<apache port>"
 echo "*****************************************************************************************************"

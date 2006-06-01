@@ -12,10 +12,14 @@
 require_once('include/database/PearDatabase.php');
 global $adb;
 
+//if($_REQUEST['module']=='Users')
+//	$sql = "insert into salesmanactivityrel values (". $_REQUEST["entityid"] .",".$_REQUEST["parid"] .")";
+//else
 if($_REQUEST['destination_module']=='Products')
 {
 	if($_REQUEST['smodule']=='VENDOR')
 	{
+		#include('modules/Products/SaveVendor.php');
 		$sql = "update products set vendor_id=".$_REQUEST['parid']." where productid=".$_REQUEST['entityid'];
 		$adb->query($sql);
 	}
@@ -30,7 +34,9 @@ if($_REQUEST['destination_module']=='Contacts')
 }
 
 
- header("Location:index.php?action=DetailView&module=Vendors&record=".$_REQUEST["parid"]);
+	#$sql = "insert into seproductsrel values (". $_REQUEST["parid"] .",".$_REQUEST["entityid"] .")";
+#$adb->query($sql);
+ header("Location:index.php?action=VendorDetailView&module=Products&record=".$_REQUEST["parid"]);
 
 
 

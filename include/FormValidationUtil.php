@@ -16,8 +16,6 @@
 
 function getDBValidationData($tablearray,$tabid='')
 {
-  global $log;
-  $log->debug("Entering getDBValidationData(".$tablearray.",".$tabid.") method ...");
   $sql = '';
   $tab_con = "";
   $numValues = count($tablearray);
@@ -67,7 +65,6 @@ function getDBValidationData($tablearray,$tabid='')
   }
 
   
-  $log->debug("Exiting getDBValidationData method ...");
   return $fieldName_array;
   
 

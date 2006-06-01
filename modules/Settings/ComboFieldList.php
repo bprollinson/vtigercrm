@@ -9,6 +9,7 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
+
 require_once('include/database/PearDatabase.php');
 require_once('database/DatabaseConnection.php');
 require_once('XTemplate/xtpl.php');
@@ -19,6 +20,8 @@ global $app_list_strings;
 
 echo get_module_title("Settings",$mod_strings['LBL_MODULE_NAME'].": ".$mod_strings[$_REQUEST['fld_module']].$mod_strings['PicklistFields'], true);
 echo '<BR>';
+//echo get_form_header("Standard Fields", "", false );
+
 
 global $theme;
 $theme_path="themes/".$theme."/";
@@ -110,7 +113,7 @@ elseif($fld_module == 'Quotes')
 			);
 	$standCustFld = getStdOutput($custFldArray, $mod_strings);
 }
-elseif($fld_module == 'PurchaseOrder')
+elseif($fld_module == 'Orders')
 {
 	$custFldArray = Array($mod_strings['LBL_CARRIER']=>'carrier'
 			);
@@ -124,7 +127,21 @@ elseif($fld_module == 'SalesOrder')
 }
 
 
-$tabid = getTabid($fldmodule);
+
+function fetchTabIDVal($fldmodule)
+{
+
+  global $adb;
+  $query = "select tabid from tab where tablabel='" .$fldmodule ."'";
+  $tabidresult = $adb->query($query);
+  return $adb->query_result($tabidresult,0,"tabid");
+}
+
+$tabid = fetchTabIDVal($fldmodule);
+
+
+
+
 
 //Standard PickList Fields
 function getStdOutput($custFldArray, $mod_strings)
@@ -199,15 +216,17 @@ $xtpl->out("main");
 
 function getUserFldArray($fld_module)
 {
+	global $adb;
 	$user_fld = Array();
-	$query = "select * from field where generatedtype=2 and tabid=".getTabid($fld_module)." and uitype IN (15,16)";
-        $result = mysql_query($query);
-	$noofrows = mysql_num_rows($result);
+	$query = "select * from field where generatedtype=2 and tabid=".fetchTabIDVal($fld_module)." and uitype IN (15,16)";
+//        echo $query;
+        $result = $adb->query($query);
+	$noofrows = $adb->getRowCount($result);
         if($noofrows > 0)
         {
           for($i=0; $i<$noofrows; $i++)
           {
-            $user_fld[mysql_result($result,$i,"fieldlabel")] = mysql_result($result,$i,"columnname");	
+            $user_fld[$adb->query_result($result,$i,"fieldlabel")] = $adb->query_result($result,$i,"columnname");
           }
         }
           return $user_fld;

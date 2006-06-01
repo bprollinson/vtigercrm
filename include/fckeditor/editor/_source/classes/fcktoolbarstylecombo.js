@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fcktoolbarstylecombo.js
  * 	FCKToolbarPanelButton Class: Handles the Fonts combo selector.
  * 
@@ -17,12 +15,9 @@
  * 		Frederico Caldeira Knabben (fredck@fckeditor.net)
  */
 
-var FCKToolbarStyleCombo = function( tooltip, style )
+var FCKToolbarStyleCombo = function()
 {
-	this.Command	= FCKCommands.GetCommand( 'Style' ) ;
-	this.Label		= this.GetLabel() ;
-	this.Tooltip	= tooltip ? tooltip : this.Label ;
-	this.Style		= style ? style : FCK_TOOLBARITEM_ICONTEXT ;
+	this.Command = FCKCommands.GetCommand( 'Style' ) ;
 }
 
 // Inherit from FCKToolbarSpecialCombo.
@@ -37,8 +32,6 @@ FCKToolbarStyleCombo.prototype.CreateItems = function( targetSpecialCombo )
 {
 	// Add the Editor Area CSS to the Styles panel so the style classes are previewed correctly.
 	FCKTools.AppendStyleSheet( targetSpecialCombo._Panel.Document, FCKConfig.EditorAreaCSS ) ;
-	
-	targetSpecialCombo._Panel.Document.body.className += ' ForceBaseFont' ;
 
 	// For some reason Gecko is blocking inside the "RefreshVisibleItems" function.
 	if ( ! FCKBrowserInfo.IsGecko )
@@ -48,13 +41,10 @@ FCKToolbarStyleCombo.prototype.CreateItems = function( targetSpecialCombo )
 	for ( var s in this.Command.Styles )
 	{
 		var oStyle = this.Command.Styles[s] ;
-		var oItem ;
-		
 		if ( oStyle.IsObjectElement )
-			oItem = targetSpecialCombo.AddItem( s, s ) ;
+			var oItem = targetSpecialCombo.AddItem( s, s ) ;
 		else
-			oItem = targetSpecialCombo.AddItem( s, oStyle.GetOpenerTag() + s + oStyle.GetCloserTag() ) ;
-			
+			var oItem = targetSpecialCombo.AddItem( s, oStyle.GetOpenerTag() + s + oStyle.GetCloserTag() ) ;
 		oItem.Style = oStyle ;
 	}
 }

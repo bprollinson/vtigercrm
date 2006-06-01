@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fckdialog_gecko.js
  * 	Dialog windows operations. (Gecko specific implementations)
  * 
@@ -19,8 +17,8 @@
 
 FCKDialog.Show = function( dialogInfo, dialogName, pageUrl, dialogWidth, dialogHeight, parentWindow, resizable )
 {
-	var iTop  = (FCKConfig.ScreenHeight - dialogHeight) / 2 ;
-	var iLeft = (FCKConfig.ScreenWidth  - dialogWidth)  / 2 ;
+	var iTop  = (screen.height - dialogHeight) / 2 ;
+	var iLeft = (screen.width  - dialogWidth)  / 2 ;
 
 	var sOption  = "location=no,menubar=no,toolbar=no,dependent=yes,dialog=yes,minimizable=no,modal=yes,alwaysRaised=yes" +
 		",resizable="  + ( resizable ? 'yes' : 'no' ) +
@@ -33,13 +31,6 @@ FCKDialog.Show = function( dialogInfo, dialogName, pageUrl, dialogWidth, dialogH
 		parentWindow = window ;
 	
 	var oWindow = parentWindow.open( '', 'FCKeditorDialog_' + dialogName, sOption, true ) ;
-	
-	if ( !oWindow )
-	{
-		alert( FCKLang.DialogBlocked ) ;
-		return ;
-	}
-		
 	oWindow.moveTo( iLeft, iTop ) ;
 	oWindow.resizeTo( dialogWidth, dialogHeight ) ;
 	oWindow.focus() ;
@@ -74,10 +65,13 @@ FCKDialog.CheckFocus = function()
 	// It is strange, but we have to check the FCKDialog existence to avoid a 
 	// random error: "FCKDialog is not defined".
 	if ( typeof( FCKDialog ) != "object" )
-		return false ;
+		return ;
 	
 	if ( FCKDialog.Window && !FCKDialog.Window.closed )
+	{
 		FCKDialog.Window.focus() ;
+		return false ;
+	}
 	else
 	{
 		// Try/Catch must be used to avoit an error when using a frameset 
@@ -94,5 +88,4 @@ FCKDialog.CheckFocus = function()
 		catch (e)
 		{}
 	}
-	return false ;
 }

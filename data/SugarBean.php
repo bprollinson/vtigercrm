@@ -23,8 +23,8 @@
 include_once('config.php');
 require_once('include/logging.php');
 require_once('data/Tracker.php');
-require_once('include/utils/utils.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('include/utils.php');
+require_once('modules/Users/UserInfoUtil.php');
 require_once('include/database/PearDatabase.php');
 
 class SugarBean
@@ -40,6 +40,8 @@ class SugarBean
  * Contributor(s): ______________________________________..
      */
 	
+	var $new_schema = false;
+	var $new_with_id = false;
 
 	function save($module_name= '') 
 	{
@@ -117,7 +119,7 @@ class SugarBean
 				/*else
 					$query = $query.", ";
 	
-				$query = $query.$field."='".$adb->quote(from_html($this->$field,$isUpdate))."'";
+				$query = $query.$field."='".PearDatabase::quote(from_html($this->$field,$isUpdate))."'";
 				*/
 				if($isUpdate)
 				{
@@ -152,9 +154,23 @@ class SugarBean
 	        	$this->id = $this->db->getOne("SELECT LAST_INSERT_ID()" );
 		}
 	        
+		// let subclasses save related field changes
+		$this->save_relationship_changes($isUpdate);
 		return $this->id;
 	}
 
+    /** 
+     * This function is a good location to save changes that have been made to a relationship.
+     * This should be overriden in subclasses that have something to save.
+     * param $is_update true if this save is an update.
+ * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________..
+     */
+    function save_relationship_changes($is_update)
+    {
+    	
+    }
     
     /**
      * This function retrieves a record of the appropriate type from the DB.
@@ -168,9 +184,6 @@ class SugarBean
 	 function retrieve($id = -1, $encodeThis=true) {
 		if ($id == -1) {
 			$id = $this->id;
-		}
-		if($id == '') {
-			return null;
 		}
 // GS porting crmentity
 $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
@@ -246,6 +259,22 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 		return $query;
 	}
 	
+	function create_lead_list_query($order_by, $where)
+	{
+                $query = "select * from $this->table_name left join leadcf on leads.id=leadcf.leadid ";
+		//$query = "SELECT * FROM $this->table_name ";
+
+		if($where != "")
+			$query .= "where ($where) AND deleted=0 AND converted=0";
+		else
+			$query .= "where deleted=0 AND converted=0";
+
+		if($order_by != "")
+			$query .= " ORDER BY $order_by";
+
+		return $query;
+	}
+
 
 	function process_list_query($query, $row_offset, $limit= -1, $max_per_page = -1)
 	{
@@ -290,7 +319,7 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 
 				$this->fill_in_additional_list_fields();
 
-				$list[] = clone($this);   //added clone to support PHP5
+				$list[] = $this;
 			}
 		}
 
@@ -327,7 +356,7 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 
 				$this->fill_in_additional_list_fields();
 
-				$list[] = clone($this);         //added clone tosupport PHP5
+				$list[] = $this;
 			}
 		}
 
@@ -360,6 +389,17 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 
 
 	/**
+	 * return the summary text that should show up in the recent history list for this object.
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	 */
+	function get_summary_text()
+	{
+		return "Base Implementation.  Should be overridden.";
+	}
+
+	/**
 	 * This is designed to be overridden and add specific fields to each record.  This allows the generic query to fill in
 	 * the major fields, and then targetted queries to get related fields and add them to the record.  The contact's account for instance.
 	 * This method is only used for populating extra fields in lists
@@ -383,6 +423,19 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 	{
 	}
 
+	/**
+	 * This is a helper class that is used to quickly created indexes when createing tables
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	 */
+	function create_index($query)
+	{
+		$this->log->info($query);
+
+		$result =& $this->db->query($query, true, "Error creating index:");
+	}
+
 	/** This function should be overridden in each module.  It marks an item as deleted.
 	* If it is not overridden, then marking this type of item is not allowed
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
@@ -402,6 +455,78 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 
 	}
 
+	/** This function deletes relationships to this object.  It should be overridden to handle the relationships of the specific object.
+	* This function is called when the item itself is being deleted.  For instance, it is called on Contact when the contact is being deleted.
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	*/
+	function mark_relationships_deleted($id)
+	{
+
+	}
+
+	/**
+	 * This function is used to execute the query and create an array template objects from the resulting ids from the query.
+	 * It is currently used for building sub-panel arrays.
+	 * param $query - the query that should be executed to build the list
+	 * param $template - The object that should be used to copy the records.
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	 */
+	function build_related_list($query, &$template)
+	{
+
+		$this->log->debug("Finding linked records $this->object_name: ".$query);
+
+		$result =& $this->db->query($query, true);
+
+		$list = Array();
+
+		while($row = $this->db->fetchByAssoc($result))
+		{
+			$template->retrieve($row['id']);
+
+			// this copies the object into the array
+			$list[] = $template;
+		}
+
+		return $list;
+	}
+
+	/**
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	 */
+	function build_related_list2($query, &$template, &$field_list)
+	{
+
+		$this->log->debug("Finding linked values $this->object_name: ".$query);
+
+		$result =& $this->db->query($query, true);
+
+		$list = Array();
+
+		while($row = $this->db->fetchByAssoc($result))
+		{
+			// Create a blank copy
+			$copy = $template;
+			
+			foreach($field_list as $field)
+			{
+				// Copy the relevant fields
+				$copy->$field = $row[$field];
+				
+			}	
+
+			// this copies the object into the array
+			$list[] = $copy;
+		}
+
+		return $list;
+	}
 
 	/* This is to allow subclasses to fill in row specific columns of a list view form */
 	function list_view_parse_additional_sections(&$list_form)
@@ -440,7 +565,7 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 				$where_clause .= " AND ";
 			} 
 
-			$where_clause .= "$name = ".$adb->quote($value)."";
+			$where_clause .= "$name = ".PearDatabase::quote($value)."";
 		} 
 
 		$where_clause .= " AND deleted=0";
@@ -507,13 +632,84 @@ $query = "SELECT * FROM $this->table_name WHERE $this->module_id = '$id'";
 				$where_clause .= " or";
 			} 
 
-			$where_clause .= "$name = ".$adb->quote($value)."";
+			$where_clause .= "$name = ".PearDatabase::quote($value)."";
 		} 
 
 		$where_clause .= " AND deleted=0";
 		return $where_clause;
 	}
 
+/*	
+	function get_msgboard_data($orderby = "" , $where = "" ,$row_offset = 0)
+ 	{
+ 	         $response = $this->get_messageboard_list($order_by, $where , $row_offset,$limit= -1,$max_per_page = -1);
+ 	         return $response;
+ 	}
+ 	
+  function get_messageboard_list($orderby, $where, $row_offset,$limit= -1, $max_per_page = -1)
+  {
+    global $list_max_entries_per_page;
+
+		if(isset($_REQUEST['query']))
+			{
+$sql='select distinct(t.topic_id), t.topic_title, c.cat_title, first.username as author, t.topic_replies,FROM_UNIXTIME(p.post_time) as post_time from phpbb_posts p, phpbb_topics t, phpbb_forums f, phpbb_categories c, phpbb_users first where t.topic_id = p.topic_id and p.post_id=t.topic_last_post_id and t.topic_poster=first.user_id and t.forum_id=f.forum_id and f.cat_id=c.cat_id and ' .$where;
+	
+//				$sql='select distinct(t.topic_title),c.cat_title,t.topic_poster, t.topic_replies,FROM_UNIXTIME(p.post_time) as post_time, t.topic_replies from phpbb_posts p, phpbb_topics t, phpbb_forums f, phpbb_categories c,phpbb_users u where t.forum_id=f.forum_id and f.cat_id=c.cat_id and ' .$where ;
+			}
+			else
+			{
+				$sql='select t.topic_id,p.post_id,t.topic_title,FROM_UNIXTIME(p.post_time) as post_time, f.forum_name , u.username , t.topic_replies from phpbb_posts p, phpbb_topics t, phpbb_forums f, phpbb_users u where p.topic_id=t.topic_id and t.forum_id=f.forum_id and u.user_id=t.topic_poster ORDER BY p.post_time ';
+ 	 		}
+ 	                 $result = mysql_query($sql);
+ 	                 $list = Array();
+                        
+                         if($max_per_page == -1)
+                         {
+                           $max_per_page 	= $list_max_entries_per_page;
+                         }
+	
+ 	                 $rows_found =  $this->db->getRowCount($result);
+ 	                 $previous_offset = $row_offset - $max_per_page;
+ 	                 $next_offset = $row_offset + $max_per_page;
+ 	                 if($rows_found != 0)
+ 	                 {
+                           //$max_per_page=15;
+ 	                    for($index = $row_offset , $row = $this->db->fetchByAssoc($result, $index); $row && ($index < $row_offset + $max_per_page ||  $max_per_page == -99) ;$index++, $row = $this->db->fetchByAssoc($result, $index))
+ 	                         {
+ 	                                 foreach($this->list_fields as $field)
+ 	                                 {
+ 	                                         //print_r($this->list_fields);
+ 	                                         if (isset($row[$field]))
+ 	                                         {
+ 	                                                 $this->$field = $row[$field];
+ 	                                         }
+ 	                                         else
+ 	                                         {
+ 	                                                 $this->$field = "";
+ 	                                         }
+ 	                                 }
+ 	 
+ 	                    $list[] = $this;
+ 	                         }
+ 	                 }
+ 	 
+ 	           $response = Array();
+ 	                 $response['list'] = $list;
+ 	                 $response['row_count'] = $rows_found;
+ 	                 $response['next_offset'] = $next_offset;
+ 	                 $response['previous_offset'] = $previous_offset;
+                         /*
+ 	                 foreach($this->list_fields as $field)
+ 	                                {
+ 	                                        if (isset($row[$field]))
+ 	                                         {
+ 	                                                $this->$field = $row[$field];
+ 	                                                $this->log->debug("process_full_list: $this->object_name({$row['id']}): ".$field." = ".$this->$field);
+ 	                                        }
+ 	                                }
+ 	                 return $response;
+  }
+	*/
 }
 
 

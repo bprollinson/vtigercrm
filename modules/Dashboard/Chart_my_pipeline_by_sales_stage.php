@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_my_pipeline_by_sales_stage.php,v 1.17.2.1 2005/08/30 14:24:17 cooljaguar Exp $
  * Description:  returns HTML for client-side image map.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once("modules/Dashboard/Forms.php");

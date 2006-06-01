@@ -27,17 +27,12 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 
 $local_log =& LoggerManager::getLogger('index');
-global $log;
+global $vtlog;
 $focus = new Account();
-global $current_user;
-$currencyid=fetchCurrency($current_user->id);
-$rate_symbol = getCurrencySymbolandCRate($currencyid);
-$rate = $rate_symbol['rate'];
-$curr_symbol = $rate_symbol['symbol'];
 if(isset($_REQUEST['record']))
 {
 	$focus->id = $_REQUEST['record'];
-$log->info("id is ".$focus->id);
+$vtlog->logthis("id is ".$focus->id,'info'); 
 }
 if(isset($_REQUEST['mode']))
 {
@@ -56,11 +51,6 @@ foreach($focus->column_fields as $fieldname => $val)
 		//echo '<BR>';
 		$focus->column_fields[$fieldname] = $value;
 	}
-	if(isset($_REQUEST['annual_revenue']))
-        {
-                        $value = convertToDollar($_REQUEST['annual_revenue'],$rate);
-                        $focus->column_fields['annual_revenue'] = $value;
-        }
 		
 }
 //echo '<BR>';
@@ -84,7 +74,6 @@ $focus->save("Accounts");
 $return_id = $focus->id;
 //save_customfields($focus->id);
 
-if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
 if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] != "") $return_module = $_REQUEST['return_module'];
 else $return_module = "Accounts";
 if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] != "") $return_action = $_REQUEST['return_action'];
@@ -93,33 +82,21 @@ if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "") $return_id = $
 
 $local_log->debug("Saved record with id of ".$return_id);
 
-
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-
-//Send notification mail to the assigned to owner about the account creation
-if($focus->column_fields['notify_owner'] == 1 || $focus->column_fields['notify_owner'] == 'on')
-	$status = sendNotificationToOwner('Accounts',&$focus);
-
-header("Location: index.php?action=$return_action&module=$return_module&parenttab=$parenttab&record=$return_id&viewname=$return_viewname");
-
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
 //Code to save the custom field info into database
 function save_customfields($entity_id)
 {
-	global $log;
-	$log->debug("Entering save_customfields(".$entity_id.") method ...");
-	$log->info("save customfields invoked");
+$vtlog->logthis("save customfields invoked",'info');
 	global $adb;
-	$dbquery = "SELECT * FROM customfields WHERE module = 'Accounts'";
+	$dbquery="select * from customfields where module='Accounts'";
         /*
 	$result = mysql_query($dbquery);
-	$custquery = "SELECT * FROM accountcf WHERE accountid = '".$entity_id."'";
+	$custquery = 'select * from accountcf where accountid="'.$entity_id.'"';
         $cust_result = mysql_query($custquery);
 	if(mysql_num_rows($result) != 0)
         */
 	$result = $adb->query($dbquery);
-	$custquery = "SELECT * FROM accountcf WHERE accountid = '".$entity_id."'";
+	$custquery = "select * from accountcf where accountid='".$entity_id."'";
         $cust_result = $adb->query($custquery);
 	if($adb->num_rows($result) != 0)
 	{
@@ -185,18 +162,20 @@ function save_customfields($entity_id)
                   if(isset($_REQUEST['record']) && $_REQUEST['record'] != '' && $adb->num_rows($cust_result) !=0)
 		{
 			//Update Block
-                        $query = "UPDATE accountcf SET ".$update." WHERE accountid='".$entity_id."'"; 
+                  //$query = 'update accountcf SET '.$update.' where accountid="'.$entity_id.'"'; 
+                  //mysql_query($query);
+                        $query = 'update accountcf SET '.$update." where accountid='".$entity_id."'"; 
 			$adb->query($query);
 		}
 		else
 		{
 			//Insert Block
-			$query = "INSERT INTO accountcf (".$columns.") VALUES(".$values.")";
+			$query = 'insert into accountcf ('.$columns.') values('.$values.')';
+			//mysql_query($query);
                         $adb->query($query);
 		}
 		
 	}
-	$log->debug("Exiting save_customfields method ...");
 	// commented by srini - PATCH for saving accounts
 	/*else
 	{
@@ -208,7 +187,7 @@ function save_customfields($entity_id)
 		else
 		{
 			//Insert Block
-			$query = "INSERT INTO accountcf (".$columns.") VALUES(".$values.")";
+			$query = 'insert into accountcf ('.$columns.') values('.$values.')';
                         $adb->query($query);
 			//mysql_query($query);
 		}

@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
-// $Id: de.php,v 1.18 2006/03/10 21:57:13 bigmichi1 Exp $
+// $Id: de.php,v 1.13 2004/08/30 15:51:26 webbie Exp $
 
 $text['title']          = 'System Information';
 
@@ -53,7 +53,7 @@ $text['memusage']       = 'Speicher-Auslastung';
 $text['phymem']         = 'Physikalischer Speicher';
 $text['swap']           = 'Auslagerungsdatei';
 
-$text['fs']             = 'Angemeldete Dateisysteme';
+$text['fs']             = 'Angemeldete Filesysteme';
 $text['mount']          = 'Mount';
 $text['partition']      = 'Partition';
 
@@ -64,20 +64,20 @@ $text['used']           = 'Benutzt';
 $text['size']           = 'Gr&ouml;&szlig;e';
 $text['totals']         = 'Insgesamt';
 
-$text['kb']             = 'KB';
-$text['mb']             = 'MB';
-$text['gb']             = 'GB';
+$text['kb']             = 'KiB';
+$text['mb']             = 'MiB';
+$text['gb']             = 'GiB';
 
 $text['none']           = 'keine';
 
-$text['capacity']       = 'Kapazit&auml;t';
+$text['capacity']       = 'Kapazität';
   
 $text['template']       = 'Vorlage';
 $text['language']       = 'Sprache';
-$text['submit']         = '&Auml;ndern';
+$text['submit']         = 'Ändern';
 $text['created']        = 'Erstellt von';
 $text['locale']         = 'de_DE';
-$text['gen_time']       = 'am %d.%b %Y um %H:%M';
+$text['gen_time']       = 'am %d.%b %Y um %R';
 
 $text['days']           = 'Tage';
 $text['hours']          = 'Stunden';
@@ -95,10 +95,6 @@ $text['s_limit']        = 'Grenzwert';
 $text['s_label']        = 'Bezeichnung';
 $text['degree_mark']    = '&ordm;C';
 $text['voltage_mark']   = 'V';
-$text['rpm_mark']       = 'Umin';
-
-$text['app']		= 'Kernel + Anwendungen';
-$text['buffers']	= 'Puffer';
-$text['cached']		= 'Cache';
+$text['rpm_mark']       = 'RPM';
 
 ?>

@@ -33,7 +33,7 @@ define('LOG4PHP_OPTION_CONVERTER_DELIM_STOP_LEN',   1);
  * A convenience class to convert property values to specific types.
  *
  * @author VxR <vxr@vxr.it>
- * @version $Revision: 1.6 $ 
+ * @version $Revision: 1.1 $ 
  * @package log4php
  * @subpackage helpers
  * @static

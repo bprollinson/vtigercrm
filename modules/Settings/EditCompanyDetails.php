@@ -9,40 +9,30 @@
 *
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
 
-$smarty = new vtigerCRM_Smarty;
-//error handling
-if(isset($_REQUEST['flag']) && $_REQUEST['flag'] != '')
-{
-	$flag = $_REQUEST['flag'];
-	switch($flag)
-	{
-		case 1:
-			$smarty->assign("ERRORFLAG","<font color='red'><B> Logo has to be an Image of type jpeg/png</B></font>");
-			break;
-		case 2:
-			$smarty->assign("ERRORFLAG","<font color='red'><B>Error Message<ul><li><font color='red'>Invalid file OR</font><li><font color='red'>File has no data</font></ul></B></font>");
-			break;
-		case 3:
-			$smarty->assign("ERRORFLAG","<B><font color='red'>Sorry, the uploaded file exceeds the maximum filesize limit. Please try a file smaller than 800000 bytes</font></B>");
-			break;
-		case 4:
-			$smarty->assign("ERRORFLAG","<b>Problems in file upload. Please try again! </b><br>");
-			break;
-		default:
-			$smarty->assign("ERRORFLAG","");
-		
-	}
-}
+
+$filename=$_REQUEST['file_name'];
+$filetype=$_REQUEST['file_type'];
+$filesize=$_REQUEST['file_size'];
+$logo_value=$_REQUEST['logo_value'];
+
+echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_SETTINGS'].' : '. $mod_strings['LBL_COMPANY_INFO'], true);
+echo '<br><br>';
+
 global $adb;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
+
+$xtpl=new XTemplate ('modules/Settings/EditCompanyDetails.html');
+//$xtpl=new XTemplate ('modules/Settings/add2db');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
 
 $sql="select * from organizationdetails";
 $result = $adb->query($sql);
@@ -58,33 +48,40 @@ $organization_website = $adb->query_result($result,0,'website');
 $organization_logoname = $adb->query_result($result,0,'logoname');
 
 
+$xtpl->assign("RETURN_MODULE","Settings");
+$xtpl->assign("RETURN_ACTION","index");
+
+$xtpl->assign("FILE_NAME",$filename);
+$xtpl->assign("FILE_TYPE",$filetype);
+$xtpl->assign("FILE_SIZE",$filesize);
+$xtpl->assign("LOGO_VALUE",$logo_value);
+
 if (isset($organization_name))
-	$smarty->assign("ORGANIZATIONNAME",$organization_name);
+	$xtpl->assign("ORGANIZATIONNAME",$organization_name);
 if (isset($organization_address))
-	$smarty->assign("ORGANIZATIONADDRESS",$organization_address);
+	$xtpl->assign("ORGANIZATIONADDRESS",$organization_address);
 if (isset($organization_city))
-	$smarty->assign("ORGANIZATIONCITY",$organization_city);
+	$xtpl->assign("ORGANIZATIONCITY",$organization_city);
 if (isset($organization_state))
-	$smarty->assign("ORGANIZATIONSTATE",$organization_state);
+	$xtpl->assign("ORGANIZATIONSTATE",$organization_state);
 if (isset($organization_code))
-	$smarty->assign("ORGANIZATIONCODE",$organization_code);
+	$xtpl->assign("ORGANIZATIONCODE",$organization_code);
 if (isset($organization_country))
-	$smarty->assign("ORGANIZATIONCOUNTRY",$organization_country);
+	$xtpl->assign("ORGANIZATIONCOUNTRY",$organization_country);
 if (isset($organization_phone))
-	$smarty->assign("ORGANIZATIONPHONE",$organization_phone);
+	$xtpl->assign("ORGANIZATIONPHONE",$organization_phone);
 if (isset($organization_fax))
-	$smarty->assign("ORGANIZATIONFAX",$organization_fax);
+	$xtpl->assign("ORGANIZATIONFAX",$organization_fax);
 if (isset($organization_website))
-	$smarty->assign("ORGANIZATIONWEBSITE",$organization_website);
-if ($organization_logoname == '') 
-	$organization_logoname = $_REQUEST['prev_name'];
-if (isset($organization_logoname)) 
-	$smarty->assign("ORGANIZATIONLOGONAME",$organization_logoname);
+	$xtpl->assign("ORGANIZATIONWEBSITE",$organization_website);
+if (isset($upload_maxsize))
+	$xtpl->assign("MAX_FILE_SIZE",$upload_maxsize);
+if (isset($organization_logoname))
+	$xtpl->assign("ORGANIZATIONLOGONAME",$organization_logoname);
 
 
-$smarty->assign("MOD", return_module_language($current_language,'Settings'));
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("CMOD", $mod_strings);
-$smarty->display('Settings/EditCompanyInfo.tpl');
+$xtpl->parse("main");
+$xtpl->out("main");
+
+
 ?>

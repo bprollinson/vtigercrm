@@ -37,7 +37,7 @@ require_once(LOG4PHP_DIR . '/LoggerLog.php');
  * {@link $locationInfo}, {@link $useXml} and {@link $log4jNamespace}.
  *
  * @author VxR <vxr@vxr.it>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.1 $
  * @package log4php
  * @subpackage appenders
  */ 

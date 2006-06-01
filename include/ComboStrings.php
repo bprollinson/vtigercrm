@@ -121,9 +121,12 @@ $combo_strings = Array(
                 , 'Held'=>'Held'
                 , 'Not Held'=>'Not Held'
                 ),
-'taskstatus_dom' => Array('Planned'=>'Planned'
+'taskstatus_dom' => Array('Not Started'=>'Not Started'
+                , 'In Progress'=>'In Progress'
                 , 'Completed'=>'Completed'
+                , 'Pending Input'=>'Pending Input'
                 , 'Deferred'=>'Deferred'
+                , 'Planned'=>'Planned'
                 ),
 'taskpriority_dom' => Array('High'=>'High'
                 ,'Medium'=>'Medium'
@@ -184,10 +187,6 @@ $combo_strings = Array(
                         'Euro'=>'Euro'
                         ),
 
-'visibility_dom' => Array('Private'=>'Private',
-                          'Public'=>'Public'
-			 ),
-				     
 'rsscategory_dom' => Array('vtiger Discussions'=>'vtiger Discussions',
                        'vtiger Wiki'=>'vtiger Wiki'
                       ),
@@ -257,8 +256,7 @@ $combo_strings = Array(
 'postatus_dom' => Array('Created'=>'Created',
 			'Approved'=>'Approved',
 			'Delivered'=>'Delivered',
-			'Canceled'=>'Canceled',
-			'Received Shipment'=>'Received Shipment'
+			'Canceled'=>'Canceled'
 			),
 
 'sostatus_dom' => Array('Created'=>'Created',
@@ -266,34 +264,6 @@ $combo_strings = Array(
 			'Delivered'=>'Delivered',
 			'Canceled'=>'Canceled'
 			),
-
-'campaignstatus_dom' => Array(''=>'',
-			      'Planning'=>'Planning',						      	      'Active'=>'Active',							      'Inactive'=>'Inactive',
-			      'Complete'=>'Complete',
-			      'Cancelled'=>'Cancelled',							      ),
-			
-
-'campaigntype_dom' => Array(''=>'',
-			    'Conference'=>'Conference',
-			    'Webinar'=>'Webinar',
-			    'Trade Show'=>'Trade Show',				    			    'Public Relations'=>'Public Relations',					    'Partners'=>'Partners',
-			    'Referral Program'=>'Referral Program',
-			    'Advertisement'=>'Advertisement',
-			    'Banner Ads'=>'Banner Ads',
-			    'Direct Mail'=>'Direct Mail',
-			    'Email'=>'Email',
-			    'Telemarketing'=>'Telemarketing',
-			    'Others'=>'Others'
-			    ),
-
-'expectedresponse_dom' => Array(''=>'',
-			      'Excellent'=>'Excellent',
-			      'Good'=>'Good',
-			      'Average'=>'Average',
-                              'Poor'=>'Poor'
-			      ),			      
-
-			    
 		
 );
 

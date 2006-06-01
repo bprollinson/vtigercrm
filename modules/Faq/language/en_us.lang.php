@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Faq/language/en_us.lang.php,v 1.8 2005/06/22 14:13:40 mickie Exp $
  * Description:  Defines the English language pack 
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -35,7 +35,6 @@ $mod_strings = Array(
 'LBL_LIST_PHONE'=>'Phone',
 'LBL_LIST_EMAIL_ADDRESS'=>'Email Address',
 'LBL_LIST_CONTACT_NAME'=>'Contact Name',
-'LBL_FAQ_INFORMATION'=>'Faq Information',
 
 //DON'T CONVERT THESE THEY ARE MAPPINGS
 'db_name' => 'LBL_LIST_ACCOUNT_NAME',
@@ -118,10 +117,6 @@ $mod_strings = Array(
 'Add Comment'=>'Add Comment',
 'LBL_COMMENT_INFORMATION'=>'Comment Information',
 'Status'=>'Status',
-
-//Added on 10-12-2005
-'LBL_QUESTION'=>'Question',
-'LBL_CATEGORY'=>'Category',
 );
 
 ?>

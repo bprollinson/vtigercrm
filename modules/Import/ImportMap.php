@@ -72,25 +72,69 @@ class ImportMap extends SugarBean
 		return "Object:ImportMap id=$this->id name=$this->name module=$this->module content=$this->content";
 	}
 
+	function create_tables () 
+	{
+		/*
+		$query = 'CREATE TABLE '.$this->table_name.' ( ';
+		$query .='id char(36) NOT NULL';
+		$query .=', name char(36) NOT NULL';
+		$query .=', module char(36) NOT NULL';
+		$query .=', content blob';
+                $query .=', has_header bool NOT NULL default 1';
+                $query .=', deleted bool NOT NULL default 0';
+                $query .=', date_entered datetime NOT NULL';
+                $query .=', date_modified datetime NOT NULL';
+                $query .=', assigned_user_id char(36)';
+                $query .=', is_published char(3) NOT NULL default \'no\'';
+		$query .=', PRIMARY KEY ( ID ) )';
+
+		
+		
+		
+		$this->db->query($query,true,"Error creating table: ".$this->table_name. ":" );
+
+
+		//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
+	
+		// Create the indexes
+                $this->create_index("create index idx_cont_owner_id_module_and_name on ".$this->table_name." (assigned_user_id, module, name, deleted)");*/
+	}
+
+	function drop_tables () 
+	{
+		/*
+		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
+
+		
+			
+		$this->db->query($query);
+
+		//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
+		*/
+
+	}
+	
         function save_map( $owner_id, $name, $module, $has_header,$content )
         {
-		$query_arr = array('assigned_user_id'=>$owner_id,'name'=>$name);
+		$query_arr = array(
+			'assigned_user_id'=>$owner_id,'name'=>$name);
 
-		//$this->retrieve_by_string_fields($query_arr, false);
+		$this->retrieve_by_string_fields($query_arr, false);
 
                 $result = 1;
                 $this->assigned_user_id = $owner_id;
-
+		//$this->new_with_id=$this->db->getUniqueID("import_maps");
                 $this->name = $name;
                 $this->module = $module;
-
+                //$this->content = $content;
 		$this->content = "".$this->db->getEmptyBlob()."";
                 $this->has_header = $has_header;
                 $this->deleted = 0;
                 $returnid = $this->save();
-
+		//$this->db->println("save_map=".$this->new_with_id);
 		$this->db->updateBlob($this->table_name,"content","name='".$name."' and module='".$module."'",$content);
-
+		//$this->db->updateBlob($this->table_name,"content","id=".$this->new_with_id,$content);
+		
                 return $result;
         }
 
@@ -148,37 +192,10 @@ class ImportMap extends SugarBean
 					$focus->$field = $row[$field];
 				} 
 			} 
+			$focus->fill_in_additional_detail_fields(); 
 			array_push($obj_arr,$focus);
 		}
 		return $obj_arr;
-	}
-
-	function getSavedMappingsList($module)
-	{
-		$query = "SELECT * FROM $this->table_name where module='".$module."'";
-		$result = $this->db->query($query,true," Error: ");
-		$map_lists = array();
-
-		while ($row = $this->db->fetchByAssoc($result,-1,FALSE) )
-		{	
-			$map_lists[$row['id']] = $row['name'];
-		}
-		return $map_lists;
-	}
-	function getSavedMappingContent($mapid)
-	{
-		$query = "SELECT * FROM $this->table_name where id='".$mapid."'";
-		$result = $this->db->query($query,true," Error: ");
-		$mapping_arr = array();
-
-		$pairs = split("&",$this->db->query_result($result,0,'content'));
-		foreach ($pairs as $pair)
-		{
-			list($name,$value) = split("=",$pair);
-			$mapping_arr["$name"] = $value;
-		}
-
-		return $mapping_arr;
 	}
 
 }

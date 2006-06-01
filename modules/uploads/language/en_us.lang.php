@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/uploads/language/en_us.lang.php,v 1.1 2005/01/20 05:29:32 saraj Exp $
+ * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/uploads/language/en_us.lang.php,v 1.1 2005/01/20 05:29:32 sarajkumar Exp $
  * Description:  Defines the English language pack
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -23,11 +23,10 @@
 $mod_strings = Array(
 
 //Added fields for uploads (attach files)
-'LBL_ATTACH_FILE'=>'Attach File',
-'LBL_STEP_SELECT_FILE'=>'Step 1 : Select File',
-'LBL_BROWSE_FILES'=>'Click the browse button and select the file to be attached',
-'LBL_DESCRIPTION'=>'Step 2 : Write some description',
-'LBL_OPTIONAL'=>'(optional)',
+'LBL_DESCRIPTION'=>'Description:',
+'LBL_FILENAME'=>'File Name:',
+'LBL_ATTACH_FILE'=>'File Attachment',
+'LBL_UPLOAD'=>'Upload',
 );
 
 ?>

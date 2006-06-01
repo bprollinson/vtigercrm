@@ -32,7 +32,7 @@ require_once(LOG4PHP_DIR . '/LoggerLog.php');
  * <p>This appender requires a layout.</p>
  *
  * @author VxR <vxr@vxr.it>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.1 $
  * @package log4php
  * @subpackage appenders
  */

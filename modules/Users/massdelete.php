@@ -12,65 +12,27 @@
  ********************************************************************************/
 
 
-require_once('include/database/PearDatabase.php');
-require_once('include/utils/UserInfoUtil.php');
-require_once('include/utils/CommonUtils.php');
 
-$idlist = $_REQUEST['idlist'];
+
+
+
+
+require_once('include/database/PearDatabase.php');
+$idlist = $_POST['idlist'];
 $viewid = $_REQUEST['viewname'];
 $returnmodule=$_REQUEST['return_module'];
 //split the string and store in an array
 $storearray = explode(";",$idlist);
-array_filter($storearray);
-$ids_list = array();
 foreach($storearray as $id)
 {
-        if(isPermitted($returnmodule,'Delete',$id) == 'yes')
-        {
-                $sql="update vtiger_crmentity set deleted=1 where crmid='" .$id ."'";
-                $result = $adb->query($sql);
-        }
-        else
-        {
-                $ids_list[] = $id;
-        }
+	$sql="update crmentity set crmentity.deleted=1 where crmentity.crmid='" .$id ."'";
+	$result = $adb->query($sql);
 }
-$ret = getEntityName($returnmodule,$ids_list);
-if(count($ret) > 0)
-{
-       $errormsg = implode(',',$ret);
-}else
-{
-       $errormsg = '';
-}
-
 if(isset($_REQUEST['smodule']) && ($_REQUEST['smodule']!=''))
 {
 	$smod = "&smodule=".$_REQUEST['smodule'];
 }
-if($returnmodule == 'Emails')
-{
-	if(isset($_REQUEST['folderid']) && $_REQUEST['folderid'] != '')
-	{
-		$folderid = $_REQUEST['folderid'];
-	}else
-	{
-		$folderid = 1;
-	}
-	header("Location: index.php?module=".$returnmodule."&action=".$returnmodule."Ajax&folderid=".$folderid."&ajax=delete&file=ListView&errormsg=".$errormsg);
-}
-elseif($returnmodule == 'Calendar')
-{
-	header("Location: index.php?module=".$returnmodule."&action=index&view=".$_REQUEST['view']."&hour=".$_REQUEST['hour']."&day=".$_REQUEST['day']."&month=".$_REQUEST['month']."&year=".$_REQUEST['year']."&parenttab=My Home Page");
-}
-			
-elseif($returnmodule!='Faq')
-{
-	header("Location: index.php?module=".$returnmodule."&action=".$returnmodule."Ajax&ajax=delete&file=ListView&viewname=".$viewid."&errormsg=".$errormsg);
-}
-else
-{
-	header("Location: index.php?module=".$returnmodule."&action=".$returnmodule."Ajax&ajax=delete&file=ListView&errormsg=".$errormsg);
-}
+header("Location: index.php?module=".$returnmodule."&action=index&viewname=".$viewid.$smod);
+
 ?>
 

@@ -8,11 +8,11 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('modules/Reports/Reports.php');
 require_once('include/database/PearDatabase.php');
 
@@ -29,7 +29,7 @@ $log = LoggerManager::getLogger('report_type');
 global $currentModule;
 global $image_path;
 global $theme;
-$report_column=new vtigerCRM_Smarty;
+$report_column=new XTemplate('modules/Reports/ReportColumns.html');
 $report_column->assign("MOD", $mod_strings);
 $report_column->assign("APP", $app_strings);
 $report_column->assign("IMAGE_PATH",$image_path);
@@ -52,12 +52,6 @@ if(isset($_REQUEST["record"]))
 	
 }
 
-/** Function to formulate the vtiger_fields for the primary modules 
- *  This function accepts the module name 
- *  as arguments and generates the vtiger_fields for the primary module as
- *  a HTML Combo values
- */
-
 function getPrimaryColumnsHTML($module)
 {
         global $ogReport;
@@ -65,6 +59,7 @@ function getPrimaryColumnsHTML($module)
 	global $current_language;
 
 	$mod_strings = return_module_language($current_language,$module);
+	//print_r($mod_strings);
 	foreach($ogReport->module_list[$module] as $key=>$value)
         {
             $shtml .= "<optgroup label=\"".$app_list_strings['moduleList'][$module]." ".$key."\" class=\"select\" style=\"border:none\">";
@@ -84,13 +79,6 @@ function getPrimaryColumnsHTML($module)
         }
 	return $shtml;
 }
-
-/** Function to formulate the vtiger_fields for the secondary modules
- *  This function accepts the module name
- *  as arguments and generates the vtiger_fields for the secondary module as
- *  a HTML Combo values
- */
-
 
 function getSecondaryColumnsHTML($module)
 {
@@ -126,6 +114,7 @@ function getSecondaryColumnsHTML($module)
         return $shtml;
 }
 
-$report_column->display("ReportColumns.tpl");
+$report_column->parse("main");
+$report_column->out("main");
 ?>
 

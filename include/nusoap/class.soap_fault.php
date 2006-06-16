@@ -4,37 +4,18 @@
 
 
 /**
-* Contains information for a SOAP fault.
-* Mainly used for returning faults from deployed functions
+* soap_fault class, allows for creation of faults
+* mainly used for returning faults from deployed functions
 * in a server instance.
 * @author   Dietrich Ayala <dietrich@ganx4.com>
-* @version  $Id: class.soap_fault.php,v 1.12 2005/07/27 19:24:42 snichol Exp $
+* @version  $Id: class.soap_fault.php,v 1.1 2004/08/17 13:27:46 gjayakrishnan Exp $
 * @access public
 */
 class soap_fault extends nusoap_base {
-	/**
-	 * The fault code (client|server)
-	 * @var string
-	 * @access private
-	 */
+
 	var $faultcode;
-	/**
-	 * The fault actor
-	 * @var string
-	 * @access private
-	 */
 	var $faultactor;
-	/**
-	 * The fault string, a description of the fault
-	 * @var string
-	 * @access private
-	 */
 	var $faultstring;
-	/**
-	 * The fault detail, typically a string or array of string
-	 * @var mixed
-	 * @access private
-	 */
 	var $faultdetail;
 
 	/**
@@ -43,10 +24,9 @@ class soap_fault extends nusoap_base {
     * @param string $faultcode (client | server)
     * @param string $faultactor only used when msg routed between multiple actors
     * @param string $faultstring human readable error message
-    * @param mixed $faultdetail detail, typically a string or array of string
+    * @param string $faultdetail
 	*/
 	function soap_fault($faultcode,$faultactor='',$faultstring='',$faultdetail=''){
-		parent::nusoap_base();
 		$this->faultcode = $faultcode;
 		$this->faultactor = $faultactor;
 		$this->faultstring = $faultstring;
@@ -56,7 +36,6 @@ class soap_fault extends nusoap_base {
 	/**
 	* serialize a fault
 	*
-	* @return	string	The serialization of the fault instance.
 	* @access   public
 	*/
 	function serialize(){
@@ -69,10 +48,10 @@ class soap_fault extends nusoap_base {
 			'<SOAP-ENV:Envelope SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"'.$ns_string.">\n".
 				'<SOAP-ENV:Body>'.
 				'<SOAP-ENV:Fault>'.
-					$this->serialize_val($this->faultcode, 'faultcode').
-					$this->serialize_val($this->faultactor, 'faultactor').
-					$this->serialize_val($this->faultstring, 'faultstring').
-					$this->serialize_val($this->faultdetail, 'detail').
+					'<faultcode>'.$this->expandEntities($this->faultcode).'</faultcode>'.
+					'<faultactor>'.$this->expandEntities($this->faultactor).'</faultactor>'.
+					'<faultstring>'.$this->expandEntities($this->faultstring).'</faultstring>'.
+					'<detail>'.$this->serialize_val($this->faultdetail).'</detail>'.
 				'</SOAP-ENV:Fault>'.
 				'</SOAP-ENV:Body>'.
 			'</SOAP-ENV:Envelope>';

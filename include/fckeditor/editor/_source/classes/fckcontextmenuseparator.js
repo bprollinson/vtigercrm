@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fckcontextmenuseparator.js
  * 	FCKContextMenuSeparator Class: represents a separator in the toolbar.
  * 
@@ -30,11 +28,9 @@ FCKContextMenuSeparator.prototype.CreateTableRow = function( targetTable )
 	var oCell = this._Row.insertCell(-1) ;
 	oCell.className = 'CM_Icon' ;
 	
-	var oDoc = targetTable.ownerDocument || targetTable.document ;
-	
 	oCell = this._Row.insertCell(-1) ;
 	oCell.className = 'CM_Label' ;
-	oCell.appendChild( oDoc.createElement( 'DIV' ) ).className = 'CM_Separator_Line' ;
+	oCell.innerHTML = '<div></div>' ;
 }
 
 FCKContextMenuSeparator.prototype.SetVisible = function( isVisible )

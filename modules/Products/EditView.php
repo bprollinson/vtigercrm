@@ -8,15 +8,16 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('Smarty_setup.php');
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
+require_once('XTemplate/xtpl.php');
+require_once('include/uifromdbutil.php');
 require_once('modules/Products/Product.php');
 require_once('include/FormValidationUtil.php');
 
 global $app_strings;
+global $app_list_strings;
 global $mod_strings;
-global $currentModule;
+global $current_user;
 
 $encode_val=$_REQUEST['encode_val'];
 $decode_val=base64_decode($encode_val);
@@ -29,7 +30,6 @@ $decode_val=base64_decode($encode_val);
 
 
 $focus = new Product();
-$smarty = new vtigerCRM_Smarty();
 
 if($_REQUEST['record']!="") 
 {
@@ -63,7 +63,35 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
     	$focus->mode = ''; 	
 } 
 
-//needed when creating a new product with a default vtiger_vendor name to passed 
+//get Block 1 Information
+
+$block_1 = getBlockInformation("Products",1,$focus->mode,$focus->column_fields);
+
+
+
+//get Address Information
+
+$block_2 = getBlockInformation("Products",2,$focus->mode,$focus->column_fields);
+$block_3 = getBlockInformation("Products",3,$focus->mode,$focus->column_fields);
+$block_4 = getBlockInformation("Products",4,$focus->mode,$focus->column_fields);
+$block_6 = getBlockInformation("Products",6,$focus->mode,$focus->column_fields);
+
+//get Custom Field Information
+$block_5 = getBlockInformation("Products",5,$focus->mode,$focus->column_fields);
+if(trim($block_5) != '')
+{
+        $cust_fld = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="formOuterBorder">';
+        $cust_fld .=  '<tr><td>';
+	$block_5_header = getBlockTableHeader("LBL_CUSTOM_INFORMATION");
+        $cust_fld .= $block_5_header;
+        $cust_fld .= '<table width="100%" border="0" cellspacing="1" cellpadding="0">';
+        $cust_fld .= $block_5;
+        $cust_fld .= '</table>';
+        $cust_fld .= '</td></tr></table>';
+        $cust_fld .='<BR>';
+}
+
+//needed when creating a new product with a default vendor name to passed 
 if (isset($_REQUEST['name']) && is_null($focus->name)) {
 	$focus->name = $_REQUEST['name'];
 	
@@ -77,89 +105,48 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-$disp_view = getView($focus->mode);
-if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
-else	
-{
-	$bas_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS');
-	$adv_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV');
+$xtpl=new XTemplate ('modules/Products/EditView.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("BLOCK1", $block_1);
+$xtpl->assign("BLOCK2", $block_2);
+$xtpl->assign("BLOCK3", $block_3);
+$xtpl->assign("BLOCK4", $block_4);
+$xtpl->assign("BLOCK6", $block_6);
+$block_1_header = getBlockTableHeader("LBL_PRODUCT_INFORMATION");
+$block_2_header = getBlockTableHeader("LBL_PRICING_INFORMATION");
+$block_3_header = getBlockTableHeader("LBL_STOCK_INFORMATION");
+$block_4_header = getBlockTableHeader("LBL_DESCRIPTION_INFORMATION");
+$block_6_header = getBlockTableHeader("LBL_IMAGE_INFORMATION");
+$xtpl->assign("BLOCK1_HEADER", $block_1_header);
+$xtpl->assign("BLOCK2_HEADER", $block_2_header);
+$xtpl->assign("BLOCK3_HEADER", $block_3_header);
+$xtpl->assign("BLOCK4_HEADER", $block_4_header);
+$xtpl->assign("BLOCK6_HEADER", $block_6_header);
 
-	$blocks['basicTab'] = $bas_block;
-	if(is_array($adv_block))
-		$blocks['moreTab'] = $adv_block;
-
-	$smarty->assign("BLOCKS",$blocks);
-	$smarty->assign("BLOCKS_COUNT",count($blocks));
-}
-$smarty->assign("OP_MODE",$disp_view);
-
-$smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD",$app_strings['Product']);
-
-
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
-if($focus->id != '')
-	$smarty->assign("ROWCOUNT", getImageCount($focus->id));
-if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
-else $smarty->assign("NAME", "");
+if (isset($focus->name)) $xtpl->assign("NAME", $focus->name);
+else $xtpl->assign("NAME", "");
 
 if(isset($cust_fld))
 {
-        $smarty->assign("CUSTOMFIELD", $cust_fld);
+        $xtpl->assign("CUSTOMFIELD", $cust_fld);
 }
-$smarty->assign("ID", $focus->id);
-$category = getParentTab();
-$smarty->assign("CATEGORY",$category);
+$xtpl->assign("ID", $focus->id);
 
-$smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
-$smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
+$xtpl->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
+$xtpl->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 if($focus->mode == 'edit')
 {
-	$smarty->assign("UPDATEINFO",updateInfo($focus->id));
-	$smarty->assign("MODE", $focus->mode);
-
-	$vat_tax = getProductTaxPercentage('VAT',$focus->id);
-	$sales_tax = getProductTaxPercentage('Sales',$focus->id);
-	$service_tax = getProductTaxPercentage('Service',$focus->id);
+        $xtpl->assign("MODE", $focus->mode);
 }
 
-$vat_check = 1;
-$sales_check = 1;
-$service_check = 1;
-if($vat_tax == '')
-{
-	$vat_tax = getTaxPercentage('VAT');
-	$vat_check = 0;
-}
-if($sales_tax == '')
-{
-	$sales_tax = getTaxPercentage('Sales');
-	$sales_check = 0;
-}
-if($service_tax == '')
-{
-	$service_tax = getTaxPercentage('Service');
-	$service_check = 0;
-}
-
-//Following values has been added to display the Tax information
-$smarty->assign("VAT_TAX", $vat_tax);
-$smarty->assign("SALES_TAX", $sales_tax);
-$smarty->assign("SERVICE_TAX", $service_tax);
-
-$smarty->assign("VAT_CHECK", $vat_check);
-$smarty->assign("SALES_CHECK", $sales_check);
-$smarty->assign("SERVICE_CHECK", $service_check);
-
-if(isset($_REQUEST['return_module'])) $smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
-if(isset($_REQUEST['return_action'])) $smarty->assign("RETURN_ACTION", $_REQUEST['return_action']);
-if(isset($_REQUEST['return_id'])) $smarty->assign("RETURN_ID", $_REQUEST['return_id']);
-if(isset($_REQUEST['activity_mode'])) $smarty->assign("ACTIVITYMODE", $_REQUEST['activity_mode']);
-if(isset($_REQUEST['return_viewname'])) $smarty->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
-$smarty->assign("THEME", $theme);
-$smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+if(isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
+if(isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
+if(isset($upload_maxsize)) $xtpl->assign("MAX_FILE_SIZE", $upload_maxsize);
+if(isset($_REQUEST['return_id'])) $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
+if(isset($_REQUEST['activity_mode'])) $xtpl->assign("ACTIVITYMODE", $_REQUEST['activity_mode']);
+$xtpl->assign("THEME", $theme);
+$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 
 
 
@@ -167,7 +154,43 @@ $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint
 $product_tables = Array('products','productcf','productcollaterals'); 
 
  $validationData = getDBValidationData($product_tables);
- $data = split_validationdataArray($validationData);
+ $fieldName = '';
+ $fieldLabel = '';
+ $fldDataType = '';
+
+ $rows = count($validationData);
+ foreach($validationData as $fldName => $fldLabel_array)
+ {
+   if($fieldName == '')
+   {
+     $fieldName="'".$fldName."'";
+   }
+   else
+   {
+     $fieldName .= ",'".$fldName ."'";
+   }
+   foreach($fldLabel_array as $fldLabel => $datatype)
+   {
+	if($fieldLabel == '')
+	{
+			
+     		$fieldLabel = "'".$fldLabel ."'";
+	}		
+      else
+       {
+      $fieldLabel .= ",'".$fldLabel ."'";
+        }
+ 	if($fldDataType == '')
+         {
+      		$fldDataType = "'".$datatype ."'";
+    	}
+	 else
+        {
+       		$fldDataType .= ",'".$datatype ."'";
+     	}
+   }
+ }
+
 if($errormessage==2)
 {
 	$msg =$mod_strings['LBL_MAXIMUM_LIMIT_ERROR'];
@@ -195,18 +218,21 @@ else
 }
 if($errormessage!="")
 {
-	$smarty->assign("ERROR_MESSAGE",$errormessage);
+	$xtpl->assign("ERROR_MESSAGE",$errormessage);
 }
 
-$smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
-$smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
-$smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
 
-$check_button = Button_Check($module);
-$smarty->assign("CHECK", $check_button);
+$xtpl->assign("VALIDATION_DATA_FIELDNAME",$fieldName);
+$xtpl->assign("VALIDATION_DATA_FIELDDATATYPE",$fldDataType);
+$xtpl->assign("VALIDATION_DATA_FIELDLABEL",$fieldLabel);
 
-if($focus->mode == 'edit')
-	$smarty->display('Inventory/InventoryEditView.tpl');
-else
-	$smarty->display('Inventory/InventoryCreateView.tpl');
+
+
+
+
+
+$xtpl->parse("main");
+
+$xtpl->out("main");
+
 ?>

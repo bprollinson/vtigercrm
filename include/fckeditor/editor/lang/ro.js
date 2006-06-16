@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: ro.js
  * 	Romanian language file.
  * 
@@ -86,8 +84,6 @@ Find				: "Găseşte",
 Replace				: "Înlocuieşte",
 SpellCheck			: "Verifică text",
 UniversalKeyboard	: "Tastatură universală",
-PageBreakLbl		: "Separator de pagină (Page Break)",
-PageBreak			: "Inserează separator de pagină (Page Break)",
 
 Form			: "Formular (Form)",
 Checkbox		: "Bifă (Checkbox)",
@@ -109,7 +105,6 @@ InsertCell			: "Inserează Cell",
 DeleteCells			: "Şterge celule",
 MergeCells			: "Uneşte celule",
 SplitCell			: "Împarte celulă",
-TableDelete			: "Şterge tabel",
 CellProperties		: "Proprietăţile celulei",
 TableProperties		: "Proprietăţile tabelului",
 ImageProperties		: "Proprietăţile imaginii",
@@ -137,9 +132,6 @@ UnknownToolbarItem	: "Obiectul \"%1\" din bara cu opţiuni necunoscut",
 UnknownCommand		: "Comanda \"%1\" necunoscută",
 NotImplemented		: "Comandă neimplementată",
 UnknownToolbarSet	: "Grupul din bara cu opţiuni \"%1\" nu există",
-NoActiveX			: "Setările de securitate ale programului dvs. cu care navigaţi pe internet (browser) pot limita anumite funcţionalităţi ale editorului. Pentru a evita asta, trebuie să activaţi opţiunea \"Run ActiveX controls and plug-ins\". Poate veţi întâlni erori sau veţi observa funcţionalităţi lipsă.",
-BrowseServerBlocked : "The resources browser could not be opened. Asiguraţi-vă că nu e activ niciun \"popup blocker\" (funcţionalitate a programului de navigat (browser) sau a unui plug-in al acestuia de a bloca deschiderea unui noi ferestre).",
-DialogBlocked		: "Nu a fost posibilă deschiderea unei ferestre de dialog. Asiguraţi-vă că nu e activ niciun \"popup blocker\" (funcţionalitate a programului de navigat (browser) sau a unui plug-in al acestuia de a bloca deschiderea unui noi ferestre).",
 
 // Dialogs
 DlgBtnOK			: "Bine",
@@ -221,7 +213,7 @@ DlgLnkURL			: "URL",
 DlgLnkAnchorSel		: "Selectaţi o ancoră",
 DlgLnkAnchorByName	: "după numele ancorei",
 DlgLnkAnchorById	: "după Id-ul elementului",
-DlgLnkNoAnchors		: "&lt;Nicio ancoră disponibilă în document&gt;",
+DlgLnkNoAnchors		: "&lt;Nici o ancoră disponibilă în document&gt;",
 DlgLnkEMail			: "Adresă de e-mail",
 DlgLnkEMailSubject	: "Subiectul mesajului",
 DlgLnkEMailBody		: "Conţinutul mesajului",
@@ -284,7 +276,6 @@ DlgTableHeight		: "Înălţime",
 DlgTableCellSpace	: "Spaţiu între celule",
 DlgTableCellPad		: "Spaţiu în cadrul celulei",
 DlgTableCaption		: "Titlu (Caption)",
-DlgTableSummary		: "Rezumat",
 
 // Table Cell Dialog
 DlgCellTitle		: "Proprietăţile celulei",
@@ -363,8 +354,8 @@ DlgSpellBtnReplaceAll	: "Înlocuieşte tot",
 DlgSpellBtnUndo			: "Starea anterioară (undo)",
 DlgSpellNoSuggestions	: "- Fără sugestii -",
 DlgSpellProgress		: "Verificarea textului în desfăşurare...",
-DlgSpellNoMispell		: "Verificarea textului terminată: Nicio greşeală găsită",
-DlgSpellNoChanges		: "Verificarea textului terminată: Niciun cuvânt modificat",
+DlgSpellNoMispell		: "Verificarea textului terminată: Nici o greşeală găsită",
+DlgSpellNoChanges		: "Verificarea textului terminată: Nici un cuvânt modificat",
 DlgSpellOneChange		: "Verificarea textului terminată: Un cuvânt modificat",
 DlgSpellManyChanges		: "Verificarea textului terminată: 1% cuvinte modificate",
 
@@ -423,7 +414,7 @@ BulletedListProp	: "Proprietăţile listei punctate (Bulleted List)",
 NumberedListProp	: "Proprietăţile listei numerotate (Numbered List)",
 DlgLstType			: "Tip",
 DlgLstTypeCircle	: "Cerc",
-DlgLstTypeDisc		: "Disc",
+DlgLstTypeDisk		: "Disc",
 DlgLstTypeSquare	: "Pătrat",
 DlgLstTypeNumbers	: "Numere (1, 2, 3)",
 DlgLstTypeLCase		: "Minuscule-litere mici (a, b, c)",
@@ -471,7 +462,7 @@ Templates			: "Template-uri (şabloane)",
 DlgTemplatesTitle	: "Template-uri (şabloane) de conţinut",
 DlgTemplatesSelMsg	: "Vă rugăm selectaţi template-ul (şablonul) ce se va deschide în editor<br>(conţinutul actual va fi pierdut):",
 DlgTemplatesLoading	: "Se încarcă lista cu template-uri (şabloane). Vă rugăm aşteptaţi...",
-DlgTemplatesNoTpl	: "(Niciun template (şablon) definit)",
+DlgTemplatesNoTpl	: "(Nici un template (şablon) definit)",
 
 // About Dialog
 DlgAboutAboutTab	: "Despre",

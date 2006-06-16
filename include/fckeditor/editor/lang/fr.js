@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fr.js
  * 	French language file.
  * 
@@ -85,8 +83,6 @@ Find				: "Chercher",
 Replace				: "Remplacer",
 SpellCheck			: "Orthographe",
 UniversalKeyboard	: "Clavier Universel",
-PageBreakLbl		: "Page Break",	//MISSING
-PageBreak			: "Insert Page Break",	//MISSING
 
 Form			: "Formulaire",
 Checkbox		: "Case à cocher",
@@ -108,7 +104,6 @@ InsertCell			: "Insérer une Cellule",
 DeleteCells			: "Supprimer des Cellules",
 MergeCells			: "Fusionner les Cellules",
 SplitCell			: "Scinder les Cellules",
-TableDelete			: "Delete Table",	//MISSING
 CellProperties		: "Propriétés de Cellule",
 TableProperties		: "Propriétés de Tableau",
 ImageProperties		: "Propriétés d'Image",
@@ -136,9 +131,6 @@ UnknownToolbarItem	: "Elément de barre d'outil inconnu \"%1\"",
 UnknownCommand		: "Nom de commande inconnu \"%1\"",
 NotImplemented		: "Commande non encore écrite",
 UnknownToolbarSet	: "La barre d'outils \"%1\" n'existe pas",
-NoActiveX			: "Les paramètres de sécurité de votre navigateur peuvent limiter quelques fonctionnalités de l'éditeur. Veuillez activer l'option \"Exécuter les contrôles ActiveX et les plug-ins\". Il se peut que vous rencontriez des erreurs et remarquiez quelques limitations.",
-BrowseServerBlocked : "The resources browser could not be opened. Make sure that all popup blockers are disabled.",	//MISSING
-DialogBlocked		: "It was not possible to open the dialog window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -283,7 +275,6 @@ DlgTableHeight		: "Hauteur",
 DlgTableCellSpace	: "Espacement",
 DlgTableCellPad		: "Contour",
 DlgTableCaption		: "Titre",
-DlgTableSummary		: "Résumé",
 
 // Table Cell Dialog
 DlgCellTitle		: "Propriétés de cellule",
@@ -422,7 +413,7 @@ BulletedListProp	: "Propriétés de Liste à puces",
 NumberedListProp	: "Propriétés de Numérotée",
 DlgLstType			: "Type",
 DlgLstTypeCircle	: "Cercle",
-DlgLstTypeDisc		: "Disque",
+DlgLstTypeDisk		: "Disque",
 DlgLstTypeSquare	: "Carré",
 DlgLstTypeNumbers	: "Nombres (1, 2, 3)",
 DlgLstTypeLCase		: "Lettres Minuscules (a, b, c)",

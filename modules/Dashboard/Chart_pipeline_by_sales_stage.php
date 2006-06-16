@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_pipeline_by_sales_stage.php,v 1.17.2.1 2005/08/30 14:24:17 cooljaguar Exp $
  * Description:  returns HTML for client-side image map.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once('include/ComboUtil.php');
@@ -55,7 +55,7 @@ elseif (isset($_REQUEST['pbss_date_start']) && $_REQUEST['pbss_date_start'] != '
 	$log->debug($_SESSION['pbss_date_start']);
 }
 else {
-	$date_start = "2001-01-01";
+	$date_start = date("Y-m-d", time());
 }
 
 if (isset($_SESSION['pbss_date_end']) && $_SESSION['pbss_date_end'] != '' && !isset($_REQUEST['pbss_date_end'])) {
@@ -124,7 +124,7 @@ else {
 	$ids = array_keys($ids);
 }
 
-//create unique prefix based on selected vtiger_users for image vtiger_files
+//create unique prefix based on selected users for image files
 $id_hash = '';
 if (isset($ids)) {
 	sort($ids);
@@ -136,8 +136,10 @@ $log->debug($ids);
 $cache_file_name = $id_hash."_pipeline_".$current_language."_".crc32(implode('',$datax)).$date_start.$date_end.".png";
 $log->debug("cache file name is: $cache_file_name");
 
-if(isPermitted('Potentials','index')=="yes")
-{
+if (substr(phpversion(), 0, 1) == "5") { // php5 }
+	echo "<em>Charts not supported in PHP 5.</em>";
+}
+else {
 $draw_this = new jpgraph();
 echo $draw_this->pipeline_by_sales_stage($datax, $date_start, $date_end, $ids, $tmp_dir.$cache_file_name, $refresh);
 echo "<P><font size='1'><em>".$current_module_strings['LBL_SALES_STAGE_FORM_DESC']."</em></font></P>";
@@ -199,11 +201,6 @@ else {
 </em>[<a href="index.php?module=<?php echo $currentModule;?>&action=<?php echo $action;?>&pbss_refresh=true"><?php echo $current_module_strings['LBL_REFRESH'];?></a>]
 [<a href="index.php?module=<?php echo $currentModule;?>&action=<?php echo $action;?>&pbss_edit=true"><?php echo $current_module_strings['LBL_EDIT'];?></a>]
 </FONT></div>
-<?php }
-}
-else
-{
-	echo $mod_strings['LBL_NO_PERMISSION'];
-} 
+<?php } 
 //echo get_validate_chart_js();
-?>
+}?>

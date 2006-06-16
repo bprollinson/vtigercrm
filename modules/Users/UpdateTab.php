@@ -25,7 +25,7 @@ global $mod_strings;
 $focus = new User();
 
 if(isset($_REQUEST['record'])) {
-	$focus->retrieve_entity_info($_REQUEST['record'],"Users");
+	$focus->retrieve($_REQUEST['record']);
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 	$focus->id = "";

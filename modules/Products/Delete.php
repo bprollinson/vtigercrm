@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/Products/Delete.php,v 1.4 2005/03/22 13:53:55 mickie Exp $
+ * $Header: /advent/projects/wesat/vtiger_crm/vtigercrm/modules/Products/Delete.php,v 1.4 2005/03/22 13:53:55 rajeshkannan Exp $
  * Description:  Deletes an Account record and then redirects the browser to the 
  * defined return URL.
  ********************************************************************************/
@@ -29,14 +29,26 @@ $focus = new Product();
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-DeleteEntity($_REQUEST['module'],$_REQUEST['return_module'],$focus,$_REQUEST['record'],$_REQUEST['return_id']);
+if($_REQUEST['record'] != '' && $_REQUEST['return_id'] != '')
+{
+	if($_REQUEST['return_module'] == 'Activities')
+        	$sql = 'delete from seactivityrel where crmid = '.$_REQUEST['record'].' and activityid = '.$_REQUEST['return_id'];
+
+	if($_REQUEST['return_module'] == 'Potentials' || $_REQUEST['return_module'] == 'Accounts' || $_REQUEST['return_module'] == 'Leads')
+		$sql = 'delete from seproductsrel where crmid = '.$_REQUEST['return_id'].' and productid = '.$_REQUEST['record'];
+
+	$adb->query($sql);
+}
+if($_REQUEST['return_module'] == "Contacts")
+{
+	$sql = "UPDATE products set contactid = '' where productid = ".$_REQUEST['record'];
+	$adb->query($sql);
+}
+if($_REQUEST['module'] == $_REQUEST['return_module'])
+	$focus->mark_deleted($_REQUEST['record']);
 
 if(isset($_REQUEST['activity_mode']))
 	$activitymode = '&activity_mode='.$_REQUEST['activity_mode'];
 
-//code added for returning back to the current view after delete from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-
-header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id'].$activitymode."&viewname=".$return_viewname);
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id'].$activitymode);
 ?>

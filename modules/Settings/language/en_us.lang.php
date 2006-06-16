@@ -28,7 +28,7 @@
 
 /*********************************************************************************
 
- * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Settings/language/en_us.lang.php,v 1.45 2006/02/03 05:19:44 mangai Exp $
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Settings/language/en_us.lang.php,v 1.36.2.1 2005/08/08 06:18:40 crouchingtiger Exp $
 
  * Description:  Defines the English language pack
 
@@ -62,25 +62,7 @@ $mod_strings = Array(
 
 'LBL_EMAIL_ADDRESS'=>'Email',
 
-'LBL_TRANSCURR'=>'Transfer User currency to',
-
-'LBL_CURRDEL'=>'Currency to be Deleted',
-
 'LBL_NEW_FORM_TITLE'=>'New Contact',
-
-'LBL_NEW_CURRENCY'=>'New Currency',
-
-'LBL_CURRENCY_NAME'=>'Currency Name',
-
-'LBL_CURRENCY_CODE'=>'Currency Code',
-
-'LBL_CURRENCY_SYMBOL'=>'Symbol',
-
-'LBL_CURRENCY_CRATE'=>'Conversion Rate',
-
-'LBL_CURRENCY_STATUS'=>'Status',
-
-'LBL_CURRENCY_TOOL'=>'Tools',
 
 
 
@@ -174,23 +156,15 @@ $mod_strings = Array(
 
 'FieldType'=>'Field Type',
 
-'FieldLabel'=>'Field Label',
-
 'Delete'=>'Del',
 
 'NEW'=>'New',
 
 'CUSTOMFIELD'=>'Custom Field',
 
-'LBL_CUSTOM_FIELDS'=>'Custom Fields',
 
-'LBL_ADD_FIELD'=>'Add Field',
-
-'LBL_CUSTM_MSG'=>'allows you to ....',
 
 'PicklistFields'=>' Picklist Fields',
-
-'LBL_PICKLIST_EDITOR'=>'Picklist Editor',
 
 'Edit'=>'Edit',
 
@@ -248,29 +222,18 @@ $mod_strings = Array(
 
 'PickList'=>'Pick List',
 
-'LBL_MULTISELECT_COMBO'=>'Multi-Select Combo Box',
-
 
 
 //added for patch2
 
 'USERGROUPLIST'=>'Groups',
 
-'EMAILTEMPLATES'=>'E-Mail Templates',
+'EMAILTEMPLATES'=>'Email Templates',
 
 'WORDINTEGRATION'=>'Mail Merge Templates',
 
-'LBL_MAIL_MERGE'=>'Mail Merge',
-
 'NOTIFICATIONSCHEDULERS'=>'Notification Schedulers',
-//currency status
-'LBL_ACTIVE'=>'Active',
 
-'LBL_INACTIVE'=>'Inactive',
-
-'LBL_NOTIFICATION'=>'Notification',
-'LBL_DESCRIPTION'=>'Description',
-'LBL_TOOL'=>'Tool',
 
 
 //Added fields for Title Informations -- after 4 Beta
@@ -295,21 +258,21 @@ $mod_strings = Array(
 
 'LBL_MAIL_SERVER_INFO'=>'Mail Server Information',
 
-'LBL_OUTGOING_MAIL_SERVER'=>'Outgoing Mail Server',
+'LBL_OUTGOING_MAIL_SERVER'=>'OutGoing Mail Server',
 
-'LBL_OUTGOING_MAIL_SERVER_LOGIN_USER_NAME'=>'Outgoing Mail Server Login User Name',
+'LBL_OUTGOING_MAIL_SERVER_LOGIN_USER_NAME'=>'OutGoing Mail Server Login User Name',
 
-'LBL_OUTGOING_MAIL_SERVER_PASSWORD'=>'Outgoing Mail Server Password',
+'LBL_OUTGOING_MAIL_SERVER_PASSWORD'=>'OutGoing Mail Server Password',
 
-'LBL_MAIL_SERVER_SMTP'=>'Mail Server (SMTP)',
+
 
 'LBL_BACKUP_SERVER_CONFIG'=>'Backup Server Configuration',
 
-'LBL_FTP_SERVER_NAME'=>'FTP Server Name',
+'LBL_FTP_SERVER_NAME'=>'ftp Server Name',
 
-'LBL_FTP_USER_NAME'=>'FTP User Name',
+'LBL_FTP_USER_NAME'=>'ftp User Name',
 
-'LBL_FTP_PASSWORD'=>'FTP Password',
+'LBL_FTP_PASSWORD'=>'ftp Password',
 
 'LBL_SYSTEM_CONFIG'=>'System Configuration',
 
@@ -318,22 +281,17 @@ $mod_strings = Array(
 'LBL_CURRENCY_CONFIG'=>'Currency Configuration',
 
 'LBL_CURRENCY_INFO'=>'Currency Information',
+'LBL_CURRENCY_NAME'=>'Currency Name',
+'LBL_CURRENCY_CODE'=>'Currency Code',
+'LBL_CURRENCY_SYMBOL'=>'Currency Symbol',
 
-'LBL_CURRENCY_TITLE'=>'Currency',
-
-'LBL_CURRENCY_SETTINGS'=>'Currency Settings',
-
-'LBL_YES'=>'yes',
-'LBL_NO'=>'no',
 
 
 //Fields for Settings
 
-'LBL_USER_MANAGEMENT'=>'Users & Access Management',
+'LBL_USER_MANAGEMENT'=>'User Management',
 
 'LBL_USERS'=>'Users',
-
-'LBL_USERS_LIST'=>'Users List',
 
 'LBL_CREATE_AND_MANAGE_USERS'=>'- Create and Manage Users (e.g., admin)',
 
@@ -343,30 +301,22 @@ $mod_strings = Array(
 
 'LBL_PROFILES'=>'Profiles',
 
-'LBL_PROFILES_LIST'=>'Profiles List',
-
 'LBL_CREATE_AND_MANAGE_USER_PROFILES'=>'- Create and Manage user profiles (e.g., CEO, Sales Manager, etc.)',
 
 'LBL_CREATE_AND_MANAGE_USER_GROUPS'=>'- Create and Manage user groups',
 
-'LBL_SHARING_ACCESS'=>'Sharing Access',
-
-'LBL_FIELDS_ACCESS'=>'Fields',
+'LBL_DEFAULT_ORGANIZATION_SHARING_ACCESS'=>'Default Organization Sharing Access',
 
 'LBL_DEFAULT_ORGANIZATION_FIELDS'=>'Default Organization Fields Access',
 
-'LBL_SETTING_DEFAULT_ORGANIZATION_FIELDS'=>' - Setting Default Field Access within the Organization',
+'LBL_SETTING_DEFAULT_ORGANIZATION_FIELDS'=>'Setting Default Field Access within the Organization',
 
 'LBL_SETTING_DEFAULT_SHARING_ACCESS'=>'- Setting Default Sharing Access within the Organization',
 
 'LBL_FIELD_ACCESSIBILITY'=>'Field Accessibility',
 
 'LBL_SETTING_FIELD_ACCESSIBILITY'=>' - Setting Field Accessibility for each profiles',
-//<<<<<<<<for edit ordering blocks>>>>>>
-'LBL_FIELD_ORDERING_DESC'=>' - Edit Field Order',
 
-'LBL_FIELD_ORDERING'=>'Edit Field Blocks',
-//<<<<<<<<<<end>>>>>>>>>>>>>
 'LBL_LEAD_FIELD_ACCESS'=>'Lead Field Access',
 
 'LBL_ACCOUNT_FIELD_ACCESS'=>'Account Field Access',
@@ -397,11 +347,7 @@ $mod_strings = Array(
 
 'LBL_CUSTOM_FIELD_SETTINGS'=>'Custom Field Settings',
 
-'LBL_CREATE_AND_MANAGE_USER_DEFINED_FIELDS'=>'Create and Manage user defined fields...',
-
-'LBL_SELECT_MODULE'=>'Select Module',
-
-'LBL_SELECT_CF_TEXT'=>'Select the CRM module to show CustomFields :',
+'LBL_CREATE_AND_MANAGE_USER_DEFINED_FIELDS'=>'- Create and Manage user defined fields',
 
 
 
@@ -409,17 +355,17 @@ $mod_strings = Array(
 
 'LBL_EDIT_PICKLIST_VALUES'=>' - Edit values of Picklist fields',
 
-'LBL_EDIT'=>'Editing',
+
 
 'LBL_COMMUNICATION_TEMPLATES'=>'Communication Templates',
 
-'LBL_CREATE_EMAIL_TEMPLATES'=>'Creating Email Template',
+'LBL_CREATE_EMAIL_TEMPLATES'=>' - Create Email Templates',
 
 'LBL_UPLOAD_MSWORD_TEMPLATES'=>' - Upload MS Word Templates for Mail Merge',
 
 'LBL_SCHEDULE_EMAIL_NOTIFICATION'=>' - Schedule Email Notifications',
 
-'LBL_EXPAND_CLOSE_MENU'=>'Expand/Close Menu',
+
 
 'LBL_CONFIGURATION'=>'Configuration',
 
@@ -428,8 +374,6 @@ $mod_strings = Array(
 'LBL_BACKUP_SERVER_CONFIGURATION'=>'Backup Server Configuration',
 
 'LBL_BACKUP_SERVER_INFO'=>'Backup Server Information',
-
-'LBL_BACKUP_SERVER_SETTINGS'=>'Backup Server Settings',
 
 'LBL_CONFIGURE_BACKUP_SERVER'=>' - Configure Backup Server',
 
@@ -489,27 +433,14 @@ $mod_strings = Array(
 'LBL_DISPLAY_NAME'=>'Display Name',
 'LBL_MAIL_PROTOCOL'=>'Mail Protocol',
 'LBL_LIST_PASSWORD'=>'Password',
-'LBL_MAIL_SERVER_NAME'=>'Mail Server Name or IP',
-'LBL_MAIL_SERVER_SETTINGS'=>'Mail Server Settings',
+'LBL_MAIL_SERVER_NAME'=>'Mail Server Name',
 'LBL_TEST_SETTINGS'=>'Test my account setting immediately',
 'LBL_TEST_BUTTON_TITLE'=>'Test my account now! [Alt+T]',
 'LBL_TEST_BUTTON_KEY'=>'T',
 'LBL_TEST_BUTTON_LABEL'=>'Test my account now!',
 'LBL_DEFAULT'=>'Default',
-'LBL_IMAP2'=>'IMAP2',
-'LBL_IMAP4'=>'IMAP4',
-'LBL_POP'=>'POP',
 'LBL_IMAP'=>'IMAP',
-'LBL_MAIL_DISCLAIM'=>'Items marked with <font color="red">*</font> are required<br>Items marked with <font color="red">* *</font> are not fully supported',
-'LBL_SSL_OPTIONS'=>'SSL Options',
-'LBL_TLS'=>'TLS',
-'LBL_NO_TLS'=>'No TLS',
-'LBL_CERT_VAL'=>'Certificate Validations',
-'LBL_INT_MAILER'=>'Use Internal Mailer?',
-'LBL_INT_MAILER_USE'=>'Yes',
-'LBL_INT_MAILER_NOUSE'=>'No',
-'LBL_VAL_SSL_CERT'=>'Validate SSL Cert',
-'LBL_DONOT_VAL_SSL_CERT'=>'Do Not Validate SSL Cert',
+'LBL_POP'=>'POP',
 'LBL_WEB_MAIL_CONFIG'=>'Web Mail Configuration',
 'LBL_CONFIGURE_WEB_MAIL'=>' - Configure Web Mail',
 'LBL_LIST_MAIL_ACCOUNT'=>'  List Mail Account',
@@ -518,18 +449,6 @@ $mod_strings = Array(
 'LBL_QUOTE_STAGE'=>'Quote Stage',
 'LBL_CARRIER'=>'Carrier',
 'LBL_TAXCLASS'=>'Tax Class',
-'LBL_MY_DETAILS'=>'My Details',
-'LBL_MY_MAIL_SERVER_DET'=>'My Incoming Mail Server Details',
-'LBL_EMAIL_ID'=>'Email ID',
-'LBL_NAME_EXAMPLE'=>'(example : John Fenner)',
-'LBL_EMAIL_EXAMPLE'=>'(example : johnfenner@xyz.com)',
-'LBL_REFRESH_TIMEOUT'=>'Refresh Timeout',
-'LBL_1_MIN'=>'1 minute',
-'LBL_2_MIN'=>'2 minutes',
-'LBL_3_MIN'=>'3 minutes',
-'LBL_4_MIN'=>'4 minutes',
-'LBL_5_MIN'=>'5 minutes',
-'LBL_EMAILS_PER_PAGE'=>'Emails per Page',
 
 //Added for Organization Details (4.2 release)
 'LBL_ORGANIZATION_NAME'=>'Company Name',
@@ -543,11 +462,11 @@ $mod_strings = Array(
 'LBL_ORGANIZATION_WEBSITE'=>'Website',
 'LBL_ORGANIZATION_DETAILS'=>'Company Information',
 'LBL_SPECIFY_COMPANY_DETAILS'=>' - Specify Company Information',
-'LBL_ORGANIZATION_LOGO'=>'Logo',
+'LBL_ORGANIZATION_LOGO'=>'Logo Name',
 'LBL_UPLOAD'=>'Upload',
 'LBL_FILENAME'=>'File Name',
 'LBL_SETTINGS'=>'Settings',
-'LBL_COMPANY_DETAILS'=>'Company Details',
+'LBL_COMPANY_INFO'=>'Company Information',
 
 'LBL_SEVERITY'=>'Severity',
 'LBL_FAQ_CATEGORY'=>'FAQ Category',
@@ -558,13 +477,7 @@ $mod_strings = Array(
 'LBL_SO_FIELD_ACCESS'=>'Sales Order Access',
 'LBL_INVOICE_FIELD_ACCESS'=>'Invoice Field Access',
 'INVENTORYNOTIFICATION'=>'Inventory Notifications',
-'LBL_INVENTORY_NOTIFICATIONS'=>' - Edit Inventory Email Notifications',
-'INVENTORYTERMSANDCONDITIONS'=>'Inventory Terms & Conditions',//newly added for Inventory terms and conditions
-'LBL_INVENTORY_TERMSANDCONDITIONS'=>' - Edit Inventory Terms & Conditions',//newly added
-
-'LBL_OTHER_SETTINGS'=>'Other Settings',
-'LBL_SCROLL'=>'Scroll to Top',
-
+'LBL_INVENTORY_NOTIFICATIONS'=>'Edit Inventory Email Notifications',
 'LBL_INV_NOT_DESC'=>'The following is the list of notifications that are sent to the product handler regarding the demand and the current quantity in hand during the creation of a Quote, SalesOrder and Invoice.',
 
 'InvoiceNotification'=>'Product Stock Notification during Invoice Generation',
@@ -572,81 +485,23 @@ $mod_strings = Array(
 'Vendor'=>'Vendor',
 'PriceBook'=>'PriceBook',
 'Quotes'=>'Quote',
-'PurchaseOrder'=>'Purchase Order',
+'Orders'=>'Purchase Order',
 'SalesOrder'=>'SalesOrder',
 'Invoice'=>'Invoice',
 
 //For Custom Fields
-'LBL_LEAD_MAP_CUSTOM_FIELD'=>'Mapping Lead Custom Fields',
-'leadCustomFieldDescription'=>'Map each of your organizations lead custom fields to each of your custom account
-,contact, or potential fields. These mappings will be used when you convert leads',
+'LBL_LEAD_MAP_CUSTOM_FIELD'=>'Map Lead Custom Fields',
+'leadCustomFieldDescription'=>'Map each of your organizations lead custom fields to each of your custom accoun
+t, contact, or potential fields. These mappings will be used when you convert leads',
 'LBL_MAPPING_INFO'=>'Mapping Information',
-'LBL_ACCOUNT_FIELD'=>'Account Custom Field',
-'LBL_CONTACT_FIELD'=>'Contact Custom Field',
-'LBL_POTENTIAL_FIELD'=>'Potential Custom Field',
+'LBL_ACCOUNT_FIELD'=>'Account Field',
+'LBL_CONTACT_FIELD'=>'Contact Field',
+'LBL_POTENTIAL_FIELD'=>'Potential Field',
 'CUSTOMFIELDMAPPING'=>'Custom Field Mapping',
-'LBL_FIELD_MAPPING'=>'Field Mapping',
-'LBL_LEAD_FIELD'=>'Lead Custom Field',
+
 //After 4.2 GA
 'LBL_TEXT_AREA'=>'Text Area',
-//for Edit ordering the blocks
-'NOTESCUSTOMFIELDS'=>'Notes Custom Fields',
 
-//Added fields after 4.2 ptach 2
-'LBL_ASSIGN_MODULE_OWNERS'=>'Assign Module Owners',
-'LBL_MODULE_OWNERS'=>'Module Owners',
-'LBL_ASSIGN_MODULE_OWNERS_INFO'=>' - Assign Owners for each modules',
-'LBL_MODULE'=>'Module',
-'LBL_OWNER'=>'Owner',
-'LBL_MIGRATION'=>'Migrate from Previous Version',
-'LBL_MIGRATION_INFO'=>' - Migration from previous Version of vTiger',
-
-//Added for 5 GA - Description of Settings UI
-
-'LBL_USER_DESCRIPTION'=>'Manage Users list who access CRM',
-'LBL_ROLE_DESCRIPTION'=>'Define hierarchy of Roles and assign to Users',
-'LBL_PROFILE_DESCRIPTION'=>'Define Profiles to provide access rights to each Role',
-'LBL_GROUP_DESCRIPTION'=>'Define Groups based on roles, users, profiles etc',
-'LBL_SHARING_ACCESS_DESCRIPTION'=>'Define privileges for each Role to access CRM modules',
-'LBL_SHARING_FIELDS_DESCRIPTION'=>'Show or hide fields in each CRM Module',
-'LBL_MODULE_OWNERS_DESCRIPTION'=>'Assign Owners for each CRM module',
-'LBL_ANNOUNCEMENT_DESCRIPTION'=>'Edit the contents of Announcements display',
-'LBL_CUSTOM_FIELDS_DESCRIPTION'=>'Create and Manage user-defined fields',
-'LBL_PICKLIST_DESCRIPTION'=>'Manage contents of Picklists in all CRM Modules',
-'LBL_EMAIL_TEMPLATE_DESCRIPTION'=>'Manage templates for E-Mail module',
-'LBL_MAIL_MERGE_DESCRIPTION'=>'Manage templates for Mail Merging',
-'LBL_NOTIF_SCHED_DESCRIPTION'=>'Manage Notifications that will alert in case of important actions',
-'LBL_INV_NOTIF_DESCRIPTION'=>'Change Settings of Inventory related Notifications',
-'LBL_INV_TANDC_DESCRIPTION'=>'Manage the text contents of Terms and Conditions',
-'LBL_COMPANY_DESCRIPTION'=>'Manage details about your company',
-'LBL_MAIL_SERVER_DESCRIPTION'=>'Edit settings for Outgoing E-Mail Server',
-'LBL_BACKUP_SERVER_DESCRIPTION'=>'Edit settings of Backup Server',
-'LBL_CURRENCY_DESCRIPTION'=>'Manage Currencies and Exchange Rates',
-'LBL_TAX_DESCRIPTION'=>'Manage values for Sales tax, VAT etc',
-
-
-
-//Added fields after 5.0 Alpha
-'LBL_REQUIRE_SMTP_AUTHENTICATION'=>'Require SMTP Authentication?',
-'LBL_ANNOUNCEMENT'=>'Announcements',
-'LBL_SETTING_ANNOUNCEMENT'=>'Announcement',
-'LBL_ANNOUNCE_TEXT'=>'Announcement Text',
-'LBL_UPDATE_BUTTON'=>'Update',
-'LBL_ANNOUNCEMENT_INFO'=>'Type the announcement text below, and click the Update button.',
-'LBL_ANNOUNCEMENT_DESC'=>'Change the text that appears in the announcement display on top of each page',
-'LBL_EMAIL_CONTENTS'=>'Email Contents',
-'LBL_SUBJECT'=>'Subject',
-'LBL_MESSAGE'=>'Message',
-'LBL_PICKLIST_EDITOR'=>'Picklist Editor',
-'LBL_PICKLIST_AVAIL'=>'Picklists Availabe in',
-'LBL_PICKLIST_AVAILINFO1'=>'The picklists available in',
-'LBL_PICKLIST_AVAILINFO2'=>'are shown below. Click Edit to modify the contents of the list.',
-'LBL_EDIT_PICKLIST'=>'Edit Pick List',
-'LBL_PICKLIST_SAVEINFO'=>'Type the entries one - by - one below and click the Save button to save the list.',
-'LBL_SELECT_CRM_MODULE'=>'Select crm module',
-'LBL_TAX_SETTINGS'=>'Tax Settings',
-'LBL_INVENTORY_TAX_CONFIG'=>'Inventory Tax Configuration',
 );
-
 
 ?>

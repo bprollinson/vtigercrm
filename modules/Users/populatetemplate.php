@@ -8,19 +8,19 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-//query the specific vtiger_table and then get the data and write the data here 
+//query the specific table and then get the data and write the data here 
 require_once('include/database/PearDatabase.php');
 include_once('modules/Contacts/Contact.php');
 include_once('modules/Leads/Lead.php');
 include_once('modules/Users/User.php');
-global $log;
+global $vtlog;
 
 //download the template file and store it in some specific location
-$sql = "select templatename,body from vtiger_emailtemplates where templateid='".$_REQUEST["templateid"] ."'";
+$sql = "select templatename,body from emailtemplates where templateid='".$_REQUEST["templateid"] ."'";
 $tempresult = $adb->query($sql);
 $tempArray = $adb->fetch_array($tempresult);
 $fileContent = $tempArray["body"];
-	$log->debug("the filecontent is ".$fileContent);
+	$vtlog->logthis("the filecontent is ".$fileContent,'debug');  
 $handle = fopen($root_directory.'/modules/Emails/templates/'.$_REQUEST["templatename"],"wb") ;
 fwrite($handle,$fileContent,89999999);
 fclose($handle);
@@ -55,8 +55,8 @@ else {
  $module = $_REQUEST['entity'];
 $recordid = $_REQUEST['entityid'];
 
-	$log->debug("the module is ".$module);
-        $log->debug("the template being used has id  ".$recordid);
+	$vtlog->logthis("the module is ".$module,'debug');  
+	$vtlog->logthis("the template being used has id  ".$recordid,'debug');  
 //get the module
 if($module == 'leads')
 {
@@ -86,7 +86,7 @@ foreach ($focus->column_fields as $columnName=>$value)
 
 global $current_user;
 global $adb;
-$query = 'select * from vtiger_users where id= '.$current_user->id;
+$query = 'select * from users where id= '.$current_user->id;
 $result = $adb->query($query);
 $res_row = $adb->fetchByAssoc($result);
 foreach ($res_row as $columnName=>$value)
@@ -112,11 +112,11 @@ $myString .= "\\$" .$module ."_" .$colName[$i];
 $myString .="\"; \n\n";
 
 $myString .= "?> \n";
-	$log->debug("the string in totality is  ".$myString);
+	$vtlog->logthis("the string in totality is  ".$myString,'debug');  
 if ($is_writable && ($config_file = @ fopen($root_directory.'/modules/Emails/templates/testemailtemplateusage.php', "w"))) 
 	{
-        	$log->debug("writing to the testemailtemplatuseage.php file");
-		fputs($config_file, $myString, strlen($myString));
+	$vtlog->logthis("writing to the testemailtemplatuseage.php file",'debug');  
+        	fputs($config_file, $myString, strlen($myString));
 	        fclose($config_file);
 	}
 $templatename = $root_directory.'/modules/Emails/templates/'.$_REQUEST["templatename"];

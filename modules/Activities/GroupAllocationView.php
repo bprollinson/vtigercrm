@@ -20,6 +20,7 @@
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
+require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
 require_once('modules/Activities/Activity.php');
 require_once('themes/'.$theme.'/layout_utils.php');
@@ -48,10 +49,17 @@ if (isset($_REQUEST['current_user_only'])) $current_user_only = $_REQUEST['curre
 
 
 //get a list of all the group allocated tasks/calls/leads
+
+
+
+//select leads.last_name,LeadGroupRelation.groupname from leads inner join LeadGroupRelation on leads.id=LeadGroupRelation.LEADID where LeadGroups.deleted=0  and Leads.deleted=0
+
+
+
 if(isset($_REQUEST['query']))
 {
 
-  $query = "select leads.last_name,vtiger_leadgrouprelation.groupname from leads inner join vtiger_leadgrouprelation on leads.id=vtiger_leadgrouprelation.leadid where vtiger_leadgrouprelation.deleted=0  and leads.deleted=0";
+  $query = "select leads.last_name,leadgrouprelation.groupname from leads inner join leadgrouprelation on leads.id=leadgrouprelation.leadid where leadgrouprelation.deleted=0  and leads.deleted=0";
   $log->info("Here is the where clause for the list view: $query");
 
 }

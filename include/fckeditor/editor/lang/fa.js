@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fa.js
  * 	Persian language file.
  * 
@@ -85,8 +83,6 @@ Find				: "جستجو",
 Replace				: "جايگزينی",
 SpellCheck			: "کنترل املا",
 UniversalKeyboard	: "صفحه کليد جهانی",
-PageBreakLbl		: "Page Break",	//MISSING
-PageBreak			: "Insert Page Break",	//MISSING
 
 Form			: "فرم",
 Checkbox		: "دکمه گزينه ای",
@@ -108,7 +104,6 @@ InsertCell			: "درج سلول",
 DeleteCells			: "حذف سلولها",
 MergeCells			: "ادغام سلولها",
 SplitCell			: "تفکيک سلول",
-TableDelete			: "Delete Table",	//MISSING
 CellProperties		: "ويژگيهای سلول",
 TableProperties		: "ويژگيهای جدول",
 ImageProperties		: "ويژگيهای تصوير",
@@ -136,9 +131,6 @@ UnknownToolbarItem	: "فقره منوابزار ناشناخته \"%1\"",
 UnknownCommand		: "نام دستور ناشناخته \"%1\"",
 NotImplemented		: "دستور اجرا نشد",
 UnknownToolbarSet	: "مجموعه منوابزار \"%1\" وجود ندارد",
-NoActiveX			: "You browser's security settings could limit some features of the editor. You must enable the option \"Run ActiveX controls and plug-ins\". You may experience errors and notice missing features.",	//MISSING
-BrowseServerBlocked : "The resources browser could not be opened. Make sure that all popup blockers are disabled.",	//MISSING
-DialogBlocked		: "It was not possible to open the dialog window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "تائيد",
@@ -283,7 +275,6 @@ DlgTableHeight		: "درازا",
 DlgTableCellSpace	: "فاصله ميان سلولها",
 DlgTableCellPad		: "فاصله پرشده در سلول",
 DlgTableCaption		: "عنوان",
-DlgTableSummary		: "Summary",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "ويژگيهای سلول",
@@ -422,7 +413,7 @@ BulletedListProp	: "ويژگيهای فهرست دکمه ای",
 NumberedListProp	: "ويژگيهای فهرست عددی",
 DlgLstType			: "نوع",
 DlgLstTypeCircle	: "دايره",
-DlgLstTypeDisc		: "Disc",	//MISSING
+DlgLstTypeDisk		: "قرص",
 DlgLstTypeSquare	: "مربع",
 DlgLstTypeNumbers	: "شماره ها (1، 2، 3)",
 DlgLstTypeLCase		: "حروف کوچک (a، b، c)",

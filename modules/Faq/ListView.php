@@ -16,191 +16,183 @@ global $mod_strings;
 
 require_once('modules/Faq/Faq.php');
 require_once('include/database/PearDatabase.php');
-require_once('Smarty_setup.php');
-require_once('include/utils/utils.php');
-require_once('include/ListView/ListView.php');
+require_once('XTemplate/xtpl.php');
+require_once('include/utils.php');
 require_once('modules/Faq/Faq.php');
 require_once('themes/'.$theme.'/layout_utils.php');
-require_once('include/utils/utils.php');
-require_once('modules/CustomView/CustomView.php');
+require_once('include/uifromdbutil.php');
 
 global $app_strings;
+global $mod_strings;
 $current_module_strings = return_module_language($current_language, 'Faq');
 
-global $currentModule;
-
+global $theme;
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-if(isset($_REQUEST['category']) && $_REQUEST['category'] !='')
-{
-	$category = $_REQUEST['category'];
-}
-else
-{
-	$category = getParentTabFromModule($currentModule);
-}
-
 $focus = new Faq();
-$smarty = new vtigerCRM_Smarty;
 
-$other_text = Array();
+if (isset($_REQUEST['order_by'])) $order_by = $_REQUEST['order_by'];
 
-if(!$_SESSION['lvs'][$currentModule])
-{
-	unset($_SESSION['lvs']);
-	$modObj = new ListViewSession();
-	$modObj->sorder = $sorder;
-	$modObj->sortby = $order_by;
-	$_SESSION['lvs'][$currentModule] = get_object_vars($modObj);
+$url_string = ''; // assigning http url string
+$sorder = 'ASC';  // Default sort order
+if(isset($_REQUEST['sorder']) && $_REQUEST['sorder'] != '')
+$sorder = $_REQUEST['sorder'];
+
+//Constructing the Search Form
+if (!isset($_REQUEST['search_form']) || $_REQUEST['search_form'] != 'false') {
+        // Stick the form header out there.
+        $search_form=new XTemplate ('modules/Faq/SearchForm.html');
+        $search_form->assign("MOD", $mod_strings);
+        $search_form->assign("APP", $app_strings);
+	
+	if ($order_by !='') $search_form->assign("ORDER_BY", $order_by);
+	if ($sorder !='') $search_form->assign("SORDER", $sorder);
+	$search_form->assign("JAVASCRIPT", get_clear_form_js());
+
+	echo get_form_header($current_module_strings['LBL_SEARCH_FORM_TITLE'], "", false);
+
 }
 
-if($_REQUEST['errormsg'] != '')
+if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
-        $errormsg = $_REQUEST['errormsg'];
-        $smarty->assign("ERROR","The User does not have permission to delete ".$errormsg." ".$currentModule);
-}else
-{
-        $smarty->assign("ERROR","");
+	$where_clauses = Array();
+	$url_string .="&query=true";
+	// we have a query
+	if (isset($_REQUEST['question'])) $question = $_REQUEST['question'];
+	if (isset($_REQUEST['faqcategories'])) $faqcategories = $_REQUEST['faqcategories'];
+
+	if(isset($question) && $question != "")
+	{
+		array_push($where_clauses, "faq.question like '%".$question."%'");
+		$url_string .= "&question=".$question;
+		$search_form->assign("QUESTION", $question);
+
+	}
+	if(isset($faqcategories) && $faqcategories != "")
+	{
+		array_push($where_clauses, "faq.category like '%".$faqcategories."%'"); 
+		$url_string .= "&faqcategories=".$faqcategories;
+		$search_form->assign("FAQCATEGORIES", $faqcategories);
+
+	}
+
+	$where = "";
+	foreach($where_clauses as $clause)                                                                            {
+		$where .= " and ";
+		$where .= $clause;                                                                                    }
 }
-$url_string = ''; 
-//<<<<cutomview>>>>>>>
-$oCustomView = new CustomView("Faq");
-$viewid = $oCustomView->getViewId($currentModule);
-$customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
-$viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
-//<<<<<customview>>>>>
 
-//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-if($_REQUEST['order_by'] != '')
-	$order_by = $_REQUEST['order_by'];
-else
-	$order_by = (($_SESSION['FAQ_ORDER_BY'] != '')?($_SESSION['FAQ_ORDER_BY']):($focus->default_order_by));
+if (!isset($_REQUEST['search_form']) || $_REQUEST['search_form'] != 'false') {
+	$search_form->assign("ALPHABETICAL",AlphabeticalSearch('Faq','index','question','true','basic'));
+       	$search_form->parse("main");
+        $search_form->out("main");
+	echo get_form_footer();
+	echo "\n<BR>\n";
 
-if($_REQUEST['sorder'] != '')
-	$sorder = $_REQUEST['sorder'];
-else
-	$sorder = (($_SESSION['FAQ_SORT_ORDER'] != '')?($_SESSION['FAQ_SORT_ORDER']):($focus->default_sort_order));
-
-$_SESSION['FAQ_ORDER_BY'] = $order_by;
-$_SESSION['FAQ_SORT_ORDER'] = $sorder;
-//<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
-
-if($viewid != 0)
-{
-        $CActionDtls = $oCustomView->getCustomActionDetails($viewid);
 }
-if(isPermitted('Faq','Delete','') == 'yes')
-$other_text ['del'] = $app_strings[LBL_MASS_DELETE]; 
+// Buttons and View options
+$other_text = '<table width="100%" border="0" cellpadding="1" cellspacing="0">
+	<form name="massdelete" method="POST">
+	<tr>
+	<input name="idlist" type="hidden">';
 
+        $other_text .='<td><input class="button" type="submit" value="'.$app_strings[LBL_MASS_DELETE].'" onclick="return massDelete()"/>
+   		</td>
+		<td align="right">&nbsp;</td>
+	</tr>
+	</table>';
+//
 
 //Retreive the list from Database
 $list_query = getListQuery("Faq");
-if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
-{
-	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
-	// we have a query
-	$url_string .="&query=true".$ustring;
-	$log->info("Here is the where clause for the list view: $where");
-	$smarty->assign("SEARCH_URL",$url_string);
-}
 if(isset($where) && $where != '')
 {
-	$list_query .= ' and '.$where;
+	$list_query .= $where;
 }
 
-
-$view_script = "<script language='javascript'>
-function set_selected()
-{
-	len=document.massdelete.viewname.length;
-	for(i=0;i<len;i++)
-	{
-		if(document.massdelete.viewname[i].value == '$viewid')
-		document.massdelete.viewname[i].selected = true;
-	}
-}
-	set_selected();
-	</script>";
 if(isset($order_by) && $order_by != '')
 {
-	$tablename = getTableNameForField('Faq',$order_by);
-	$tablename = (($tablename != '')?($tablename."."):'');
-
-        $list_query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
+        $list_query .= ' ORDER BY '.$order_by.' '.$sorder;
 }
 
 $list_result = $adb->query($list_query);
 
 //Constructing the list view 
 
+echo get_form_header($current_module_strings['LBL_LIST_FORM_TITLE'],$other_text, false);
+$xtpl=new XTemplate ('modules/Faq/ListView.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("IMAGE_PATH",$image_path);
 
-
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("MODULE",$currentModule);
-$smarty->assign("BUTTONS",$other_text);
-$smarty->assign("CATEGORY",$category);
-$smarty->assign("SINGLE_MOD",'Note');
 //Retreiving the no of rows
 $noofrows = $adb->num_rows($list_result);
 
-if($viewnamedesc['viewname'] == 'All')
+//Retreiving the start value from request
+if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
 {
-	$smarty->assign("ALL", 'All');
+	$start = $_REQUEST['start'];
 }
-
-//Storing Listview session object
-if($_SESSION['lvs'][$currentModule])
+else
 {
-	setSessionVar($_SESSION['lvs'][$currentModule],$noofrows,$list_max_entries_per_page);
+	
+	$start = 1;
 }
-
-$start = $_SESSION['lvs'][$currentModule]['start'];
-
 //Retreive the Navigation array
 $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per_page);
 
 // Setting the record count string
-//modified by rdhital
-$start_rec = $navigation_array['start'];
-$end_rec = $navigation_array['end_val']; 
-// Raju Ends
-
+if ($navigation_array['start'] == 1)
+{
+	if($noofrows != 0)
+	$start_rec = $navigation_array['start'];
+	else
+	$start_rec = 0;
+	if($noofrows > $list_max_entries_per_page)
+	{
+		$end_rec = $navigation_array['start'] + $list_max_entries_per_page - 1;
+	}
+	else
+	{
+		$end_rec = $noofrows;
+	}
+	
+}
+else
+{
+	if($navigation_array['next'] > $list_max_entries_per_page)
+	{
+		$start_rec = $navigation_array['next'] - $list_max_entries_per_page;
+		$end_rec = $navigation_array['next'] - 1;
+	}
+	else
+	{
+		$start_rec = $navigation_array['prev'] + $list_max_entries_per_page;
+		$end_rec = $noofrows;
+	}
+}
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
-if($viewid !='')
-$url_string .= "&viewname=".$viewid;
-
 //Retreive the List View Table Header
+
 $listview_header = getListViewHeader($focus,"Faq",$url_string,$sorder,$order_by);
-$smarty->assign("LISTHEADER", $listview_header);
+$xtpl->assign("LISTHEADER", $listview_header);
 
-$listview_header_search = getSearchListHeaderValues($focus,"Faq",$url_string,$sorder,$order_by,"",$oCustomView);
-$smarty->assign("SEARCHLISTHEADER",$listview_header_search);
+$listview_entries = getListViewEntries($focus,"Faq",$list_result,$navigation_array);
+$xtpl->assign("LISTHEADER", $listview_header);
+$xtpl->assign("LISTENTITY", $listview_entries);
 
-$listview_entries = getListViewEntries($focus,"Faq",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
-$smarty->assign("LISTHEADER", $listview_header);
-$smarty->assign("LISTENTITY", $listview_entries);
-$smarty->assign("SELECT_SCRIPT", $view_script);
-$navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Faq","index",$viewid);
-$alphabetical = AlphabeticalSearch($currentModule,'index','question','true','basic',"","","","",$viewid);
-$fieldnames = getAdvSearchfields($module);
-$criteria = getcriteria_options();
-$smarty->assign("CRITERIA", $criteria);
-$smarty->assign("FIELDNAMES", $fieldnames);
-$smarty->assign("ALPHABETICAL", $alphabetical);
-$smarty->assign("NAVIGATION", $navigationOutput);
-$smarty->assign("RECORD_COUNTS", $record_string);
-$smarty->assign("CUSTOMVIEW_OPTION",$customviewcombo_html);
-$smarty->assign("VIEWID", $viewid);
-$smarty->assign("SINGLE_MOD" ,'Faq');
+if($order_by !='')
+$url_string .="&order_by=".$order_by;
+if($sorder !='')
+$url_string .="&sorder=".$sorder;
 
-$check_button = Button_Check($module);
-$smarty->assign("CHECK", $check_button);
+$navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Faq");
+$xtpl->assign("NAVIGATION", $navigationOutput);
+$xtpl->assign("RECORD_COUNTS", $record_string);
 
-if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
-	$smarty->display("ListViewEntries.tpl");
-else	
-	$smarty->display("ListView.tpl");
+$xtpl->parse("main");
+$xtpl->out("main");
 ?>

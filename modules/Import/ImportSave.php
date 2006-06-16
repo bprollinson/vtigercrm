@@ -1,13 +1,4 @@
 <?php
-/*********************************************************************************
-  ** The contents of this file are subject to the vtiger CRM Public License Version 1.0
-   * ("License"); You may not use this file except in compliance with the License
-   * The Original Code is:  vtiger CRM Open Source
-   * The Initial Developer of the Original Code is vtiger.
-   * Portions created by vtiger are Copyright (C) vtiger.
-   * All Rights Reserved.
-  *
- ********************************************************************************/
 
 $count = 0;
 $skip_required_count = 0;
@@ -17,7 +8,7 @@ function InsertImportRecords($rows,$rows1,$focus,$ret_field_count,$col_pos_to_fi
 	global $current_user;
 	global $adb;
 
-// MWC ** Getting vtiger_users
+// MWC ** Getting users
 $temp = get_user_array(FALSE);
 foreach ( $temp as $key=>$data)
 	$my_users[$data] = $key;
@@ -84,7 +75,7 @@ foreach ($rows1 as $row)
 
 	p("setting done");
 	
-	p("do save before req vtiger_fields=".$do_save);
+	p("do save before req fields=".$do_save);
 
 	$adb->println($focus->required_fields);
 
@@ -115,7 +106,8 @@ foreach ($rows1 as $row)
 		}	
 
 		// now do any special processing
-	
+		$focus->process_special_fields(); 
+
 		$focus->save($module);
 		//$focus->saveentity($module);
 		$return_id = $focus->id;
@@ -127,7 +119,7 @@ foreach ($rows1 as $row)
 			{
 				$_REQUEST['module']='contactdetails';
 			}
-			$dbquery="select * from vtiger_field where vtiger_tablename='".$_REQUEST['module']."'";
+			$dbquery="select * from field where tablename='".$_REQUEST['module']."'";
 			$custresult = $adb->query($dbquery);
 			if($adb->num_rows($custresult) != 0)
 			{
@@ -147,11 +139,6 @@ foreach ($rows1 as $row)
 					$custTabName = 'potentialscf';
 				}
 
-				else if ( $_REQUEST['module'] == 'Products')
-				{
-					$columns = 'productid';
-					$custTabName = 'productscf';
-				}
 				$noofrows = $adb->num_rows($custresult);
 				$values='"'.$focus->id.'"';
 				for($j=0; $j<$noofrows; $j++)
@@ -199,12 +186,12 @@ if($end >= $totalnoofrows)
 	$imported_records = $ii - $skip_required_count;
 	if($imported_records == $ii)
 		$skip_required_count = 0;
-	 $message= urlencode("<b>".$mod_strings['LBL_SUCCESS']."</b>"."<br><br>" .$mod_strings['LBL_SUCCESS_1']."  $imported_records" ."<br><br>" .$mod_strings['LBL_SKIPPED_1']."  $skip_required_count " );
+	$message= urlencode($mod_strings['LBL_SUCCESS']."<BR>$imported_records ". $_REQUEST['return_module']." ".$mod_strings['LBL_SUCCESSFULLY']."<br>$skip_required_count " .  $mod_strings['LBL_RECORDS_SKIPPED'] );
 }
 else
 {
 	$module = 'Import';
-	$action = 'ImportStep3';
+	$action = 'ImportStep4';
 }
 ?>
 

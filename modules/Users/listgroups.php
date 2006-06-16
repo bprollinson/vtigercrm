@@ -11,36 +11,53 @@
  ********************************************************************************/
 
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/UserInfoUtil.php');
-
-global $mod_strings;
-global $app_strings;
-global $app_list_strings;
-
-$smarty = new vtigerCRM_Smarty;
-$groupInfo=getAllGroupInfo();
-$cnt=1;
-$output='';
-$list_header = array($mod_strings['LBL_OERATION'],$mod_strings['LBL_GROUP_NAME'],$mod_strings['LBL_DESCRIPTION']);
-$return_data = array();
-foreach($groupInfo as $groupId=>$groupInfo)
-{
-	
-	$standCustFld = array();
-	$standCustFld['groupid']= $groupId;	
-	$standCustFld['groupname']= $groupInfo[0];
-	$standCustFld['description']= $groupInfo[1];
-	$return_data[]=$standCustFld;
-	$cnt++;
-}
-
-$smarty->assign("LIST_HEADER",$list_header);
-$smarty->assign("LIST_ENTRIES",$return_data);
-$smarty->assign("PROFILES", $standCustFld);
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("CMOD", $mod_strings);
-$smarty->assign("MOD", return_module_language($current_language,'Settings'));
-
-$smarty->display("ListGroup.tpl");
 ?>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+  <title>Roles List</title>
+<!--meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"-->
+</head>
+<body>
+<!--c:out value="${locale}"/-->
+<!--fmt:setLocale value="ja_JP"/-->
+            <form action="index.php">
+			<?php echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_GROUPS'], false); ?>
+	<br>
+             <input type="hidden" name="module" value="Users">
+             <input type="hidden" name="action" value="createnewgroup">
+             <input type="submit" class="button" name="Submit" value="<? echo $mod_strings['LBL_CREATE_NEW_GROUP']; ?>">
+<br><br>
+		<table width="30%" border="0" cellspacing="1" cellpadding="5" class="FormBorder">
+		<tr>
+		<td class="moduleListTitle" height="20" style='padding:0px 3px 0px 3px;'><b><?php echo $mod_strings['LBL_GROUP_NAME']; ?></b></td>
+                <td class="moduleListTitle" style='padding:0px 3px 0px 3px;'><b><?php echo $mod_strings['LBL_DESCRIPTION']; ?></b></td>
+                </tr>
+<?php
+   $sql = "select * from groups";
+   $result = $adb->query($sql);
+   $temprow = $adb->fetch_array($result);
+$edit="Edit  ";
+$del="Del  ";
+$bar="  | ";
+$cnt=1;
+
+require_once('modules/Users/UserInfoUtil.php');
+do
+{
+  $name=$temprow["name"];
+  if ($cnt%2==0)
+  printf("<tr class='evenListRow'> <td height='21' style='padding:0px 3px 0px 3px;'>");
+  else
+  printf("<tr class='oddListRow'> <td height='21' style='padding:0px 3px 0px 3px;'>");
+  
+  printf("<a href='index.php?module=Users&action=UserInfoUtil&groupname=$name'>%s</a></td>",$temprow["name"]);
+  printf("<td height='21' style='padding:0px 3px 0px 3px;'>%s</td>",$temprow["description"]);
+  $cnt++;
+}while($temprow = $adb->fetch_array($result));
+?>
+</tr>
+</table>
+</body>
+</html>

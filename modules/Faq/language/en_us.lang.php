@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Faq/language/en_us.lang.php,v 1.8 2005/06/22 14:13:40 mickie Exp $
  * Description:  Defines the English language pack 
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -35,7 +35,6 @@ $mod_strings = Array(
 'LBL_LIST_PHONE'=>'Phone',
 'LBL_LIST_EMAIL_ADDRESS'=>'Email Address',
 'LBL_LIST_CONTACT_NAME'=>'Contact Name',
-'LBL_FAQ_INFORMATION'=>'Faq Information',
 
 //DON'T CONVERT THESE THEY ARE MAPPINGS
 'db_name' => 'LBL_LIST_ACCOUNT_NAME',
@@ -78,10 +77,10 @@ $mod_strings = Array(
 'NTC_COPY_SHIPPING_ADDRESS'=>'Copy shipping address to billing address',
 'NTC_REMOVE_MEMBER_ORG_CONFIRMATION'=>'Are you sure you want to remove this record as a member organization?',
 'LBL_DUPLICATE'=>'Potential Duplicate Faq',
-'MSG_DUPLICATE' => 'Creating this vtiger_account may vtiger_potentialy create a duplicate vtiger_account. You may either select an vtiger_account from the list below or you may click on Create New Faq to continue creating a new vtiger_account with the previously entered data.',
+'MSG_DUPLICATE' => 'Creating this account may potentialy create a duplicate account. You may either select an account from the list below or you may click on Create New Faq to continue creating a new account with the previously entered data.',
 
 'LBL_INVITEE'=>'Contacts',
-'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
+'ERR_DELETE_RECORD'=>"A record number must be specified to delete the account.",
 
 'LBL_SELECT_ACCOUNT'=>'Select Faq',
 'LBL_GENERAL_INFORMATION'=>'General Information',
@@ -110,7 +109,7 @@ $mod_strings = Array(
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',
 
-//Added vtiger_fields after 4.2 alpha
+//Added fields after 4.2 alpha
 'LBL_TICKETS'=>'Tickets',
 'LBL_FAQ'=>'FAQ',
 'Product Name'=>'Product Name',
@@ -118,10 +117,6 @@ $mod_strings = Array(
 'Add Comment'=>'Add Comment',
 'LBL_COMMENT_INFORMATION'=>'Comment Information',
 'Status'=>'Status',
-
-//Added on 10-12-2005
-'LBL_QUESTION'=>'Question',
-'LBL_CATEGORY'=>'Category',
 );
 
 ?>

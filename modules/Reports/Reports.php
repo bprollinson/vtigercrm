@@ -10,44 +10,40 @@
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/UserInfoUtil.php');
 global $calpath;
 global $app_strings,$mod_strings;
 global $app_list_strings;
 global $modules;
 global $blocks;
 global $adv_filter_options;
-global $log;
+global $vtlog;
 
 global $report_modules;
 global $related_modules;
-global $profileList;
 
-//$profileList = getCurrentUserProfileList();
+//$modules = array("Leads_", "Accounts_", "Potentials_", "Contacts_", "Products_", "_");
+
 $adv_filter_options = array("e"=>"equals",
-		            "n"=>"not equal to",
+			    "n"=>"not equal to",
 			    "s"=>"starts with",
 			    "c"=>"contains",
 			    "k"=>"does not contain",
 			    "l"=>"less than",
 			    "g"=>"greater than",
 			    "m"=>"less or equal",
-			    "h"=>"greater or equal"
-			   );
+			    "h"=>"greater or equal");
 
-$report_modules = Array('Leads','Accounts','Contacts','Potentials','Products',
-			'HelpDesk','Quotes','PurchaseOrder','Invoice','Activities'
-		       );
+$report_modules = Array('Leads','Accounts','Contacts','Potentials','Products','HelpDesk','Quotes','Orders','Invoice','Activities');
 
-$related_modules = Array('Leads'=>Array(),
+$related_modules = Array('Leads'=>Array(''),
 			 'Accounts'=>Array('Potentials','Contacts','Products','Quotes','Invoice'),
-			 'Contacts'=>Array('Accounts','Potentials','Quotes','PurchaseOrder'),
+			 'Contacts'=>Array('Accounts','Potentials','Quotes','Orders'),
 			 'Potentials'=>Array('Accounts','Contacts','Quotes'),
 			 'Activities'=>Array('Contacts'),
 			 'Products'=>Array('Accounts','Contacts'),
 			 'HelpDesk'=>Array('Products'),
 			 'Quotes'=>Array('Accounts','Contacts','Potentials'),
-			 'PurchaseOrder'=>Array('Contacts'),
+			 'Orders'=>Array('Contacts'),
 			 'Invoice'=>Array('Accounts')
 			);
 
@@ -58,16 +54,6 @@ foreach($report_modules as $values)
 $modules[] = "_";
 
 class Reports extends CRMEntity{
-
-
-
-/**
- * This class has the informations for Reports and inherits class CRMEntity and
- * has the variables required to generate,save,restore vtiger_reports
- * and also the required functions for the same
- * Contributor(s): ______________________________________..
- */
-
 
 	var $srptfldridjs;
 
@@ -105,33 +91,28 @@ class Reports extends CRMEntity{
         var $advft_option;
         var $advft_value;
 
-	var $module_list = Array("Leads"=>Array("Information"=>13,"Address"=>15,"Description"=>16,"Custom Information"=>5),
-	 			 "Contacts"=>Array("Information"=>4,"- Portal Information"=>6,"Address"=>7,"Description"=>8,"Custom Information"=>5),
-				 "Accounts"=>Array("Information"=>9,"Address"=>11,"Description"=>12,"Custom Information"=>5),
-				 "Potentials"=>Array("Information"=>1,"Description"=>3,"Custom Information"=>5),
-				 "Activities"=>Array("Information"=>19,"Description"=>20),
-				 "Products"=>Array("Information"=>31,"Description"=>36,"Custom Information"=>5),
-				 "Notes"=>Array("Information"=>17,"Description"=>18),
-				 "Emails"=>Array("Information"=>1,"Description"=>24),
-				 "HelpDesk"=>Array("Information"=>'25,26',"Custom Information"=>5,"Description"=>28,"Solution"=>29),//patch2
-				 "Quotes"=>Array("Information"=>51,"Address"=>53,"Description"=>56,"Custom Information"=>5),
-				 "PurchaseOrder"=>Array("Information"=>57,"Address"=>59,"Description"=>61,"Custom Information"=>5),
-				 "Invoice"=>Array("Information"=>69,"Address"=>71,"Description"=>74,"Custom Information"=>5)
+	var $module_list = Array("Leads"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Contacts"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Accounts"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Potentials"=>Array("Information"=>1,"Description"=>2,"Custom Information"=>5),
+				 "Activities"=>Array("Information"=>1,"Description"=>2),
+				 "Products"=>Array("Information"=>1,"Description"=>2,"Custom Information"=>5),
+				 "Notes"=>Array("Information"=>1,"Description"=>3),
+				 "Emails"=>Array("Information"=>1,"Description"=>2),
+				 "HelpDesk"=>Array("Information"=>'1,2',"Custom Information"=>5,"Description"=>3,"Solution"=>4),//patch2
+				 "Quotes"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Orders"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5),
+				 "Invoice"=>Array("Information"=>1,"Address"=>2,"Description"=>3,"Custom Information"=>5)
 				);
 
-/** Function to set primodule,secmodule,reporttype,reportname,reportdescription,folderid for given vtiger_reportid
- *  This function accepts the vtiger_reportid as argument
- *  It sets primodule,secmodule,reporttype,reportname,reportdescription,folderid for the given vtiger_reportid
- */
-			
 	function Reports($reportid="")
 	{
 		global $adb;
 
 		if($reportid != "")
 		{
-			$ssql = "select vtiger_reportmodules.*,vtiger_report.* from vtiger_report inner join vtiger_reportmodules on vtiger_report.reportid = vtiger_reportmodules.reportmodulesid";
-			$ssql .= " where vtiger_report.reportid =".$reportid;
+			$ssql = "select reportmodules.*,report.* from report inner join reportmodules on report.reportid = reportmodules.reportmodulesid";
+			$ssql .= " where report.reportid =".$reportid;
 			$result = $adb->query($ssql);
 		        $reportmodulesrow = $adb->fetch_array($result);
 			if($reportmodulesrow)
@@ -146,101 +127,141 @@ class Reports extends CRMEntity{
 		}
 	}
 
-
-/** Function to get the Listview of Reports
- *  This function accepts no argument
- *  This generate the Reports view page and returns a string
- *  contains HTML 
- */
-	
-	function sgetRptFldr($mode='')
+	function save($module_name)
 	{
+		if($module_name = "ReportFolder")
+		{
+			if($this->mode = "Save")
+			{
+				$this->id = "";
+
+			}elseif($this->mode = "Edit")
+			{
+
+			}
+		}
+	}
+	function sgetRptFldr(){
 
 		global $adb;
-		global $log;
-		$returndata = Array();
-		$sql = "select * from vtiger_reportfolder order by folderid";
+		global $vtlog;
+
+		$sql = "select * from reportfolder order by folderid";
 		$result = $adb->query($sql);
 		$reportfldrow = $adb->fetch_array($result);
-		if($mode != '')
+		$x = 0;
+                do
 		{
-			do
-			{
-				if($reportfldrow["state"] == $mode)
-				{
-					$details = Array();	
-					$details['state'] = $reportfldrow["state"]; 
-					$details['id'] = $reportfldrow["folderid"]; 
-					$details['name'] = $reportfldrow["foldername"]; 
-					$details['description'] = $reportfldrow["description"]; 
-					$details['details'] = $this->sgetRptsforFldr($reportfldrow["folderid"]);
-					$returndata[] = $details;
-				}
-			}while($reportfldrow = $adb->fetch_array($result));
-		}else
-		{
-			do
-			{
-				$details = Array();	
-				$details['state'] = $reportfldrow["state"]; 
-				$details['id'] = $reportfldrow["folderid"]; 
-				$details['name'] = $reportfldrow["foldername"]; 
-				$details['description'] = $reportfldrow["description"]; 
-				$returndata[] = $details;
-			}while($reportfldrow = $adb->fetch_array($result));
-		}
 
-		$log->info("Reports :: ListView->Successfully returned vtiger_report folder HTML");
-		return $returndata;
+			$reporttempid = $reportfldrow["folderid"]."RptFldr";
+			$reporttempidjs[$x] = "'".$reportfldrow["folderid"]."RptFldr'";
+
+			$shtml .= "<br><table width=\"95%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+			<tr>
+			    <td width=\"15\" nowrap>
+				<div align=\"center\">
+				    <a href=\"javascript:toggleReports('".$reporttempid."')\"><img id=\"".$reporttempid."img\" src=\"".$image_path."collapse.gif\" border=\"0\" align=\"absmiddle\"></a>
+				</div>
+			  </td>
+			  <td height=\"20\" class=\"uline\">
+				<a class=\"relListHead\" href=\"javascript:toggleReports('".$reporttempid."')\">".$reportfldrow["foldername"]."</a>
+			   ";
+				        if($reportfldrow["state"]=="SAVED")
+					{
+						$shtml .="";
+					}else
+					{
+						$shtml .="&nbsp;&nbsp;[ <a href=\"index.php?module=Reports&action=NewReportFolder&record=".$reportfldrow["folderid"] ."\" class=\"link\">Edit Folder</a>
+						<span class=\"sep\">|</span>
+						<a onclick=\"return window.confirm('Are you sure?');\" href=\"index.php?module=Reports&action=DeleteReportFolder&record=".$reportfldrow["folderid"] ."\" class=\"link\">Del Folder</a> ]";
+					}
+				$shtml .="
+			   </td>
+			 </tr>
+			</table>";
+			$shtml .= $this->sgetRptsforFldr($reportfldrow["folderid"]);
+			$x = $x + 1;
+
+		}while($reportfldrow = $adb->fetch_array($result));
+		$this->srptfldridjs = implode(",",$reporttempidjs);
+
+		$vtlog->logthis("Reports :: ListView->Successfully returned report folder HTML","info");
+		return $shtml;
 	}
-
-/** Function to get the Reports inside each modules
- *  This function accepts the folderid
- *  This Generates the Reports under each Reports module 
- *  This Returns a HTML sring
- */
 
 	function sgetRptsforFldr($rpt_fldr_id)
 	{
 		$srptdetails="";
 		global $adb;
-		global $log;
-		global $mod_strings;
-		$returndata = Array();
+		global $vtlog;
 		
-		require_once('include/utils/UserInfoUtil.php');
-		
-		$sql = "select vtiger_report.*, vtiger_reportmodules.* from vtiger_report inner join vtiger_reportfolder on vtiger_reportfolder.folderid = vtiger_report.folderid";
-		$sql .= " inner join vtiger_reportmodules on vtiger_reportmodules.reportmodulesid = vtiger_report.reportid where vtiger_reportfolder.folderid=".$rpt_fldr_id;
+		$sql = "select report.*, reportmodules.* from report inner join reportfolder on reportfolder.folderid = report.folderid";
+		$sql .= " inner join reportmodules on reportmodules.reportmodulesid = report.reportid where reportfolder.folderid=".$rpt_fldr_id;
 		$result = $adb->query($sql);
 		$report = $adb->fetch_array($result);
 		if(count($report)>0)
 		{
-					  do
-					  {
-						  	$report_details = Array();
-							$report_details ['customizable'] = $report["customizable"];
-							$report_details ['reportid'] = $report["reportid"];
-							$report_details ['primarymodule'] = $report["primarymodule"];
-							$report_details ['secondarymodules'] = $report["secondarymodules"];
-							$report_details ['state'] = $report["state"];
-							$report_details ['description'] = $report["description"];
-							$report_details ['reportname'] = $report["reportname"];
-							
-							$returndata []=$report_details; 
-					  }while($report = $adb->fetch_array($result));
-		}
-	
-		$log->info("Reports :: ListView->Successfully returned vtiger_report details HTML");
-		return $returndata;
-	}
+			$srptdetails .= '<div id="'.$rpt_fldr_id.'RptFldr" style="display:block">
+				<table width="95%" border="0" cellspacing="0" cellpadding="0">
+				  <tr>
+				    <td width="15">&nbsp;</td>
+				    <td>
+				    <table border="0" width="100%" cellspacing="0" cellpadding="0" class="formOuterBorder">
+						<tr>
+							<td width="15%" nowrap height="21" class="moduleListTitle" style="padding:0px 3px 0px 3px;"></td>
+							<td width="30%" nowrap height="21" class="moduleListTitle" style="padding:0px 3px 0px 3px;">Report Name</td>
+							<td width="55%" nowrap height="21" class="moduleListTitle" style="padding:0px 3px 0px 3px;">Description</td>
+						</tr>';
+						$rowcnt = 1;
+						do
+						{
+							if ($rowcnt%2 == 0)
+								$srptdetails .= '<tr class="evenListRow">';
+							else
+								$srptdetails .= '<tr class="oddListRow">';
 
-/** Function to get the array of ids
- *  This function forms the array for the ExpandCollapse
- *  Javascript
- *  It returns the array of ids
- *  Array('1RptFldr','2RptFldr',........,'9RptFldr','10RptFldr')
- */
+								$srptdetails .= '<td height="21" style="padding:0px 3px 0px 3px;">
+								<div align="center">';
+								if($report["customizable"]==1)
+								{
+									$srptdetails .= '<a class="link" href="index.php?module=Reports&action=NewReport1&record='.$report["reportid"] .'&primarymodule='.$report["primarymodule"].'&secondarymodule='.$report["secondarymodules"].'">Customize</a>';
+								}
+
+								if($report["state"]=="SAVED")
+								{
+								//	$srptdetails .= '<span class="sep">|</span>&nbsp;<span class="disabled">Del</span>';
+								}else
+								{
+									$srptdetails .=  "&nbsp;<span class=\"sep\">|</span>&nbsp;<a class=\"link\" onclick=\"return window.confirm('Are you sure?');\" href=\"index.php?module=Reports&action=Delete&record=".$report["reportid"]."\">Del</a>";
+								}
+								$srptdetails .='</div>
+								</td>
+								<td  height="21" style="padding:0px 3px 0px 3px;" nowrap><a class="link" href="index.php?module=Reports&action=SaveAndRun&record='.$report["reportid"].'">'.$report["reportname"].'</a></td>
+								<td  height="21" style="padding:0px 3px 0px 3px;">'.$report["description"].'</td>
+								</tr>
+							';
+							$rowcnt++;
+						}while($report = $adb->fetch_array($result));
+				    $srptdetails .= '</table>
+				    </td>
+				  </tr>
+				</table>
+				</div>';
+			}else
+			{
+				$srptdetails .= '<div id="'.$rpt_fldr_id.'RptFldr" style="display:block">
+				<table width="100%" border="0" cellspacing="0" cellpadding="0">
+				  <tr>
+				    <td width="15"></td>
+				    <td height="21">No reports in this folder</td>
+				  </tr>
+				</table>
+				</div>';
+			}
+
+		$vtlog->logthis("Reports :: ListView->Successfully returned report details HTML","info");
+		return $srptdetails;
+	}
 
 	function sgetJsRptFldr()
 	{
@@ -248,12 +269,6 @@ class Reports extends CRMEntity{
 		setExpandCollapse()";
 		return $srptfldr_js;
 	}
-
-/** Function to set the Primary module vtiger_fields for the given Report 
- *  This function sets the primary module columns for the given Report 
- *  It accepts the Primary module as the argument and set the vtiger_fields of the module
- *  to the varialbe pri_module_columnslist and returns true if sucess
- */
 
 	function getPriModuleColumnsList($module)
 	{
@@ -265,71 +280,85 @@ class Reports extends CRMEntity{
 		return true;
 	}
 
-/** Function to set the Secondary module fileds for the given Report
- *  This function sets the secondary module columns for the given module
- *  It accepts the module as the argument and set the vtiger_fields of the module
- *  to the varialbe sec_module_columnslist and returns true if sucess
- */
-	
 	function getSecModuleColumnsList($module)
         {
-        	if($module != "")
-			{
-				$secmodule = explode(":",$module);
-               	for($i=0;$i < count($secmodule) ;$i++)
-               	{
-					foreach($this->module_list[$secmodule[$i]] as $key=>$value)
-               		{
-                       	$ret_module_list[$secmodule[$i]][$key] = $this->getColumnsListbyBlock($secmodule[$i],$value);
-               		}
-				}
-               	$this->sec_module_columnslist = $ret_module_list;
-			}
-            return true;
+                if($module != "")
+		{
+		$secmodule = explode(":",$module);
+
+                for($i=0;$i < count($secmodule) ;$i++)
+                {
+			foreach($this->module_list[$secmodule[$i]] as $key=>$value)
+                	{
+                        	$ret_module_list[$secmodule[$i]][$key] = $this->getColumnsListbyBlock($secmodule[$i],$value);
+                	}
+		}
+                $this->sec_module_columnslist = $ret_module_list;
+		}
+                return true;
         }
 
-/** Function to get vtiger_fields for the given module and block
- *  This function gets the vtiger_fields for the given module
- *  It accepts the module and the block as arguments and 
- *  returns the array column lists
- *  Array module_columnlist[ vtiger_fieldtablename:fieldcolname:module_fieldlabel1:fieldname:fieldtypeofdata]=fieldlabel
- */
+	/*function getEscapedFieldNames($fieldname)
+        {
+                //print($selectedfields);
+                //print_r($selectedfields);
+                //$fieldname = $selectedfields[3];
+                if($fieldname == "assigned_user_id")
+                {
+                        $querycolumn = "usersRel.user_name"." ".$selectedfields[2];
+                }
+                if($fieldname == "account_id")
+                {
+                        $querycolumn = "accountRel.accountname"." ".$selectedfields[2];
+                }
+                if($fieldname == "parent_id")
+                {
+                        $querycolumn = "case crmentityRel.setype when 'Accounts' then accountRel.accountname when 'Leads' then leaddetailsRel.lastname when 'Potentials' then potentialRel.potentialname End"." ".$selectedfields[2].", crmentityRel.setype Entity_type";
+                }
+                if($fieldname == "contact_id")
+                {
+                        $querycolumn = "contactdetailsRel.lastname"." ".$selectedfields[2];
+                }
+                if($fieldname == "vendor_id")
+                {
+                        $querycolumn = "vendorRel.name"." ".$selectedfields[2];
+                }
+                if($fieldname == "potential_id")
+                {
+                        $querycolumn = "potentialRel.potentialname"." ".$selectedfields[2];
+                }
+                if($fieldname == "assigned_user_id1")
+                {
+                        $querycolumn = "usersRel1.user_name"." ".$selectedfields[2];
+                }
+                return $querycolumn;
+        }*/
 
 	function getColumnsListbyBlock($module,$block)
 	{
-        global $adb;
-	global $log;
-	global $profileList;
-	global $current_user;
-	
+                global $adb;
+		global $vtlog;
 
-        $tabid = getTabid($module);
-	
-	//Security Check 
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0)
-	{
-		$sql = "select * from vtiger_field where vtiger_field.uitype != 50 and vtiger_field.tabid=".$tabid." and vtiger_field.block in (".$block .") and vtiger_field.displaytype in (1,2) order by sequence";
-	}
-	else
-	{
-			
-        	$sql = "select * from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.uitype != 50 and vtiger_field.tabid=".$tabid." and vtiger_field.block in (".$block .") and vtiger_field.displaytype in (1,2) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList." group by vtiger_field.fieldid order by sequence";
-	}
-        $result = $adb->query($sql);
-        $noofrows = $adb->num_rows($result);
-        for($i=0; $i<$noofrows; $i++)
-        {
-            $fieldtablename = $adb->query_result($result,$i,"tablename");
-            $fieldcolname = $adb->query_result($result,$i,"columnname");
+                $tabid = getTabid($module);
+                global $profile_id;
+
+                $sql = "select * from field inner join profile2field on profile2field.fieldid=field.fieldid  where field.uitype != 50 and field.tabid=".$tabid." and field.block in (".$block .") and field.displaytype in (1,2) and profile2field.visible=0 and profile2field.profileid=".$profile_id." order by sequence";
+
+                $result = $adb->query($sql);
+                $noofrows = $adb->num_rows($result);
+                for($i=0; $i<$noofrows; $i++)
+                {
+                        $fieldtablename = $adb->query_result($result,$i,"tablename");
+                        $fieldcolname = $adb->query_result($result,$i,"columnname");
 			$fieldname = $adb->query_result($result,$i,"fieldname");
 			$fieldtype = $adb->query_result($result,$i,"typeofdata");
 			$fieldtype = explode("~",$fieldtype);
 			$fieldtypeofdata = $fieldtype[0];
 
-            if($fieldtablename == "crmentity")
-            {
-   	        	$fieldtablename = $fieldtablename.$module;
-            }
+                        if($fieldtablename == "crmentity")
+                        {
+                           $fieldtablename = $fieldtablename.$module;
+                        }
 			if($fieldname == "assigned_user_id")
 			{
 			   $fieldtablename = "users".$module;
@@ -351,46 +380,170 @@ class Reports extends CRMEntity{
 					$fieldcolname = "setype";
 			}
 			if($fieldname == "vendor_id")
-	        {
-               	$fieldtablename = "vendorRel";
+	                {
+                        	$fieldtablename = "vendorRel";
 				$fieldcolname = "vendorname";
-            }
-            if($fieldname == "potential_id")
-            {
-               	$fieldtablename = "potentialRel";
-			    $fieldcolname = "potentialname";
-            }
-            if($fieldname == "assigned_user_id1")
-            {
-               	$fieldtablename = "usersRel1";
-			    $fieldcolname = "user_name";
-            }
+//				$querycolumn = "vendorRel.name"." ".$selectedfields[2];
+                	}
+                	if($fieldname == "potential_id")
+                	{
+                        	$fieldtablename = "potentialRel";
+			        $fieldcolname = "potentialname";
+//				$querycolumn = "potentialRel.potentialname"." ".$selectedfields[2];
+                	}
+                	if($fieldname == "assigned_user_id1")
+                	{
+                        	$fieldtablename = "usersRel1";
+			        $fieldcolname = "user_name";
+//				$querycolumn = "usersRel1.user_name"." ".$selectedfields[2];
+                	}
 
-            $fieldlabel = $adb->query_result($result,$i,"fieldlabel");
-            $fieldlabel1 = str_replace(" ","_",$fieldlabel);
-            $optionvalue = $fieldtablename.":".$fieldcolname.":".$module."_".$fieldlabel1.":".$fieldname.":".$fieldtypeofdata;
+                        $fieldlabel = $adb->query_result($result,$i,"fieldlabel");
+                        $fieldlabel1 = str_replace(" ","_",$fieldlabel);
+                        $optionvalue = $fieldtablename.":".$fieldcolname.":".$module."_".$fieldlabel1.":".$fieldname.":".$fieldtypeofdata;
 			$module_columnlist[$optionvalue] = $fieldlabel;
 		}
-        $log->info("Reports :: FieldColumns->Successfully returned ColumnslistbyBlock".$module.$block);
-		return $module_columnlist;
+		$vtlog->logthis("Reports :: FieldColumns->Successfully returned ColumnslistbyBlock".$module.$block,"info");
+                return $module_columnlist;
 	}
-	
-/** Function to set the standard filter vtiger_fields for the given vtiger_report
- *  This function gets the standard filter vtiger_fields for the given vtiger_report
- *  and set the values to the corresponding variables
- *  It accepts the repordid as argument 
- */
+	function getReportBlockInformation($module,$block,$block_name,$selected="")
+	{
+		//retreive the tabid
+		global $adb;
+		$tabid = getTabid($module);
+		global $profile_id;
+		//echo $selected;
+		$sql = "select * from field inner join profile2field on profile2field.fieldid=field.fieldid  where field.uitype != 50 and field.tabid=".$tabid." and field.block in (".$block .") and field.displaytype in (1,2) and profile2field.visible=0 and profile2field.profileid=".$profile_id." order by sequence";
+
+		//putan if condition and reuse the code for sorting
+		$shtml = "<optgroup label=\"".$block_name."\" class=\"select\" style=\"border:none\">";
+
+		$result = $adb->query($sql);
+		$noofrows = $adb->num_rows($result);
+		for($i=0; $i<$noofrows; $i++)
+		{
+			$fieldtablename = $adb->query_result($result,$i,"tablename");
+			$fieldcolname = $adb->query_result($result,$i,"columnname");
+			//if($this->mcount != 0)
+			//{
+			if($fieldtablename == "crmentity")
+			{
+			   $fieldtablename = $fieldtablename.$module;
+			}
+			//}
+			$fieldlabel = $adb->query_result($result,$i,"fieldlabel");
+			$fieldlabel1 = str_replace(" ","_",$fieldlabel);
+			$optionvalue = $fieldtablename.":".$fieldcolname.":".$module."_".$fieldlabel1;
+			if($selected == $optionvalue)
+			{
+				$soptionhtml .= "<option selected value=\"".$optionvalue."\">".$fieldlabel."</option>";
+			}else
+			{
+				$soptionhtml .= "<option value=\"".$optionvalue."\">".$fieldlabel."</option>";
+			}
+			$this->module_blocks[$block][$optionvalue] = $fieldlabel;
+		}
+		if($soptionhtml!="")
+		{
+			$shtml = $shtml.$soptionhtml;
+		}else
+		{
+			$shtml="";
+		}
+		return $shtml;
+		//return $this->modules_block;
+	}
+
+	function getAvailableColumnsforQs($primarymodule,$secondarymodule)
+	{
+
+		$this->mcount = 0;
+		$html = $this->getColumnsforReportModule($primarymodule);
+		$secondarymodule = explode(":",$secondarymodule);
+
+		for($i=0;$i < count($secondarymodule) ;$i++)
+		{
+			$this->mcount = $this->mcount + 1;
+			$html .= $this->getColumnsforReportModule($secondarymodule[$i]);
+		}
+
+		return $html;
+	}
+
+	function getColumnsforReportModule($module,$selectedvalue="")
+	{
+		global $app_list_strings;
+		//global $adb;
+
+		//$sSQL = "select * from tab where tabname='".$module."'";
+		//$result = $adb->query($sSQL);
+		//$tabrow = $adb->fetch_array($result);
+
+		//if($result)
+		//{
+
+		//}
+		//if($module == "Leads")
+		//{
+		 foreach($app_list_strings['moduleList'] as $key=>$value)
+		 {
+			if($module == $key)
+			{
+			$shtml .= $this->getReportBlockInformation($module,1,$value.' Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation($module,2,$value.' Address Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation($module,3,$value.' Description Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation($module,5,$value.' Custom Information',$selectedvalue);
+			}
+		}
+		//}
+		/*if($module == "Accounts")
+		{
+			$shtml .= $this->getReportBlockInformation('Accounts',1,'Account Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Accounts',2,'Account Address Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Accounts',3,'Account Description Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Accounts',5,'Account Custom Information',$selectedvalue);
+		}
+		if($module == "Contacts")
+		{
+			$shtml .= $this->getReportBlockInformation('Contacts',1,'Contact Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Contacts',2,'Contacts Address Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Contacts',3,'Contacts Description Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Contacts',5,'Contacts Custom Information',$selectedvalue);
+		}
+		if($module == "Potentials")
+		{
+			$shtml .= $this->getReportBlockInformation('Potentials',1,'Potential Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Potentials',2,'Potentials Description Information',$selectedvalue);
+			$shtml .= $this->getReportBlockInformation('Potentials',5,'Potentials Custom Information',$selectedvalue);
+		}*/
+		return $shtml;
+	}
+
+	function getSortingColumnDetails($reportId)
+	{
+		$ssql = "select reportsortcol.* from report left join reportsortcol on report.reportid=reportsortcol.reportid where report.reportid=".$reportId;
+	}
+
+	function getSelectedReportType($reportid)
+	{
+		global $adb;
+
+		$ssql = "select report.reporttype from report where reportid=".$reportid;
+		$result = $adb->query($ssql);
+		$reporttyperow = $adb->fetch_array($result);
+		return $reporttyperow["reporttype"];
+	}
 
 	function getSelectedStandardCriteria($reportid)
 	{
 		global $adb;
-		$sSQL = "select vtiger_reportdatefilter.* from vtiger_reportdatefilter inner join vtiger_report on vtiger_report.reportid = vtiger_reportdatefilter.datefilterid where vtiger_report.reportid=".$reportid;
+		$sSQL = "select reportdatefilter.* from reportdatefilter inner join report on report.reportid = reportdatefilter.datefilterid where report.reportid=".$reportid;
 
 		$result = $adb->query($sSQL);
 		$selectedstdfilter = $adb->fetch_array($result);
 
 		$this->stdselectedcolumn = $selectedstdfilter["datecolumnname"];
-	    $this->stdselectedfilter = $selectedstdfilter["datefilter"];
+	        $this->stdselectedfilter = $selectedstdfilter["datefilter"];
 		
 		if($selectedstdfilter["datefilter"] == "custom")
 		{
@@ -403,27 +556,22 @@ class Reports extends CRMEntity{
 				$this->enddate = $selectedstdfilter["enddate"]; 
 			}
 		}
+		//$shtml = $this->getStandardCriteria($primarymodule,$secondarymodule,$selectedcolumn);
+		//return $shtml;
 	}
-
-/** Function to get the combo values for the standard filter
- *  This function get the combo values for the standard filter for the given vtiger_report
- *  and return a HTML string 
- */
-
+	
 	function getSelectedStdFilterCriteria($selecteddatefilter = "")
 	{
 		    
 		$datefiltervalue = Array("custom","prevfy","thisfy","nextfy","prevfq","thisfq","nextfq",
-                                 "yesterday","today","tomorrow","lastweek","thisweek","nextweek","lastmonth","thismonth",
-		                         "nextmonth","last7days","last30days", "last60days","last90days","last120days",
-		                         "next30days","next60days","next90days","next120days"
-								);
+                                                 "yesterday","today","tomorrow","lastweek","thisweek","nextweek","lastmonth","thismonth",
+		                                 "nextmonth","last7days","last30days", "last60days","last90days","last120days",
+		                                 "next30days","next60days","next90days","next120days");
 		
 		$datefilterdisplay = Array("Custom","Previous FY", "Current FY","Next FY","Previous FQ","Current FQ","Next FQ","Yesterday",
-                                   "Today","Tomorrow","Last Week","Current Week","Next Week","Last Month","Current Month",
-                                   "Next Month","Last 7 Days","Last 30 Days","Last 60 Days","Last 90 Days","Last 120 Days",
-                                   "Next 7 Days","Next 30 Days","Next 60 Days","Next 90 Days","Next 120 Days"
-								  );
+                                                     "Today","Tomorrow","Last Week","Current Week","Next Week","Last Month","Current Month",
+                                                     "Next Month","Last 7 Days","Last 30 Days","Last 60 Days","Last 90 Days","Last 120 Days",        
+                                                     "Next 7 Days","Next 30 Days","Next 60 Days","Next 90 Days","Next 120 Days");
 						     
 		for($i=0;$i<count($datefiltervalue);$i++)
 		{
@@ -439,64 +587,95 @@ class Reports extends CRMEntity{
 		return $sshtml;
 	}
 
-/** Function to get the selected standard filter columns 
- *  This function returns the selected standard filter criteria 
- *  which is selected for vtiger_reports as an array
- *  Array stdcriteria_list[fieldtablename:fieldcolname:module_fieldlabel1]=fieldlabel
- */
-
 	function getStdCriteriaByModule($module)
 	{	
 		global $adb;
-		global $log;
-		global $current_user;
-		require('user_privileges/user_privileges_'.$current_user->id.'.php');		
+		global $vtlog;
 
 		$tabid = getTabid($module);
+		global $profile_id;
+	
 		foreach($this->module_list[$module] as $key=>$blockid)
 		{
 			$blockids[] = $blockid;
 		}	
 		$blockids = implode(",",$blockids);	
 
-		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-                {
-			$sql = "select * from vtiger_field where vtiger_field.tabid=".$tabid." and (vtiger_field.uitype =5 or vtiger_field.displaytype=2) and vtiger_field.block in (".$blockids.") order by vtiger_field.sequence";
-		}
-		else
-		{
-			$profileList = getCurrentUserProfileList();			
-			$sql = "select * from vtiger_field inner join vtiger_tab on vtiger_tab.tabid = vtiger_field.tabid inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid  where vtiger_field.tabid=".$tabid." and (vtiger_field.uitype =5 or vtiger_field.displaytype=2) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_field.block in (".$blockids.") and vtiger_profile2field.profileid in ".$profileList." order by vtiger_field.sequence";
-	
-		}
+		//print_r($blockids);
+		$sql = "select * from field inner join tab on tab.tabid = field.tabid 
+			inner join profile2field on profile2field.fieldid=field.fieldid 
+			where field.tabid=".$tabid." and (field.uitype =5 or field.displaytype=2)  
+			and profile2field.visible=0 and field.block in (".$blockids.") and profile2field.profileid=".$profile_id." order by field.sequence";
 		
-        $result = $adb->query($sql);
+		//echo $sql;
+                $result = $adb->query($sql);
 
-        while($criteriatyperow = $adb->fetch_array($result))
-        {
+                while($criteriatyperow = $adb->fetch_array($result))
+                {
 			$fieldtablename = $criteriatyperow["tablename"];
-            $fieldcolname = $criteriatyperow["columnname"];
-            $fieldlabel = $criteriatyperow["fieldlabel"];
+                        $fieldcolname = $criteriatyperow["columnname"];
+                        $fieldlabel = $criteriatyperow["fieldlabel"];
 
 			if($fieldtablename == "crmentity")
-            {
-	            $fieldtablename = $fieldtablename.$module;
-            }
-            $fieldlabel1 = str_replace(" ","_",$fieldlabel);
-            $optionvalue = $fieldtablename.":".$fieldcolname.":".$module."_".$fieldlabel1;
+                        {
+                           $fieldtablename = $fieldtablename.$module;
+                        }
+                        $fieldlabel1 = str_replace(" ","_",$fieldlabel);
+                        $optionvalue = $fieldtablename.":".$fieldcolname.":".$module."_".$fieldlabel1;
+
 			$stdcriteria_list[$optionvalue] = $fieldlabel;
 		}
 		
-		$log->info("Reports :: StdfilterColumns->Successfully returned Stdfilter for".$module);
+		$vtlog->logthis("Reports :: StdfilterColumns->Successfully returned Stdfilter for".$module,"info");
 		return $stdcriteria_list;
 		
 	}
 	
-/** Function to form a javascript to determine the start date and end date for a standard filter 
- *  This function is to form a javascript to determine
- *  the start date and End date from the value selected in the combo lists
- */
+	function sgetStandardCriteriaHTML($tabid,$count,$selectedvalue="")
+	{
+		global $adb;
+		global $vtlog;
 
+		global $profile_id;
+		
+		$sql = "select * from field inner join tab on tab.tabid = field.tabid inner join profile2field on profile2field.fieldid=field.fieldid  where field.tabid=".$tabid." and (field.uitype =5 or field.displaytype=2) and profile2field.visible=0 and profile2field.profileid=".$profile_id." order by field.sequence";
+		$result = $adb->query($sql);
+		$criteriatyperow = $adb->fetch_array($result);
+
+		do
+		{
+			$fieldtablename = $criteriatyperow["tablename"];	
+			$fieldcolname = $criteriatyperow["columnname"];	
+			$fieldlabel = $criteriatyperow["fieldlabel"];
+			$tablabel = $criteriatyperow["tablabel"];
+			if($count != 0)
+			{
+				if($fieldtablename == "crmentity")
+				{
+					$optionvalue = $tablabel.":".$fieldtablename.$count.":".$fieldcolname.":".$fieldlabel;
+				}else
+				{
+					$optionvalue = $tablabel.":".$fieldtablename.":".$fieldcolname.":".$fieldlabel;
+				}
+			}else
+			{
+				$optionvalue = $tablabel.":".$fieldtablename.":".$fieldcolname.":".$fieldlabel;
+			}
+			if($selectedvalue == $optionvalue)
+			{
+				$shtml .= "<option selected value=\"".$optionvalue."\">".$criteriatyperow["tablabel"]." - ".$fieldlabel."</option>";
+			}
+			else
+			{
+				$shtml .= "<option value=\"".$optionvalue."\">".$criteriatyperow["tablabel"]." - ".$fieldlabel."</option>";
+			}
+		
+		}while($criteriatyperow = $adb->fetch_array($result));
+		
+		$vtlog->logthis("Reports :: StdfilterColumns->Successfully returned Stdfilter HTML for".$tabid,"info");
+		return $shtml;
+	}
+	
 	function getCriteriaJS()
 	{
 		$today = date("Y-m-d",mktime(0, 0, 0, date("m")  , date("d"), date("Y")));
@@ -538,6 +717,12 @@ class Reports extends CRMEntity{
 		$nextFY0 = date("Y-m-d",mktime(0, 0, 0, "01", "01",   date("Y")+1));
 		$nextFY1 = date("Y-m-t", mktime(0, 0, 0, "12", date("d"), date("Y")+1));
 		
+//		$currentFQ0 = date("Y-m-d",mktime(0,0,0,(date("m")*3)/3,"01",date("Y")));
+//		$currentFQ1 = "";
+//		$previousFQ0 = "";
+//		$previousFQ1 = "";
+//		$nextFQ0 = "";
+//                $nextFQ1 = "";
 
 		$sjsStr = '<script language="JavaScript" type="text/javaScript">
 		function showDateRange( type )
@@ -717,24 +902,16 @@ class Reports extends CRMEntity{
 		
 		return $sjsStr;
 	}
-
-/** Function to set the order of grouping and to find the columns responsible
- *  to the grouping
- *  This function accepts the vtiger_reportid as variable,sets the variable ascdescorder[] to the sort order and
- *  returns the array array_list which has the column responsible for the grouping
- *  Array array_list[0]=columnname
- */
-
-
+	
 	function getSelctedSortingColumns($reportid)
 	{
 
 		global $adb;
-		global $log;
+		global $vtlog;
 
-    	$sreportsortsql = "select vtiger_reportsortcol.* from vtiger_report";
-		$sreportsortsql .= " inner join vtiger_reportsortcol on vtiger_report.reportid = vtiger_reportsortcol.reportid";
-		$sreportsortsql .= " where vtiger_report.reportid =".$reportid." order by vtiger_reportsortcol.sortcolid";
+    	        $sreportsortsql = "select reportsortcol.* from report";
+		$sreportsortsql .= " inner join reportsortcol on report.reportid = reportsortcol.reportid";
+		$sreportsortsql .= " where report.reportid =".$reportid." order by reportsortcol.sortcolid";
 
 		$result = $adb->query($sreportsortsql);
 		$noofrows = $adb->num_rows($result);
@@ -747,26 +924,20 @@ class Reports extends CRMEntity{
 			$array_list[] = $fieldcolname;
 		}
 		
-		$log->info("Reports :: Successfully returned getSelctedSortingColumns");
+		$vtlog->logthis("Reports :: Successfully returned getSelctedSortingColumns","info");
 		return $array_list;
 	}
 	
-/** Function to get the selected columns list for a selected vtiger_report
- *  This function accepts the vtiger_reportid as the argument and get the selected columns
- *  for the given vtiger_reportid and it forms a combo lists and returns
- *  HTML of the combo values
- */
-
 	function getSelectedColumnsList($reportid)
 	{
 
 		global $adb;
-	    global $modules;
-		global $log;
+	        global $modules;
+		global $vtlog;
 
-		$ssql = "select vtiger_selectcolumn.* from vtiger_report inner join vtiger_selectquery on vtiger_selectquery.queryid = vtiger_report.queryid";
-		$ssql .= " left join vtiger_selectcolumn on vtiger_selectcolumn.queryid = vtiger_selectquery.queryid where vtiger_report.reportid =".$reportid;
-		$ssql .= " order by vtiger_selectcolumn.columnindex";
+		$ssql = "select selectcolumn.* from report inner join selectquery on selectquery.queryid = report.queryid";
+		$ssql .= " left join selectcolumn on selectcolumn.queryid = selectquery.queryid where report.reportid =".$reportid;
+		$ssql .= " order by selectcolumn.columnindex";
 
 		$result = $adb->query($ssql);
 		$noofrows = $adb->num_rows($result);
@@ -781,27 +952,20 @@ class Reports extends CRMEntity{
 			}
 		}
 
-		$log->info("Reports :: Successfully returned getSelectedColumnsList");
+		$vtlog->logthis("Reports :: Successfully returned getSelectedColumnsList","info");
 		return $shtml;
 	}
-
-/** Function to Set the selected columns for the advanced filter for the vtiger_report
- *  This function accepts the vtiger_reportid as the argument and get the selected columns
- *  in the advanced filter and sets the values
- *  $this->advft_column[] = The column name
- *  $this->advft_option[] = The filter option
- *  $this->advft_value[] = The value to be compared
- *	and returns true in sucess
- */
 
 	//<<<<<<<<advanced filter>>>>>>>>>>>>>>
 	function getAdvancedFilterList($reportid)
 	{
 		global $adb;
 		global $modules;
-		global $log;
-		$ssql = 'select vtiger_relcriteria.* from vtiger_report inner join vtiger_relcriteria on vtiger_relcriteria.queryid = vtiger_report.queryid left join vtiger_selectquery on vtiger_relcriteria.queryid = vtiger_selectquery.queryid';
-		$ssql.= " where vtiger_report.reportid =".$reportid." order by vtiger_relcriteria.columnindex";
+		global $vtlog;
+
+		$ssql = "select relcriteria.* from report inner join selectquery on relcriteria.queryid = report.queryid";
+		$ssql.= " left join relcriteria on relcriteria.queryid = selectquery.queryid";
+		$ssql.= " where report.reportid =".$reportid." order by relcriteria.columnindex";
 
 		$result = $adb->query($ssql);
 
@@ -812,71 +976,53 @@ class Reports extends CRMEntity{
 			$this->advft_value[] = $relcriteriarow["value"];
 		}
 
-		$log->info("Reports :: Successfully returned getAdvancedFilterList");
+		$vtlog->logthis("Reports :: Successfully returned getAdvancedFilterList","info");
 		return true;
 	}
 	//<<<<<<<<advanced filter>>>>>>>>>>>>>>
 	
-/** Function to get the list of vtiger_report folders when Save and run  the vtiger_report
- *  This function gets the vtiger_report folders from database and form
- *  a combo values of the folders and return 
- *  HTML of the combo values
- */
-	
 	function sgetRptFldrSaveReport()
 	{
 		global $adb;
-		global $log;
+		global $vtlog;
 
-		$sql = "select * from vtiger_reportfolder order by folderid";
+		$sql = "select * from reportfolder order by folderid";
 		$result = $adb->query($sql);
 		$reportfldrow = $adb->fetch_array($result);
 		$x = 0;
-        do
+                do
 		{
 			$shtml .= "<option value='".$reportfldrow['folderid']."'>".$reportfldrow['foldername']."</option>";
+
 		}while($reportfldrow = $adb->fetch_array($result));
 		
-		$log->info("Reports :: Successfully returned sgetRptFldrSaveReport");
+		$vtlog->logthis("Reports :: Successfully returned sgetRptFldrSaveReport","info");
 		return $shtml;
 	}
-
-/** Function to get the column to total vtiger_fields in Reports 
- *  This function gets columns to total vtiger_field 
- *  and generated the html for that vtiger_fields
- *  It returns the HTML of the vtiger_fields along with the check boxes
- */
-
+	
 	function sgetColumntoTotal($primarymodule,$secondarymodule)
 	{
-		$options = Array();
-		$options []= $this->sgetColumnstoTotalHTML($primarymodule,0);
+		$shtml = $this->sgetColumnstoTotalHTML($primarymodule,0);
 		if($secondarymodule != "")
 		{
 			$secondarymodule = explode(":",$secondarymodule);
 			for($i=0;$i < count($secondarymodule) ;$i++)
 			{
-				$options []= $this->sgetColumnstoTotalHTML($secondarymodule[$i],($i+1));
+				$shtml .= $this->sgetColumnstoTotalHTML($secondarymodule[$i],($i+1));
 			}
 		}
-		return $options;
+		
+		return $shtml;
 	}
-	
-/** Function to get the selected columns of total vtiger_fields in Reports
- *  This function gets selected columns of total vtiger_field
- *  and generated the html for that vtiger_fields
- *  It returns the HTML of the vtiger_fields along with the check boxes
- */
-	
 	
 	function sgetColumntoTotalSelected($primarymodule,$secondarymodule,$reportid)
 	{
 		global $adb;
-		global $log;
-		$options = Array();
+		global $vtlog;
+
 		if($reportid != "")
 		{
-			$ssql = "select vtiger_reportsummary.* from vtiger_reportsummary inner join vtiger_report on vtiger_report.reportid = vtiger_reportsummary.reportsummaryid where vtiger_report.reportid=".$reportid;
+			$ssql = "select reportsummary.* from reportsummary inner join report on report.reportid = reportsummary.reportsummaryid where report.reportid=".$reportid;
 			$result = $adb->query($ssql);
 			if($result)
 			{
@@ -889,56 +1035,53 @@ class Reports extends CRMEntity{
 				}while($reportsummaryrow = $adb->fetch_array($result));
 			}
 		}	
-		$options []= $this->sgetColumnstoTotalHTML($primarymodule,0);
+//		print_r($this->columnssummary);		
+		$shtml = $this->sgetColumnstoTotalHTML($primarymodule,0);
 		if($secondarymodule != "")
 		{
 			$secondarymodule = explode(":",$secondarymodule);
 			for($i=0;$i < count($secondarymodule) ;$i++)
 			{
-				$options []= $this->sgetColumnstoTotalHTML($secondarymodule[$i],($i+1));
+				$shtml .= $this->sgetColumnstoTotalHTML($secondarymodule[$i],($i+1));
 			}
 		}
 		
-		$log->info("Reports :: Successfully returned sgetColumntoTotalSelected");
-		return $options;
+		$vtlog->logthis("Reports :: Successfully returned sgetColumntoTotalSelected","info");
+		return $shtml;
 	}
 
-
-/** Function to form the HTML for columns to total	
- *  This function formulates the HTML format of the
- *  vtiger_fields along with four checkboxes
- *  It returns the HTML of the vtiger_fields along with the check boxes
- */
-	
-	
+	function getColumnstoTotalByModule($module)
+	{
+	}
 	function sgetColumnstoTotalHTML($module)
 	{
-		//retreive the vtiger_tabid	
+		//retreive the tabid	
 		global $adb;
-		global $log;
-		global $current_user;
-		require('user_privileges/user_privileges_'.$current_user->id.'.php');
+		global $vtlog;
+
 		$tabid = getTabid($module);
+		global $profile_id;
 		$escapedchars = Array('_SUM','_AVG','_MIN','_MAX');
-		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0)
-		{
-			$ssql = "select * from vtiger_field inner join vtiger_tab on vtiger_tab.tabid = vtiger_field.tabid where vtiger_field.uitype != 50 and vtiger_field.tabid=".$tabid." and vtiger_field.displaytype = 1 order by sequence";
-		}
-		else
-		{
-			$profileList = getCurrentUserProfileList();
-			$ssql = "select * from vtiger_field inner join vtiger_tab on vtiger_tab.tabid = vtiger_field.tabid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid  where vtiger_field.uitype != 50 and vtiger_field.tabid=".$tabid." and vtiger_field.displaytype = 1 and vtiger_def_org_field.visible=0 and vtiger_profile2field.visible=0 and vtiger_profile2field.profileid in ".$profileList." order by sequence";
-		}
+		$ssql = "select * from field inner join tab on tab.tabid = field.tabid inner join profile2field on profile2field.fieldid=field.fieldid  where field.uitype != 50 and field.tabid=".$tabid." and field.displaytype = 1 and profile2field.visible=0 and profile2field.profileid=".$profile_id." order by sequence";
+		
 		$result = $adb->query($ssql);
 		$columntototalrow = $adb->fetch_array($result);
-		$options_list = Array();	
+                $n = 0;
 		do
 		{
 			$typeofdata = explode("~",$columntototalrow["typeofdata"]);
-		
-  		    if($typeofdata[0] == "N" || $typeofdata[0] == "I")
+
+  		      if($typeofdata[0] == "N" || $typeofdata[0] == "I")
 			{
-				$options = Array();
+				
+				if(($n % 2) == 0)
+				{
+					$shtml .= '<tr class="evenListRow">';
+				}else
+				{
+					$shtml .= '<tr class="oddListRow">';
+				}
+
 				if(isset($this->columnssummary))
 				{
 					$selectedcolumn = "";
@@ -959,103 +1102,76 @@ class Reports extends CRMEntity{
 						}
 						
       				          }
+					  //print_r("cb:".$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].":2");
 
 $columntototalrow['fieldlabel'] = str_replace(" ","_",$columntototalrow['fieldlabel']);
-					$options []= $columntototalrow['tablabel'].' - '.$columntototalrow['fieldlabel'];
+					$shtml .= '<td nowrap height="21" style="padding:0px 3px 0px 3px;">'.$columntototalrow['tablabel'].' - '.$columntototalrow['fieldlabel'].'</td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center">';
+
 						if($selectedcolumn1[2] == "cb:".$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel']."_SUM:2")
 					    {
-					    $options []=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_SUM:2" type="checkbox" value="">';					    
-						}else
+						//echo "here";   
+					    $shtml .=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_SUM:2" type="checkbox" value="">';					    }else
 					    {
-						    $options []=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_SUM:2" type="checkbox" value="">';
+						    $shtml .=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_SUM:2" type="checkbox" value="">';
 					    }
+					    $shtml .=  '</div></td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center">'; 
 					    if($selectedcolumn1[3] == "cb:".$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel']."_AVG:3")
 					    {
-						   $options []=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_AVG:3" type="checkbox" value="">';
+						   $shtml .=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_AVG:3" type="checkbox" value="">';
 					    }else
 					    {
-						    $options []=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_AVG:3" type="checkbox" value="">';
+						    $shtml .=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_AVG:3" type="checkbox" value="">';
 					    }
 
+					    $shtml .=  '</div></td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center">';  
 					    if($selectedcolumn1[4] == "cb:".$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel']."_MIN:4")
 					    {
-						   $options []=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MIN:4" type="checkbox" value="">';
+						   $shtml .=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MIN:4" type="checkbox" value="">';
 					    }else
 					    {
-						    $options []=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MIN:4" type="checkbox" value="">';
+						    $shtml .=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MIN:4" type="checkbox" value="">';
 					    }
 
+					    $shtml .=  '</div></td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center">'; 
 					    if($selectedcolumn1[5] == "cb:".$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel']."_MAX:5")
 					    {
-						   $options []=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MAX:5" type="checkbox" value="">';
+						   $shtml .=  '<input checked name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MAX:5" type="checkbox" value="">';
 					    }else
 					    {
-						    $options []=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MAX:5" type="checkbox" value="">';
+						    $shtml .=  '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MAX:5" type="checkbox" value="">';
 					    }
+	
+					    $shtml .=  '</div></td>
+					</tr>';
+					$n = $n + 1;
+					
 				}else
 				{
-					$options []= $columntototalrow['tablabel'].' - '.$columntototalrow['fieldlabel'];
-					$options []= '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_SUM:2" type="checkbox" value="">';
-					$options []= '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_AVG:3" type="checkbox" value="" >';
-					$options []= '<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MIN:4"type="checkbox" value="" >';
-					$options [] ='<input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MAX:5" type="checkbox" value="" >';	
+					$shtml .= '<td nowrap height="21" style="padding:0px 3px 0px 3px;">'.$columntototalrow['tablabel'].' - '.$columntototalrow['fieldlabel'].'</td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center"> 
+						    <input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_SUM:2" type="checkbox" value="">
+					    </div></td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center"> 
+						     <input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_AVG:3" type="checkbox" value="" >
+					    </div></td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center">  
+						    <input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MIN:4"type="checkbox" value="" >
+					    </div></td>
+					    <td height="21" style="padding:0px 3px 0px 3px;"><div align="center"> 
+						    <input name="cb:'.$columntototalrow['tablename'].':'.$columntototalrow['columnname'].':'.$columntototalrow['fieldlabel'].'_MAX:5" type="checkbox" value="" >	
+					    </div></td>
+					</tr>';
+					$n = $n + 1;
 				}
-				$options_list [] = $options;
 			}
 		}while($columntototalrow = $adb->fetch_array($result));
 		
-		$log->info("Reports :: Successfully returned sgetColumnstoTotalHTML");
-		return $options_list;
+		$vtlog->logthis("Reports :: Successfully returned sgetColumnstoTotalHTML","info");
+		return $shtml;
 	}
-}
-
-/** Function to get the primary module list in vtiger_reports
- *  This function generates the list of primary modules in vtiger_reports
- *  and returns an array of permitted modules 
- */
-
-function getReportsModuleList()
-{
-	global $adb;
-	global $app_list_strings;
-	global $report_modules;	
-	global $mod_strings;
-	$modules = Array();
-	foreach($app_list_strings['moduleList'] as $key=>$value)
-	{
-		for($i=0;$i<count($report_modules);$i++)
-		{
-			if($key == $report_modules[$i])
-			{
-				if(isPermitted($key,'index') == "yes")
-				{
-					$count_flag = 1;
-					$modules [] = $value;
-				}
-			}
-		}
-		
-	}
-	return $modules;
-}
-/** Function to get the Related module list in vtiger_reports
- *  This function generates the list of secondary modules in vtiger_reports
- *  and returns the related module as an Array 
- */
-
-function getReportRelatedModules($module)
-{
-	global $app_list_strings;
-	global $related_modules;
-	global $mod_strings;
-	$optionhtml = Array();
-	foreach($related_modules[$module] as $rel_modules)
-	{
-		if(isPermitted($rel_modules,'index') == "yes")
-		{
-			$optionhtml []= $rel_modules;		
-		}	
-	}
-	return $optionhtml;
 }
 ?>

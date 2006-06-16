@@ -20,15 +20,15 @@ global $allow_exports;
 <table width="100%" cellpadding="6">
 <tr>
 -->
-<?php
-require_once('include/utils/UserInfoUtil.php'); 
+<?php 
 if ($_REQUEST['module'] == 'Products' ||
 	$_REQUEST['module'] == 'Contacts' ||
 	$_REQUEST['module'] == 'Potentials' ||
 	$_REQUEST['module'] == 'Accounts' ||
 	$_REQUEST['module'] == 'Leads')
 {
-	if(isPermitted($_REQUEST['module'],'Import') == 0)
+	$permissionData = $_SESSION['action_permission_set'];
+	if($permissionData[$tabid]['5'] == 0)
 	{
 ?>
 <!--
@@ -53,11 +53,12 @@ if  ( $allow_exports=='all' ||
 	{
 		if($_REQUEST['module'] != 'Activities')
 		{
-			if(isPermitted($_REQUEST['module'],'Export') == 'yes')
+			$permissionData = $_SESSION['action_permission_set'];
+			if($permissionData[$tabid]['6'] == 0)
 			{
 ?>
 <!--
-<form name="EXPORT" method="get" action="include\export.php">
+<form name="EXPORT" method="get" action="export.php">
 <input type="hidden" name="module" value="<?php echo $_REQUEST['module']; ?>">
 <input type="hidden" name="all" value="1">
 <input type="hidden" name="action" value="Export">
@@ -65,7 +66,7 @@ if  ( $allow_exports=='all' ||
 </form>
 -->
 <li>
-	<a href="index.php?module=<?php echo $_REQUEST['module']; ?>&action=Export&all=1"><?php echo $app_strings['LBL_EXPORT_ALL']?> <?php echo $mod_strings['LBL_MODULE_NAME']?></a>
+	<a href="export.php?module=<?php echo $_REQUEST['module']; ?>&action=Export&all=1"><?php echo $app_strings['LBL_EXPORT_ALL']?> <?php echo $mod_strings['LBL_MODULE_NAME']?></a>
 </li>
 <?php
 			}

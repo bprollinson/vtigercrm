@@ -10,19 +10,12 @@
  ********************************************************************************/
 
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
-/**
- * Function to get vtiger_field typename
- * @param $uitype :: uitype -- Type integer
- * returns the vtiger_field type name -- Type string
- */
 function getCustomFieldTypeName($uitype)
 {
-	global $log;
-	$log->debug("Entering getCustomFieldTypeName(".$uitype.") method ...");
-	global $log;
-        $log->info("uitype is ".$uitype);
+	global $vtlog;
+	$vtlog->logthis("uitype is ".$uitype,'info');  
 	$fldname = '';
 	
 	if($uitype == 1)
@@ -73,25 +66,222 @@ function getCustomFieldTypeName($uitype)
 	{
 		$fldname = 'Text Area';
 	}
-	elseif($uitype == 33)
-	{
-		$fldname = 'Multi-Select Combo Box';
-	}
-$log->debug("Exiting getCustomFieldTypeName method ...");
 	return $fldname;
 }
 
-/**
- * Function to get custom vtiger_fields
- * @param $module :: vtiger_table name -- Type string
- * returns customfields in key-value pair array format
- */
+
+function CustomFieldEditView($id, $fldModule, $tableName, $colidName, $app_strings, $theme)
+{
+
+	global $adb;
+	//Custom Field Addition
+	$dbquery = "select  * from field where tablename='".$fldModule."'";
+	$result = $adb->query($dbquery);
+	if($adb->num_rows($result) != 0)
+	{
+		if(isset($id))
+		{
+			$custquery = 'select * from '.$tableName.' where '.$colidName."='".$id."'";
+			$cust_result = $adb->query($custquery);
+		}
+		$noofrows = $adb->num_rows($result);
+
+		$custfld = '<table width="100%" border="0" cellspacing="1" cellpadding="0">';
+		$custfld .= '<tr><th align="left" class="formSecHeader" colspan="4">Custom Information</th></tr>';
+		for($i=0; $i<$noofrows; $i++)
+		{
+			$colName=$adb->query_result($result,$i,"fieldlabel");
+			$setName=$adb->query_result($result,$i,"column_name");
+			$uitype=$adb->query_result($result,$i,"uitype");
+			if(isset($id) && $adb->num_rows($cust_result) != 0)
+			{
+				$value=$adb->query_result($cust_result,0,strtolower($setName));
+			}
+			else
+			{
+				$value='';
+			}
+			$custfld .= '<tr>
+				<td width="20%" class="dataLabel">'.$colName.':</td>';
+			if($uitype == 5)
+			{
+				$date_format = parse_calendardate($app_strings['NTC_DATE_FORMAT']);
+				$custfld .= '<td width="30%"><input name="'.$setName.'" id="jscal_field_'.$setName.'" type="text" tabindex="2" size="11" maxlength="10" value="'.$value.'"> <img src="themes/'.$theme.'/images/calendar.gif" id="jscal_trigger_'.$setName.'"> <font size=1><em old="(yyyy-mm-dd)">(yyyy-mm-dd)</em></font></td>';
+				$custfld .= '<script type="text/javascript">';
+				$custfld .= 'Calendar.setup ({';
+						$custfld .= 'inputField : "jscal_field_'.$setName.'", ifFormat : "'.$date_format.'", showsTime : false, button : "jscal_trigger_'.$setName.'", singleClick : true, step : 1';
+						$custfld .= '});';
+				$custfld .= '</script>';
+			}
+			elseif($uitype == 15)
+			{
+				$pick_query="select * from ".$fldModule."_".$setName;
+				$pickListResult = $adb->query($pick_query);
+				$noofpickrows = $adb->num_rows($pickListResult);
+				$custfld .= '<td width="30%"><select name="'.$setName.'" tabindex="1">';
+				for($j = 0; $j < $noofpickrows; $j++)
+				{
+					$pickListValue=$adb->query_result($pickListResult,$j,strtolower($setName));
+					
+					if($value == $pickListValue)
+					{
+						$chk_val = "selected";	
+					}
+					else
+					{	
+						$chk_val = '';	
+					}
+					
+					$custfld .= '<OPTION value="'.$pickListValue.'" '.$chk_val.'>'.$pickListValue.'</OPTION>';
+				}
+				$custfld .= '</td>';
+			}
+			else
+			{
+
+				$custfld .= '<td width="30%"><input name="'.$setName.'" type="text" tabindex="'.$i.'" size="25" maxlength="25" value="'.$value.'"></td>';
+			}
+			$i++;
+			if($i<$noofrows)
+			{
+				$colName=$adb->query_result($result,$i,"fieldlabel");
+				$setName=$adb->query_result($result,$i,"column_name");
+				$uitype=$adb->query_result($result,$i,"uitype");
+				if(isset($id) && $adb->num_rows($cust_result) != 0)
+				{
+					$value=$adb->query_result($cust_result,0,$setName);
+				}
+				else
+				{
+					$value='';
+				}
+				$custfld .= '<td width="20%" class="dataLabel">'.$colName.':</td>';
+				if($uitype == 5)
+				{
+					$date_format = parse_calendardate($app_strings['NTC_DATE_FORMAT']);
+					$custfld .= '<td width="30%"><input name="'.$setName.'" id="jscal_field_'.$setName.'" type="text" tabindex="2" size="11" maxlength="10" value="'.$value.'"> <img src="themes/'.$theme.'/images/calendar.gif" id="jscal_trigger_'.$setName.'"> <font size=1><em old="(yyyy-mm-dd)">(yyyy-mm-dd)</em></font></td>';
+					$custfld .= '<script type="text/javascript">';
+					$custfld .= 'Calendar.setup ({';
+							$custfld .= 'inputField : "jscal_field_'.$setName.'", ifFormat : "'.$date_format.'", showsTime : false, button : "jscal_trigger_'.$setName.'", singleClick : true, step : 1';
+							$custfld .= '});';
+					$custfld .= '</script>';
+
+				}
+				elseif($uitype == 15)
+				{
+					$pick_query="select * from ".$fldModule."_".$setName;
+					$pickListResult = $adb->query($pick_query);
+					$noofpickrows = $adb->num_rows($pickListResult);
+					$custfld .= '<td width="30%"><select name="'.$setName.'" tabindex="1">';
+					for($j = 0; $j < $noofpickrows; $j++)
+					{
+						$pickListValue=$adb->query_result($pickListResult,$j,strtolower($setName));
+
+						if($value == $pickListValue)
+						{
+							$chk_val = "selected";	
+						}
+						else
+						{	
+							$chk_val = '';	
+						}
+
+						$custfld .= '<OPTION value="'.$pickListValue.'" '.$chk_val.'>'.$pickListValue.'</OPTION>';
+					}
+					$custfld .= '</td>';
+				}
+				else
+				{
+					$custfld .= '<td width="30%"><input name="'.$setName.'" type="text" tabindex="'.$i.'" size="25" maxlength="25" value="'.$value.'"></td>';
+				}
+			}
+
+			$custfld .= '<tr>';
+
+		}
+		$custfld .= '</table>';
+		return $custfld;
+
+	}
+}
+
+function CustomFieldDetailView($id, $fldModule, $tableName, $colidName)
+{
+	global $adb;
+	//Assigning custom field values
+	$dbquery = "select  * from field where tablename='".$fldModule."'";
+	$result = $adb->query($dbquery);
+	$adb->println($result);
+	if($adb->num_rows($result) != 0)
+	{
+		$custquery = 'select * from '.$tableName.' where '.$colidName."='".$id."'";
+		$cust_result = $adb->query($custquery);
+		$adb->println($cust_result);
+
+		$noofrows=$adb->num_rows($result);
+		$custfld = '';	
+		for($i=0; $i<$noofrows; $i++)
+		{
+			$fldName=$adb->query_result($result,$i,"fieldlabel");
+			$colName=$adb->query_result($result,$i,"column_name");
+			$uitype=$adb->query_result($result,$i,"uitype");
+			if($adb->num_rows($cust_result) != 0)
+			{
+				$value=$adb->query_result($cust_result,0,strtolower($colName));
+			}
+			else
+			{
+				$value='';
+				$adb->println("emply value ");
+			}
+			$custfld .= '<tr>';
+			$custfld .= '<td width="20%" valign="top" class="dataLabel">'.$fldName.':</td>';
+			if($uitype == 13)
+			{
+				$custfld .= '<td width="30%" valign="top" class="dataField"><a href="mailto:'.$value.'">'.$value.'</a></td>';
+			}
+			else
+			{
+				$custfld .= '<td width="30%" valign="top" class="dataField">'.$value.'</td>';
+			}	
+			$i++;
+			if($i<$noofrows)
+			{
+				$fldName=$adb->query_result($result,$i,"fieldlabel");
+				$colName=$adb->query_result($result,$i,"column_name");
+				$uitype=$adb->query_result($result,$i,"uitype");
+				if($adb->num_rows($cust_result) != 0)
+				{
+					$value=$adb->query_result($cust_result,0,strtolower($colName));
+				}
+				else
+				{
+					$value='';
+				}
+				$custfld .= '<td width="20%" valign="top" class="dataLabel">'.$fldName.':</td>';
+				if($uitype == 13)
+				{
+
+					$custfld .= '<td width="30%" valign="top" class="dataField"><a href="mailto:'.$value.'">'.$value.'</a></td>';
+				}
+				else
+				{
+					$custfld .= '<td width="30%" valign="top" class="dataField">'.$value.'</td>';
+				}
+			}
+
+
+			$custfld .= '<tr>';
+
+		}
+	}
+	return $custfld;
+}
+
 function getCustomFieldArray($module)
 {
-	global $log;
-	$log->debug("Entering getCustomFieldArray(".$module.") method ...");
 	global $adb;
-	$custquery = "select * from vtiger_field where tablename='".$module."'";
+	$custquery = "select * from field where tablename='".$module."'";
 	$custresult = $adb->query($custquery);
 	$custFldArray = Array();
 	$noofrows = $adb->num_rows($custresult);
@@ -100,24 +290,15 @@ function getCustomFieldArray($module)
 		$colName=$adb->query_result($custresult,$i,"column_name");
 		$custFldArray[$colName] = $i;
 	}
-	$log->debug("Exiting getCustomFieldArray method ...");
 	return $custFldArray;
 	
 }
 
-/**
- * Function to get columnname and vtiger_fieldlabel from vtiger_field vtiger_table
- * @param $module :: module name -- Type string
- * @param $trans_array :: translated column vtiger_fields -- Type array
- * returns trans_array in key-value pair array format
- */
-function getCustomFieldTrans($module, $trans_array)
+function getCustomFieldTrans($module, &$trans_array)
 {
-	global $log;
-	$log->debug("Entering getCustomFieldTrans(".$module.",". $trans_array.") method ...");
 	global $adb;
 	$tab_id = getTabid($module);	
-	$custquery = "select columnname,fieldlabel from vtiger_field where generatedtype=2 and tabid=".$tab_id;
+	$custquery = "select columnname,fieldlabel from field where generatedtype=2 and tabid=".$tab_id;
 	$custresult = $adb->query($custquery);
 	$custFldArray = Array();
 	$noofrows = $adb->num_rows($custresult);
@@ -127,100 +308,57 @@ function getCustomFieldTrans($module, $trans_array)
 		$fldLbl = $adb->query_result($custresult,$i,"fieldlabel");
 		$trans_array[$colName] = $fldLbl;
 	}	
-	$log->debug("Exiting getCustomFieldTrans method ...");
 }
 
 
-/**
- * Function to get customfield record from vtiger_field vtiger_table
- * @param $tab :: Tab ID -- Type integer
- * @param $datatype :: vtiger_field name -- Type string
- * @param $id :: vtiger_field Id -- Type integer
- * returns the data result in string format
- */
-function getCustomFieldData($tab,$id,$datatype)
+function CustomFieldSearch($customfieldarray, $fldModule, $tableName,$colidName,$app_strings,$theme,$fieldlabel,$column)
 {
-	global $log;
-	$log->debug("Entering getCustomFieldData(".$tab.",".$id.",".$datatype.") method ...");
-	global $adb;
-	$query = "select * from vtiger_field where tabid=".$tab." and fieldid=".$id;
-	$result = $adb->query($query);
-	$return_data=$adb->fetch_array($result);
-	$log->debug("Exiting getCustomFieldData method ...");
-	return $return_data[$datatype];
-}
-
-
-/**
- * Function to get customfield type,length value,decimal value and picklist value
- * @param $label :: vtiger_field typename -- Type string
- * @param $typeofdata :: datatype -- Type string
- * returns the vtiger_field type,length,decimal
- * and picklist value in ';' separated array format
- */
-function getFldTypeandLengthValue($label,$typeofdata)
-{
-	global $log;
-	$log->debug("Entering getFldTypeandLengthValue(".$label.",".$typeofdata.") method ...");
-	if($label == 'Text')
-	{
-		$types = explode("~",$typeofdata);
-		$data_array=array('0',$types[3]);
-		$fieldtype = implode(";",$data_array);
-	}
-	elseif($label == 'Number')
-	{
-		$types = explode("~",$typeofdata);
-		$data_decimal = explode(",",$types[2]);
-		$data_array=array('1',$data_decimal[0],$data_decimal[1]);
-		$fieldtype = implode(";",$data_array);
-	}
-	elseif($label == 'Percent')
-	{
-		$types = explode("~",$typeofdata);
-		$data_array=array('2','5',$types[3]);
-		$fieldtype = implode(";",$data_array);
-	}
-	elseif($label == 'Currency')
-	{
-		$types = explode("~",$typeofdata);
-		$data_decimal = explode(",",$types[2]);
-		$data_array=array('3',$data_decimal);
-		$fieldtype = implode(";",$data_array);
-	}
-	elseif($label == 'Date')
-	{
-		$fieldtype = '4';
-	}
-	elseif($label == 'Email')
-	{
-		$fieldtype = '5';
-	}
-	elseif($label == 'Phone')
-	{
-		$fieldtype = '6';
-	}
-	elseif($label == 'PickList')
-	{
-		$fieldtype = '7';
-	}
-	elseif($label == 'Url')
-	{
-		$fieldtype = '8';
-	}
-	elseif($label == 'Checkbox')
-	{
-		$fieldtype = '9';
-	}
-	elseif($label == 'Text Area')
-	{
-		$fieldtype = '10';
-	}
-	elseif($label == 'Multi-Select Combo Box')
+global $adb;
+//for($i=0;$i<count($customfieldarray);$i++){echo '<br> Custom Field : '.$i.'...'.$customfieldarray[$i];}
+        //Custom Field Addition
+        $dbquery = "select  * from field  where tablename='".$fldModule."' order by fieldlabel";
+        $result = $adb->query($dbquery);
+        if($adb->num_rows($result) != 0)
         {
-                $fieldtype = '11';
+                $noofrows = $adb->num_rows($result);
+
+                $custfld = '<table width="85%" border="0" cellspacing="0" cellpadding="0">';
+                $custfld .= '<tr><th align="left" class="formSecHeader" colspan="4">'.$app_strings['LBL_CUSTOM_INFORMATION'].'</th></tr>';
+                for($i=0; $i<$noofrows; $i++)
+                {
+                        $id=$customfieldarray[$i];
+                        $colName=$column[$i];
+                        $setName=$fieldlabel[$i];
+			$uitype[$i] = $adb->query_result($result,$i,'uitype');
+
+			if($uitype[$i] == 56)
+		        {
+                		$custfld .= '<td width="20%" class="dataLabel">'.$colName.':</td>';
+		                if($customfieldarray[$i] == 'on')
+                		{
+		                        $custfld .='<td width="30%"><input name="'.$setName.'" type="checkbox"  checked></td>';
+                		}
+		                else
+                		{
+		                        $custfld .='<td width="30%"><input name="'.$setName.'" type="checkbox"></td>';
+                		}
+		        }
+			else
+			{
+	                        $custfld .= '<td width="20%" class="dataLabel">'.$colName.':</td>';
+
+        	                $custfld .= '<td width="30%"><input name="'.$setName.'" type="text" tabindex="'.$i.'" size="25" maxlength="25" value="'.$customfieldarray[$i].'"></td>';
+	                        if($i%2==1)
+        	                {
+                	                $custfld .= '<tr>';
+                        	}
+			}
+                }
+
+                $custfld .= '</table>';
+                return $custfld;
+
         }
-	$log->debug("Exiting getFldTypeandLengthValue method ...");
-	return $fieldtype;
 }
+
 ?>

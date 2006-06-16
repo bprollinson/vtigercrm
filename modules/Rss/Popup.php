@@ -8,43 +8,77 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
+require_once('XTemplate/xtpl.php');
 require_once("data/Tracker.php");
 require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('modules/Rss/Rss.php');
 
+global $app_strings;
+global $app_list_strings;
+global $mod_strings;
+$current_module_strings = return_module_language($current_language, 'Rss');
+global $urlPrefix;
 $log = LoggerManager::getLogger('rss_save');
+global $currentModule;
+global $image_path;
+global $theme;
 
-if(isset($_REQUEST["record"]))
+$theme_path="themes/".$theme."/";
+$image_path=$theme_path."images/";
+
+// focus_list is the means of passing data to a ListView.
+global $focus_list;
+
+if(isset($_REQUEST["rssurl"]))
 {
-	global $adb;
-	$query = 'update vtiger_rss set starred=0';
-	$adb->query($query);
-	$query = 'update vtiger_rss set starred=1 where vtiger_rssid ='.$_REQUEST["record"]; 
-	$adb->query($query);
-	echo $_REQUEST["record"];
-}
-elseif(isset($_REQUEST["rssurl"]))
-{
-	$newRssUrl = str_replace('##amp##','&',$_REQUEST["rssurl"]);
-	$setstarred = 0;
+	$newRssUrl = $_REQUEST["rssurl"];
+	$rsscategory = $_REQUEST["rsscategory"];
+	$setstarred = $_REQUEST["setstarred"];
+	
+	if($setstarred != 1)
+	{
+		$setstarred = 0;
+	}
 	$oRss = new vtigerRSS();
 	if($oRss->setRSSUrl($newRssUrl))
 	{
-			$result = $oRss->saveRSSUrl($newRssUrl,$setstarred);
-        	if($result == false)
+        	if($oRss->saveRSSUrl($newRssUrl,$setstarred,$rsscategory) == false)
         	{
-				echo "Unable to save the RSS Feed URL" ;
+			echo "<font color='red'><b>Unable to save the RSS Feed URL</b></font><br>" ;
         	}else
         	{
-				echo $result;
+			$jscript = "window.opener.location.href=window.opener.location.href;
+				    window.self.close();";
         	}
 	}else
 	{
-		echo "Not a valid RSS Feed URL" ;
+		echo "<font color='red'><b>Not a valid RSS Feed URL</b></font><br>" ;
 
 	}
 }
-
+function getRsscategory_html()
+{
+	$oRss = new vtigerRSS();
+	$rsscategory = $oRss->getRsscategory();
+	//print_r($rsscategory);
+	if(isset($rsscategory)) 
+	{
+		for($i=0;$i<count($rsscategory);$i++)
+		{
+			$shtml .= "<option value=\"$rsscategory[$i]\">$rsscategory[$i]</option>";
+		}
+	}
+	return $shtml;
+}
+$save_rss_form=new XTemplate ("modules/Rss/Popup.html");
+$save_rss_form->assign("MOD", $mod_strings);
+$save_rss_form->assign("APP", $app_strings);
+$save_rss_form->assign("IMAGE_PATH",$image_path);
+$save_rss_form->assign("THEME_PATH",$theme_path);
+$save_rss_form->assign("JAVASCRIPT",$jscript);
+$save_rss_form->assign("RSS_CATEGORY",getRsscategory_html());
+$save_rss_form->parse("main");
+$save_rss_form->out("main");
 ?>

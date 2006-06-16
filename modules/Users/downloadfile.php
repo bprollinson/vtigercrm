@@ -16,8 +16,8 @@ global $fileId;
 
 $templateid = $_REQUEST['record'];
 $dbQuery = "SELECT filename,filetype, data ";
-$dbQuery .= "FROM vtiger_wordtemplates ";
-$dbQuery .= "WHERE templateid=" .$templateid;
+$dbQuery .= "FROM wordtemplates ";
+$dbQuery .= "WHERE templateid=".$templateid;
 
 $result = $adb->query($dbQuery) or die("Couldn't get file list");
 if($adb->num_rows($result) == 1)

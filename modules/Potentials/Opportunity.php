@@ -29,486 +29,682 @@ require_once('modules/Contacts/Contact.php');
 require_once('modules/Activities/Activity.php');
 require_once('modules/Notes/Note.php');
 require_once('modules/Emails/Email.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 
-// vtiger_potential is used to store customer information.
+// potential is used to store customer information.
 class Potential extends CRMEntity {
 	var $log;
 	var $db;
+	// Stored fields
+	var $id;
+	var $potentialid;
+	var $potentialname;
+	var $amount;
+	var $closingdate;
+	var $nextstep;
+ 	 var $private;
+  
+	var $probability;
+	var $stage;
+  	var $potentialtype;
+
+	var $leadsource;
+	var $description;
+  var $deleted;
+	
+
+	// These are related
+	var $accountname;
+	var $accountid;
+	var $productname;
+	var $productid;
+	var $contactid;
+	var $taskid;
+	var $notesid;
+	var $meetingid;
+	var $callid;
+	var $emailid;
+	var $assigned_user_name;
 
 	var $module_name="Potentials";
-	var $table_name = "vtiger_potential";
-	var $rel_product_table = "vtiger_seproductsrel";
-	var $rel_opportunity_table = "vtiger_contpotentialrel";
+	var $table_name = "potential";
+	var $rel_product_table = "seproductsrel";
+	var $rel_opportunity_table = "contpotentialrel";
 	var $module_id = "potentialid";
 	var $object_name = "potential";
 
-	var $tab_name = Array('vtiger_crmentity','vtiger_potential','vtiger_potentialscf');
-	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_potential'=>'potentialid','vtiger_potentialscf'=>'potentialid');
-
+	var $tab_name = Array('crmentity','potential','potentialscf');
+	var $tab_name_index = Array('crmentity'=>'crmid','potential'=>'potentialid','potentialscf'=>'potentialid');
+	
 	var $column_fields = Array();
 
-	var $sortby_fields = Array('potentialname','amount','closingdate','smownerid');
+        var $sortby_fields = Array('potentialname','amount','closingdate');
+
+	// This is used to retrieve related fields from form posts.
+	var $additional_column_fields = Array('assigned_user_name', 'assigned_user_id', 'accountname', 'accountid', 'productname', 'productid', 'contactid', 'taskid', 'notesid', 'meetingid', 'callid', 'emailid');
 
 
-	// This is the list of vtiger_fields that are in the lists.
+	// This is the list of fields that are in the lists.
 	var $list_fields = Array(
-			'Potential'=>Array('potential'=>'potentialname'),
-			'Account Name'=>Array('account'=>'accountname'),	  			
-			'Sales Stage'=>Array('potential'=>'sales_stage'),
-			'Amount'=>Array('potential'=>'amount'),
-			'Expected Close'=>Array('potential'=>'closingdate'),
-			'Assigned To'=>Array('crmentity','smownerid')
-			);
-
+	'Potential'=>Array('potential'=>'potentialname'),
+	'Account Name'=>Array('account'=>'accountname'),	  			
+	'Sales Stage'=>Array('potential'=>'sales_stage'),
+	'Amount'=>Array('potential'=>'amount'),
+	'Expected Close'=>Array('potential'=>'closingdate'),
+	'Assigned To'=>Array('crmentity','smownerid')
+	);
+	
 	var $list_fields_name = Array(
-			'Potential'=>'potentialname',
-			'Account Name'=>'accountid',	  			
-			'Sales Stage'=>'sales_stage',	  			
-			'Amount'=>'amount',
-			'Expected Close'=>'closingdate',
-			'Assigned To'=>'assigned_user_id');
+	'Potential'=>'potentialname',
+	'Account Name'=>'accountid',	  			
+	'Sales Stage'=>'sales_stage',	  			
+	'Amount'=>'amount',
+	'Expected Close'=>'closingdate',
+	'Assigned To'=>'assigned_user_id');
 
 	var $list_link_field= 'potentialname';
 
-	var $search_fields = Array(
-			'Potential'=>Array('potential'=>'potentialname'),
-			'Account Name'=>Array('potential'=>'accountid'),
-			'Expected Close'=>Array('potential'=>'closedate')
-			);
+	var $record_id;
+	var $list_mode;
+        var $popup_type;
 
-	var $search_fields_name = Array(
-			'Potential'=>'potentialname',
-			'Account Name'=>'account_id',
-			'Expected Close'=>'closingdate'
-			);
+        var $search_fields = Array(
+        'Potential'=>Array('potential'=>'potentialname'),
+        'Account Name'=>Array('potential'=>'accountid'),
+        'Expected Close'=>Array('potential'=>'closedate')
+        );
+
+        var $search_fields_name = Array(
+        'Potential'=>'potentialname',
+        'Account Name'=>'account_id',
+        'Expected Close'=>'closingdate'
+        );
 
 	var $required_fields =  array(
-			"potentialname"=>1,
-			"account_id"=>1,
-			"closingdate"=>1,
-			"sales_stage"=>1,
-			"amount"=>1
-			);
+				"potentialname"=>1,
+				"account_id"=>1,
+				"closingdate"=>1,
+				"sales_stage"=>1,
+				"amount"=>1
+);
 
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'potentialname';
-	var $default_sort_order = 'ASC';
 
-	function Potential() {
+	function potential() {
 		$this->log = LoggerManager::getLogger('potential');
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Potentials');
 	}
 
 	var $new_schema = true;
-	
-	function getSortOrder()
-	{
-		global $log;
-                $log->debug("Entering getSortOrder() method ...");	
-		if(isset($_REQUEST['sorder'])) 
-			$sorder = $_REQUEST['sorder'];
-		else
-			$sorder = (($_SESSION['POTENTIALS_SORT_ORDER'] != '')?($_SESSION['POTENTIALS_SORT_ORDER']):($this->default_sort_order));
-		$log->debug("Exiting getSortOrder() method ...");
-		return $sorder;
+
+	function create_tables () {
+		/*
+		$query = 'CREATE TABLE '.$this->table_name.' ( ';
+		$query .='id char(36) NOT NULL';
+		$query .=', date_entered datetime NOT NULL';
+		$query .=', date_modified datetime NOT NULL';
+		$query .=', modified_user_id char(36) NOT NULL';
+		$query .=', assigned_user_id char(36)';
+		$query .=', deleted bool NOT NULL default 0';
+		$query .=', name char(50)';
+		$query .=', potential_type char(25)';
+		$query .=', lead_source char(25)';
+		$query .=', amount char(25)';
+		$query .=', date_closed date';
+		$query .=', next_step char(25)';
+		$query .=', sales_stage char(25)';
+		$query .=', probability char(3)';
+		$query .=', description TEXT';
+		$query .=', PRIMARY KEY ( ID ) )';
+
+		$this->db->query($query, true, "Error creating table:" );
+
+
+
+		//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
+
+		$query = "CREATE TABLE $this->rel_account_table (";
+		$query .='id char(36) NOT NULL';
+		$query .=', potential_id char(36)';
+		$query .=', account_id char(36)';
+		$query .=', deleted bool NOT NULL default 0';
+		$query .=', PRIMARY KEY ( ID ) )';
+
+		$this->db->query($query, true, "Error creating account/potential relationship table: " );
+
+		$query = "CREATE TABLE $this->rel_product_table (";
+		$query .='id char(36) NOT NULL';
+		$query .=', potential_id char(36)';
+		$query .=', product_id int(36)';
+		$query .=', deleted bool NOT NULL default 0';
+		$query .=', PRIMARY KEY ( ID ) )';
+
+		$this->db->query($query, true, "Error creating product/potential relationship table: " );
+
+
+		$query = "CREATE TABLE $this->rel_potential_table (";
+		$query .='id char(36) NOT NULL';
+		$query .=', contact_id char(36)';
+		$query .=', potential_id char(36)';
+		$query .=', contact_role char(50)';
+		$query .=', deleted bool NOT NULL default 0';
+		$query .=', PRIMARY KEY ( ID ) )';
+		$this->db->query($query, true,"Error creating potential/contact relationship table: ");
+
+		// Create the indexes
+		$this->create_index("create index idx_opp_name on opportunities (name)");
+		$this->create_index("create index idx_acc_opp_acc on accounts_opportunities (account_id)");
+		$this->create_index("create index idx_acc_opp_opp on accounts_opportunities (potential_id)");
+		$this->create_index("create index idx_pr_opp_pr on products_opportunities (product_id)");
+		$this->create_index("create index idx_pr_opp_opp on products_opportunities (potential_id)");
+
+		$this->create_index("create index idx_con_opp_con on opportunities_contacts (contact_id)");
+		$this->create_index("create index idx_con_opp_opp on opportunities_contacts (potential_id)");
+		*/
 	}
 
-	function getOrderBy()
+	function drop_tables () {
+		/*
+		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
+
+		$this->db->query($query);
+
+		$query = 'DROP TABLE IF EXISTS '.$this->rel_account_table;
+
+		$this->db->query($query);
+
+		$query = 'DROP TABLE IF EXISTS '.$this->rel_product_table;
+
+		$this->db->query($query);
+
+		$query = 'DROP TABLE IF EXISTS '.$this->rel_potential_table;
+
+		$this->db->query($query);
+
+		//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
+		*/
+
+	}
+
+	function get_summary_text()
 	{
-		global $log;
-                $log->debug("Entering getOrderBy() method ...");
-		if (isset($_REQUEST['order_by'])) 
-			$order_by = $_REQUEST['order_by'];
-		else
-			$order_by = (($_SESSION['POTENTIALS_ORDER_BY'] != '')?($_SESSION['POTENTIALS_ORDER_BY']):($this->default_order_by));
-		$log->debug("Exiting getOrderBy method ...");
-		return $order_by;
-	}	
+		return "$this->name";
+	}
 
 	function create_list_query($order_by, $where)
 	{
-		global $log;
-		$log->debug("Entering create_list_query(".$order_by.",". $where.") method ...");
-		// Determine if the vtiger_account name is present in the where clause.
+		// Determine if the account name is present in the where clause.
 		$account_required = ereg("accounts\.name", $where);
 
 		if($account_required)
 		{
-			$query = "SELECT vtiger_potential.potentialid,  vtiger_potential.potentialname, vtiger_potential.dateclosed FROM vtiger_potential, vtiger_account ";
-			$where_auto = "account.accountid = vtiger_potential.accountid AND vtiger_crmentity.deleted=0 ";
+			$query = "SELECT potential.potentialid,  potential.potentialname, potential.dateclosed FROM potential, account ";
+			$where_auto = "account.accountid = potential.accountid AND crmentity.deleted=0 ";
 		}
 		else
 		{
-			$query = 'SELECT potentialid, potentialname, smcreatorid, closingdate FROM vtiger_potential inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_potential.potentialid ';
-			$where_auto = 'AND vtiger_crmentity.deleted=0';
+			$query = 'SELECT potentialid, potentialname, smcreatorid, closingdate FROM potential inner join crmentity on crmentity.crmid=potential.potentialid ';
+			$where_auto = 'AND crmentity.deleted=0';
 		}
 
 		if($where != "")
-			$query .= "where $where ".$where_auto;
+                  $query .= "where $where ".$where_auto;
 		else
 			$query .= "where ".$where_auto;
 
 		if($order_by != "")
-			$query .= " ORDER BY vtiger_potential.$order_by";
+			$query .= " ORDER BY potential.$order_by";
 		else
-			$query .= " ORDER BY vtiger_potential.potentialname";
+			$query .= " ORDER BY potential.potentialname";
 
 
 
-		$log->debug("Exiting create_list_query method ...");
 		return $query;
 	}
-
-
-	function create_export_query($order_by, $where)
-	{
-		global $log;
-		$log->debug("Entering create_export_query(".$order_by.",". $where.") method ...");
-
-		if($this->checkIfCustomTableExists('potentialscf'))
+//method added to construct the query to fetch the custom fields 
+	function constructCustomQueryAddendum()
+	{		
+        
+        global $adb;
+        	//get all the custom fields created 
+		$sql1 = "select columnname,fieldlabel from field where generatedtype=2 and tabid=2";
+        	$result = $adb->query($sql1);
+		$numRows = $adb->num_rows($result);
+	//select accountscf.columnname fieldlabel,accountscf.columnname fieldlabel	
+		$sql3 = "select ";
+		for($i=0; $i < $numRows;$i++)
 		{
-			$query = $this->constructCustomQueryAddendum('potentialscf','Potentials') ."
-			vtiger_potential.*,
-			vtiger_account.accountname account_name,
-			vtiger_users.user_name assigned_user_name
-					FROM vtiger_potential
-					INNER JOIN vtiger_crmentity
-					ON vtiger_crmentity.crmid=vtiger_potential.potentialid
-					LEFT JOIN vtiger_account on vtiger_potential.accountid=vtiger_account.accountid
-					left join vtiger_potentialscf on vtiger_potentialscf.potentialid=vtiger_potential.potentialid
-					left join vtiger_users on vtiger_crmentity.smownerid=vtiger_users.id where vtiger_crmentity.deleted=0 ";
+			$columnName = $adb->query_result($result,$i,"columnname");
+			$fieldlable = $adb->query_result($result,$i,"fieldlabel");
+			//construct query as below
+		       if($i == 0)
+		      	{
+				$sql3 .= "potentialscf.".$columnName. " '" .$fieldlable."'";
+			}
+			else
+			{	
+				$sql3 .= ", potentialscf.".$columnName. " '" .$fieldlable."'";
+			}
+        	         }
+	return $sql3;
+
+		}
+
+//check if the custom table exists or not in the first place
+function checkIfCustomTableExists()
+{
+ $result = $this->db->query("select * from potentialscf");
+ $testrow = $this->db->num_fields($result);
+	if($testrow > 1)
+	{
+		$exists=true;
+	}
+	else
+	{
+		$exists=false;
+	}
+return $exists;
+}
+
+        function create_export_query($order_by, $where)
+        {
+
+		if($this->checkIfCustomTableExists())
+		{
+ $query = $this->constructCustomQueryAddendum() .",                                potential.*,
+                                account.accountname account_name,
+                                users.user_name assigned_user_name
+                                FROM potential
+                                INNER JOIN crmentity
+                                ON crmentity.crmid=potential.potentialid
+                                LEFT JOIN account on potential.accountid=account.accountid
+                                left join potentialscf on potentialscf.potentialid=potential.potentialid
+				left join users on crmentity.smcreatorid=users.id where crmentity.deleted=0 ";
 		}
 		else
 		{
-			$query = "SELECT
-			vtiger_potential.*,
-			vtiger_account.accountname vtiger_account_name,
-			vtiger_users.user_name assigned_user_name
-					FROM vtiger_potential inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_potential.potentialid                                LEFT JOIN vtiger_users
-					ON vtiger_crmentity.smownerid=vtiger_users.id
-					LEFT JOIN vtiger_account on vtiger_potential.accountid=vtiger_account.accountid  LEFT JOIN vtiger_potentialscf on vtiger_potentialscf.potentialid=vtiger_potential.potentialid where vtiger_crmentity.deleted=0 ";
+                  	$query = "SELECT
+                                potential.*,
+                                account.accountname account_name,
+                                users.user_name assigned_user_name
+                                FROM potential inner join crmentity on crmentity.crmid=potential.potentialid                                LEFT JOIN users
+                                ON crmentity.smcreatorid=users.id
+                                LEFT JOIN account on potential.accountid=account.accountid  LEFT JOIN potentialscf on potentialscf.potentialid=potential.potentialid where crmentity.deleted=0 ";
 		}	
+                
+                return $query;
+        
+        }
 
-		$log->debug("Exiting create_export_query method ...");
-		return $query;
+
+
+	function save_relationship_changes($is_update)
+    {
+    	$this->clear_potential_account_relationship($this->id);
+    	$this->clear_potential_product_relationship($this->id);
+
+		if($this->account_id != "")
+    	{
+    		$this->set_potential_account_relationship($this->id, $this->account_id);
+    	}
+	if($this->product_id != "")
+    	{
+    		$this->set_potential_product_relationship($this->id, $this->product_id);
+    	}
+    	if($this->contact_id != "")
+    	{
+    		$this->set_potential_contact_relationship($this->id, $this->contact_id);
+    	}
+    	if($this->task_id != "")
+    	{
+    		$this->set_potential_task_relationship($this->id, $this->task_id);
+    	}
+    	if($this->note_id != "")
+    	{
+    		$this->set_potential_note_relationship($this->id, $this->note_id);
+    	}
+    	if($this->meeting_id != "")
+    	{
+    		$this->set_potential_meeting_relationship($this->id, $this->meeting_id);
+    	}
+    	if($this->call_id != "")
+    	{
+    		$this->set_potential_call_relationship($this->id, $this->call_id);
+    	}
+    	if($this->email_id != "")
+    	{
+    		$this->set_potential_email_relationship($this->id, $this->email_id);
+    	}
+    }
+
+	function set_potential_account_relationship($potential_id, $account_id)
+	{
+		//$query = "insert into accounts_potential set id='".create_guid()."', potential_id='$potential_id', account_id='$account_id'";
+		$query = "insert into accounts_potential (id,potential_id,account_id) values ('".create_guid()."','$potential_id','$account_id')";
+		$this->db->query($query, true, "Error setting account to contact relationship: ");
 
 	}
 
+	function clear_potential_account_relationship($potential_id)
+	{
+		$query = "UPDATE accounts_potential set deleted=1 where potential_id='$potential_id' and deleted=0";
+		$this->db->query($query, true, "Error clearing account to potential relationship: ");
+	}
+
+	function set_potential_product_relationship($potential_id, $product_id)
+	{
+		//$query = "insert into products_potential set id='".create_guid()."', potential_id='$potential_id', product_id='$product_id'";
+		$query = "insert into products_potential (id,potential_id,product_id) values('".create_guid()."','$potential_id','$product_id')";
+		$this->db->query($query, true, "Error setting  product to opp relationship: ");
+
+	}
+
+	function clear_potential_product_relationship($potential_id)
+	{
+		$query = "UPDATE products_potential set deleted=1 where potential_id='$potential_id' and deleted=0";
+		$this->db->query($query, true, "Error clearing product to potential relationship: ");
+	}
+
+	function set_potential_contact_relationship($potential_id, $contact_id)
+	{
+		global $app_list_strings;
+		$default = $app_list_strings['potential_relationship_type_default_key'];
+		//$query = "insert into potential_contacts set id='".create_guid()."', potential_id='$potential_id', contact_id='$contact_id', contact_role='$default'";
+		$query = "insert into potential_contacts (id,potential_id,contact_id,contact_role) values ('".create_guid()."','$potential_id','$contact_id','$default')";
+		$this->db->query($query, true, "Error setting potential to contact relationship: ");
+	}
+
+	function clear_potential_contact_relationship($potential_id)
+	{
+		$query = "UPDATE potential_contacts set deleted=1 where potential_id='$potential_id' and deleted=0";
+		$this->db->query($query, true, "Error marking record deleted: ");
+
+	}
+
+	function set_potential_task_relationship($potential_id, $task_id)
+	{
+		$query = "UPDATE tasks set parent_id='$potential_id', parent_type='Potential' where id='$task_id'";
+		$this->db->query($query, true, "Error setting potential to task relationship: ");
+
+	}
+
+	function clear_potential_task_relationship($potential_id)
+	{
+		$query = "UPDATE tasks set parent_id='', parent_type='' where parent_id='$potential_id'";
+		$this->db->query($query, true, "Error clearing potential to task relationship: ");
+
+	}
+
+	function set_potential_note_relationship($potential_id, $note_id)
+	{
+		$query = "UPDATE notes set parent_id='$potential_id', parent_type='Potential' where id='$note_id'";
+		$this->db->query($query, true, "Error setting potential to note relationship: ");
+	}
+
+	function clear_potential_note_relationship($potential_id)
+	{
+		$query = "UPDATE notes set parent_id='', parent_type='' where parent_id='$potential_id'";
+		$this->db->query($query, true, "Error clearing potential to note relationship: ");
+	}
+
+	function set_potential_meeting_relationship($potential_id, $meeting_id)
+	{
+		$query = "UPDATE meetings set parent_id='$potential_id', parent_type='Potential' where id='$meeting_id'";
+		$this->db->query($query, true,"Error setting potential to meeting relationship: ");
+	}
+
+	function clear_potential_meeting_relationship($potential_id)
+	{
+		$query = "UPDATE meetings set parent_id='', parent_type='' where parent_id='$potential_id'";
+		$this->db->query($query, true,"Error clearing potential to meeting relationship: ");
+	}
+
+	function set_potential_call_relationship($potential_id, $call_id)
+	{
+		$query = "UPDATE calls set parent_id='$potential_id', parent_type='Potential' where id='$call_id'";
+		$this->db->query($query, true,"Error setting potential to call relationship: ");
+	}
+
+	function clear_potential_call_relationship($potential_id)
+	{
+		$query = "UPDATE calls set parent_id='', parent_type='' where parent_id='$potential_id'";
+		$this->db->query($query, true,"Error clearing potential to call relationship: ");
+	}
+
+	function set_potential_email_relationship($potential_id, $email_id)
+	{
+		$query = "UPDATE emails set parent_id='$potential_id', parent_type='Potential' where id='$email_id'";
+		$this->db->query($query, true,"Error setting potential to email relationship: ");
+	}
+
+	function clear_potential_email_relationship($potential_id)
+	{
+		$query = "UPDATE emails set parent_id='', parent_type='' where parent_id='$potential_id'";
+		$this->db->query($query, true,"Error clearing potential to email relationship: ");
+	}
+
+	function mark_relationships_deleted($id)
+	{
+		$this->clear_potential_contact_relationship($id);
+		$this->clear_potential_account_relationship($id);
+		$this->clear_potential_product_relationship($id);
+		$this->clear_potential_task_relationship($id);
+		$this->clear_potential_note_relationship($id);
+		$this->clear_potential_meeting_relationship($id);
+		$this->clear_potential_call_relationship($id);
+		$this->clear_potential_email_relationship($id);
+	}
+
+	function fill_in_additional_list_fields()
+	{
+		// Fill in the assigned_user_name
+		$this->assigned_user_name = get_assigned_user_name($this->assigned_user_id);
+
+		$query = "SELECT amount, sales_stage, leadsource FROM potential where potentialid = ".$this->potentialid;
+		$result =& $this->db->query($query, true,"Error filling in additional detail fields: ");
+
+		// Get the id and the name.
+		$row =  $this->db->fetchByAssoc($result);
+
+		if($row != null)
+		{
+			$this->leadsource 	= stripslashes($row['leadsource']);
+			$this->amount 		= stripslashes($row['amount']);
+			$this->sales_stage 	= stripslashes($row['sales_stage']);
+		}
+		$this->fill_in_additional_detail_fields();
+	}
+
+	function fill_in_additional_detail_fields()
+	{
+		// Fill in the assigned_user_name
+		$this->assigned_user_name = get_assigned_user_name($this->assigned_user_id);
+
+		$query = "SELECT acc.accountid, acc.accountname from account acc, potential pt where acc.accountid = pt.accountid and pt.potentialid = '$this->potentialid' and pt.deleted=0";
+		$result =& $this->db->query($query, true,"Error filling in additional detail fields: ");
+
+		// Get the id and the name.
+		$row = $this->db->fetchByAssoc($result);
+
+		if($row != null)
+		{
+			$this->accountname = stripslashes($row['accountname']);
+			$this->accountid 	= stripslashes($row['accountid']);
+		}
+		else
+		{
+			$this->accountname = '';
+			$this->accountid = '';
+		}
+
+		$query = "SELECT pr.productid, pr.productname from products pr, potential pt where pr.productid = pt.productid and pt.potentialid = '$this->potentialid' and pr.deleted=0 and pt.deleted=0";
+		$result =& $this->db->query($query, true,"Error filling in additional detail fields: ");
+
+		// Get the id and the name.
+		$row = $this->db->fetchByAssoc($result);
+
+		if($row != null)
+		{
+			$this->productname = stripslashes($row['productname']);
+			$this->productid 	= stripslashes($row['productid']);
+		}
+		else
+		{
+			$this->product_name = '';
+			$this->product_id = '';
+		}
+
+
+	}
 
 
 	/** Returns a list of the associated contacts
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
-	 */
+	*/
 	function get_contacts($id)
 	{
-		global $log;
-		$log->debug("Entering get_contacts(".$id.") method ...");
-		global $app_strings;
+		$query = 'select contactdetails.accountid, potential.potentialid, potential.potentialname, contactdetails.contactid, contactdetails.lastname, contactdetails.firstname, contactdetails.title, contactdetails.department, contactdetails.email, contactdetails.phone, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from potential inner join contpotentialrel on contpotentialrel.potentialid = potential.potentialid inner join contactdetails on contpotentialrel.contactid = contactdetails.contactid inner join crmentity on crmentity.crmid = contactdetails.contactid where potential.potentialid = '.$id.' and crmentity.deleted=0';
+          renderRelatedContacts($query,$id);
+        }
 
-		$focus = new Contact();
-
-		$button = '';
-
-		if(isPermitted("Contacts",3,"") == 'yes')
-		{
-
-			$button .= '<input title="Change" accessKey="" tabindex="2" type="button" class="button" value="'.$app_strings['LBL_SELECT_CONTACT_BUTTON_LABEL'].'" name="Button" LANGUAGE=javascript onclick=\'return window.open("index.php?module=Contacts&action=Popup&return_module=Potentials&popuptype=detailview&form=EditView&form_submit=false&recordid='.$_REQUEST["record"].'","test","width=600,height=400,resizable=1,scrollbars=1");\'>&nbsp;';
-		}
-		$returnset = '&return_module=Potentials&return_action=DetailView&return_id='.$id;
-
-		$query = 'select vtiger_contactdetails.accountid, vtiger_users.user_name,vtiger_groups.groupname,vtiger_potential.potentialid, vtiger_potential.potentialname, vtiger_contactdetails.contactid, vtiger_contactdetails.lastname, vtiger_contactdetails.firstname, vtiger_contactdetails.title, vtiger_contactdetails.department, vtiger_contactdetails.email, vtiger_contactdetails.phone, vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime from vtiger_potential inner join vtiger_contpotentialrel on vtiger_contpotentialrel.potentialid = vtiger_potential.potentialid inner join vtiger_contactdetails on vtiger_contpotentialrel.contactid = vtiger_contactdetails.contactid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_contactdetails.contactid left join vtiger_contactgrouprelation on vtiger_contactdetails.contactid=vtiger_contactgrouprelation.contactid left join vtiger_groups on vtiger_groups.groupname=vtiger_contactgrouprelation.groupname left join vtiger_users on vtiger_crmentity.smownerid=vtiger_users.id where vtiger_potential.potentialid = '.$id.' and vtiger_crmentity.deleted=0';
-		
-		$log->debug("Exiting get_contacts method ...");
-		return GetRelatedList('Potentials','Contacts',$focus,$query,$button,$returnset);
+	/** Returns a list of the associated tasks
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	*/
+	function get_tasks($id)
+	{
+          $query = "SELECT activity.subject,task.duedate,task.priority,task.status from task inner join activity on activity.activityid=task.taskid inner join seactivityrel on seactivityrel.activityid=task.taskid inner join crmentity on crmentity.crmid=task.taskid where seactivityrel.crmid=".$id."";
+          //include('modules/Potentials/RenderRelatedListUI.php');
+          renderRelatedTasks($query);
 	}
+
+	/** Returns a list of the associated notes
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	*/
+	function get_notes($id)
+	{
+          // First, get the list of IDs.
+          $query = "SELECT notes.title,notes.filename,notes.notecontent from notes inner join senotesrel on senotesrel.notesid=notes.notesid inner join crmentity on crmentity.crmid=notes.notesid where senotesrel.crmid=" .$id."";
+          renderRelatedNotes($query);
+        }
+
+	/** Returns a list of the associated meetings
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	*/
+	function get_meetings($id)
+	{
+          $query ="select name,meetings.location  from meetings inner join events on meetings.meetingid=events.eventid inner join activity on activity.activityid=events.eventid inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join account on account.accountid=seactivityrel.crmid where account.accountid=".$id."";
+          renderRelatedMeetings($query);
+        }
 
 	/** Returns a list of the associated calls
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
 	 * Contributor(s): ______________________________________..
-	 */
+	*/
 	function get_activities($id)
 	{
-		global $log;
-		$log->debug("Entering get_activities(".$id.") method ...");
-		global $mod_strings;
-
-		$focus = new Activity();
-
-		$button = '';
-
-		if(isPermitted("Activities",1,"") == 'yes')
-		{
-
-			$button .= '<input title="New Task" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.return_action.value=\'DetailView\';this.form.module.value=\'Activities\';this.form.activity_mode.value=\'Task\';this.form.return_module.value=\'Potentials\'" type="submit" name="button" value="'.$mod_strings['LBL_NEW_TASK'].'">&nbsp;';
-			$button .= '<input title="New Event" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.return_action.value=\'DetailView\';this.form.module.value=\'Activities\';this.form.return_module.value=\'Potentials\';this.form.activity_mode.value=\'Events\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_EVENT'].'">&nbsp;';
-		}
-		$returnset = '&return_module=Potentials&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT vtiger_activity.*,vtiger_seactivityrel.*,vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime, vtiger_users.user_name, vtiger_recurringevents.recurringtype, vtiger_contactdetails.contactid, vtiger_contactdetails.lastname, vtiger_contactdetails.firstname from vtiger_activity inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid inner join vtiger_potential on vtiger_potential.potentialid=vtiger_seactivityrel.crmid left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid left join vtiger_contactdetails on vtiger_contactdetails.contactid= vtiger_cntactivityrel.contactid left join vtiger_users on vtiger_users.id=vtiger_crmentity.smownerid left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_crmentity.crmid left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname left outer join vtiger_recurringevents on vtiger_recurringevents.activityid=vtiger_activity.activityid where vtiger_seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and vtiger_crmentity.deleted=0 and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Completed') and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Deferred') or (vtiger_activity.eventstatus != '' &&  vtiger_activity.eventstatus != 'Held')";
-		$log->debug("Exiting get_activities method ...");
-		return GetRelatedList('Potentials','Activities',$focus,$query,$button,$returnset);
-
+          //$query = "SELECT activity.subject,semodule,activitytype,date_start,status,priority from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid where seactivityrel.crmid=".$id;
+	  $query = "SELECT activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name, recurringevents.recurringtype, contactdetails.contactid, contactdetails.lastname, contactdetails.firstname from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid= cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and crmentity.deleted=0 and ( activity.status is NULL || activity.status != 'Completed' ) and (  activity.eventstatus is NULL ||  activity.eventstatus != 'Held')";
+          //include('modules/Potentials/RenderRelatedListUI.php');
+          renderRelatedActivities($query,$id);
 	}
 
+	/** Returns a list of the associated emails
+	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
+	 * All Rights Reserved..
+	 * Contributor(s): ______________________________________..
+	*/
+	function get_emails($id)
+	{
+		$query ="select activity.subject,emails.emailid, emails.filename,semodule,activitytype,date_start,activity.status,priority,crmentity.crmid,crmentity.smownerid,crmentity.modifiedtime, users.user_name  from emails inner join activity on activity.activityid=emails.emailid inner join seactivityrel on seactivityrel.activityid=emails.emailid inner join crmentity on crmentity.crmid=emails.emailid inner join users on  users.id=crmentity.smownerid where seactivityrel.crmid=".$id;
+          renderRelatedEmails($query,$id);
+        }
 
 	function get_products($id)
 	{
-		global $log;
-		$log->debug("Entering get_products(".$id.") method ...");
-		require_once('modules/Products/Product.php');
-		global $app_strings;
-
-		$focus = new Product();
-
-		$button = '';
-
-		if(isPermitted("Products",1,"") == 'yes')
-		{
-
-
-			$button .= '<input title="New Product" accessyKey="F" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'Products\';this.form.return_module.value=\'Potentials\';this.form.return_action.value=\'DetailView\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_PRODUCT'].'">&nbsp;';
-		}
-		if(isPermitted("Products",3,"") == 'yes')
-		{
-			$button .= '<input title="Change" accessKey="" tabindex="2" type="button" class="button" value="'.$app_strings['LBL_SELECT_PRODUCT_BUTTON_LABEL'].'" name="Button" LANGUAGE=javascript onclick=\'return window.open("index.php?module=Products&action=Popup&return_module=Potentials&popuptype=detailview&form=EditView&form_submit=false&recordid='.$_REQUEST["record"].'","test","width=600,height=400,resizable=1,scrollbars=1");\'>&nbsp;';
-		}
-		$returnset = '&return_module=Potentials&return_action=DetailView&return_id='.$id;
-
-		$query = 'select vtiger_products.productid, vtiger_products.productname, vtiger_products.productcode, vtiger_products.commissionrate, vtiger_products.qty_per_unit, vtiger_products.unit_price, vtiger_crmentity.crmid, vtiger_crmentity.smownerid from vtiger_products inner join vtiger_seproductsrel on vtiger_products.productid = vtiger_seproductsrel.productid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_products.productid inner join vtiger_potential on vtiger_potential.potentialid = vtiger_seproductsrel.crmid  where vtiger_potential.potentialid = '.$id.' and vtiger_crmentity.deleted = 0';
-		$log->debug("Exiting get_products method ...");
-		return GetRelatedList('Potentials','Products',$focus,$query,$button,$returnset);
-	}
+		//$query = 'select potential.potentialid, potential.potentialname, products.productid, products.productname, products.qty_per_unit, products.unit_price, products.purchase_date from potential inner join crmentity on crmentity.crmid = potential.potentialid inner join seproductsrel on seproductsrel.productid = products.productid inner join products on seproductsrel.productid = products.productid where potential.potentialid='.$id;
+		$query = 'select products.productid, products.productname, products.productcode, products.commissionrate, products.qty_per_unit, products.unit_price, crmentity.crmid, crmentity.smownerid from products inner join seproductsrel on products.productid = seproductsrel.productid inner join crmentity on crmentity.crmid = products.productid inner join potential on potential.potentialid = seproductsrel.crmid  where potential.potentialid = '.$id.' and crmentity.deleted = 0';
+	      	renderRelatedProducts($query,$id);
+        }
 	function get_stage_history($id)
-	{	
-		 global $log;
-		$log->debug("Entering get_stage_history(".$id.") method ...");
-		global $theme;
-		$theme_path="themes/".$theme."/";
-		$image_path=$theme_path."images/";
-		require_once ($theme_path."layout_utils.php");
-
-		global $adb;
-		global $mod_strings;
-		global $app_strings;
-
-		$result=$adb->query($query);
-		$noofrows = $adb->num_rows($result);
-
-
-		if($noofrows == 0)
-		{
-		}
-		else
-		{	
-			if ($noofrows > 15)
-			{
-				$list .= '<div style="overflow:auto;height:315px;width:100%;">';
-			}
-
-			$list .= '<table border="0" cellpadding="0" cellspacing="0" class="FormBorder" width="100%">';
-			$list .= '<tr class="ModuleListTitle" height=20>';
-
-			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-			$list .= '<td class="moduleListTitle" height="21">';
-
-			$list .= $app_strings['LBL_AMOUNT'].'</td>';
-			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-			$list .= '<td class="moduleListTitle">';
-
-			$list .= $app_strings['LBL_SALES_STAGE'].'</td>';
-			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-			$list .= '<td class="moduleListTitle">';
-
-			$list .= $app_strings['LBL_PROBABILITY'].'</td>';
-			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-			$list .= '<td class="moduleListTitle">';
-
-			$list .= $app_strings['LBL_CLOSE_DATE'].'</td>';
-			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-			$list .= '<td class="moduleListTitle">';
-
-			$list .= $app_strings['LBL_LAST_MODIFIED'].'</td>';
-			$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-			$list .= '<td class="moduleListTitle">';
-
-			$list .= '</td>';
-			$list .= '</tr>';
-
-			$list .= '<tr><td COLSPAN="12" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif"></td></tr>';
-
-			$i=1;
-			while($row = $adb->fetch_array($result))
-			{
-
-				if ($i%2==0)
-					$trowclass = 'evenListRow';
-				else
-					$trowclass = 'oddListRow';
-
-				$list .= '<tr class="'. $trowclass.'">';
-
-				$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-				$list .= '<td width="15%">'.$row['amount'].'</td>';
-
-				$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-				$list .= '<td width="25%" height="21" style="padding:0px 3px 0px 3px;">';
-				$list .= $row['stage'];
-				$list .= '</td>';
-
-				$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-				$list .= '<td width="15%" height="21" style="padding:0px 3px 0px 3px;">';
-				$list .= $row['probability'];
-				$list .= '</td>';
-
-				$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-				$list .= '<td width="25%" height="21" style="padding:0px 3px 0px 3px;">';
-				//changed to show the close date as user date format -- after 4.2 patch2
-				$closedate = getDisplayDate($row['closedate']);
-				$list .= $closedate;
-				$list .= '</td>';
-
-				$list .= '<td WIDTH="1" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif">';
-				$list .= '<td width="20%" height="21" style="padding:0px 3px 0px 3px;">';
-				//changed to show the last modified date as user date format -- after 4.2 patch2
-				$lastmodified = getDisplayDate($row['lastmodified']);
-				$list .= $lastmodified;
-				$list .= '</td>';
-
-				$list .= '</td>';
-
-				$list .= '</tr>';
-				$i++;
-			}
-
-			$list .= '<tr><td COLSPAN="12" class="blackLine"><IMG SRC="themes/'.$theme.'/images/blank.gif"></td></tr>';
-			$list .= '</table>';
-			if ($noofrows > 15)
-			{
-				$list .= '</div>';
-			}
-
-		}
-
-		$query = 'select vtiger_potstagehistory.*, vtiger_potential.potentialname from vtiger_potstagehistory inner join vtiger_potential on vtiger_potential.potentialid = vtiger_potstagehistory.potentialid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_potential.potentialid where vtiger_crmentity.deleted = 0 and vtiger_potential.potentialid = '.$id;
-	 $log->debug("Exiting get_stage_history method ...");
+	{
+		$query = 'select potstagehistory.*, potential.potentialname from potstagehistory inner join potential on potential.potentialid = potstagehistory.potentialid inner join crmentity on crmentity.crmid = potential.potentialid where crmentity.deleted = 0 and potential.potentialid = '.$id;
+		renderRelatedStageHistory($query,$id);
 	}
 
 	function get_history($id)
 	{
-		 global $log;
-		$log->debug("Entering get_history(".$id.") method ...");
-		$query = "SELECT vtiger_activity.activityid, vtiger_activity.subject, vtiger_activity.status,
-		vtiger_activity.eventstatus, vtiger_activity.activitytype, vtiger_contactdetails.contactid,
-		vtiger_contactdetails.firstname, vtiger_contactdetails.lastname, vtiger_crmentity.modifiedtime,
-		vtiger_crmentity.createdtime, vtiger_crmentity.description, vtiger_users.user_name
-				from vtiger_activity
-				inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid
-				inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid
-				left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid
-				left join vtiger_contactdetails on vtiger_contactdetails.contactid= vtiger_cntactivityrel.contactid
-				left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_activity.activityid
-				left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname
-				inner join vtiger_users on vtiger_crmentity.smcreatorid= vtiger_users.id
-				where (vtiger_activity.activitytype = 'Meeting' or vtiger_activity.activitytype='Call' or vtiger_activity.activitytype='Task')
-				and (vtiger_activity.status = 'Completed' or vtiger_activity.status = 'Deferred' or (vtiger_activity.eventstatus = 'Held' and vtiger_activity.eventstatus != ''))
-				and vtiger_seactivityrel.crmid=".$id;
-		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
-
-		$log->debug("Exiting get_history method ...");
-		return getHistory('Potentials',$query,$id);
+		$query = "SELECT activity.activityid, activity.subject, activity.status, activity.eventstatus, activity.activitytype, contactdetails.contactid, contactdetails.firstname, contactdetails.lastname, crmentity.modifiedtime from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid= cntactivityrel.contactid where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task') and (activity.status='Completed' or activity.eventstatus='Held') and seactivityrel.crmid=".$id;
+		renderRelatedHistory($query,$id);
 	}
 
 	function get_attachments($id)
 	{
-		 global $log;
-		$log->debug("Entering get_attachments(".$id.") method ...");
-		// Armando Lüscher 18.10.2005 -> §visibleDescription
-		// Desc: Inserted crm2.createdtime, vtiger_notes.notecontent description, vtiger_users.user_name
-		// Inserted inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
-		$query = "select vtiger_notes.title,'Notes      '  ActivityType, vtiger_notes.filename,
-		vtiger_attachments.type  FileType, crm2.modifiedtime lastmodified,
-		vtiger_seattachmentsrel.attachmentsid, vtiger_notes.notesid crmid,
-			crm2.createdtime, vtiger_notes.notecontent description, vtiger_users.user_name
-				from vtiger_notes
-				inner join vtiger_senotesrel on vtiger_senotesrel.notesid= vtiger_notes.notesid
-				inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_senotesrel.crmid
-				inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_notes.notesid and crm2.deleted=0
-				left join vtiger_seattachmentsrel  on vtiger_seattachmentsrel.crmid =vtiger_notes.notesid
-				left join vtiger_attachments on vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid
-				inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
-				where vtiger_crmentity.crmid=".$id;
-		$query .= ' union all ';
-		// Armando Lüscher 18.10.2005 -> §visibleDescription
-		// Desc: Inserted crm2.createdtime, vtiger_attachments.description, vtiger_users.user_name
-		// Inserted inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
-		// Inserted order by createdtime desc
-		$query .= "select vtiger_attachments.description title ,'Attachments'  ActivityType,
-		vtiger_attachments.name filename, vtiger_attachments.type FileType,crm2.modifiedtime lastmodified,
-		vtiger_attachments.attachmentsid, vtiger_seattachmentsrel.attachmentsid crmid,
-			crm2.createdtime, vtiger_attachments.description, vtiger_users.user_name
-				from vtiger_attachments
-				inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid= vtiger_attachments.attachmentsid
-				inner join vtiger_crmentity on vtiger_crmentity.crmid= vtiger_seattachmentsrel.crmid
-				inner join vtiger_crmentity crm2 on crm2.crmid=vtiger_attachments.attachmentsid
-				inner join vtiger_users on crm2.smcreatorid= vtiger_users.id
-				where vtiger_crmentity.crmid=".$id."
-				order by createdtime desc";
+		$query = "select notes.title,'Notes      '  ActivityType, notes.filename, attachments.type  FileType,crm2.modifiedtime lastmodified, seattachmentsrel.attachmentsid attachmentsid, notes.notesid crmid from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0 left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid=".$id;
+                $query .= ' union all ';
+                $query .= "select attachments.description title ,'Attachments'  ActivityType, attachments.name  filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, attachments.attachmentsid  attachmentsid, seattachmentsrel.attachmentsid crmid from attachments inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid inner join crmentity on crmentity.crmid= seattachmentsrel.crmid inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid where crmentity.crmid=".$id;
 
-		$log->debug("Exiting get_attachments method ...");
-		return getAttachmentsAndNotes('Potentials',$query,$id);
+		renderRelatedAttachments($query,$id);
 	}
 
+	function get_tickets($id)
+	{
+		$query = 'select users.user_name, users.id, seticketsrel.*, troubletickets.title, troubletickets.status, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime  from troubletickets inner join seticketsrel on seticketsrel.ticketid = troubletickets.ticketid inner join crmentity on crmentity.crmid = seticketsrel.crmid inner join users on users.id=crmentity.smownerid where seticketsrel.crmid = '.$id; 
+		renderRelatedTickets($query);
+	}
 	function get_quotes($id)
 	{
-		 global $log;
-		$log->debug("Entering get_quotes(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/Quotes/Quote.php');
+		$query = "select crmentity.*, quotes.*,potential.potentialname from quotes inner join crmentity on crmentity.crmid=quotes.quoteid left outer join potential on potential.potentialid=quotes.potentialid where crmentity.deleted=0 and potential.potentialid=".$id;
+		renderRelatedQuotes($query,$id,$this->column_fields['account_id']);
+	 }
+	 function get_salesorder($id)
+	 {
+	 	$query = "select crmentity.*, salesorder.*, quotes.subject as quotename, account.accountname, potential.potentialname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid left outer join quotes on quotes.quoteid=salesorder.quoteid left outer join account on account.accountid=salesorder.accountid left outer join potential on potential.potentialid=salesorder.potentialid where crmentity.deleted=0 and potential.potentialid = ".$id;
+		renderRelatedSalesOrders($query,$id,$this->column_fields['account_id']);	
+	 }
 
-		if($this->column_fields['account_id']!='')
-			$focus = new Quote();
-
-		$button = '';
-		if(isPermitted("Quotes",1,"") == 'yes')
-		{
-			$button .= '<input title="'.$app_strings['LBL_NEW_QUOTE_BUTTON_TITLE'].'" accessyKey="'.$app_strings['LBL_NEW_QUOTE_BUTTON_KEY'].'" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'Quotes\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_QUOTE_BUTTON'].'">&nbsp;</td>';
-		}
-		$returnset = '&return_module=Potentials&return_action=DetailView&return_id='.$id;
-
-
-		$query = "select vtiger_crmentity.*, vtiger_quotes.*, vtiger_potential.potentialname, vtiger_users.user_name from vtiger_quotes inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_quotes.quoteid left outer join vtiger_potential on vtiger_potential.potentialid=vtiger_quotes.potentialid left join vtiger_quotegrouprelation on vtiger_quotes.quoteid=vtiger_quotegrouprelation.quoteid left join vtiger_groups on vtiger_groups.groupname=vtiger_quotegrouprelation.groupname left join vtiger_users on vtiger_users.id=vtiger_crmentity.smownerid where vtiger_crmentity.deleted=0 and vtiger_potential.potentialid=".$id;
-		$log->debug("Exiting get_quotes method ...");
-		return  GetRelatedList('Potentials','Quotes',$focus,$query,$button,$returnset);
+	function get_list_view_data(){
+		global $current_language;
+		$app_strings = return_application_language($current_language);
+		return  Array(
+					'ID' => $this->potentialid,
+					'NAME' => (($this->potentialname == "") ? "<em>blank</em>" : $this->potentialname),
+					'AMOUNT' => $app_strings['LBL_CURRENCY_SYMBOL'].$this->amount,
+					'ACCOUNT_ID' => $this->accountid,
+					'ACCOUNT_NAME' => $this->accountname,
+					'DATE_CLOSED' => $this->dateclosed,
+					'ASSIGNED_USER_NAME' => $this->assigned_user_name,
+					"ENCODED_NAME"=>htmlspecialchars($this->name, ENT_QUOTES)
+				);
 	}
-	function get_salesorder($id)
+	/**
+		builds a generic search based on the query string using or
+		do not include any $this-> because this is called on without having the class instantiated
+	*/
+	function build_generic_where_clause ($the_query_string) {
+	$where_clauses = Array();
+	$the_query_string = addslashes($the_query_string);
+	array_push($where_clauses, "potentialname like '$the_query_string%'");
+
+	$the_where = "";
+	foreach($where_clauses as $clause)
 	{
-		global $log;
-		$log->debug("Entering get_salesorder(".$id.") method ...");
-		require_once('modules/SalesOrder/SalesOrder.php');
-		global $mod_strings;
-		global $app_strings;
-
-		$focus = new SalesOrder();
-
-		$button = '';
-		if(isPermitted("SalesOrder",1,"") == 'yes')
-		{
-			$button .= '<input title="'.$app_strings['LBL_NEW_SORDER_BUTTON_TITLE'].'" accessyKey="'.$app_strings['LBL_NEW_SORDER_BUTTON_KEY'].'" class="button" onclick="this.form.action.value=\'EditView\';this.form.module.value=\'SalesOrder\'" type="submit" name="button" value="'.$app_strings['LBL_NEW_SORDER_BUTTON'].'">&nbsp;</td>';
-		}
-
-		$returnset = '&return_module=Potentials&return_action=DetailView&return_id='.$id;
-
-
-		$query = "select vtiger_crmentity.*, vtiger_salesorder.*, vtiger_quotes.subject as quotename, vtiger_account.accountname, vtiger_potential.potentialname from vtiger_salesorder inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_salesorder.salesorderid left outer join vtiger_quotes on vtiger_quotes.quoteid=vtiger_salesorder.quoteid left outer join vtiger_account on vtiger_account.accountid=vtiger_salesorder.accountid left outer join vtiger_potential on vtiger_potential.potentialid=vtiger_salesorder.potentialid left join vtiger_sogrouprelation on vtiger_salesorder.salesorderid=vtiger_sogrouprelation.salesorderid left join vtiger_groups on vtiger_groups.groupname=vtiger_sogrouprelation.groupname where vtiger_crmentity.deleted=0 and vtiger_potential.potentialid = ".$id;
-		$log->debug("Exiting get_salesorder method ...");
-		return GetRelatedList('Potentials','SalesOrder',$focus,$query,$button,$returnset);
-
+		if($the_where != "") $the_where .= " or ";
+		$the_where .= $clause;
 	}
+
+
+	return $the_where;
+}
+
 
 
 

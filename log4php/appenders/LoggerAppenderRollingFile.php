@@ -33,7 +33,7 @@ require_once(LOG4PHP_DIR . '/appenders/LoggerAppenderFile.php');
  * <p>Contributors: Sergio Strampelli.</p>
  *
  * @author VxR <vxr@vxr.it>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.1 $
  * @package log4php
  * @subpackage appenders
  */
@@ -134,7 +134,7 @@ class LoggerAppenderRollingFile extends LoggerAppenderFile {
                 $file = $fileName . "." . $i;
                 if (is_readable($file)) {
                     $target = $fileName . '.' . ($i + 1);
-                    @rename($file, $target);
+                    rename($file, $target);
                 }
             }
     
@@ -144,7 +144,7 @@ class LoggerAppenderRollingFile extends LoggerAppenderFile {
             $this->closeFile(); // keep windows happy.
     
             $file = $fileName;
-            @rename($file, $target);
+            rename($file, $target);
         }
         
         $this->setFile($fileName, false);

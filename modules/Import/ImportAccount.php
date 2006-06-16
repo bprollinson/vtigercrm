@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportAccount.php,v 1.16 2005/05/03 13:18:55 saraj Exp $
  * Description:  Defines the Account SugarBean Account entity with the necessary
  * methods and variables.
  ********************************************************************************/
@@ -24,30 +24,37 @@ require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('modules/Contacts/Contact.php');
 require_once('modules/Potentials/Opportunity.php');
+//require_once('modules/Cases/Case.php');
+//require_once('modules/Calls/Call.php');
 require_once('modules/Notes/Note.php');
 require_once('modules/Emails/Email.php');
 require_once('modules/Accounts/Account.php');
 require_once('include/ComboUtil.php');
 
-// Account is used to store vtiger_account information.
+// Account is used to store account information.
 class ImportAccount extends Account {
 	 var $db;
 
-	// Get _dom arrays from Database
-	//$comboFieldNames = Array('accounttype'=>'account_type_dom'
-	//                      ,'industry'=>'industry_dom');
-	//$comboFieldArray = getComboArray($comboFieldNames);
+// Get _dom arrays from Database
+//$comboFieldNames = Array('accounttype'=>'account_type_dom'
+//                      ,'industry'=>'industry_dom');
+//$comboFieldArray = getComboArray($comboFieldNames);
 
 
-	// This is the list of vtiger_fields that are required.
+	// these are fields that may be set on import
+	// but are to be processed and incorporated
+	// into fields of the parent class
+
+
+	// This is the list of fields that are required.
 	var $required_fields =  array("accountname"=>1);
 	
 	// This is the list of the functions to run when importing
 	var $special_functions =  array(
-						//"add_billing_address_streets"
-						//,"add_shipping_address_streets"
-						//,"fix_website"
-				       );
+	//"add_billing_address_streets"
+	//,"add_shipping_address_streets"
+	//,"fix_website"
+	 );
 
 
 	function fix_website()
@@ -120,7 +127,7 @@ class ImportAccount extends Account {
 	}
 
 
-	// This is the list of vtiger_fields that are importable.
+	// This is the list of fields that are importable.
 	// some if these do not map directly to database columns
 	/*var $importable_fields = Array(
 		"id"=>1

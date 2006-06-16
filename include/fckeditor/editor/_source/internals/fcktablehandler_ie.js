@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fcktablehandler_ie.js
  * 	Manage table operations (IE specific).
  * 
@@ -22,8 +20,7 @@ FCKTableHandler.GetSelectedCells = function()
 	var aCells = new Array() ;
 
 	var oRange = FCK.EditorDocument.selection.createRange() ;
-//	var oParent = oRange.parentElement() ;
-	var oParent = FCKSelection.GetParentElement() ;
+	var oParent = oRange.parentElement() ;
 	
 	if ( oParent && oParent.tagName == "TD" )
 		aCells[0] = oParent ;

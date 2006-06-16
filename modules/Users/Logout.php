@@ -22,15 +22,15 @@ require_once('database/DatabaseConnection.php');
 require_once('modules/Users/LoginHistory.php');
 require_once('modules/Users/User.php');
 require_once('config.php');
-require_once('include/db_backup/backup.php');
-require_once('include/db_backup/ftp.php');
+require_once('include/backup.php');
+require_once('include/ftp.php');
 require_once('include/database/PearDatabase.php');
 
 $ftpserver = '';
 $ftpuser = '';
 $ftppassword = '';
 global $adb;
-$query = "select * from vtiger_systems where server_type='backup'";
+$query = "select * from systems where server_type='backup'";
 $result = $adb->query($query);
 $num_rows = $adb->num_rows($result);
 if($num_rows > 0)

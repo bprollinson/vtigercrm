@@ -17,25 +17,29 @@
  * Description:  Starts the installation process.
  ********************************************************************************/
 
-include('adodb/adodb.inc.php');
-
-if (substr(phpversion(), 0, 1) == "5") {
-	ini_set("zend.ze1_compatibility_mode", "1");
+if (is_file('config.php')) {
+	require_once('config.php');
+	if (isset($dbconfig['db_hostname']) & is_file('install_lock')) {
+    	header("Location: index.php");
+    	exit();
+    }
 }
 
+if (substr(phpversion(), 0, 1) == "5") {
+  ini_set("zend.ze1_compatibility_mode", "1");
+}
 
- function stripslashes_checkstrings($value){
- 	if(is_string($value)){
- 		return stripslashes($value);
- 	}
- 	return $value;
+function stripslashes_checkstrings($value) {
+  if(is_string($value))
+    return stripslashes($value);
 
- }
- if(get_magic_quotes_gpc() == 1){
- 	$_REQUEST = array_map("stripslashes_checkstrings", $_REQUEST);
-	$_POST = array_map("stripslashes_checkstrings", $_POST);
-	$_GET = array_map("stripslashes_checkstrings", $_GET);
+  return $value;
+}
 
+if(get_magic_quotes_gpc() == 1) {
+  $_REQUEST = array_map("stripslashes_checkstrings", $_REQUEST);
+  $_POST = array_map("stripslashes_checkstrings", $_POST);
+  $_GET = array_map("stripslashes_checkstrings", $_GET);
 }
 
 //Run command line if no web var detected
@@ -43,31 +47,12 @@ if (!isset($_SERVER['REQUEST_METHOD'])) {
 	require("install/5createTables.inc.php");
 	exit;
 }
-			
-if (isset($_POST['file'])) $the_file = $_POST['file'];
-else $the_file = "0welcome.php";
+
+if (isset($_POST['file']))
+  $the_file = $_POST['file'];
+else
+  $the_file = "0welcome.php";
 
 include("install/".$the_file);
-
-echo "<style>
-		.bggray
-		{
-			background-color: #dfdfdf;
-		}
-	.bgwhite
-	{
-		background-color: #FFFFFF;
-	}
-	.copy
-	{
-		font-size:9px;
-		font-family: Verdana, Arial, Helvetica, Sans-serif;
-	}
-	</style>
-	<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>
-	<table width=20% border=0 cellspacing=1 cellpadding=0 class=\"bggray\" align=center><tr><td align=center>\n
-	<table width=100% border=0 cellspacing=1 cellpadding=0 class=\"bgwhite\" align=center><tr><td align=center class=\"copy\">\n
-	&copy; Click <a href ='javascript:mypopup()'>here</a> for Copyright details.<br>
-	</td></tr></table></td></tr></table>\n";
 
 ?>

@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/language/en_us.lang.php,v 1.8 2005/07/07 14:43:53 saraj Exp $
  * Description:  Defines the English language pack 
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
@@ -29,7 +29,7 @@ $mod_strings = Array(
 'LBL_MEMBER_ORG_FORM_TITLE'=>'Member Organizations',
 
 'LBL_LIST_ACCOUNT_NAME'=>'Account Name',
-'LBL_RELATED_PRODUCTS'=>'Product Details',
+'LBL_RELATED_PRODUCTS'=>'Line Items',
 'LBL_LIST_CITY'=>'City',
 'LBL_LIST_WEBSITE'=>'Website',
 'LBL_LIST_STATE'=>'State',
@@ -79,10 +79,10 @@ $mod_strings = Array(
 'NTC_COPY_SHIPPING_ADDRESS'=>'Copy shipping address to billing address',
 'NTC_REMOVE_MEMBER_ORG_CONFIRMATION'=>'Are you sure you want to remove this record as a member organization?',
 'LBL_DUPLICATE'=>'Potential Duplicate Accounts',
-'MSG_DUPLICATE' => 'Creating this vtiger_account may vtiger_potentialy create a duplicate vtiger_account. You may either select an vtiger_account from the list below or you may click on Create New Account to continue creating a new vtiger_account with the previously entered data.',
+'MSG_DUPLICATE' => 'Creating this account may potentialy create a duplicate account. You may either select an account from the list below or you may click on Create New Account to continue creating a new account with the previously entered data.',
 
 'LBL_INVITEE'=>'Contacts',
-'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
+'ERR_DELETE_RECORD'=>"A record number must be specified to delete the account.",
 
 'LBL_SELECT_ACCOUNT'=>'Select Account',
 'LBL_GENERAL_INFORMATION'=>'General Information',
@@ -102,7 +102,7 @@ $mod_strings = Array(
 'LBL_NEW_CONTACT'=>'New Contact',
 'LBL_CONTACT_TITLE'=>'Contacts',
 
-//Added vtiger_fields after RC1 - Release
+//Added fields after RC1 - Release
 'LBL_ALL'=>'All',
 'LBL_PROSPECT'=>'Prospect',
 'LBL_INVESTOR'=>'Investor',
@@ -134,8 +134,6 @@ $mod_strings = Array(
 'Billing State'=>'Billing State',
 'Billing Code'=>'Billing Code',
 'Billing Country'=>'Billing Country',
-'Billing Po Box'=>'Billing Po Box',
-'Shipping Po Box'=>'Shipping Po Box',
 'Shipping City'=>'Shipping City',
 'Shipping State'=>'Shipping State',
 'Shipping Code'=>'Shipping Code',
@@ -156,7 +154,7 @@ $mod_strings = Array(
 'LBL_ACCOUNT_NAME'=>'Account Name:',
 'LBL_QUOTE_STAGE'=>'Quote Stage:',
 'LBL_MY_TOP_QUOTE'=>'My Top Open Quotes',
-'Quote ID'=>'Quote Id',
+'Quote Id'=>'Quote Id',
 
 );
 

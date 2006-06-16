@@ -22,45 +22,15 @@
 
 require_once('modules/Users/User.php');
 require_once('include/logging.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 $log =& LoggerManager::getLogger('index');
 
-global $adb;
-$user_name = $_REQUEST['userName'];
-if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check'] != '')
-{
-        $query = "SELECT user_name FROM vtiger_users WHERE user_name ='".$user_name."'";
-        $result = $adb->query($query);
-        if($adb->num_rows($result) > 0)
-        {
-		echo 'User Name Already Exists!';
-		die;
-	}else
-	{
-	        echo 'SUCCESS';
-	        die;
-	}
-}
-																		
+
 if (isset($_POST['record']) && !is_admin($current_user) && $_POST['record'] != $current_user->id) echo ("Unauthorized access to user administration.");
 elseif (!isset($_POST['record']) && !is_admin($current_user)) echo ("Unauthorized access to user administration.");
 
 $focus = new User();
-if(isset($_REQUEST["record"]) && $_REQUEST["record"] != '')
-{
-    $focus->mode='edit';
-	$focus->id = $_REQUEST["record"];
-}
-else
-    $focus->mode='';
-	
-//save user Image
-$image_upload_array=SaveImage($_FILES,'user',$focus->id,$focus->mode);
-$focus->imagename = $image_upload_array['imagename'];
-$image_error = $image_upload_array['imageerror'];
-$errormessage = $image_upload_array['errormessage'];
-$saveimage = $image_upload_array['saveimage'];
-	
+$focus->retrieve($_POST['record']);
 if(strtolower($current_user->is_admin) == 'off'  && $current_user->id != $focus->id){
 		$log->fatal("SECURITY:Non-Admin ". $current_user->id . " attempted to change settings for user:". $focus->id);
 		header("Location: index.php?module=Users&action=Logout");
@@ -72,28 +42,67 @@ if(strtolower($current_user->is_admin) == 'off'  && isset($_POST['is_admin']) &&
 		exit;
 	}
 	
-			
-	if (!isset($_POST['is_admin'])) $_REQUEST["is_admin"] = 'off';
-	//Code contributed by mike crowe for rearrange the home page and tab
-	if (!isset($_POST['deleted'])) $_REQUEST["deleted"] = '0';
-	if (!isset($_POST['homeorder']) || $_POST['homeorder'] == "" ) $_REQUEST["homeorder"] = 'ILTI,QLTQ,ALVT,PLVT,CVLVT,HLT,OLV,GRT,OLTSO';
-	
-	setObjectValuesFromRequest(&$focus);
-	$focus->saveentity("Users");
-	$return_id = $focus->id;
-
-if (isset($_POST['user_name']) && isset($_POST['new_password'])) {
+if (isset($_POST['user_name']) && isset($_POST['old_password']) && isset($_POST['new_password'])) {
+	/*	
+		//changing fourm password	
+		define('IN_PHPBB', 1);
+		
+		$phpbb_root_path = "modules/MessageBoard/";
+		require($phpbb_root_path . 'extension.inc');
+		include($phpbb_root_path . 'common.php');
+	*/	
 		$new_pass = $_POST['new_password'];
 		$new_passwd = $_POST['new_password'];
 		$new_pass = md5($new_pass);
 		$uname = $_POST['user_name'];
-		if (!$focus->change_password($_POST['confirm_new_password'], $_POST['new_password'])) {
+		//$sql = "UPDATE " . USERS_TABLE . " SET user_password = '$new_pass' WHERE username = '$uname'";
+	/*
+		if (!($result = $db->sql_query($sql)) )
+		{
+			message_die(GENERAL_ERROR, 'Could not update user password', '', __LINE__, __FILE__, $sql);
+		}
+	*/
+		if (!$focus->change_password($_POST['old_password'], $_POST['new_password'])) {
 		
 			header("Location: index.php?action=Error&module=Users&error_string=".urlencode($focus->error_string));
 		exit;
-}
+	}
 }  
-
+else {
+	foreach($focus->column_fields as $field)
+	{
+		if(isset($_POST[$field]))
+		{
+			$value = $_POST[$field];
+			$focus->$field = $value;
+			
+		}
+	}
+	
+	foreach($focus->additional_column_fields as $field)
+	{
+		if(isset($_POST[$field]))
+		{
+			$value = $_POST[$field];
+			$focus->$field = $value;
+			
+		}
+	}
+	
+	if (!isset($_POST['is_admin'])) $focus->is_admin = 'off';
+	
+	
+	if (!$focus->verify_data()) {
+		header("Location: index.php?action=Error&module=Users&error_string=".urlencode($focus->error_string));
+		exit;
+	}
+	else {	
+		$focus->save("Users");
+//		include('modules/Calendar/user_ins.php');
+//		include("modules/Users/forum_register.php");	
+		$return_id = $focus->id;
+	}
+}
 if(isset($focus->id) && $focus->id != '')
 {
 
@@ -124,19 +133,7 @@ if(isset($_POST['return_action']) && $_POST['return_action'] != "") $return_acti
 else $return_action = "DetailView";
 if(isset($_POST['return_id']) && $_POST['return_id'] != "") $return_id = $_POST['return_id'];
 if(isset($_REQUEST['activity_mode']))   $activitymode = '&activity_mode='.$_REQUEST['activity_mode'];
-if(isset($_POST['parenttab'])) $parenttab = $_POST['parenttab'];
 
 $log->debug("Saved record with id of ".$return_id);
-
-//Creating the Privileges Flat File
-require_once('modules/Users/CreateUserPrivilegeFile.php');
-createUserPrivilegesfile($focus->id);
-createUserSharingPrivilegesfile($focus->id);
-
-if($_REQUEST['modechk'] == 'prefview')
-	header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
-else
-	header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&parenttab=$parenttab");
-
-
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id$activitymode");
 ?>

@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-// $Id: class.HP-UX.inc.php,v 1.17 2006/02/11 17:31:03 bigmichi1 Exp $
+// $Id: class.HP-UX.inc.php,v 1.12 2004/10/13 08:13:29 webbie Exp $
 
 class sysinfo {
   // get our apache SERVER_NAME or vhost
@@ -64,15 +64,15 @@ class sysinfo {
     return $result;
   } 
 
-  function loadavg ($bar = false) {
+  function loadavg () {
     $ar_buf = array();
 
     $buf = execute_program('uptime');
 
     if (preg_match("/average: (.*), (.*), (.*)$/", $buf, $ar_buf)) {
-      $results['avg'] = array($ar_buf[1], $ar_buf[2], $ar_buf[3]);
+      $results = array($ar_buf[1], $ar_buf[2], $ar_buf[3]);
     } else {
-      $results['avg'] = array('N.A.', 'N.A.', 'N.A.');
+      $results = array('N.A.', 'N.A.', 'N.A.');
     } 
     return $results;
   } 
@@ -81,10 +81,8 @@ class sysinfo {
     $results = array();
     $ar_buf = array();
 
-    $bufr = rfts( '/proc/cpuinfo' );
-    if( $bufr != "ERROR" ) {
-      $bufe = explode( "\n", $bufr );
-      foreach( $bufe as $buf ) {
+    if ($fd = fopen('/proc/cpuinfo', 'r')) {
+      while ($buf = fgets($fd, 4096)) {
         list($key, $value) = preg_split('/\s+:\s+/', trim($buf), 2); 
         // All of the tags here are highly architecture dependant.
         // the only way I could reconstruct them for machines I don't
@@ -155,12 +153,10 @@ class sysinfo {
   function pci () {
     $results = array();
 
-    $bufr = rfts( '/proc/pci' );
-    if( $bufr != "ERROR" ) {
-      $bufe = explode( "\n", $bufr );
-      foreach( $bufe as $buf ) {
+    if ($fd = fopen('/proc/pci', 'r')) {
+      while ($buf = fgets($fd, 4096)) {
         if (preg_match('/Bus/', $buf)) {
-          $device = true;
+          $device = 1;
           continue;
         } 
 
@@ -170,9 +166,9 @@ class sysinfo {
           if (!preg_match('/bridge/i', $key) && !preg_match('/USB/i', $key)) {
             $results[] = preg_replace('/\([^\)]+\)\.$/', '', trim($value));
           } 
-          $device = false;
+          $device = 0;
         } 
-      }
+      } 
     } 
     asort($results);
     return $results;
@@ -181,26 +177,26 @@ class sysinfo {
   function ide () {
     $results = array();
 
-    $bufd = gdc( '/proc/ide' );
+    $handle = opendir('/proc/ide');
 
-    foreach( $bufd as $file ) {
+    while ($file = readdir($handle)) {
       if (preg_match('/^hd/', $file)) {
         $results[$file] = array(); 
         // Check if device is CD-ROM (CD-ROM capacity shows as 1024 GB)
-	$buf = rfts( "/proc/ide/" . $file . "/media", 1 );
-	if( $buf != "ERROR" ) {
-          $results[$file]['media'] = trim( $buf );
+        if ($fd = fopen("/proc/ide/$file/media", 'r')) {
+          $results[$file]['media'] = trim(fgets($fd, 4096));
           if ($results[$file]['media'] == 'disk') {
             $results[$file]['media'] = 'Hard Disk';
           } 
+
           if ($results[$file]['media'] == 'cdrom') {
             $results[$file]['media'] = 'CD-ROM';
           } 
+          fclose($fd);
         } 
 
-	$buf = rfts( "/proc/ide/" . $file . "/model", 1 );
-	if( $buf != "ERROR" ) {
-          $results[$file]['model'] = trim( $buf );
+        if ($fd = fopen("/proc/ide/$file/model", 'r')) {
+          $results[$file]['model'] = trim(fgets($fd, 4096));
           if (preg_match('/WDC/', $results[$file]['model'])) {
             $results[$file]['manufacture'] = 'Western Digital';
           } elseif (preg_match('/IBM/', $results[$file]['model'])) {
@@ -210,17 +206,21 @@ class sysinfo {
           } else {
             $results[$file]['manufacture'] = 'Unknown';
           } 
+
+          fclose($fd);
         } 
 
-	$buf = rfts( "/proc/ide/" . $file . "/capacity", 1 );
-	if( $buf != "ERROR" ) {
-          $results[$file]['capacity'] = trim( $buf );
+        if ($fd = fopen("/proc/ide/$file/capacity", 'r')) {
+          $results[$file]['capacity'] = trim(fgets($fd, 4096));
           if ($results[$file]['media'] == 'CD-ROM') {
             unset($results[$file]['capacity']);
           } 
+          fclose($fd);
         } 
       } 
     } 
+    closedir($handle);
+
     asort($results);
     return $results;
   } 
@@ -233,10 +233,8 @@ class sysinfo {
     $dev_type = '';
     $s = 1;
 
-    $bufr = rfts( '/proc/scsi/scsi' );
-    if( $bufr != "ERROR" ) {
-      $bufe = explode( "\n", $bufr );
-      foreach( $bufe as $buf ) {
+    if ($fd = fopen('/proc/scsi/scsi', 'r')) {
+      while ($buf = fgets($fd, 4096)) {
         if (preg_match('/Vendor/', $buf)) {
           preg_match('/Vendor: (.*) Model: (.*) Rev: (.*)/i', $buf, $dev);
           list($key, $value) = split(': ', $buf, 2);
@@ -252,7 +250,7 @@ class sysinfo {
           $s++;
           $get_type = 0;
         } 
-      }
+      } 
     } 
     asort($results);
     return $results;
@@ -263,10 +261,8 @@ class sysinfo {
     $devstring = 0;
     $devnum = -1;
 
-    $bufr = rfts( '/proc/bus/usb/devices' );
-    if( $bufr != "ERROR" ) {
-      $bufe = explode( "\n", $bufr );
-      foreach( $bufe as $buf ) {
+    if ($fd = fopen('/proc/bus/usb/devices', 'r')) {
+      while ($buf = fgets($fd, 4096)) {
         if (preg_match('/^T/', $buf)) {
           $devnum += 1;
         } 
@@ -280,7 +276,7 @@ class sysinfo {
           $results[$devnum] .= " " . trim($value2);
           $devstring = 0;
         } 
-      }
+      } 
     } 
     return $results;
   } 
@@ -319,16 +315,12 @@ class sysinfo {
     return $results;
   } 
   function memory () {
-    $results['ram'] = array();
-    $results['swap'] = array();
-    $results['devswap'] = array();
-
-    $bufr = rfts( '/proc/meminfo' );
-    if( $bufr != "ERROR" ) {
-      $bufe = explode( "\n", $bufr );
-      foreach( $bufe as $buf ) {
+    if ($fd = fopen('/proc/meminfo', 'r')) {
+      while ($buf = fgets($fd, 4096)) {
         if (preg_match('/Mem:\s+(.*)$/', $buf, $ar_buf)) {
           $ar_buf = preg_split('/\s+/', $ar_buf[1], 6);
+
+          $results['ram'] = array();
 
           $results['ram']['total'] = $ar_buf[0] / 1024;
           $results['ram']['used'] = $ar_buf[1] / 1024;
@@ -346,28 +338,34 @@ class sysinfo {
         if (preg_match('/Swap:\s+(.*)$/', $buf, $ar_buf)) {
           $ar_buf = preg_split('/\s+/', $ar_buf[1], 3);
 
+          $results['swap'] = array();
+
           $results['swap']['total'] = $ar_buf[0] / 1024;
           $results['swap']['used'] = $ar_buf[1] / 1024;
           $results['swap']['free'] = $ar_buf[2] / 1024;
           $results['swap']['percent'] = round(($ar_buf[1] * 100) / $ar_buf[0]); 
           // Get info on individual swap files
-	  $swaps = rfts( '/proc/swaps' );
-	  if( $swaps != "ERROR" ) {
-            $swapdevs = split("\n", $swaps);
+          $swaps = file ('/proc/swaps');
+          $swapdevs = split("\n", $swaps);
 
-            for ($i = 1, $max = (sizeof($swapdevs) - 1); $i < $max; $i++) {
-              $ar_buf = preg_split('/\s+/', $swapdevs[$i], 6);
-              $results['devswap'][$i - 1] = array();
-              $results['devswap'][$i - 1]['dev'] = $ar_buf[0];
-              $results['devswap'][$i - 1]['total'] = $ar_buf[2];
-              $results['devswap'][$i - 1]['used'] = $ar_buf[3];
-              $results['devswap'][$i - 1]['free'] = ($results['devswap'][$i - 1]['total'] - $results['devswap'][$i - 1]['used']);
-              $results['devswap'][$i - 1]['percent'] = round(($ar_buf[3] * 100) / $ar_buf[2]);
-            } 
-            break;
-	  }
+          for ($i = 1, $max = (sizeof($swapdevs) - 1); $i < $max; $i++) {
+            $ar_buf = preg_split('/\s+/', $swapdevs[$i], 6);
+
+            $results['devswap'][$i - 1] = array();
+            $results['devswap'][$i - 1]['dev'] = $ar_buf[0];
+            $results['devswap'][$i - 1]['total'] = $ar_buf[2];
+            $results['devswap'][$i - 1]['used'] = $ar_buf[3];
+            $results['devswap'][$i - 1]['free'] = ($results['devswap'][$i - 1]['total'] - $results['devswap'][$i - 1]['used']);
+            $results['devswap'][$i - 1]['percent'] = round(($ar_buf[3] * 100) / $ar_buf[2]);
+          } 
+          break;
         } 
       } 
+      fclose($fd);
+    } else {
+      $results['ram'] = array();
+      $results['swap'] = array();
+      $results['devswap'] = array();
     } 
     return $results;
   } 
@@ -389,10 +387,6 @@ class sysinfo {
     for ($i = 1, $j = 0, $max = sizeof($mounts); $i < $max; $i++) {
       $ar_buf = preg_split("/\s+/", $mounts[$i], 6);
 
-      if (hide_mount($ar_buf[5])) {
-        continue;
-      }
-
       $results[$j] = array();
 
       $results[$j]['disk'] = $ar_buf[0];
@@ -413,7 +407,7 @@ class sysinfo {
   }
 
   function distroicon () {
-    $result = 'unknown.png';
+    $result = 'xp.gif';
     return($result);
   }
 } 

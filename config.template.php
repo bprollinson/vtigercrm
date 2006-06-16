@@ -19,13 +19,11 @@ include('vtigerversion.php');
 // memory limit default value = 16M
 ini_set('memory_limit','16M');
 
-// show or hide world clock, calculator and FCKEditor
+// show or hide world clock and calculator
 // world_clock_display default value = true
-// calculator_display default value = true
-// fckeditor_display default value = true
+// calculator_clock_display default value = true
 $WORLD_CLOCK_DISPLAY = 'true';
 $CALCULATOR_DISPLAY = 'true';
-$FCKEDITOR_DISPLAY = 'true';
 
 // url for customer portal (Example: http://vtiger.com/portal)
 $PORTAL_URL = 'http://your-domain.com/customerportal';
@@ -76,8 +74,6 @@ $dbconfigoption['portability'] = 0;
 // ssl default value = false
 $dbconfigoption['ssl'] = false;
 
-$host_name = $dbconfig['db_hostname'];
-
 $site_URL = '_SITE_URL_';
 
 // root directory path
@@ -90,7 +86,7 @@ $cache_dir = '_VT_CACHEDIR_';
 $tmp_dir = '_VT_TMPDIR_';
 
 // import_dir default value prepended by cache_dir = import/
-$import_dir = 'cache/import/';
+$import_dir = '_VT_IMPORTDIR_';
 
 // upload_dir default value prepended by cache_dir = upload/
 $upload_dir = '_VT_UPLOADDIR_';
@@ -121,9 +117,6 @@ $includeDirectory = $root_directory.'include/';
 
 // list_max_entries_per_page default value = 20
 $list_max_entries_per_page = '20';
-
-// limitpage_navigation default value = 5
-$limitpage_navigation = '5';
 
 // history_max_viewed default value = 5
 $history_max_viewed = '5';
@@ -183,12 +176,12 @@ $default_language = 'en_us';
 // translation_string_prefix default value = false
 $translation_string_prefix = false;
 
-//Option to cache tabs permissions for speed.
-$cache_tab_perms = true;
+// access level for vtiger log files
+// set to 1, the vtiger.log will be readable by the owner (chmod: 0600)
+// set to 0, the vtiger.log will not be readable remotely (chmod: 0200)
 
-//Option to hide empty home blocks if no entries.
-$display_empty_home_blocks = false;
+// 0 is recommended for security.
+// You may need to set it to 1 to read it for certain hosted accounts.
+$log_readable = 0;
 
-// Generating Unique Application Key
-$application_unique_key = '_VT_APP_UNIQKEY_';
 ?>

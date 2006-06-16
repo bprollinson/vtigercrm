@@ -33,7 +33,6 @@ global $mod_strings;
 $mod_strings['ERR_ENTER_OLD_PASSWORD'];
 ?>
 <script type='text/javascript' language='JavaScript'>
-
 function trim(s) {
 	while (s.substring(0,1) == " ") {
 		s = s.substring(1, s.length);
@@ -44,7 +43,6 @@ function trim(s) {
 
 	return s;
 }
-
 
 function set_password(form) {
 	if (form.is_admin.value == 1 && trim(form.old_password.value) == "") {
@@ -80,41 +78,38 @@ function set_password(form) {
 
 <form name="ChangePassword">
 <?php echo get_form_header($mod_strings['LBL_CHANGE_PASSWORD'], "", false); ?>
-
-<table width='100%' cellspacing='0' cellpadding='5' border='0' class="small">
+<br>
+<table width='100%' cellspacing='0' cellpadding='1' border='0'>
 <tr>
-	<td class="detailedViewHeader" colspan="2"><b>Change Password</b></td>
-</tr>
 <?php if (!is_admin($current_user)) {
-	echo "<tr>";
-	echo "<td width='40%' class='dvtCellLabel' align='right'><b>".$mod_strings['LBL_OLD_PASSWORD']."</b></td>\n";
-	echo "<td width='60%' class='dvtCellInfo'><input name='old_password' type='password' vtiger_tabindex='1' size='15' maxlength='15'></td>\n";
+	echo "<td width='40%' class='dataLabel'>".$mod_strings['LBL_OLD_PASSWORD']."</td>\n";
+	echo "<td width='60%' class='dataField'><input name='old_password' type='password' tabindex='1' size='15' maxlength='15'></td>\n";
 	echo "<input name='is_admin' type='hidden' value='1'>";
 	echo "</tr><tr>\n";
 }
 else echo "<input name='old_password' type='hidden'><input name='is_admin' type='hidden' value='0'>";
 ?>
-<td width='40%' class='dvtCellLabel' nowrap align="right"><b><?php echo $mod_strings['LBL_NEW_PASSWORD']; ?></b></td>
-<td width='60%' class='dvtCellInfo'><input name='new_password' type='password' vtiger_tabindex='1' size='15' maxlength='15'></td>
+<td width='40%' class='dataLabel'nowrap><?php echo $mod_strings['LBL_NEW_PASSWORD']; ?></td>
+<td width='60%' class='dataField'><input name='new_password' type='password' tabindex='1' size='15' maxlength='15'></td>
 </tr><tr>
-<td width='40%' class='dvtCellLabel' nowrap align="right"><b><?php echo $mod_strings['LBL_CONFIRM_PASSWORD']; ?></b></td>
-<td width='60%' class='dvtCellInfo'><input name='confirm_new_password' type='password' vtiger_tabindex='1' size='15' maxlength='15'></td>
+<td width='40%' class='dataLabel' nowrap><?php echo $mod_strings['LBL_CONFIRM_PASSWORD']; ?></td>
+<td width='60%' class='dataField'><input name='confirm_new_password' type='password' tabindex='1' size='15' maxlength='15'></td>
 </tr><tr>
 <td width='40%' class='dataLabel'></td>
-<td width='60%' class='dvtCellInfo'></td>
+<td width='60%' class='dataField'></td>
 </td></tr>
 </table>
 <br>
 <table width='100%' cellspacing='0' cellpadding='1' border='0'>
 <tr>
-<td align='right'><input title='<?php echo $app_strings['LBL_SAVE_BUTTON_TITLE']; ?>' accessKey='<?php echo $app_strings['LBL_SAVE_BUTTON_KEY']; ?>' class='classBtn' LANGUAGE=javascript onclick='if (set_password(this.form)) window.close(); else return false;' type='submit' name='button' value='  <?php echo $app_strings['LBL_SAVE_BUTTON_LABEL']; ?>  '></td>
-<td align='left'><input title='<?php echo $app_strings['LBL_CANCEL_BUTTON_TITLE']; ?>' accessyKey='<?php echo $app_strings['LBL_CANCEL_BUTTON_KEY']; ?>' class='classBtn' LANGUAGE=javascript onclick='window.close()' type='submit' name='button' value='  <?php echo $app_strings['LBL_CANCEL_BUTTON_LABEL']; ?>  '></td>
+<td align='right'><input title='<?php echo $app_strings['LBL_SAVE_BUTTON_TITLE']; ?>' accessKey='<?php echo $app_strings['LBL_SAVE_BUTTON_KEY']; ?>' class='button' LANGUAGE=javascript onclick='if (set_password(this.form)) window.close(); else return false;' type='submit' name='button' value='  <?php echo $app_strings['LBL_SAVE_BUTTON_LABEL']; ?>  '></td>
+<td align='left'><input title='<?php echo $app_strings['LBL_CANCEL_BUTTON_TITLE']; ?>' accessyKey='<?php echo $app_strings['LBL_CANCEL_BUTTON_KEY']; ?>' class='button' LANGUAGE=javascript onclick='window.close()' type='submit' name='button' value='  <?php echo $app_strings['LBL_CANCEL_BUTTON_LABEL']; ?>  '></td>
 </tr>
-
+</form>
 <script language="JavaScript">
 document.ChangePassword.new_password.focus();
 </script>
 </table>
-</form>
 <br>
-
+<?php echo get_form_footer(); ?>
+<?php insert_popup_footer(); ?>

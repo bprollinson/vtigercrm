@@ -23,17 +23,194 @@
 require_once('modules/Contacts/Contact.php');
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
-require_once("modules/Emails/mail.php");
 
+$local_log =& LoggerManager::getLogger('index');
 
-/**
- * This function is used to get a random password.
- * @return a random password with alpha numeric chanreters of length 8
- */
+global $vtlog;
+$focus = new Contact();
+if(isset($_REQUEST['record']))
+{
+        $focus->id = $_REQUEST['record'];
+}
+if(isset($_REQUEST['mode']))
+{
+        $focus->mode = $_REQUEST['mode'];
+}
+if($_REQUEST['salutation'] == '--None--')	$_REQUEST['salutation'] = '';
+/*
+if (isset($_REQUEST['new_reports_to_id'])) {
+	$focus->retrieve($_REQUEST['new_reports_to_id']);
+	$focus->reports_to_id = $_REQUEST['record']; 
+}
+*/
+//else {
+//	$focus->retrieve($_REQUEST['record']);
+
+foreach($focus->column_fields as $fieldname => $val)
+{
+	if(isset($_REQUEST[$fieldname]))
+	{
+		//$focus->$field = $_REQUEST[$field];
+		$value = $_REQUEST[$fieldname];
+		$focus->column_fields[$fieldname] = $value;
+	}
+}
+/*	
+	foreach($focus->additional_column_fields as $field)
+	{
+		if(isset($_REQUEST[$field]))
+		{
+			$value = $_REQUEST[$field];
+			$focus->$field = $value;
+			
+		}
+	}
+*/
+	if (!isset($_REQUEST['email_opt_out'])) $focus->email_opt_out = 'off';
+	if (!isset($_REQUEST['do_not_call'])) $focus->do_not_call = 'off';
+//}
+
+//$focus->saveentity("Contacts");
+$focus->save("Contacts");
+$return_id = $focus->id;
+//save_customfields($focus->id);
+
+if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] != "") $return_module = $_REQUEST['return_module'];
+else $return_module = "Contacts";
+if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] != "") $return_action = $_REQUEST['return_action'];
+else $return_action = "DetailView";
+if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "") $return_id = $_REQUEST['return_id'];
+
+if(isset($_REQUEST['activity_mode']) && $_REQUEST['activity_mode'] != '') $activitymode = $_REQUEST['activity_mode'];
+
+$local_log->debug("Saved record with id of ".$return_id);
+
+//BEGIN -- Code for Create Customer Portal Users password and Send Mail 
+if($_REQUEST['portal'] == '' && $_REQUEST['mode'] == 'edit')
+{
+	$sql = "update PortalInfo set user_name='".$_REQUEST['email']."',isactive=0 where id=".$_REQUEST['record'];
+	$adb->query($sql);
+}
+elseif($_REQUEST['portal'] != '' && $_REQUEST['email'] != '')// && $_REQUEST['mode'] != 'edit')
+{
+	$id = $_REQUEST['record'];
+	$username = $_REQUEST['email'];
+
+	if($_REQUEST['mode'] != 'edit')
+		$insert = 'true';
+
+	$sql = "select id,user_name,user_password,isactive from PortalInfo";
+	$result = $adb->query($sql);
+
+	for($i=0;$i<$adb->num_rows($result);$i++)
+	{
+		if($id == $adb->query_result($result,$i,'id'))
+		{
+			$dbusername = $adb->query_result($result,$i,'user_name');
+			$isactive = $adb->query_result($result,$i,'isactive');
+
+			if($username == $dbusername && $isactive == 1)
+				$flag = 'true';
+			else
+			{
+				$sql = "update PortalInfo set user_name='".$username."', isactive=1 where id=".$id;
+				$adb->query($sql);
+				$update = 'true';
+				$flag = 'true';
+				$password = $adb->query_result($result,$i,'user_password');
+			}
+		}
+	}
+	if($flag != 'true')
+		$insert = 'true';
+	else
+		$insert = 'false';
+
+	if($insert == 'true')
+	{
+		$password = makeRandomPassword();
+		$sql = "insert into PortalInfo (id,user_name,user_password,type,isactive) values(".$focus->id.",'".$username."','".$password."','C',1)";
+                $adb->query($sql);
+	}
+
+	$subject = "Customer Portal Login Details";
+	$contents = "Dear ".$_REQUEST['firstname'].' '.$_REQUEST['lastname'].',<br><br>';
+	$contents .= 'Your Customer Portal Login details are given below:';
+//	$contents .= '<br>Customer Portal URL:';
+	$contents .= "<br><br>User Id : ".$_REQUEST['email'];
+	$contents .= '<br>Password : '.$password;
+	$contents .= "<br><br><a href='".$PORTAL_URL."/cp_index.php'>Please Login Here</a>";
+
+	$contents .= '<br><br><b>Note : </b>We suggest you to change your password after logging in first time.';
+	$contents .= '<br><br>Support Team';
+
+	$vtlog->logthis("Customer Portal Information Updated in database and details are going to send => '".$_REQUEST['email']."'",'info');
+
+	if($insert == 'true' || $update == 'true')
+	{
+		SendMailToCustomer('Contacts',$focus->id,$_REQUEST['email'],$current_user->id,$subject,$contents);
+	}
+	$vtlog->logthis("After return from the SendMailToCustomer function. Now control will go to the header.",'info');
+}
+function SendMailToCustomer($module,$id,$to,$current_user_id,$subject,$contents)
+{
+	global $vtlog;
+	include("modules/Emails/class.phpmailer.php");
+
+	$mail = new PHPMailer();
+	
+	$mail->Subject = $subject;
+	$mail->Body    = nl2br($contents);	
+	$mail->IsSMTP();
+
+	if($current_user_id != '')
+	{
+		global $adb;
+		$sql = "select * from users where id= ".$current_user_id;
+		$result = $adb->query($sql);
+		$from = $adb->query_result($result,0,'email1');
+		$initialfrom = $adb->query_result($result,0,'user_name');
+		$vtlog->logthis("Mail sending process : From Name & email id (selected from db) => '".$initialfrom."','".$from."'",'info');
+	}
+	if($mail_server=='')
+        {
+		global $adb;
+                $mailserverresult=$adb->query("select * from systems where server_type='email'");
+                $mail_server=$adb->query_result($mailserverresult,0,'server');
+                $mail_server_username=$adb->query_result($mailserverresult,0,'server_username');
+                $mail_server_password=$adb->query_result($mailserverresult,0,'server_password');
+                $_REQUEST['server']=$mail_server;
+		$vtlog->logthis("Mail Server Details => '".$mail_server."','".$mail_server_username."','".$mail_server_password."'","info");
+        }
+	$mail->Host = $mail_server;
+        $mail->SMTPAuth = true;
+        $mail->Username = $mail_server_username;
+        $mail->Password = $mail_server_password;
+	$mail->From = $from;
+	$mail->FromName = $initialfrom;
+
+	$mail->AddAddress($to);
+	$vtlog->logthis("Mail sending process : To Email id = '".$to."' (set in the mail object)",'info');
+	$mail->AddReplyTo($from);
+	$mail->WordWrap = 50;
+
+	$mail->IsHTML(true);
+
+	$mail->AltBody = "This is the body in plain text for non-HTML mail clients";
+
+	if(!$mail->Send())
+	{
+		$vtlog->logthis("Error in Mail Sending : Error log = '".$mail->ErrorInfo."'",'info');
+		$errormsg = "Mail Could not be sent...";	
+	}
+	else
+	{
+		$vtlog->logthis("Mail has been sent from the vtigerCRM system : Status : '".$mail->ErrorInfo."'",'info');
+	}
+	$vtlog->logthis("After executing the mail->Send() function.",'info');
+}
 function makeRandomPassword() 
 {
-	global $log;
-	$log->debug("Entering makeRandomPassword() method ...");
         $salt = "abcdefghijklmnopqrstuvwxyz0123456789";
         srand((double)microtime()*1000000);
         $i = 0;
@@ -44,175 +221,99 @@ function makeRandomPassword()
                 $pass = $pass . $tmp;
                 $i++;
 	}
-$log->debug("Exiting makeRandomPassword method ...");
       return $pass;
 }
-
-$local_log =& LoggerManager::getLogger('index');
-
-global $log;
-$focus = new Contact();
-
-setObjectValuesFromRequest(&$focus);
-
-if($_REQUEST['salutation'] == '--None--')	$_REQUEST['salutation'] = '';
-if (!isset($_REQUEST['email_opt_out'])) $focus->email_opt_out = 'off';
-if (!isset($_REQUEST['do_not_call'])) $focus->do_not_call = 'off';
-
-//Checking If image is given or not
-$image_upload_array=SaveImage($_FILES,'contact',$focus->id,$focus->mode);
-$image_name_val=$image_upload_array['imagename'];
-$image_error=$image_upload_array['imageerror'];
-$errormessage=$image_upload_array['errormessage'];
-$saveimage=$image_upload_array['saveimage'];
-
-//code added for returning back to the current view after edit from list view
-if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-
-if($image_error=="true") //If there is any error in the file upload then moving all the data to EditView.
+//END -- Code for Create Customer Portal Users password and Send Mail
+$vtlog->logthis("This Page is redirected to : ".$return_module." / ".$return_action."& return id =".$return_id,'info');
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&activity_mode=$activitymode");
+//Code to save the custom field info into database
+function save_customfields($entity_id)
 {
-        //re diverting the page and reassigning the same values as image error occurs
-        if($_REQUEST['activity_mode'] != '')$activity_mode=$_REQUEST['activity_mode'];
-        if($_REQUEST['return_module'] != '')$return_module=$_REQUEST['return_module'];
-        if($_REQUEST['return_action'] != '')$return_action=$_REQUEST['return_action'];
-        if($_REQUEST['return_id'] != '')$return_id=$_REQUEST['return_id'];
-
-        $log->debug("There is an error during the upload of contact image.");
-        $field_values_passed.="";
-        foreach($focus->column_fields as $fieldname => $val)
-        {
-                if(isset($_REQUEST[$fieldname]))
-                {
-			$log->debug("Assigning the previous values given for the contact to respective vtiger_fields ");
-                        $field_values_passed.="&";
-                        $value = $_REQUEST[$fieldname];
-                        $focus->column_fields[$fieldname] = $value;
-                        $field_values_passed.=$fieldname."=".$value;
-
-                }
-        }
-        $values_pass=$field_values_passed;
-        $encode_field_values=base64_encode($values_pass);
-
-        $error_module = "Contacts";
-        $error_action = "EditView";
-
-	if(isset($_request['return_id']) && $_request['return_id'] != "")
-                $return_id = $_request['return_id'];
-        if(isset($_request['activity_mode']))
-                $return_action .= '&activity_mode='.$_request['activity_mode'];
-
-        if($mode=="edit")
-        {
-                $return_id=$_REQUEST['record'];
-        }
-        header("location: index.php?action=$error_action&module=$error_module&record=$return_id&return_id=$return_id&return_action=$return_action&return_module=$return_module&activity_mode=$activity_mode&return_viewname=$return_viewname&saveimage=$saveimage&error_msg=$errormessage&image_error=$image_error&encode_val=$encode_field_values");
-
-}
-if($saveimage=="true")
-{
-        $focus->column_fields['imagename']=$image_name_val;
-        $log->debug("Assign the Image name to the vtiger_field name ");
-}
-//Saving the contact
-if($image_error=="false")
-{
-	$focus->save("Contacts");
-	$return_id = $focus->id;
-
-	if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] != "") $return_module = $_REQUEST['return_module'];
-	else $return_module = "Contacts";
-	if(isset($_REQUEST['return_action']) && $_REQUEST['return_action'] != "") $return_action = $_REQUEST['return_action'];
-	else $return_action = "DetailView";
-	if(isset($_REQUEST['return_id']) && $_REQUEST['return_id'] != "") $return_id = $_REQUEST['return_id'];
-
-	if(isset($_REQUEST['activity_mode']) && $_REQUEST['activity_mode'] != '') $activitymode = $_REQUEST['activity_mode'];
-
-	$local_log->debug("Saved record with id of ".$return_id);
-
-	//BEGIN -- Code for Create Customer Portal Users password and Send Mail 
-	if($_REQUEST['portal'] == '' && $_REQUEST['mode'] == 'edit')
+	global $adb;
+	$dbquery="select * from customfields where module='Contacts'";
+	$result = $adb->query($dbquery);
+	$custquery = "select * from contactscf where contactid='".$entity_id."'";
+        $cust_result = $adb->query($custquery);
+	if($adb->num_rows($result) != 0)
 	{
-		$sql = "update vtiger_portalinfo set user_name='".$_REQUEST['email']."',isactive=0 where id=".$_REQUEST['record'];
-		$adb->query($sql);
-	}
-	elseif($_REQUEST['portal'] != '' && $_REQUEST['email'] != '')// && $_REQUEST['mode'] != 'edit')
-	{
-		$id = $_REQUEST['record'];
-		$username = $_REQUEST['email'];
-
-		if($_REQUEST['mode'] != 'edit')
-			$insert = 'true';
-
-		$sql = "select id,user_name,user_password,isactive from vtiger_portalinfo";
-		$result = $adb->query($sql);
-
-		for($i=0;$i<$adb->num_rows($result);$i++)
+		
+		$columns='';
+		$values='';
+		$update='';
+		$noofrows = $adb->num_rows($result);
+		for($i=0; $i<$noofrows; $i++)
 		{
-			if($id == $adb->query_result($result,$i,'id'))
+			$fldName=$adb->query_result($result,$i,"fieldlabel");
+			$colName=$adb->query_result($result,$i,"column_name");
+			if(isset($_REQUEST[$colName]))
 			{
-				$dbusername = $adb->query_result($result,$i,'user_name');
-				$isactive = $adb->query_result($result,$i,'isactive');
-
-				if($username == $dbusername && $isactive == 1)
-					$flag = 'true';
+				$fldvalue=$_REQUEST[$colName];
+				if(get_magic_quotes_gpc() == 1)
+                		{
+                        		$fldvalue = stripslashes($fldvalue);
+                		}
+			}
+			else
+			{
+				$fldvalue = '';
+			}
+			if(isset($_REQUEST['record']) && $_REQUEST['record'] != '' && $adb->num_rows($cust_result) !=0)
+			{
+				//Update Block
+				if($i == 0)
+				{
+					$update = $colName.'="'.$fldvalue.'"';
+				}
 				else
 				{
-					$sql = "update vtiger_portalinfo set user_name='".$username."', isactive=1 where id=".$id;
-					$adb->query($sql);
-					$update = 'true';
-					$flag = 'true';
-					$password = $adb->query_result($result,$i,'user_password');
+					$update .= ', '.$colName.'="'.$fldvalue.'"';
 				}
 			}
+			else
+			{
+				//Insert Block
+				if($i == 0)
+				{
+					$columns='contactid, '.$colName;
+					$values='"'.$entity_id.'", "'.$fldvalue.'"';
+				}
+				else
+				{
+					$columns .= ', '.$colName;
+					$values .= ', "'.$fldvalue.'"';
+				}
+			}
+			
+				
 		}
-		if($flag != 'true')
-			$insert = 'true';
+		if(isset($_REQUEST['record']) && $_REQUEST['record'] != '' && $adb->num_rows($cust_result) !=0)
+		{
+			//Update Block
+			$query = 'update contactcf SET '.$update.' where contactid="'.$entity_id.'"'; 
+			$adb->query($query);
+		}
 		else
-			$insert = 'false';
-
-		if($insert == 'true')
 		{
-			$password = makeRandomPassword();
-			$sql = "insert into vtiger_portalinfo (id,user_name,user_password,type,isactive) values(".$focus->id.",'".$username."','".$password."','C',1)";
-			$adb->query($sql);
+			//Insert Block
+			$query = 'insert into contactcf ('.$columns.') values('.$values.')';
+			$adb->query($query);
 		}
-
-		$subject = "Customer Portal Login Details";
-		$contents = "Dear ".$_REQUEST['firstname'].' '.$_REQUEST['lastname'].',<br><br>';
-		$contents .= 'Your Customer Portal Login details are given below:';
-		$contents .= "<br><br>User Id : ".$_REQUEST['email'];
-		$contents .= '<br>Password : '.$password;
-		$contents .= "<br><br><a href='".$PORTAL_URL."/cp_index.php'>Please Login Here</a>";
-
-		$contents .= '<br><br><b>Note : </b>We suggest you to change your password after logging in first time.';
-		$contents .= '<br><br>Support Team';
-
-		$log->info("Customer Portal Information Updated in database and details are going to send => '".$_REQUEST['email']."'");
-		if($insert == 'true' || $update == 'true')
-		{
-			$mail_status = send_mail('Contacts',$_REQUEST['email'],$current_user->user_name,'',$subject,$contents);
-		}
-		$log->info("After return from the SendMailToCustomer function. Now control will go to the header.");
+		
 	}
-	//END -- Code for Create Customer Portal Users password and Send Mail
-
-	$log->info("This Page is redirected to : ".$return_module." / ".$return_action."& return id =".$return_id);
-
-	//code added for returning back to the current view after edit from list view
-	if($_REQUEST['return_viewname'] == '') $return_viewname='0';
-	if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
-
-	if(isset($_REQUEST['parenttab']) && $_REQUEST['parenttab'] != "") $parenttab = $_REQUEST['parenttab'];
-
-	//Send notification mail to the assigned to owner about the contact creation
-	if($focus->column_fields['notify_owner'] == 1 || $focus->column_fields['notify_owner'] == 'on')
-		$status = sendNotificationToOwner('Contacts',&$focus);
-
-	header("Location: index.php?action=$return_action&module=$return_module&parenttab=$parenttab&record=$return_id&activity_mode=$activitymode&viewname=$return_viewname");
-
+	/* srini patch
+	else
+	{
+		if(isset($_REQUEST['record']) && $_REQUEST['record'] != '' && $adb->num_rows($cust_result) !=0)
+		{
+			//Update Block
+		}
+		else
+		{
+			//Insert Block
+			$query = 'insert into contactcf ('.$columns.') values('.$values.')';
+			$adb->query($query);
+		}
+	}*/
+	
 }
-
-
 ?>

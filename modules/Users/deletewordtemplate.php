@@ -8,19 +8,14 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
+//include('include/database/PearDatabase.php');
+global $adb;
+$templateid = $_REQUEST["record"];
+$sql = "delete from wordtemplates where templateid=".$templateid;
+$adb->query($sql);
 
- $idlist = $_REQUEST['idlist'];
- $id_array=explode(';', $idlist);
+header("Location:index.php?module=Users&action=listwordtemplates");
 
- for($i=0; $i < count($id_array)-1; $i++)
- {
-
-	         $sql = "delete from vtiger_wordtemplates where templateid=".$id_array[$i];
-	         $adb->query($sql);
-
- }
- header("Location:index.php?module=Users&action=listwordtemplates");
- 			 
 
 ?>
 

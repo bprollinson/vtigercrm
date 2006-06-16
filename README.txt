@@ -1,4 +1,110 @@
 ####################################################
+vtiger CRM 4.2.4
+June 06, 2005
+####################################################
+
+After much delay vtigercrm 4.2.4 has been released.
+
+This is the first community driven release, so a big thanks goes out to all the people involved in making this happen.
+
+This is mostly a bug fix release, but it does mark the first release using the new SVN/Trac system which helps us harness the power of the community contributions and track issues and their fixes so everyone can help out.  The Trac system can be seen here: http://vtiger.fosslabs.com
+
+A list of fixed bugs can be seen using the trac ticket system here:
+http://vtiger.fosslabs.com/cgi-bin/trac.cgi/query?status=closed&milestone=4.2.4&order=priority
+
+A full changelog can be seen trough the trac svn log here:
+http://vtiger.fosslabs.com/cgi-bin/trac.cgi/log/vtigercrm/tags/vtigercrm-4.2.4?action=stop_on_copy&rev=6885&stop_rev=&mode=follow_copy&verbose=on
+
+vtigercrm 4.2.4 can be downloaded here:
+<download links>
+
+INSTALLATION PROCEDURE:
+
+For a new installation simply extract the files into a directory accessible through your apache setup then point your web browser to that directory on your website and follow the installation instructions.  Software you'll require is apache (1.3.x or 2.x) with php (4.3+, no 5.x support yet) and mysql (4.x).
+
+You can post any issues or suggestions at http://vtiger.fosslabs.com/cgi-bin/trac.cgi/newticket 
+
+
+UPGRADING:
+
+If you are upgrading from a previous version of vtigercrm first backup all data then follow the instructions for the appropriate version below:
+
+4.2.3:
+	- No database changes are need if you are using a successfull installation.
+		- If tables were only partially created for you using an earlier version please wipe your database and try with 4.2.4, your problems should be solved.
+	- To save your current configuration copy the config.php file from your old installation to config.inc.php in the new installation.  You'll also have to edit the config file as follows:
+		- change the following variable names in config.php
+
+		from:
+			$dbconfig['db_host_name'] =
+			$dbconfig['db_user_name'] =
+
+		to:
+			$dbconfig['db_hostname'] =
+			$dbconfig['db_username'] =
+
+	- If your 4.2.3 installation has previously been upgraded from an earlier release there is one database modification missed in pervious upgrades you will want to make manually:
+		alter table wordtemplates drop primary key;
+		alter table wordtemplates change filename filename varchar(100) not null;
+		alter table wordtemplates add column templateid integer(19) primary key;
+
+
+4.2.2 (aka 4.2 patch2):
+	- Apply the 4.2.3 patch as per: http://forums.vtiger.com/viewtopic.php?t=4166
+	- Then follow the instructions for a 4.2.3 upgrade.
+
+
+4.2.1 or 4.2:
+	- Apply the 4.2.2 patch as per: http://forums.vtiger.com/viewtopic.php?t=2903
+	- Then follow the instructions for a 4.2.2 upgrade.
+
+####################################################
+vtiger CRM 4.2.3
+Dec 23, 2005
+####################################################
+We are pleased to announce the vtigerCRM 4.2.3 release. This release is a consolidated with earlier patches (1 & 2 - refer below section for the list of fixes) and Multiple vulnerablity fixes. 
+
+Note: First Time vtiger CRM users can directly install the source in their
+vtiger suported version of LAMP / WAMP. 
+
+**************************************************************************************************************
+*   IMPORTANT NOTICE                                                                                         *
+**************************************************************************************************************
+* The vtigerCRM 4.2.3 is ONLY for the first time vtiger users and not for                                    *
+* the existing users. The existing v4.2 users are recomended to upgrade their system by applying v4.2 patch  *
+* 2 and vulnerability fixes patch. You can download the patches from the                                     *
+* following urls.                                                                                            *
+* http://forums.vtiger.com/viewtopic.php?t=2903								     *
+* http://forums.vtiger.com/viewtopic.php?t=4166                                                              *
+**************************************************************************************************************
+
+Software requirements : PHP 4.3.x, MySQL 4.0.x (4.0.20 prefered), Apache 1.3.x
+or 2.0.x 
+
+For more details refer to http://www.vtiger.com/wiki/index.php/Vtiger_CRM_4.2.3_-_Installation_Guide
+
+
+***********************
+I. Vulnerability fixes
+***********************
+
+Posted by D.Fabian / SEC-CONSULT/ ww.sec-consult.com
+
+a) Multiple SQL Injection Vulnerabilities
+b) Cross Site Scripting
+c) Path Traversal/File Disclosure
+d) Arbitrary File Upload
+e) Remote Code Execution
+
+Posted by Christopher Kunz / www.hardened-php.net
+
+a) Arbitrary File Upload
+b) Authentication ByPass
+c) Unsafe File Inclusion
+d) Arbitrary code execution
+
+
+####################################################
 vtiger CRM 4.2 Patch 2
 Sep 15, 2005
 ####################################################
@@ -68,7 +174,7 @@ S.No ID    Subject
 
 8.  114  - Better icons for the inv mgmt modules
 
-9. 428 - User Signature Issue
+9.  428 - User Signature Issue
 
 10. 125  - UI for New Product creation not proper
 
@@ -102,15 +208,15 @@ S.No ID    Subject
 
 25. 414 - Field positioning Sales/Support Start dates
 
-26. 415 - Inventory Related List
+26. 415 - Inventory Related List
 
-27. 416 - Inventory RL
+27. 416 - Inventory RL
 
-28. 417 - Inventory RL - Activity History missing
+28. 417 - Inventory RL - Activity History missing
 
 29. 418 - Ticket - Create
 
-30. 419 - Email - Edit View
+30. 419 - Email - Edit View
 
 31. 420 - Availability of user
 
@@ -525,6 +631,7 @@ B. Bug Fixes
 23. FORUM:5715 - Currency Support
 
 24. FORUM:5795 - Roles and Passwords
+
 
 25. SF1102842 - CSV import, problem with ä,ö,ü
 
@@ -1303,7 +1410,7 @@ Please feel free to send your valuable comments to contact@vtiger.com so that we
 We have incorporated the following features in this release based on SugarCRM. 
 
 Opportunities
-vtiger.Sales provides a complete, yet easy-to-use Opportunities module.  From deal size to each contact’s role, from listing the competitors to tracking the lead source, sales reps can easily manage each sales opportunity to completion.  
+vtiger.Sales provides a complete, yet easy-to-use Opportunities module.  From deal size to each contact?s role, from listing the competitors to tracking the lead source, sales reps can easily manage each sales opportunity to completion.  
 
 Accounts & Contacts
 With the Accounts & Contacts module, you can easily enter and update key account and contact information. Tracking and staying in touch with your customers is simply a click away. 
@@ -1322,3 +1429,4 @@ A picture is always worth a thousand words.  With the dashboard module, you can 
 
 Administration 
 Easily manage all the users in the system, their passwords, user interface themes and more. 
+

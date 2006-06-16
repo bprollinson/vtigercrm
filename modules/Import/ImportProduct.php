@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportProduct.php,v 1.1 2005/09/02 11:11:26 saraj Exp $
  * Description:  Defines the Account SugarBean Account entity with the necessary
  * methods and variables.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -54,7 +54,7 @@ class ImportProduct extends Product {
 		{
 			$this->db->println("searching and assigning ".$ass_user);
 
-			$result = $this->db->query("select id from vtiger_users where user_name = '".$ass_user."'");
+			$result = $this->db->query("select id from users where user_name = '".$ass_user."'");
 			if($this->db->num_rows($result)!=1)
 			{
 				$this->db->println("not exact records setting current userid");

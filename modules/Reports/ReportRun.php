@@ -11,7 +11,7 @@
 global $calpath;
 global $app_strings,$mod_strings;
 global $theme;
-global $log;
+global $vtlog;
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -48,12 +48,12 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$ssql = "select vtiger_selectcolumn.* from vtiger_report inner join vtiger_selectquery on vtiger_selectquery.queryid = vtiger_report.queryid";
-                $ssql .= " left join vtiger_selectcolumn on vtiger_selectcolumn.queryid = vtiger_selectquery.queryid";
-		$ssql .= " where vtiger_report.reportid =".$reportid;
-                $ssql .= " order by vtiger_selectcolumn.columnindex";
+		$ssql = "select selectcolumn.* from report inner join selectquery on selectquery.queryid = report.queryid";
+                $ssql .= " left join selectcolumn on selectcolumn.queryid = selectquery.queryid";
+		$ssql .= " where report.reportid =".$reportid;
+                $ssql .= " order by selectcolumn.columnindex";
 
                 $result = $adb->query($ssql);
 
@@ -65,34 +65,59 @@ class ReportRun extends CRMEntity
 			$querycolumns = $this->getEscapedColumns($selectedfields);
 			if($querycolumns == "")
 			{
-				$columnslist[$fieldcolname] = $selectedfields[0].".".$selectedfields[1].' AS "'.$selectedfields[2].'"';
+				$columnslist[$fieldcolname] = $selectedfields[0].".".$selectedfields[1]." '".$selectedfields[2]."'";
 			}else
 			{
 				$columnslist[$fieldcolname] = $querycolumns;
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getQueryColumnsList".$reportid);
+		//print_r($columnslist);
+		$vtlog->logthis("ReportRun :: Successfully returned getQueryColumnsList".$reportid,"info");
 		return $columnslist;		
 	}
 
 	function getEscapedColumns($selectedfields)
 	{
 		$fieldname = $selectedfields[3];
+		/*if($fieldname == "assigned_user_id")
+		{
+			$querycolumn = "usersRel.user_name"." ".$selectedfields[2];
+		}*/
+		/*if($fieldname == "account_id")
+		{
+			$querycolumn = "accountRel.accountname"." ".$selectedfields[2];
+		}*/
 		if($fieldname == "parent_id")
 		{
 			if($this->primarymodule == "HelpDesk")
 			{
-				$querycolumn = "case vtiger_crmentityRelHelpDesk.setype when 'Accounts' then vtiger_accountRelHelpDesk.accountname when 'Contacts' then vtiger_contactdetailsRelHelpDesk.lastname End"." '".$selectedfields[2]."', vtiger_crmentityRelHelpDesk.setype 'Entity_type'";
+				$querycolumn = "case crmentityRelHelpDesk.setype when 'Accounts' then accountRelHelpDesk.accountname when 'Contacts' then contactdetailsRelHelpDesk.lastname End"." '".$selectedfields[2]."', crmentityRelHelpDesk.setype 'Entity_type'";
 			}
 			if($this->primarymodule == "Products" || $this->secondarymodule == "Products")
 			{
-				$querycolumn = "case vtiger_crmentityRelProducts.setype when 'Accounts' then vtiger_accountRelProducts.accountname when 'Leads' then vtiger_leaddetailsRelProducts.lastname when 'Potentials' then vtiger_potentialRelProducts.potentialname End"." '".$selectedfields[2]."', vtiger_crmentityRelProducts.setype 'Entity_type'";
+				$querycolumn = "case crmentityRelProducts.setype when 'Accounts' then accountRelProducts.accountname when 'Leads' then leaddetailsRelProducts.lastname when 'Potentials' then potentialRelProducts.potentialname End"." '".$selectedfields[2]."', crmentityRelProducts.setype 'Entity_type'";
 			}
 			if($this->primarymodule == "Activities" || $this->secondarymodule == "Activities")
 			{
-				$querycolumn = "case vtiger_crmentityRelActivities.setype when 'Accounts' then vtiger_accountRelActivities.accountname when 'Leads' then vtiger_leaddetailsRelActivities.lastname when 'Potentials' then vtiger_potentialRelActivities.potentialname when 'Quotes' then vtiger_quotesRelActivities.subject when 'PurchaseOrder' then vtiger_purchaseorderRelActivities.subject when 'Invoice' then vtiger_invoiceRelActivities.subject End"." '".$selectedfields[2]."', vtiger_crmentityRelActivities.setype 'Entity_type'";
+				$querycolumn = "case crmentityRelActivities.setype when 'Accounts' then accountRelActivities.accountname when 'Leads' then leaddetailsRelActivities.lastname when 'Potentials' then potentialRelActivities.potentialname when 'Quotes' then quotesRelActivities.subject when 'Orders' then purchaseorderRelActivities.subject when 'Invoice' then invoiceRelActivities.subject End"." '".$selectedfields[2]."', crmentityRelActivities.setype 'Entity_type'";
 			}
 		}
+		/*if($fieldname == "contact_id")
+		{
+			$querycolumn = "contactdetailsRel.lastname"." ".$selectedfields[2];
+		}*/
+		/*if($fieldname == "vendor_id")
+		{
+			$querycolumn = "vendorRel.name"." ".$selectedfields[2];
+		}
+		if($fieldname == "potential_id")
+                {
+                        $querycolumn = "potentialRel.potentialname"." ".$selectedfields[2];
+                }
+		if($fieldname == "assigned_user_id1")
+                {
+                        $querycolumn = "usersRel1.user_name"." ".$selectedfields[2];
+                }*/
 		return $querycolumn;
 	}
 	
@@ -101,11 +126,11 @@ class ReportRun extends CRMEntity
 	
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 		
-		$ssql = "select vtiger_selectcolumn.* from vtiger_report inner join vtiger_selectquery on vtiger_selectquery.queryid = vtiger_report.queryid"; 
-		$ssql .= " left join vtiger_selectcolumn on vtiger_selectcolumn.queryid = vtiger_selectquery.queryid where vtiger_report.reportid =".$reportid; 
-		$ssql .= " order by vtiger_selectcolumn.columnindex";
+		$ssql = "select selectcolumn.* from report inner join selectquery on selectquery.queryid = report.queryid"; 
+		$ssql .= " left join selectcolumn on selectcolumn.queryid = selectquery.queryid where report.reportid =".$reportid; 
+		$ssql .= " order by selectcolumn.columnindex";
 		
 		$result = $adb->query($ssql);
 		$noofrows = $adb->num_rows($result);
@@ -141,20 +166,20 @@ class ReportRun extends CRMEntity
 		}
 		$sSQL .= implode(",",$sSQLList);
 		
-		 $log->info("ReportRun :: Successfully returned getSelectedColumnsList".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getSelectedColumnsList".$reportid,"info");
 		return $sSQL;
 	}
 	
 	function getAdvComparator($comparator,$value)
         {
 
-		global $log,$adb;
+		global $vtlog;
 
 		if($comparator == "e")
                 {
                         if(trim($value) != "")
 			{
-				$rtvalue = " = ".$adb->quote($value);
+				$rtvalue = " = ".PearDatabase::quote($value);
 			}else
 			{
 				$rtvalue = " is NULL";
@@ -164,7 +189,7 @@ class ReportRun extends CRMEntity
                 {
                         if(trim($value) != "")
 			{
-				$rtvalue = " <> ".$adb->quote($value);
+				$rtvalue = " <> ".PearDatabase::quote($value);
 			}else
 			{
 				$rtvalue = " is NOT NULL";
@@ -172,34 +197,34 @@ class ReportRun extends CRMEntity
                 }
                 if($comparator == "s")
                 {
-                        $rtvalue = " like ".$adb->quote($value."%");
+                        $rtvalue = " like ".PearDatabase::quote($value."%");
                 }
                 if($comparator == "c")
                 {
-                        $rtvalue = " like ".$adb->quote("%".$value."%");
+                        $rtvalue = " like ".PearDatabase::quote("%".$value."%");
                 }
                 if($comparator == "k")
                 {
-                        $rtvalue = " not like ".$adb->quote("%".$value."%");
+                        $rtvalue = " not like ".PearDatabase::quote("%".$value."%");
                 }
                 if($comparator == "l")
                 {
-                        $rtvalue = " < ".$adb->quote($value);
+                        $rtvalue = " < ".PearDatabase::quote($value);
                 }
                 if($comparator == "g")
 								{
-                        $rtvalue = " > ".$adb->quote($value);
+                        $rtvalue = " > ".PearDatabase::quote($value);
                 }
                 if($comparator == "m")
                 {
-                        $rtvalue = " <= ".$adb->quote($value);
+                        $rtvalue = " <= ".PearDatabase::quote($value);
                 }
                 if($comparator == "h")
                 {
-                        $rtvalue = " >= ".$adb->quote($value);
+                        $rtvalue = " >= ".PearDatabase::quote($value);
                 }
 
-		 $log->info("ReportRun :: Successfully returned getAdvComparator");
+                $vtlog->logthis("ReportRun :: Successfully returned getAdvComparator","info");
 		return $rtvalue;
         }
 	
@@ -207,13 +232,13 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$advfiltersql =  "select vtiger_relcriteria.* from vtiger_report";
-		$advfiltersql .= " inner join vtiger_selectquery on vtiger_selectquery.queryid = vtiger_report.queryid";
-                $advfiltersql .= " left join vtiger_relcriteria on vtiger_relcriteria.queryid = vtiger_selectquery.queryid";
-                $advfiltersql .= " where vtiger_report.reportid =".$reportid;
-                $advfiltersql .= " order by vtiger_relcriteria.columnindex";
+		$advfiltersql =  "select relcriteria.* from report";
+		$advfiltersql .= " inner join selectquery on selectquery.queryid = report.queryid";
+                $advfiltersql .= " left join relcriteria on relcriteria.queryid = selectquery.queryid";
+                $advfiltersql .= " where report.reportid =".$reportid;
+                $advfiltersql .= " order by relcriteria.columnindex";
 		
 		$result = $adb->query($advfiltersql);
 		while($advfilterrow = $adb->fetch_array($result))
@@ -243,7 +268,8 @@ class ReportRun extends CRMEntity
 		     }
 	    						
 		}
-		$log->info("ReportRun :: Successfully returned getAdvFilterList".$reportid);
+
+		$vtlog->logthis("ReportRun :: Successfully returned getAdvFilterList".$reportid,"info");
 		return $advfilterlist;
 	}	
 
@@ -251,11 +277,11 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$stdfiltersql = "select vtiger_reportdatefilter.* from vtiger_report";
-		$stdfiltersql .= " inner join vtiger_reportdatefilter on vtiger_report.reportid = vtiger_reportdatefilter.datefilterid";
-		$stdfiltersql .= " where vtiger_report.reportid = ".$reportid;
+		$stdfiltersql = "select reportdatefilter.* from report";
+		$stdfiltersql .= " inner join reportdatefilter on report.reportid = reportdatefilter.datefilterid";
+		$stdfiltersql .= " where report.reportid = ".$reportid;
 
 		$result = $adb->query($stdfiltersql);
 		$stdfilterrow = $adb->fetch_array($result);
@@ -287,7 +313,7 @@ class ReportRun extends CRMEntity
 
 			}		
 		}
-		$log->info("ReportRun :: Successfully returned getStdFilterList".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getStdFilterList".$reportid,"info");
 		return $stdfilterlist;
 	}
 	function RunTimeFilter($filtercolumn,$filter,$startdate,$enddate)
@@ -315,6 +341,7 @@ class ReportRun extends CRMEntity
 			}
 
 		}
+
 		return $stdfilterlist;
 
 	}
@@ -322,11 +349,11 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$sreportstdfiltersql = "select vtiger_reportdatefilter.* from vtiger_report"; 
-		$sreportstdfiltersql .= " inner join vtiger_reportdatefilter on vtiger_report.reportid = vtiger_reportdatefilter.datefilterid"; 
-		$sreportstdfiltersql .= " where vtiger_report.reportid =".$reportid;
+		$sreportstdfiltersql = "select reportdatefilter.* from report"; 
+		$sreportstdfiltersql .= " inner join reportdatefilter on report.reportid = reportdatefilter.datefilterid"; 
+		$sreportstdfiltersql .= " where report.reportid =".$reportid;
 		
 		$result = $adb->query($sreportstdfiltersql);
 		$noofrows = $adb->num_rows($result);
@@ -358,7 +385,7 @@ class ReportRun extends CRMEntity
 				}
 			}
 		}
-		 $log->info("ReportRun :: Successfully returned getStandardCriterialSql".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getStandardCriterialSql".$reportid,"info");
 		return $sSQL;
 	}
 
@@ -559,6 +586,7 @@ class ReportRun extends CRMEntity
 			$datevalue[1] = "";
 			}
 
+			//$vtlog->logthis("ReportRun :: Successfully returned getQueryColumnsList".$reportid,"info");
 			return $datevalue;
 	}
 
@@ -566,11 +594,11 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$sreportsortsql = "select vtiger_reportsortcol.* from vtiger_report";
-                $sreportsortsql .= " inner join vtiger_reportsortcol on vtiger_report.reportid = vtiger_reportsortcol.reportid";
-                $sreportsortsql .= " where vtiger_report.reportid =".$reportid." order by vtiger_reportsortcol.sortcolid";
+		$sreportsortsql = "select reportsortcol.* from report";
+                $sreportsortsql .= " inner join reportsortcol on report.reportid = reportsortcol.reportid";
+                $sreportsortsql .= " where report.reportid =".$reportid." order by reportsortcol.sortcolid";
 		
 		$result = $adb->query($sreportsortsql);
 
@@ -596,7 +624,7 @@ class ReportRun extends CRMEntity
 				$this->groupbylist[$fieldcolname] = $selectedfields[0].".".$selectedfields[1]." ".$selectedfields[2];
 			}
 		}
-		 $log->info("ReportRun :: Successfully returned getGroupingList".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getGroupingList".$reportid,"info");
 		return $grouplist;
 	}
 
@@ -605,11 +633,12 @@ class ReportRun extends CRMEntity
 	
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
+		//$modules = array("Leads_", "Accounts_", "Potentials_", "Contacts_","_");
 	
-		$sreportsortsql = "select vtiger_reportsortcol.* from vtiger_report"; 
-		$sreportsortsql .= " inner join vtiger_reportsortcol on vtiger_report.reportid = vtiger_reportsortcol.reportid"; 
-		$sreportsortsql .= " where vtiger_report.reportid =".$reportid." order by vtiger_reportsortcol.sortcolid";
+		$sreportsortsql = "select reportsortcol.* from report"; 
+		$sreportsortsql .= " inner join reportsortcol on report.reportid = reportsortcol.reportid"; 
+		$sreportsortsql .= " where report.reportid =".$reportid." order by reportsortcol.sortcolid";
 		
 		$result = $adb->query($sreportsortsql);
 		$noofrows = $adb->num_rows($result);
@@ -642,55 +671,55 @@ class ReportRun extends CRMEntity
 				$this->orderbylistsql .= $selectedfields[0].".".$selectedfields[1]." ".$selectedfields[2];
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getSelectedOrderbyList".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getSelectedOrderbyList".$reportid,"info");
 		return $sSQL;
 	}
 
 	function getRelatedModulesQuery($module,$secmodule)
 	{
-		global $log;
+		global $vtlog;
 
 		if($module == "Contacts")
 		{
 			if($secmodule == "Accounts")
 			{
-				$query = "left join vtiger_account on vtiger_account.accountid = vtiger_contactdetails.accountid
-                                left join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid
-                                left join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid
-                                left join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid
-                                left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
-                                left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-                                left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid ";
+				$query = "left join account on account.accountid = contactdetails.accountid
+                                left join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid
+                                left join accountbillads on account.accountid=accountbillads.accountaddressid
+                                left join accountshipads on account.accountid=accountshipads.accountaddressid
+                                left join accountscf on account.accountid = accountscf.accountid
+                                left join account as accountAccounts on accountAccounts.accountid = account.parentid
+                                left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid ";
 			}
 			if($secmodule == "Potentials")
 			{
-				$query = "left join  vtiger_potential on vtiger_potential.accountid = vtiger_contactdetails.accountid
-				left join vtiger_crmentity as vtiger_crmentityPotentials on vtiger_crmentityPotentials.crmid=vtiger_potential.potentialid
-				left join vtiger_account as vtiger_accountPotentials on vtiger_potential.accountid = vtiger_accountPotentials.accountid
-				left join vtiger_potentialscf on vtiger_potentialscf.potentialid = vtiger_potential.potentialid
-				left join vtiger_users as vtiger_usersPotentials on vtiger_usersPotentials.id = vtiger_crmentityPotentials.smownerid ";
+				$query = "left join  potential on potential.accountid = contactdetails.accountid
+				left join crmentity as crmentityPotentials on crmentityPotentials.crmid=potential.potentialid
+				left join account as accountPotentials on potential.accountid = accountPotentials.accountid
+				left join potentialscf on potentialscf.potentialid = potential.potentialid
+				left join users as usersPotentials on usersPotentials.id = crmentityPotentials.smownerid ";
 			}
 			if($secmodule == "Quotes")
                         {
-                                $query = "left join vtiger_quotes on vtiger_quotes.contactid = vtiger_contactdetails.contactid
-                                left join vtiger_crmentity as vtiger_crmentityQuotes on vtiger_crmentityQuotes.crmid=vtiger_quotes.quoteid
-                                left join vtiger_quotesbillads on vtiger_quotes.quoteid=vtiger_quotesbillads.quotebilladdressid
-                                left join vtiger_quotesshipads on vtiger_quotes.quoteid=vtiger_quotesshipads.quoteshipaddressid
-                                left join vtiger_users as vtiger_usersQuotes on vtiger_usersQuotes.id = vtiger_crmentityQuotes.smownerid
-                                left join vtiger_users as vtiger_usersRel1 on vtiger_usersRel1.id = vtiger_quotes.inventorymanager
-                                left join vtiger_potential as vtiger_potentialRel on vtiger_potentialRel.potentialid = vtiger_quotes.potentialid
-                                left join vtiger_contactdetails as vtiger_contactdetailsQuotes on vtiger_contactdetailsQuotes.contactid = vtiger_quotes.contactid
-                                left join vtiger_account as vtiger_accountQuotes on vtiger_accountQuotes.accountid = vtiger_quotes.accountid ";
+                                $query = "left join quotes on quotes.contactid = contactdetails.contactid
+                                left join crmentity as crmentityQuotes on crmentityQuotes.crmid=quotes.quoteid
+                                left join quotesbillads on quotes.quoteid=quotesbillads.quotebilladdressid
+                                left join quotesshipads on quotes.quoteid=quotesshipads.quoteshipaddressid
+                                left join users as usersQuotes on usersQuotes.id = crmentityQuotes.smownerid
+                                left join users as usersRel1 on usersRel1.id = quotes.inventorymanager
+                                left join potential as potentialRel on potentialRel.potentialid = quotes.potentialid
+                                left join contactdetails as contactdetailsQuotes on contactdetailsQuotes.contactid = quotes.contactid
+                                left join account as accountQuotes on accountQuotes.accountid = quotes.accountid ";
                         }
-                        if($secmodule == "PurchaseOrder")
+                        if($secmodule == "Orders")
                         {
-                                $query = "left join vtiger_purchaseorder on vtiger_purchaseorder.contactid = vtiger_contactdetails.contactid
-                                left join vtiger_crmentity as vtiger_crmentityPurchaseOrder on vtiger_crmentityPurchaseOrder.crmid=vtiger_purchaseorder.purchaseorderid
-                                left join vtiger_pobillads on vtiger_purchaseorder.purchaseorderid=vtiger_pobillads.pobilladdressid
-                                left join vtiger_poshipads on vtiger_purchaseorder.purchaseorderid=vtiger_poshipads.poshipaddressid
-                                left join vtiger_users as vtiger_usersPurchaseOrder on vtiger_usersPurchaseOrder.id = vtiger_crmentityPurchaseOrder.smownerid
-                                left join vtiger_vendor as vtiger_vendorRel on vtiger_vendorRel.vendorid = vtiger_purchaseorder.vendorid
-                                left join vtiger_contactdetails as vtiger_contactdetailsPurchaseOrder on vtiger_contactdetailsPurchaseOrder.contactid = vtiger_purchaseorder.contactid ";
+                                $query = "left join purchaseorder on purchaseorder.contactid = contactdetails.contactid
+                                left join crmentity as crmentityOrders on crmentityOrders.crmid=purchaseorder.purchaseorderid
+                                left join pobillads on purchaseorder.purchaseorderid=pobillads.pobilladdressid
+                                left join poshipads on purchaseorder.purchaseorderid=poshipads.poshipaddressid
+                                left join users as usersOrders on usersOrders.id = crmentityOrders.smownerid
+                                left join vendor as vendorRel on vendorRel.vendorid = purchaseorder.vendorid
+                                left join contactdetails as contactdetailsOrders on contactdetailsOrders.contactid = purchaseorder.contactid ";
                         }
 
 		}
@@ -699,163 +728,163 @@ class ReportRun extends CRMEntity
 		{
 			if($secmodule == "Potentials")
 			{
-				$query = "left join vtiger_potential on vtiger_potential.accountid = vtiger_account.accountid
-				left join vtiger_crmentity as vtiger_crmentityPotentials on vtiger_crmentityPotentials.crmid=vtiger_potential.potentialid
-                                left join vtiger_potentialscf on vtiger_potentialscf.potentialid = vtiger_potential.potentialid
-                                left join vtiger_users as vtiger_usersPotentials on vtiger_usersPotentials.id = vtiger_crmentityPotentials.smownerid ";
+				$query = "left join potential on potential.accountid = account.accountid
+				left join crmentity as crmentityPotentials on crmentityPotentials.crmid=potential.potentialid
+                                left join potentialscf on potentialscf.potentialid = potential.potentialid
+                                left join users as usersPotentials on usersPotentials.id = crmentityPotentials.smownerid ";
 
 			}
 			if($secmodule == "Contacts")
 			{
-				$query = "left join vtiger_contactdetails on vtiger_contactdetails.accountid = vtiger_account.accountid
-				left join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid
-                                left join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid
-                                left join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid
-				left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-				left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid 
-                                left join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid
-                                left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid ";
+				$query = "left join contactdetails on contactdetails.accountid = account.accountid
+				left join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid
+                                left join contactaddress on contactdetails.contactid = contactaddress.contactaddressid
+                                left join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid
+				left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+				left join account as accountContacts on accountContacts.accountid = contactdetails.accountid 
+                                left join contactscf on contactdetails.contactid = contactscf.contactid
+                                left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid ";
 			}
 			if($secmodule == "Quotes")
 			{
-				$query = "left join vtiger_quotes on vtiger_quotes.accountid = vtiger_account.accountid
-                                left join vtiger_crmentity as vtiger_crmentityQuotes on vtiger_crmentityQuotes.crmid=vtiger_quotes.quoteid
-                                left join vtiger_quotesbillads on vtiger_quotes.quoteid=vtiger_quotesbillads.quotebilladdressid
-                                left join vtiger_quotesshipads on vtiger_quotes.quoteid=vtiger_quotesshipads.quoteshipaddressid
-                                left join vtiger_users as vtiger_usersQuotes on vtiger_usersQuotes.id = vtiger_crmentityQuotes.smownerid
-                                left join vtiger_users as vtiger_usersRel1 on vtiger_usersRel1.id = vtiger_quotes.inventorymanager
-                                left join vtiger_potential as vtiger_potentialRel on vtiger_potentialRel.potentialid = vtiger_quotes.potentialid
-                                left join vtiger_contactdetails as vtiger_contactdetailsQuotes on vtiger_contactdetailsQuotes.contactid = vtiger_quotes.contactid
-                                left join vtiger_account as vtiger_accountQuotes on vtiger_accountQuotes.accountid = vtiger_quotes.accountid ";
+				$query = "left join quotes on quotes.accountid = account.accountid
+                                left join crmentity as crmentityQuotes on crmentityQuotes.crmid=quotes.quoteid
+                                left join quotesbillads on quotes.quoteid=quotesbillads.quotebilladdressid
+                                left join quotesshipads on quotes.quoteid=quotesshipads.quoteshipaddressid
+                                left join users as usersQuotes on usersQuotes.id = crmentityQuotes.smownerid
+                                left join users as usersRel1 on usersRel1.id = quotes.inventorymanager
+                                left join potential as potentialRel on potentialRel.potentialid = quotes.potentialid
+                                left join contactdetails as contactdetailsQuotes on contactdetailsQuotes.contactid = quotes.contactid
+                                left join account as accountQuotes on accountQuotes.accountid = quotes.accountid ";
 			}
-			if($secmodule == "PurchaseOrder")
+			if($secmodule == "Orders")
 			{
-				$query = "left join vtiger_purchaseorder on vtiger_purchaseorder.accountid = vtiger_account.accountid
-                                left join vtiger_crmentity as vtiger_crmentityPurchaseOrder on vtiger_crmentityPurchaseOrder.crmid=vtiger_purchaseorder.purchaseorderid
-                                left join vtiger_pobillads on vtiger_purchaseorder.purchaseorderid=vtiger_pobillads.pobilladdressid
-                                left join vtiger_poshipads on vtiger_purchaseorder.purchaseorderid=vtiger_poshipads.poshipaddressid
-                                left join vtiger_users as vtiger_usersPurchaseOrder on vtiger_usersPurchaseOrder.id = vtiger_crmentityPurchaseOrder.smownerid
-                                left join vtiger_vendor as vtiger_vendorRel on vtiger_vendorRel.vendorid = vtiger_purchaseorder.vendorid
-                                left join vtiger_contactdetails as vtiger_contactdetailsPurchaseOrder on vtiger_contactdetailsPurchaseOrder.contactid = vtiger_purchaseorder.contactid ";
+				$query = "left join purchaseorder on purchaseorder.accountid = account.accountid
+                                left join crmentity as crmentityOrders on crmentityOrders.crmid=purchaseorder.purchaseorderid
+                                left join pobillads on purchaseorder.purchaseorderid=pobillads.pobilladdressid
+                                left join poshipads on purchaseorder.purchaseorderid=poshipads.poshipaddressid
+                                left join users as usersOrders on usersOrders.id = crmentityOrders.smownerid
+                                left join vendor as vendorRel on vendorRel.vendorid = purchaseorder.vendorid
+                                left join contactdetails as contactdetailsOrders on contactdetailsOrders.contactid = purchaseorder.contactid ";
 			}
 			if($secmodule == "Invoice")
 			{
-				$query = "left join vtiger_invoice on vtiger_invoice.accountid = vtiger_account.accountid
-                                left join vtiger_crmentity as vtiger_crmentityInvoice on vtiger_crmentityInvoice.crmid=vtiger_invoice.invoiceid
-                                left join vtiger_invoicebillads on vtiger_invoice.invoiceid=vtiger_invoicebillads.invoicebilladdressid
-                                left join vtiger_invoiceshipads on vtiger_invoice.invoiceid=vtiger_invoiceshipads.invoiceshipaddressid
-                                left join vtiger_users as vtiger_usersInvoice on vtiger_usersInvoice.id = vtiger_crmentityInvoice.smownerid
-                                left join vtiger_account as vtiger_accountInvoice on vtiger_accountInvoice.accountid = vtiger_invoice.accountid ";
+				$query = "left join invoice on invoice.accountid = account.accountid
+                                left join crmentity as crmentityInvoice on crmentityInvoice.crmid=invoice.invoiceid
+                                left join invoicebillads on invoice.invoiceid=invoicebillads.invoicebilladdressid
+                                left join invoiceshipads on invoice.invoiceid=invoiceshipads.invoiceshipaddressid
+                                left join users as usersInvoice on usersInvoice.id = crmentityInvoice.smownerid
+                                left join account as accountInvoice on accountInvoice.accountid = invoice.accountid ";
 			}
 			if($secmodule == "Products")
 			{
-				$query = "left join vtiger_seproductsrel on vtiger_seproductsrel.crmid = vtiger_account.accountid
-				left join vtiger_products on vtiger_products.productid = vtiger_seproductsrel.productid
-                                left join vtiger_crmentity as vtiger_crmentityProducts on vtiger_crmentityProducts.crmid=vtiger_products.productid
-                                left join vtiger_productcf on vtiger_products.productid = vtiger_productcf.productid
-                                left join vtiger_users as vtiger_usersProducts on vtiger_usersProducts.id = vtiger_crmentityProducts.smownerid
-                                left join vtiger_contactdetails as vtiger_contactdetailsProducts on vtiger_contactdetailsProducts.contactid = vtiger_products.contactid
-                                left join vtiger_vendor as vtiger_vendorRel on vtiger_vendorRel.vendorid = vtiger_products.vendor_id
-                                left join vtiger_crmentity as vtiger_crmentityRel on vtiger_crmentityRel.crmid = vtiger_seproductsrel.crmid
-                                left join vtiger_account as vtiger_accountRel on vtiger_accountRel.accountid=crmentityRel.crmid
-                                left join vtiger_leaddetails as vtiger_leaddetailsRel on vtiger_leaddetailsRel.leadid = vtiger_crmentityRel.crmid
-                                left join vtiger_potential as vtiger_potentialRel on vtiger_potentialRel.potentialid = vtiger_crmentityRel.crmid ";
+				$query = "left join seproductsrel on seproductsrel.crmid = account.accountid
+				left join products on products.productid = seproductsrel.productid
+                                left join crmentity as crmentityProducts on crmentityProducts.crmid=products.productid
+                                left join productcf on products.productid = productcf.productid
+                                left join users as usersProducts on usersProducts.id = crmentityProducts.smownerid
+                                left join contactdetails as contactdetailsProducts on contactdetailsProducts.contactid = products.contactid
+                                left join vendor as vendorRel on vendorRel.vendorid = products.vendor_id
+                                left join crmentity as crmentityRel on crmentityRel.crmid = seproductsrel.crmid
+                                left join account as accountRel on accountRel.accountid=crmentityRel.crmid
+                                left join leaddetails as leaddetailsRel on leaddetailsRel.leadid = crmentityRel.crmid
+                                left join potential as potentialRel on potentialRel.potentialid = crmentityRel.crmid ";
 			}
 		}
 		if($module == "Quotes")
 		{
 			if($secmodule == "Accounts")
                         {
-                                $query = "left join vtiger_account on vtiger_account.accountid = vtiger_quotes.accountid
-                                left join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid
-                                left join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid
-                                left join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid
-                                left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
-                                left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-                                left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid ";
+                                $query = "left join account on account.accountid = quotes.accountid
+                                left join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid
+                                left join accountbillads on account.accountid=accountbillads.accountaddressid
+                                left join accountshipads on account.accountid=accountshipads.accountaddressid
+                                left join accountscf on account.accountid = accountscf.accountid
+                                left join account as accountAccounts on accountAccounts.accountid = account.parentid
+                                left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid ";
                         }
 			if($secmodule == "Potentials")
                         {
-                                $query = "left join vtiger_potential on vtiger_potential.potentialid = vtiger_quotes.potentialid
-                                left join vtiger_crmentity as vtiger_crmentityPotentials on vtiger_crmentityPotentials.crmid=vtiger_potential.potentialid 
-				left join vtiger_potentialscf on vtiger_potentialscf.potentialid = vtiger_potential.potentialid
-                                left join vtiger_users as vtiger_usersPotentials on vtiger_usersPotentials.id = vtiger_crmentityPotentials.smownerid ";
+                                $query = "left join potential on potential.potentialid = quotes.potentialid
+                                left join crmentity as crmentityPotentials on crmentityPotentials.crmid=potential.potentialid 
+				left join potentialscf on potentialscf.potentialid = potential.potentialid
+                                left join users as usersPotentials on usersPotentials.id = crmentityPotentials.smownerid ";
 
                         }
 			if($secmodule == "Contacts")
                         {
-                                $query = "left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_quotes.contactid
-                                left join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid
-                                left join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid
-                                left join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid
-                                left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-                                left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid
+                                $query = "left join contactdetails on contactdetails.contactid = quotes.contactid
+                                left join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid
+                                left join contactaddress on contactdetails.contactid = contactaddress.contactaddressid
+                                left join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid
+                                left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+                                left join account as accountContacts on accountContacts.accountid = contactdetails.accountid
 
-                                left join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid
-                                left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid ";
+                                left join contactscf on contactdetails.contactid = contactscf.contactid
+                                left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid ";
                         }
 
 		}
-		if($module == "PurchaseOrder")
+		if($module == "Orders")
 		{
 			if($secmodule == "Accounts")
                         {
-                                $query = "left join vtiger_account on vtiger_account.accountid = vtiger_purchaseorder.accountid
-                                left join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid
-                                left join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid
-                                left join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid
-                                left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
-                                left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-                                left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid ";
+                                $query = "left join account on account.accountid = purchaseorder.accountid
+                                left join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid
+                                left join accountbillads on account.accountid=accountbillads.accountaddressid
+                                left join accountshipads on account.accountid=accountshipads.accountaddressid
+                                left join accountscf on account.accountid = accountscf.accountid
+                                left join account as accountAccounts on accountAccounts.accountid = account.parentid
+                                left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid ";
                         }
 			if($secmodule == "Contacts")
 			{
-				$query = "left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_purchaseorder.contactid
-                                left join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid
-                                left join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid
-                                left join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid
-                                left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-                                left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid
+				$query = "left join contactdetails on contactdetails.contactid = purchaseorder.contactid
+                                left join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid
+                                left join contactaddress on contactdetails.contactid = contactaddress.contactaddressid
+                                left join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid
+                                left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+                                left join account as accountContacts on accountContacts.accountid = contactdetails.accountid
 
-                                left join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid
-                                left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid ";
+                                left join contactscf on contactdetails.contactid = contactscf.contactid
+                                left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid ";
 			}
 		}
 		if($module == "Invoice")
 		{
 			if($secmodule == "Accounts")
 			{
-				$query = "left join vtiger_account on vtiger_account.accountid = vtiger_invoice.accountid
-                                left join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid
-                                left join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid
-                                left join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid
-                                left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
-                                left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-                                left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid ";
+				$query = "left join account on account.accountid = invoice.accountid
+                                left join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid
+                                left join accountbillads on account.accountid=accountbillads.accountaddressid
+                                left join accountshipads on account.accountid=accountshipads.accountaddressid
+                                left join accountscf on account.accountid = accountscf.accountid
+                                left join account as accountAccounts on accountAccounts.accountid = account.parentid
+                                left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid ";
 			}
 		}
 		if($module == "Products")
 		{
 			if($secmodule == "Accounts")
                         {
-                                $query = "left join vtiger_account on vtiger_account.accountid = vtiger_crmentityRel.crmid
-                                left join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid
-                                left join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid
-                                left join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid
-                                left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
-                                left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-                                left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid ";
+                                $query = "left join account on account.accountid = crmentityRel.crmid
+                                left join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid
+                                left join accountbillads on account.accountid=accountbillads.accountaddressid
+                                left join accountshipads on account.accountid=accountshipads.accountaddressid
+                                left join accountscf on account.accountid = accountscf.accountid
+                                left join account as accountAccounts on accountAccounts.accountid = account.parentid
+                                left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid ";
                         }
 			if($secmodule == "Contacts")
                         {
-                                $query = "left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_products.contactid
-                                left join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid
-                                left join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid
-                                left join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid
-                                left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-                                left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid
-                                left join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid
-                                left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid ";
+                                $query = "left join contactdetails on contactdetails.contactid = products.contactid
+                                left join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid
+                                left join contactaddress on contactdetails.contactid = contactaddress.contactaddressid
+                                left join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid
+                                left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+                                left join account as accountContacts on accountContacts.accountid = contactdetails.accountid
+                                left join contactscf on contactdetails.contactid = contactscf.contactid
+                                left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid ";
 
                         }
 
@@ -864,223 +893,224 @@ class ReportRun extends CRMEntity
 		{
 			if($secmodule == "Accounts")
                         {
-                                $query = "left join vtiger_account on vtiger_account.accountid = vtiger_potential.accountid
-                                left join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid
-                                left join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid
-                                left join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid
-                                left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
-                                left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-                                left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid ";
+                                $query = "left join account on account.accountid = potential.accountid
+                                left join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid
+                                left join accountbillads on account.accountid=accountbillads.accountaddressid
+                                left join accountshipads on account.accountid=accountshipads.accountaddressid
+                                left join accountscf on account.accountid = accountscf.accountid
+                                left join account as accountAccounts on accountAccounts.accountid = account.parentid
+                                left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid ";
                         }
 			if($secmodule == "Contacts")
 			{
-				$query = "left join vtiger_contactdetails on vtiger_contactdetails.accountid = vtiger_potential.accountid
-				left join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid
-				left join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid
-				left join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid
-				left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-				left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid
-				left join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid
-				left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid ";
+				$query = "left join contactdetails on contactdetails.accountid = potential.accountid
+				left join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid
+				left join contactaddress on contactdetails.contactid = contactaddress.contactaddressid
+				left join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid
+				left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+				left join account as accountContacts on accountContacts.accountid = contactdetails.accountid
+				left join contactscf on contactdetails.contactid = contactscf.contactid
+				left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid ";
 
 			}
 			if($secmodule == "Quotes")
 			{
-				$query = "left join vtiger_quotes on vtiger_quotes.potentialid = vtiger_potential.potentialid
-                                left join vtiger_crmentity as vtiger_crmentityQuotes on vtiger_crmentityQuotes.crmid=vtiger_quotes.quoteid
-                                left join vtiger_quotesbillads on vtiger_quotes.quoteid=vtiger_quotesbillads.quotebilladdressid
-                                left join vtiger_quotesshipads on vtiger_quotes.quoteid=vtiger_quotesshipads.quoteshipaddressid
-                                left join vtiger_users as vtiger_usersQuotes on vtiger_usersQuotes.id = vtiger_crmentityQuotes.smownerid
-                                left join vtiger_users as vtiger_usersRel1 on vtiger_usersRel1.id = vtiger_quotes.inventorymanager
-                                left join vtiger_potential as vtiger_potentialRel on vtiger_potentialRel.potentialid = vtiger_quotes.potentialid
-                                left join vtiger_contactdetails as vtiger_contactdetailsQuotes on vtiger_contactdetailsQuotes.contactid = vtiger_quotes.contactid
-                                left join vtiger_account as vtiger_accountQuotes on vtiger_accountQuotes.accountid = vtiger_quotes.accountid ";
+				$query = "left join quotes on quotes.potentialid = potential.potentialid
+                                left join crmentity as crmentityQuotes on crmentityQuotes.crmid=quotes.quoteid
+                                left join quotesbillads on quotes.quoteid=quotesbillads.quotebilladdressid
+                                left join quotesshipads on quotes.quoteid=quotesshipads.quoteshipaddressid
+                                left join users as usersQuotes on usersQuotes.id = crmentityQuotes.smownerid
+                                left join users as usersRel1 on usersRel1.id = quotes.inventorymanager
+                                left join potential as potentialRel on potentialRel.potentialid = quotes.potentialid
+                                left join contactdetails as contactdetailsQuotes on contactdetailsQuotes.contactid = quotes.contactid
+                                left join account as accountQuotes on accountQuotes.accountid = quotes.accountid ";
 			}
 		}
 		if($module == "HelpDesk")
 		{
 			if($secmodule == "Products")
 			{
-				$query = "left join vtiger_products on vtiger_products.productid = vtiger_troubletickets.product_id
-                                left join vtiger_crmentity as vtiger_crmentityProducts on vtiger_crmentityProducts.crmid=vtiger_products.productid
-                                left join vtiger_productcf on vtiger_products.productid = vtiger_productcf.productid
-                                left join vtiger_users as vtiger_usersProducts on vtiger_usersProducts.id = vtiger_crmentityProducts.smownerid
-																left join vtiger_contactdetails as vtiger_contactdetailsProducts on vtiger_contactdetailsProducts.contactid = vtiger_products.contactid 
-                                left join vtiger_vendor as vtiger_vendorRel on vtiger_vendorRel.vendorid = vtiger_products.vendor_id
-                                left join vtiger_seproductsrel on vtiger_seproductsrel.productid = vtiger_products.productid
-                                left join vtiger_crmentity as vtiger_crmentityRelProducts on vtiger_crmentityRelProducts.crmid = vtiger_seproductsrel.crmid
-                                left join vtiger_account as vtiger_accountRelProducts on vtiger_accountRelProducts.accountid=vtiger_seproductsrel.crmid
-                                left join vtiger_leaddetails as vtiger_leaddetailsRelProducts on vtiger_leaddetailsRelProducts.leadid = vtiger_seproductsrel.crmid
-                                left join vtiger_potential as vtiger_potentialRelProducts on vtiger_potentialRelProducts.potentialid = vtiger_seproductsrel.crmid ";
+				$query = "left join products on products.productid = troubletickets.product_id
+                                left join crmentity as crmentityProducts on crmentityProducts.crmid=products.productid
+                                left join productcf on products.productid = productcf.productid
+                                left join users as usersProducts on usersProducts.id = crmentityProducts.smownerid
+																left join contactdetails as contactdetailsProducts on contactdetailsProducts.contactid = products.contactid 
+                                left join vendor as vendorRel on vendorRel.vendorid = products.vendor_id
+                                left join seproductsrel on seproductsrel.productid = products.productid
+                                left join crmentity as crmentityRelProducts on crmentityRelProducts.crmid = seproductsrel.crmid
+                                left join account as accountRelProducts on accountRelProducts.accountid=seproductsrel.crmid
+                                left join leaddetails as leaddetailsRelProducts on leaddetailsRelProducts.leadid = seproductsrel.crmid
+                                left join potential as potentialRelProducts on potentialRelProducts.potentialid = seproductsrel.crmid ";
 			}
 		}
 		if($module == "Activities")
 		{
 			if($secmodule == "Contacts")
 			{
-                                $query = "left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_cntactivityrel.contactid 
-                                left join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid
-                                left join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid
-                                left join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid
-                                left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-                                left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid
-                                left join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid
-                                left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid ";
+                                $query = "left join contactdetails on contactdetails.contactid = cntactivityrel.contactid 
+                                left join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid
+                                left join contactaddress on contactdetails.contactid = contactaddress.contactaddressid
+                                left join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid
+                                left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+                                left join account as accountContacts on accountContacts.accountid = contactdetails.accountid
+                                left join contactscf on contactdetails.contactid = contactscf.contactid
+                                left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid ";
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getRelatedModulesQuery".$secmodule);
+		$vtlog->logthis("ReportRun :: Successfully returned getRelatedModulesQuery".$secmodule,"info");
 		return $query;
 	}
 	function getReportsQuery($module)
 	{
-		global $log;
+		global $vtlog;
+		//echo $this->secondarymodule."<br>";
 		if($module == "Leads")
 		{
-			$query = "from vtiger_leaddetails 
-				inner join vtiger_crmentity as vtiger_crmentityLeads on vtiger_crmentityLeads.crmid=vtiger_leaddetails.leadid 
-				inner join vtiger_leadsubdetails on vtiger_leadsubdetails.leadsubscriptionid=vtiger_leaddetails.leadid 
-				inner join vtiger_leadaddress on vtiger_leadaddress.leadaddressid=vtiger_leadsubdetails.leadsubscriptionid 
-				inner join vtiger_leadscf on vtiger_leaddetails.leadid = vtiger_leadscf.leadid 
-				left join vtiger_users as vtiger_usersLeads on vtiger_usersLeads.id = vtiger_crmentityLeads.smownerid
-				where vtiger_crmentityLeads.deleted=0 and vtiger_leaddetails.converted=0";
+			$query = "from leaddetails 
+				inner join crmentity as crmentityLeads on crmentityLeads.crmid=leaddetails.leadid 
+				inner join leadsubdetails on leadsubdetails.leadsubscriptionid=leaddetails.leadid 
+				inner join leadaddress on leadaddress.leadaddressid=leadsubdetails.leadsubscriptionid 
+				inner join leadscf on leaddetails.leadid = leadscf.leadid 
+				left join users as usersLeads on usersLeads.id = crmentityLeads.smownerid
+				where crmentityLeads.deleted=0 and leaddetails.converted=0";
 		}
 
 		if($module == "Accounts")
                 {
-			$query = "from vtiger_account 
-				inner join vtiger_crmentity as vtiger_crmentityAccounts on vtiger_crmentityAccounts.crmid=vtiger_account.accountid 
-				inner join vtiger_accountbillads on vtiger_account.accountid=vtiger_accountbillads.accountaddressid 
-				inner join vtiger_accountshipads on vtiger_account.accountid=vtiger_accountshipads.accountaddressid 
-				inner join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid 
-				left join vtiger_account as vtiger_accountAccounts on vtiger_accountAccounts.accountid = vtiger_account.parentid
-				left join vtiger_users as vtiger_usersAccounts on vtiger_usersAccounts.id = vtiger_crmentityAccounts.smownerid
+			$query = "from account 
+				inner join crmentity as crmentityAccounts on crmentityAccounts.crmid=account.accountid 
+				inner join accountbillads on account.accountid=accountbillads.accountaddressid 
+				inner join accountshipads on account.accountid=accountshipads.accountaddressid 
+				inner join accountscf on account.accountid = accountscf.accountid 
+				left join account as accountAccounts on accountAccounts.accountid = account.parentid
+				left join users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityAccounts.deleted=0 ";
+				where crmentityAccounts.deleted=0 ";
 		}
 
 		if($module == "Contacts")
                 {
-			$query = "from vtiger_contactdetails
-				inner join vtiger_crmentity as vtiger_crmentityContacts on vtiger_crmentityContacts.crmid = vtiger_contactdetails.contactid 
-				inner join vtiger_contactaddress on vtiger_contactdetails.contactid = vtiger_contactaddress.contactaddressid 
-				inner join vtiger_customerdetails on vtiger_customerdetails.customerid = vtiger_contactdetails.contactid
-				inner join vtiger_contactsubdetails on vtiger_contactdetails.contactid = vtiger_contactsubdetails.contactsubscriptionid 
-				inner join vtiger_contactscf on vtiger_contactdetails.contactid = vtiger_contactscf.contactid 
-				left join vtiger_contactdetails as vtiger_contactdetailsContacts on vtiger_contactdetailsContacts.contactid = vtiger_contactdetails.reportsto
-				left join vtiger_account as vtiger_accountContacts on vtiger_accountContacts.accountid = vtiger_contactdetails.accountid 
-				left join vtiger_users as vtiger_usersContacts on vtiger_usersContacts.id = vtiger_crmentityContacts.smownerid
+			$query = "from contactdetails
+				inner join crmentity as crmentityContacts on crmentityContacts.crmid = contactdetails.contactid 
+				inner join contactaddress on contactdetails.contactid = contactaddress.contactaddressid 
+				inner join contactsubdetails on contactdetails.contactid = contactsubdetails.contactsubscriptionid 
+				inner join contactscf on contactdetails.contactid = contactscf.contactid 
+				left join contactdetails as contactdetailsContacts on contactdetailsContacts.contactid = contactdetails.reportsto
+				left join account as accountContacts on accountContacts.accountid = contactdetails.accountid 
+				left join users as usersContacts on usersContacts.id = crmentityContacts.smownerid
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)." 
-				where vtiger_crmentityContacts.deleted=0";
+				where crmentityContacts.deleted=0";
 		}
 
 		if($module == "Potentials")
 		{
-			$query = "from vtiger_potential 
-				inner join vtiger_crmentity as vtiger_crmentityPotentials on vtiger_crmentityPotentials.crmid=vtiger_potential.potentialid 
-				inner join vtiger_account as vtiger_accountPotentials on vtiger_potential.accountid = vtiger_accountPotentials.accountid 
-				inner join vtiger_potentialscf on vtiger_potentialscf.potentialid = vtiger_potential.potentialid
-				left join vtiger_users as vtiger_usersPotentials on vtiger_usersPotentials.id = vtiger_crmentityPotentials.smownerid  
+			$query = "from potential 
+				inner join crmentity as crmentityPotentials on crmentityPotentials.crmid=potential.potentialid 
+				inner join account as accountPotentials on potential.accountid = accountPotentials.accountid 
+				inner join potentialscf on potentialscf.potentialid = potential.potentialid
+				left join users as usersPotentials on usersPotentials.id = crmentityPotentials.smownerid  
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityPotentials.deleted=0 ";
+				where crmentityPotentials.deleted=0 ";
 		}
 		
 		if($module == "Products")
 		{
-			$query = "from vtiger_products 
-				inner join vtiger_crmentity as vtiger_crmentityProducts on vtiger_crmentityProducts.crmid=vtiger_products.productid 
-				left join vtiger_productcf on vtiger_products.productid = vtiger_productcf.productid 
-				left join vtiger_users as vtiger_usersProducts on vtiger_usersProducts.id = vtiger_crmentityProducts.smownerid 
-				left join vtiger_contactdetails as vtiger_contactdetailsProducts on vtiger_contactdetailsProducts.contactid = vtiger_products.contactid
-				left join vtiger_vendor as vtiger_vendorRel on vtiger_vendorRel.vendorid = vtiger_products.vendor_id  
-				left join vtiger_seproductsrel on vtiger_seproductsrel.productid = vtiger_products.productid 
-				left join vtiger_crmentity as vtiger_crmentityRelProducts on vtiger_crmentityRelProducts.crmid = vtiger_seproductsrel.crmid 
-				left join vtiger_account as vtiger_accountRelProducts on vtiger_accountRelProducts.accountid=crmentityRelProducts.crmid 
-				left join vtiger_leaddetails as vtiger_leaddetailsRelProducts on vtiger_leaddetailsRelProducts.leadid = vtiger_crmentityRelProducts.crmid 
-				left join vtiger_potential as vtiger_potentialRelProducts on vtiger_potentialRelProducts.potentialid = vtiger_crmentityRelProducts.crmid 
+			$query = "from products 
+				inner join crmentity as crmentityProducts on crmentityProducts.crmid=products.productid 
+				left join productcf on products.productid = productcf.productid 
+				left join users as usersProducts on usersProducts.id = crmentityProducts.smownerid 
+				left join contactdetails as contactdetailsProducts on contactdetailsProducts.contactid = products.contactid
+				left join vendor as vendorRel on vendorRel.vendorid = products.vendor_id  
+				left join seproductsrel on seproductsrel.productid = products.productid 
+				left join crmentity as crmentityRelProducts on crmentityRelProducts.crmid = seproductsrel.crmid 
+				left join account as accountRelProducts on accountRelProducts.accountid=crmentityRelProducts.crmid 
+				left join leaddetails as leaddetailsRelProducts on leaddetailsRelProducts.leadid = crmentityRelProducts.crmid 
+				left join potential as potentialRelProducts on potentialRelProducts.potentialid = crmentityRelProducts.crmid 
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityProducts.deleted=0 ";
+				where crmentityProducts.deleted=0 ";
 		}
 
 		if($module == "HelpDesk")
 		{
-			$query = "from vtiger_troubletickets 
-				inner join vtiger_crmentity as vtiger_crmentityHelpDesk 
-				on vtiger_crmentityHelpDesk.crmid=vtiger_troubletickets.ticketid 
-				inner join vtiger_ticketcf on vtiger_ticketcf.ticketid = vtiger_troubletickets.ticketid
-        left join vtiger_crmentity as vtiger_crmentityRelHelpDesk on vtiger_crmentityRelHelpDesk.crmid = vtiger_troubletickets.parent_id
-				left join vtiger_account as vtiger_accountRelHelpDesk on vtiger_accountRelHelpDesk.accountid=crmentityRelHelpDesk.crmid 
-				left join vtiger_contactdetails as vtiger_contactdetailsRelHelpDesk on vtiger_contactdetailsRelHelpDesk.contactid= vtiger_crmentityRelHelpDesk.crmid
-				left join vtiger_products as vtiger_productsRel on vtiger_productsRel.productid = vtiger_crmentityRelHelpDesk.crmid
-				left join vtiger_users as vtiger_usersHelpDesk on vtiger_crmentityHelpDesk.smownerid=usersHelpDesk.id 
+			$query = "from troubletickets 
+				inner join crmentity as crmentityHelpDesk 
+				on crmentityHelpDesk.crmid=troubletickets.ticketid 
+				inner join ticketcf on ticketcf.ticketid = troubletickets.ticketid
+        left join crmentity as crmentityRelHelpDesk on crmentityRelHelpDesk.crmid = troubletickets.parent_id
+				left join account as accountRelHelpDesk on accountRelHelpDesk.accountid=crmentityRelHelpDesk.crmid 
+				left join contactdetails as contactdetailsRelHelpDesk on contactdetailsRelHelpDesk.contactid= crmentityRelHelpDesk.crmid
+				left join products as productsRel on productsRel.productid = crmentityRelHelpDesk.crmid
+				left join users as usersHelpDesk on crmentityHelpDesk.smownerid=usersHelpDesk.id 
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityHelpDesk.deleted=0 ";
+				where crmentityHelpDesk.deleted=0 ";
 		}
 
 		if($module == "Activities")
 		{
-			$query = "from vtiger_activity 
-				inner join vtiger_crmentity as vtiger_crmentityActivities on vtiger_crmentityActivities.crmid=vtiger_activity.activityid 
-				left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid 
-				left join vtiger_contactdetails as vtiger_contactdetailsActivities on vtiger_contactdetailsActivities.contactid= vtiger_cntactivityrel.contactid
-				left join vtiger_users as vtiger_usersActivities on vtiger_usersActivities.id = vtiger_crmentityActivities.smownerid
-				left join vtiger_seactivityrel on vtiger_seactivityrel.activityid = vtiger_activity.activityid
-				left join vtiger_crmentity as vtiger_crmentityRelActivities on vtiger_crmentityRelActivities.crmid = vtiger_seactivityrel.crmid
-				left join vtiger_account as vtiger_accountRelActivities on vtiger_accountRelActivities.accountid=crmentityRelActivities.crmid
-				left join vtiger_leaddetails as vtiger_leaddetailsRelActivities on vtiger_leaddetailsRelActivities.leadid = vtiger_crmentityRelActivities.crmid
-				left join vtiger_potential as vtiger_potentialRelActivities on vtiger_potentialRelActivities.potentialid = vtiger_crmentityRelActivities.crmid
-				left join vtiger_quotes as vtiger_quotesRelActivities on vtiger_quotesRelActivities.quoteid = vtiger_crmentityRelActivities.crmid
-				left join vtiger_purchaseorder as vtiger_purchaseorderRelActivities on vtiger_purchaseorderRelActivities.purchaseorderid = vtiger_crmentityRelActivities.crmid
-				left join vtiger_invoice as vtiger_invoiceRelActivities on vtiger_invoiceRelActivities.invoiceid = vtiger_crmentityRelActivities.crmid
+			$query = "from activity 
+				inner join crmentity as crmentityActivities on crmentityActivities.crmid=activity.activityid 
+				left join cntactivityrel on cntactivityrel.activityid= activity.activityid 
+				left join contactdetails as contactdetailsActivities on contactdetailsActivities.contactid= cntactivityrel.contactid
+				left join users as usersActivities on usersActivities.id = crmentityActivities.smownerid
+				left join seactivityrel on seactivityrel.activityid = activity.activityid
+				left join crmentity as crmentityRelActivities on crmentityRelActivities.crmid = seactivityrel.crmid
+				left join account as accountRelActivities on accountRelActivities.accountid=crmentityRelActivities.crmid
+				left join leaddetails as leaddetailsRelActivities on leaddetailsRelActivities.leadid = crmentityRelActivities.crmid
+				left join potential as potentialRelActivities on potentialRelActivities.potentialid = crmentityRelActivities.crmid
+				left join quotes as quotesRelActivities on quotesRelActivities.quoteid = crmentityRelActivities.crmid
+				left join purchaseorder as purchaseorderRelActivities on purchaseorderRelActivities.purchaseorderid = crmentityRelActivities.crmid
+				left join invoice as invoiceRelActivities on invoiceRelActivities.invoiceid = crmentityRelActivities.crmid
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				WHERE vtiger_crmentityActivities.deleted=0 and (vtiger_activity.activitytype = 'Meeting' or vtiger_activity.activitytype='Call' or vtiger_activity.activitytype='Task')";
+				WHERE crmentityActivities.deleted=0 and (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task')";
 		}
 		
 		if($module == "Quotes")
 		{
-			$query = "from vtiger_quotes 
-				inner join vtiger_crmentity as vtiger_crmentityQuotes on vtiger_crmentityQuotes.crmid=vtiger_quotes.quoteid 
-				inner join vtiger_quotesbillads on vtiger_quotes.quoteid=vtiger_quotesbillads.quotebilladdressid 
-				inner join vtiger_quotesshipads on vtiger_quotes.quoteid=vtiger_quotesshipads.quoteshipaddressid 
-				left join vtiger_users as vtiger_usersQuotes on vtiger_usersQuotes.id = vtiger_crmentityQuotes.smownerid
-				left join vtiger_users as vtiger_usersRel1 on vtiger_usersRel1.id = vtiger_quotes.inventorymanager
-				left join vtiger_potential as vtiger_potentialRel on vtiger_potentialRel.potentialid = vtiger_quotes.potentialid
-				left join vtiger_contactdetails as vtiger_contactdetailsQuotes on vtiger_contactdetailsQuotes.contactid = vtiger_quotes.contactid
-				left join vtiger_account as vtiger_accountQuotes on vtiger_accountQuotes.accountid = vtiger_quotes.accountid
+			$query = "from quotes 
+				inner join crmentity as crmentityQuotes on crmentityQuotes.crmid=quotes.quoteid 
+				inner join quotesbillads on quotes.quoteid=quotesbillads.quotebilladdressid 
+				inner join quotesshipads on quotes.quoteid=quotesshipads.quoteshipaddressid 
+				left join users as usersQuotes on usersQuotes.id = crmentityQuotes.smownerid
+				left join users as usersRel1 on usersRel1.id = quotes.inventorymanager
+				left join potential as potentialRel on potentialRel.potentialid = quotes.potentialid
+				left join contactdetails as contactdetailsQuotes on contactdetailsQuotes.contactid = quotes.contactid
+				left join account as accountQuotes on accountQuotes.accountid = quotes.accountid
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityQuotes.deleted=0";
+				where crmentityQuotes.deleted=0";
 		}
 		
-		if($module == "PurchaseOrder")
+		if($module == "Orders")
 		{
-			$query = "from vtiger_purchaseorder 
-				inner join vtiger_crmentity as vtiger_crmentityPurchaseOrder on vtiger_crmentityPurchaseOrder.crmid=vtiger_purchaseorder.purchaseorderid 
-				inner join vtiger_pobillads on vtiger_purchaseorder.purchaseorderid=vtiger_pobillads.pobilladdressid 
-				inner join vtiger_poshipads on vtiger_purchaseorder.purchaseorderid=vtiger_poshipads.poshipaddressid 
-				left join vtiger_users as vtiger_usersPurchaseOrder on vtiger_usersPurchaseOrder.id = vtiger_crmentityPurchaseOrder.smownerid 
-				left join vtiger_vendor as vtiger_vendorRel on vtiger_vendorRel.vendorid = vtiger_purchaseorder.vendorid 
-				left join vtiger_contactdetails as vtiger_contactdetailsPurchaseOrder on vtiger_contactdetailsPurchaseOrder.contactid = vtiger_purchaseorder.contactid 
+			$query = "from purchaseorder 
+				inner join crmentity as crmentityOrders on crmentityOrders.crmid=purchaseorder.purchaseorderid 
+				inner join pobillads on purchaseorder.purchaseorderid=pobillads.pobilladdressid 
+				inner join poshipads on purchaseorder.purchaseorderid=poshipads.poshipaddressid 
+				left join users as usersOrders on usersOrders.id = crmentityOrders.smownerid 
+				left join vendor as vendorRel on vendorRel.vendorid = purchaseorder.vendorid 
+				left join contactdetails as contactdetailsOrders on contactdetailsOrders.contactid = purchaseorder.contactid 
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityPurchaseOrder.deleted=0";
+				where crmentityOrders.deleted=0";
 		}
 
 		if($module == "Invoice")
 		{
-			$query = "from vtiger_invoice 
-				inner join vtiger_crmentity as vtiger_crmentityInvoice on vtiger_crmentityInvoice.crmid=vtiger_invoice.invoiceid 
-				inner join vtiger_invoicebillads on vtiger_invoice.invoiceid=vtiger_invoicebillads.invoicebilladdressid 
-				inner join vtiger_invoiceshipads on vtiger_invoice.invoiceid=vtiger_invoiceshipads.invoiceshipaddressid 
-				left join vtiger_users as vtiger_usersInvoice on vtiger_usersInvoice.id = vtiger_crmentityInvoice.smownerid
-				left join vtiger_account as vtiger_accountInvoice on vtiger_accountInvoice.accountid = vtiger_invoice.accountid
+			$query = "from invoice 
+				inner join crmentity as crmentityInvoice on crmentityInvoice.crmid=invoice.invoiceid 
+				inner join invoicebillads on invoice.invoiceid=invoicebillads.invoicebilladdressid 
+				inner join invoiceshipads on invoice.invoiceid=invoiceshipads.invoiceshipaddressid 
+				left join users as usersInvoice on usersInvoice.id = crmentityInvoice.smownerid
+				left join account as accountInvoice on accountInvoice.accountid = invoice.accountid
 				".$this->getRelatedModulesQuery($module,$this->secondarymodule)."
-				where vtiger_crmentityInvoice.deleted=0";
+				where crmentityInvoice.deleted=0";
 		}
-		$log->info("ReportRun :: Successfully returned getReportsQuery".$module);
+
+		$vtlog->logthis("ReportRun :: Successfully returned getReportsQuery".$module,"info");
 		return $query;
 	}
 
 	function sGetSQLforReport($reportid,$filterlist,$type='')
 	{
-		global $log;
+		global $vtlog;
 
 		$columnlist = $this->getQueryColumnsList($reportid);
 		$groupslist = $this->getGroupingList($reportid);
@@ -1145,7 +1175,7 @@ class ReportRun extends CRMEntity
 		}
 		
 		$reportquery = $this->getReportsQuery($this->primarymodule);
-			
+
 		if($type == 'COLUMNSTOTOTAL')
 		{
 			if(trim($groupsquery) != "")
@@ -1171,7 +1201,7 @@ class ReportRun extends CRMEntity
 				$reportquery = "select ".$selectedcolumns." ".$reportquery." ".$wheresql;
 			}
 		}
-		$log->info("ReportRun :: Successfully returned sGetSQLforReport".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned sGetSQLforReport".$reportid,"info");
 		return $reportquery;
 
 	}
@@ -1193,7 +1223,7 @@ class ReportRun extends CRMEntity
 				for ($x=0; $x<$y; $x++)
 				{
 					$fld = $adb->field_name($result, $x);
-					$header .= "<td class='rptCellLabel'>".str_replace($modules," ",$fld->name)."</td>";
+					$header .= "<td class='rptHead'>".str_replace($modules," ",$fld->name)."</td>";
 				}
 				
 				$noofrows = $adb->num_rows($result);
@@ -1281,24 +1311,37 @@ class ReportRun extends CRMEntity
 				$arr_val[] = $arraylists;
 				}while($custom_field_values = $adb->fetch_array($result));
 				
-				 $sHTML ='<table cellpadding="5" cellspacing="0" align="center" class="rptTable">
+				
+				$totalhtml = '
+				<tr>
+				<td colspan='.($y+1).' class="rptTotal">'.$mod_strings['LBL_GRAND_TOTAL'].': '.$noofrows.' Records</td>
+				</tr>';
+				
+				$sHTML = '<html>
+				<head></head>
+				<body>
+				 <table cellpadding="0" cellspacing="0" border="0" class="rptTable">
+				 <tr>
+				 	<td class="rptTitle" colspan="'.$y.'">'.$this->reportname.'</td>
+				 </tr>
 				  <tr>'. 
 				   $header
 				  .'<!-- BEGIN values -->
 				  <tr>'. 
 				   $valtemplate
-				  .'</tr>
-				</table>';
+				  .'</tr>'
+				  .$totalhtml.
+				'</table>
+				</body>
+				</html>';
 				//<<<<<<<<construct HTML>>>>>>>>>>>>
-				$return_data[] = $sHTML;
-				$return_data[] = $noofrows;
-				$return_data[] = $sSQL;
-				return $return_data;
+				return $sHTML;
 			}
 		}elseif($outputformat == "PDF")
 		{
 			
 			$sSQL = $this->sGetSQLforReport($this->reportid,$filterlist);
+			//$modules = array("Leads_", "Accounts_", "Potentials_", "Contacts_","_");
 			$result = $adb->query($sSQL);
 			$y=$adb->num_fields($result);
 
@@ -1306,6 +1349,8 @@ class ReportRun extends CRMEntity
 			{
 				$noofrows = $adb->num_rows($result);
 				$custom_field_values = $adb->fetch_array($result);
+				
+				//$modules = array("Leads_", "Accounts_", "Potentials_", "Contacts_","_");
 				
 				do
 				{
@@ -1331,13 +1376,14 @@ class ReportRun extends CRMEntity
 			$sSQL = $this->sGetSQLforReport($this->reportid,$filterlist,"COLUMNSTOTOTAL");
 			if(isset($this->totallist))
 			{
+				//print_r($this->totallist);
 				if($sSQL != "")
 				{
 					$result = $adb->query($sSQL);
 					$y=$adb->num_fields($result);
 					$custom_field_values = $adb->fetch_array($result);
 
-					$coltotalhtml .= "<table align='center' width='60%' cellpadding='3' cellspacing='0' border='0' class='rptTable'><tr><td class='rptCellLabel'>Totals</td><td class='rptCellLabel'>SUM</td><td class='rptCellLabel'>AVG</td><td class='rptCellLabel'>MIN</td><td class='rptCellLabel'>MAX</td></tr>";
+					$coltotalhtml .= "<table width='60%' cellpadding='0' cellspacing='0' border='0' class='formOuterBorder'><tr><td class='rptHead'>{$mod_strings['LBL_COLUMNS']}</td><td class='rptHead'>{$mod_strings['LBL_COLUMNS_SUM']}</td><td class='rptHead'>{$mod_strings['LBL_COLUMNS_AVERAGE']}</td><td class='rptHead'>{$mod_strings['LBL_COLUMNS_LOW_VALUE']}</td><td class='rptHead'>{$mod_strings['LBL_COLUMNS_LARGE_VALUE']}</td></tr>";
 
 					foreach($this->totallist as $key=>$value)
 					{
@@ -1357,42 +1403,43 @@ class ReportRun extends CRMEntity
 						$arraykey = trim($value).'_SUM';
 						if(isset($keyhdr[$arraykey]))
 						{
-							$coltotalhtml .= '<td class="rptTotal">'.$keyhdr[$arraykey].'</td>';
+							$coltotalhtml .= '<td class="rptData">'.$keyhdr[$arraykey].'</td>';
 						}else
 						{
-							$coltotalhtml .= '<td class="rptTotal">&nbsp;</td>';
+							$coltotalhtml .= '<td class="rptData">&nbsp;</td>';
 						}
 
 						$arraykey = trim($value).'_AVG';
 						if(isset($keyhdr[$arraykey]))
 						{
-							$coltotalhtml .= '<td class="rptTotal">'.$keyhdr[$arraykey].'</td>';
+							$coltotalhtml .= '<td class="rptData">'.$keyhdr[$arraykey].'</td>';
 						}else
 						{
-							$coltotalhtml .= '<td class="rptTotal">&nbsp;</td>';
+							$coltotalhtml .= '<td class="rptData">&nbsp;</td>';
 						}
 
 						$arraykey = trim($value).'_MIN';
 						if(isset($keyhdr[$arraykey]))
 						{
-							$coltotalhtml .= '<td class="rptTotal">'.$keyhdr[$arraykey].'</td>';
+							$coltotalhtml .= '<td class="rptData">'.$keyhdr[$arraykey].'</td>';
 						}else
 						{
-							$coltotalhtml .= '<td class="rptTotal">&nbsp;</td>';
+							$coltotalhtml .= '<td class="rptData">&nbsp;</td>';
 						}
 
 						$arraykey = trim($value).'_MAX';
 						if(isset($keyhdr[$arraykey]))
 						{
-							$coltotalhtml .= '<td class="rptTotal">'.$keyhdr[$arraykey].'</td>';
+							$coltotalhtml .= '<td class="rptData">'.$keyhdr[$arraykey].'</td>';
 						}else
 						{
-							$coltotalhtml .= '<td class="rptTotal">&nbsp;</td>';
+							$coltotalhtml .= '<td class="rptData">&nbsp;</td>';
 						}
 
 						$coltotalhtml .= '<tr>';
 					}
 
+//					print_r($keyhdr);
 					$coltotalhtml .= "</table>";
 				}
 			}			
@@ -1405,11 +1452,11 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$coltotalsql = "select vtiger_reportsummary.* from vtiger_report";
-        $coltotalsql .= " inner join vtiger_reportsummary on vtiger_report.reportid = vtiger_reportsummary.reportsummaryid";
-        $coltotalsql .= " where vtiger_report.reportid =".$reportid;
+		$coltotalsql = "select reportsummary.* from report";
+        $coltotalsql .= " inner join reportsummary on report.reportid = reportsummary.reportsummaryid";
+        $coltotalsql .= " where report.reportid =".$reportid;
 
         $result = $adb->query($coltotalsql);
 		
@@ -1438,7 +1485,7 @@ class ReportRun extends CRMEntity
 					}
 			}
 		}
-		$log->info("ReportRun :: Successfully returned getColumnsTotal".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getColumnsTotal".$reportid,"info");
 		return $stdfilterlist;
 	}
 	//<<<<<<new>>>>>>>>>
@@ -1447,11 +1494,11 @@ class ReportRun extends CRMEntity
 	{
 		global $adb;
 		global $modules;
-		global $log;
+		global $vtlog;
 
-		$sreportstdfiltersql = "select vtiger_reportsummary.* from vtiger_report"; 
-		$sreportstdfiltersql .= " inner join vtiger_reportsummary on vtiger_report.reportid = vtiger_reportsummary.reportsummaryid"; 
-		$sreportstdfiltersql .= " where vtiger_report.reportid =".$reportid;
+		$sreportstdfiltersql = "select reportsummary.* from report"; 
+		$sreportstdfiltersql .= " inner join reportsummary on report.reportid = reportsummary.reportsummaryid"; 
+		$sreportstdfiltersql .= " where report.reportid =".$reportid;
 		
 		$result = $adb->query($sreportstdfiltersql);
 		$noofrows = $adb->num_rows($result);
@@ -1485,7 +1532,7 @@ class ReportRun extends CRMEntity
 		{
 			$sSQL = implode(",",$sSQLList);
 		}
-		$log->info("ReportRun :: Successfully returned getColumnsToTotalColumns".$reportid);
+		$vtlog->logthis("ReportRun :: Successfully returned getColumnsToTotalColumns".$reportid,"info");
 		return $sSQL;
 	}
 

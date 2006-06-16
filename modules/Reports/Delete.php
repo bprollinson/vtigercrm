@@ -12,29 +12,16 @@ require_once('modules/Reports/Reports.php');
 require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 
-if(isset($_REQUEST['idlist']) && $_REQUEST['idlist']!= '')
-{
-	$id_array = Array();
-	$id_array = explode(':',$_REQUEST['idlist']);
-	for($i = 0;$i < count($id_array)-1;$i++)
-	{
-		DeleteReport($id_array[$i]);	
-	}
-	header("Location: index.php?action=ReportsAjax&file=ListView&mode=ajax&module=Reports");
-}elseif(isset($_REQUEST['record']) && $_REQUEST['record']!= '')
-{
-	$id = $_REQUEST["record"];
-	DeleteReport($id);	
-	header("Location: index.php?action=ReportsAjax&file=ListView&mode=ajaxdelete&module=Reports");
-}
+global $adb;
 
-function DeleteReport($reportid)
+$reportid = $_REQUEST["record"];
+if($reportid != "")
 {
-	global $adb;
-	$idelreportsql = "delete from vtiger_selectquery where queryid=".$reportid;
+	$idelreportsql = "delete from selectquery where queryid=".$reportid;
 	$idelreportsqlresult = $adb->query($idelreportsql);
 
-	$ireportsql = "delete from vtiger_report where vtiger_reportid=".$reportid;
-    $ireportsqlresult = $adb->query($ireportsql);
+	$ireportsql = "delete from report where reportid=".$reportid;
+        $ireportsqlresult = $adb->query($ireportsql);
 }
+header("Location: index.php?action=index&module=Reports");
 ?>

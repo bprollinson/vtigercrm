@@ -16,10 +16,12 @@
  * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/modules/Administration/index.php,v 1.1 2004/08/17 15:03:27 gjayakrishnan Exp $
  * Description: TODO:  To be written.
  ********************************************************************************/
-$_SESSION['user_sorder']='';
-$_SESSION['user_orderby']='';
-$_SESSION['user_pagestart'] = 1;
- 
+
+global $mod_strings;
+
+echo get_module_title($mod_strings['LBL_MODULE_NAME'], $mod_strings['LBL_MODULE_TITLE'], true); 
+echo "\n<BR>\n";
+
 include("modules/Users/ListView.php");
 
 ?>

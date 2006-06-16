@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fcklanguagemanager.js
  * 	Defines the FCKLanguageManager object that is used for language 
  * 	operations.
@@ -57,17 +55,17 @@ FCKLanguageManager.GetActiveLanguage = function()
 
 FCKLanguageManager.TranslateElements = function( targetDocument, tag, propertyToSet )
 {
-	var e = targetDocument.getElementsByTagName(tag) ;
+	var aInputs = targetDocument.getElementsByTagName(tag) ;
 
-	for ( var i = 0 ; i < e.length ; i++ )
+	for ( var i = 0 ; i < aInputs.length ; i++ )
 	{
-		var sKey = e[i].getAttribute( 'fckLang' ) ;
+		var sKey = aInputs[i].getAttribute( 'fckLang' ) ;
 		
 		if ( sKey )
 		{
 			var s = FCKLang[ sKey ] ;
 			if ( s ) 
-				eval( 'e[i].' + propertyToSet + ' = s' ) ;
+				eval( 'aInputs[i].' + propertyToSet + ' = s' ) ;
 		}
 	}
 }

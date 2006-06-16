@@ -12,15 +12,13 @@
 require_once('include/database/PearDatabase.php');
 function getComboArray($combofieldNames)
 {
-	global $log;
-        $log->debug("Entering getComboArray(".$combofieldNames.") method ...");
 	global $adb;
 	$comboFieldArray = Array();
 	foreach ($combofieldNames as $tableName => $arrayName)
 	{
 		$fldArrName= $arrayName;
 		$arrayName = Array();
-		$result = $adb->query("select * from vtiger_".$tableName." where presence=1 order by sortorderid");
+		$result = $adb->query("select * from ".$tableName." where presence=1 order by sortorderid");
 		while($row = $adb->fetch_array($result))
 		{
 			$val = $row[$tableName];
@@ -28,7 +26,6 @@ function getComboArray($combofieldNames)
 		}
 		$comboFieldArray[$fldArrName] = $arrayName;
 	}
-	$log->debug("Exiting getComboArray method ...");
 	return $comboFieldArray;	
 }
 ?>

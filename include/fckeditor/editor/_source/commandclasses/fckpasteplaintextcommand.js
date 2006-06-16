@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fckpasteplaintextcommand.js
  * 	FCKPastePlainTextCommand Class: represents the 
  * 	"Paste as Plain Text" command.

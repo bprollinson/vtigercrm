@@ -13,60 +13,70 @@ require_once('include/logging.php');
 require_once('include/language/en_us.lang.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/ComboStrings.php');
-/**
- *  Class which handles the population of the combo values
- * 
- *
- */
+
 class PopulateComboValues
 {
+
+	//var $table_name="lead_source";
 	var $app_list_strings;
 
-
-	/** 
-	 * To populate the default combo values for the combo vtiger_tables
-	 */
-	function insertComboValues($values, $tableName)
+  function insertComboValues($values, $tableName)
 	{
-		global $log;
-		$log->debug("Entering insertComboValues(".$values.", ".$tableName.") method ...");
-		global $adb;
-		$i=0;
-		foreach ($values as $val => $cal)
-		{
-			$id = $adb->getUniqueID($tableName);
-			if($val != '')
-			{
-				$adb->query("insert into vtiger_".$tableName. " values(".$id.",'".$val."',".$i.",1)");
-			}
-			else
-			{
-				$adb->query("insert into vtiger_".$tableName. " values(".$id.",'--None--',".$i.",1)");
-			}
-			$i++;
-		}
-		$log->debug("Exiting insertComboValues method ...");
+          global $adb;
+//	  global $vtlog;
+//	  $vtlog->logthis("in  insertComboValues ".$tableName ,'info');  
+          $i=0;
+          foreach ($values as $val => $cal)
+          {
+            if($val != '')
+            {
+              $adb->query("insert into ".$tableName. " values('','".$val."',".$i.",1)");
+            }
+            else
+            {
+              $adb->query("insert into ".$tableName. " values('','--None--',".$i.",1)");
+            }
+            $i++;
+          }
 	}
 
-
-	/** 
-	 * To populate the combo vtiger_tables at startup time
-	 */
-
-	function create_tables () 
-	{
-		global $log;
-		$log->debug("Entering create_tables () method ...");
-				
+	function create_tables () {
 		global $app_list_strings,$adb;
-		global $combo_strings;
-		$comboTables = Array('leadsource','accounttype','industry','leadstatus','rating','licencekeystatus','opportunity_type','salutationtype','sales_stage','ticketstatus','ticketpriorities','ticketseverities','ticketcategories','duration_minutes','eventstatus','taskstatus','taskpriority','manufacturer','productcategory','activitytype','currency','faqcategories','rsscategory','usageunit','glacct','quotestage','carrier','taxclass','recurringtype','faqstatus','invoicestatus','postatus','sostatus','visibility','campaigntype','campaignstatus','expectedresponse','status','activity_view','lead_view','date_format');
+                global $combo_strings;
+		$comboTables = Array('leadsource','accounttype','industry','leadstatus','rating','licencekeystatus','opportunity_type','salutationtype','sales_stage','ticketstatus','ticketpriorities','ticketseverities','ticketcategories','duration_minutes','eventstatus','taskstatus','taskpriority','manufacturer','productcategory','activitytype','currency','faqcategories','rsscategory','usageunit','glacct','quotestage','carrier','taxclass','recurringtype','faqstatus','invoicestatus','postatus','sostatus');
 
 		foreach ($comboTables as $comTab)
 		{
-			$this->insertComboValues($combo_strings[$comTab."_dom"],$comTab);
+			/*$result = mysql_query("show tables like '%".$comTab."%'");
+			if(mysql_num_rows($result) == 0)
+			{
+				$query = 'CREATE TABLE '.$comTab.' (';
+						$query .=$comTab.' varchar(200) NOT NULL';
+						$query .=', PRIMARY KEY ('.$comTab.'))';
+
+				mysql_query($query) or die($app_strings['ERR_CREATING_TABLE'].mysql_error());
+				echo("Created table ".$comTab);
+				echo("<BR>");
+				$this->insertComboValues($combo_strings[$comTab."_dom"],$comTab);
+			}
+			else
+			{
+				echo("Table ".$comTab." already exists");
+				echo("<BR>");
+				$tableRows = mysql_query("select * from ".$comTab);
+				if(mysql_num_rows($tableRows) == 0)
+				{
+
+					$this->insertComboValues($combo_strings[$comTab."_dom"],$comTab);
+				}
+			}*/
+
+                  $this->insertComboValues($combo_strings[$comTab."_dom"],$comTab);
 		}
-		$log->debug("Exiting create_tables () method ...");
+
 	}
+
+
+
 }
 ?>

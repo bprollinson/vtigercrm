@@ -19,7 +19,7 @@
  */
 
 
-//file modified by richie
+//file modified by shankar
 
 
 require("class.smtp.php");

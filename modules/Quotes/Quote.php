@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/Quote.php,v 1.11 2005/07/15 12:12:51 mickie Exp $
  * Description:  Defines the Account SugarBean Account entity with the necessary
  * methods and variables.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
@@ -26,20 +26,27 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
-require_once('include/RelatedListView.php');
-// Account is used to store vtiger_account information.
+require_once('include/utils.php');
+
+// Account is used to store account information.
 class Quote extends CRMEntity {
 	var $log;
 	var $db;
+
+
+	// Stored fields
+	var $id;
+	var $mode;
+	
 		
 	var $table_name = "quotes";
-	var $tab_name = Array('vtiger_crmentity','vtiger_quotes','vtiger_quotesbillads','vtiger_quotesshipads','vtiger_quotescf');
-	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_quotes'=>'quoteid','vtiger_quotesbillads'=>'quotebilladdressid','vtiger_quotesshipads'=>'quoteshipaddressid','vtiger_quotescf'=>'quoteid');
+	var $tab_name = Array('crmentity','quotes','quotesbillads','quotesshipads','quotescf');
+	var $tab_name_index = Array('crmentity'=>'crmid','quotes'=>'quoteid','quotesbillads'=>'quotebilladdressid','quotesshipads'=>'quoteshipaddressid','quotescf'=>'quoteid');
+				
 	
-	var $entity_table = "vtiger_crmentity";
+	var $entity_table = "crmentity";
 	
-	var $billadr_table = "vtiger_quotesbillads";
+	var $billadr_table = "quotesbillads";
 
 	var $object_name = "Quote";
 
@@ -49,12 +56,12 @@ class Quote extends CRMEntity {
 
 	var $column_fields = Array();
 
-	var $sortby_fields = Array('subject','crmid','smownerid');		
+	var $sortby_fields = Array('subject','crmid');		
 
-	// This is used to retrieve related vtiger_fields from form posts.
+	// This is used to retrieve related fields from form posts.
 	var $additional_column_fields = Array('assigned_user_name', 'smownerid', 'opportunity_id', 'case_id', 'contact_id', 'task_id', 'note_id', 'meeting_id', 'call_id', 'email_id', 'parent_name', 'member_id' );
 
-	// This is the list of vtiger_fields that are in the lists.
+	// This is the list of fields that are in the lists.
 	var $list_fields = Array(
 				'Quote Id'=>Array('crmentity'=>'crmid'),
 				'Subject'=>Array('quotes'=>'subject'),
@@ -76,6 +83,10 @@ class Quote extends CRMEntity {
 				      );
 	var $list_link_field= 'subject';
 
+	var $record_id;
+	var $list_mode;
+        var $popup_type;
+
 	var $search_fields = Array(
 				'Quote Id'=>Array('crmentity'=>'crmid'),
 				'Subject'=>Array('quotes'=>'subject'),
@@ -90,100 +101,91 @@ class Quote extends CRMEntity {
 				        'Quote Stage'=>'quotestage',
 				      );
 
-	// This is the list of vtiger_fields that are required.
+	// This is the list of fields that are required.
 	var $required_fields =  array("accountname"=>1);
-
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'crmid';
-	var $default_sort_order = 'ASC';
 
 	function Quote() {
 		$this->log =LoggerManager::getLogger('quote');
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Quotes');
 	}
-	
-	// Mike Crowe Mod --------------------------------------------------------Default ordering for us
-	function getSortOrder()
-	{
-		global $log;
-                $log->debug("Entering getSortOrder() method ...");	
-		if(isset($_REQUEST['sorder'])) 
-			$sorder = $_REQUEST['sorder'];
-		else
-			$sorder = (($_SESSION['QUOTES_SORT_ORDER'] != '')?($_SESSION['QUOTES_SORT_ORDER']):($this->default_sort_order));
-		$log->debug("Exiting getSortOrder() method ...");
-		return $sorder;
+
+	function create_tables () {
+          /*
+		$query = 'CREATE TABLE '.$this->table_name.' ( ';
+		$query .='id char(36) NOT NULL';
+		$query .=', date_entered datetime NOT NULL';
+		$query .=', date_modified datetime NOT NULL';
+		$query .=', modified_user_id char(36) NOT NULL';
+		$query .=', assigned_user_id char(36)';
+		$query .=', name char(150)';
+		$query .=', parent_id char(36)';
+		$query .=', account_type char(25)';
+		$query .=', industry char(25)';
+		$query .=', annual_revenue char(25)';
+		$query .=', phone_fax char(25)';
+		$query .=', billing_address_street char(150)';
+		$query .=', billing_address_city char(100)';
+		$query .=', billing_address_state char(100)';
+		$query .=', billing_address_postalcode char(20)';
+		$query .=', billing_address_country char(100)';
+		$query .=', description text';
+		$query .=', rating char(25)';
+		$query .=', phone_office char(25)';
+		$query .=', phone_alternate char(25)';
+		$query .=', email1 char(100)';
+		$query .=', email2 char(100)';
+		$query .=', website char(255)';
+		$query .=', ownership char(100)';
+		$query .=', employees char(10)';
+		$query .=', sic_code char(10)';
+		$query .=', ticker_symbol char(10)';
+		$query .=', shipping_address_street char(150)';
+		$query .=', shipping_address_city char(100)';
+		$query .=', shipping_address_state char(100)';
+		$query .=', shipping_address_postalcode char(20)';
+		$query .=', shipping_address_country char(100)';
+		$query .=', deleted bool NOT NULL default 0';
+		$query .=', PRIMARY KEY ( id ) )';
+
+		
+
+		$this->db->query($query);
+	//TODO Clint 4/27 - add exception handling logic here if the table can't be created.
+        */
+
 	}
 
-	function getOrderBy()
-	{
-		global $log;
-                $log->debug("Entering getOrderBy() method ...");
-		if (isset($_REQUEST['order_by'])) 
-			$order_by = $_REQUEST['order_by'];
-		else
-			$order_by = (($_SESSION['QUOTES_ORDER_BY'] != '')?($_SESSION['QUOTES_ORDER_BY']):($this->default_order_by));
-		$log->debug("Exiting getOrderBy method ...");
-		return $order_by;
-	}	
-	// Mike Crowe Mod --------------------------------------------------------
+	function drop_tables () {
+          /*
+		$query = 'DROP TABLE IF EXISTS '.$this->table_name;
 
+		
+
+		$this->db->query($query);
+
+	//TODO Clint 4/27 - add exception handling logic here if the table can't be dropped.
+        */
+	}
+
+	function get_summary_text()
+	{
+		return $this->name;
+	}
 	function get_salesorder($id)
 	{
-		global $log;
-		$log->debug("Entering get_salesorder(".$id.") method ...");
-		require_once('modules/SalesOrder/SalesOrder.php');
-	        $focus = new SalesOrder();
- 
-		$button = '';
-
-		$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
-
-		$query = "select vtiger_crmentity.*, vtiger_salesorder.*, vtiger_quotes.subject as quotename, vtiger_account.accountname from vtiger_salesorder inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_salesorder.salesorderid left outer join vtiger_quotes on vtiger_quotes.quoteid=vtiger_salesorder.quoteid left outer join vtiger_account on vtiger_account.accountid=vtiger_salesorder.accountid left join vtiger_sogrouprelation on vtiger_salesorder.salesorderid=vtiger_sogrouprelation.salesorderid left join vtiger_groups on vtiger_groups.groupname=vtiger_sogrouprelation.groupname where vtiger_crmentity.deleted=0 and vtiger_salesorder.quoteid = ".$id;
-		$log->debug("Exiting get_salesorder method ...");
-		return GetRelatedList('Quotes','SalesOrder',$focus,$query,$button,$returnset);
+		$query = "select crmentity.*, salesorder.*, quotes.subject as quotename, account.accountname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid left outer join quotes on quotes.quoteid=salesorder.quoteid left outer join account on account.accountid=salesorder.accountid where crmentity.deleted=0 and salesorder.quoteid = ".$id;
+		renderRelatedOrders($query,$id);	
 	}
-	
 	function get_activities($id)
-	{	
-		global $log;
-		$log->debug("Entering get_activities(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/Activities/Activity.php');
-	        $focus = new Activity();
-
-		$button = '';
-
-		$returnset = '&return_module=Quotes&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT vtiger_contactdetails.contactid, vtiger_contactdetails.lastname, vtiger_contactdetails.firstname, vtiger_activity.*,vtiger_seactivityrel.*,vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.modifiedtime, vtiger_users.user_name,vtiger_recurringevents.recurringtype from vtiger_activity inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid left join vtiger_contactdetails on vtiger_contactdetails.contactid = vtiger_cntactivityrel.contactid left join vtiger_users on vtiger_users.id=vtiger_crmentity.smownerid left outer join vtiger_recurringevents on vtiger_recurringevents.activityid=vtiger_activity.activityid left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_crmentity.crmid left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname where vtiger_seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Completed') and (vtiger_activity.status is not NULL && vtiger_activity.status != 'Deferred') or (vtiger_activity.eventstatus !='' && vtiger_activity.eventstatus = 'Planned')";
-		$log->debug("Exiting get_activities method ...");
-		return GetRelatedList('Quotes','Activities',$focus,$query,$button,$returnset);
+	{
+		$query = "SELECT contactdetails.contactid, contactdetails.lastname, contactdetails.firstname, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name,recurringevents.recurringtype from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting') and ( activity.status is NULL || activity.status != 'Completed' ) and (  activity.eventstatus is NULL ||  activity.eventstatus != 'Held')";
+		renderRelatedActivities($query,$id);
 	}
 	function get_history($id)
 	{
-		global $log;
-		$log->debug("Entering get_history(".$id.") method ...");
-		$query = "SELECT vtiger_activity.activityid, vtiger_activity.subject, vtiger_activity.status,
-			vtiger_activity.eventstatus, vtiger_activity.activitytype, vtiger_contactdetails.contactid,
-			vtiger_contactdetails.firstname,vtiger_contactdetails.lastname, vtiger_crmentity.modifiedtime,
-			vtiger_crmentity.createdtime, vtiger_crmentity.description, vtiger_users.user_name
-			from vtiger_activity
-				inner join vtiger_seactivityrel on vtiger_seactivityrel.activityid=vtiger_activity.activityid
-				inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_activity.activityid
-				left join vtiger_cntactivityrel on vtiger_cntactivityrel.activityid= vtiger_activity.activityid
-				left join vtiger_contactdetails on vtiger_contactdetails.contactid= vtiger_cntactivityrel.contactid
-				inner join vtiger_users on vtiger_crmentity.smcreatorid= vtiger_users.id
-				left join vtiger_activitygrouprelation on vtiger_activitygrouprelation.activityid=vtiger_activity.activityid
-                                left join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname
-			where (vtiger_activity.activitytype = 'Meeting' or vtiger_activity.activitytype='Call' or vtiger_activity.activitytype='Task')
-  				and (vtiger_activity.status = 'Completed' or vtiger_activity.status = 'Deferred' or (vtiger_activity.eventstatus !='Planned' and vtiger_activity.eventstatus != ''))
-	 	        	and vtiger_seactivityrel.crmid=".$id;
-		//Don't add order by, because, for security, one more condition will be added with this query in include/RelatedListView.php
-
-		$log->debug("Exiting get_history method ...");
-		return getHistory('Quotes',$query,$id);	
+		$query = "SELECT activity.activityid, activity.subject, activity.status, activity.eventstatus, activity.activitytype, activity.description, contactdetails.contactid, contactdetails.firstname, contactdetails.lastname, crmentity.modifiedtime from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid= cntactivityrel.contactid where (activity.activitytype = 'Meeting' or activity.activitytype='Call' or activity.activitytype='Task') and (activity.status='Completed' or activity.eventstatus='Held') and seactivityrel.crmid=".$id;
+		renderRelatedHistory($query,$id);
 	}
 }
 

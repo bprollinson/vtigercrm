@@ -13,7 +13,7 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/themes/Aqua/layout_utils.php,v 1.17 2005/05/03 13:18:57 saraj Exp $
  * Description:  Contains a variety of utility functions used to display UI 
  * components such as form headers and footers.  Intended to be modified on a per 
  * theme basis.
@@ -64,7 +64,7 @@ global $image_path;
 global $app_strings;
 
 $the_form = <<<EOQ
-<!--table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom:1px solid #000"><tbody><tr>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-bottom:1px solid #000"><tbody><tr>
 	  <td>
        <table cellpadding="0" cellspacing="0" border="0"><tbody><tr>
 		<td vAlign="top" align="left" height="20"> 
@@ -73,7 +73,7 @@ $the_form = <<<EOQ
         <td vAlign="top" align="right" height="20">
 	  	  <IMG src="$image_path/header_end.gif" border="0"></td>
 		</tr></tbody></table>
-      </td-->
+      </td>
 EOQ;
 
 if ($other_text) {

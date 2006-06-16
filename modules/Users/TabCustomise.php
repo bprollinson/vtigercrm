@@ -15,7 +15,7 @@
 require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
 require_once('modules/Users/User.php');
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/database/PearDatabase.php');
 
 global $current_user;
@@ -28,7 +28,7 @@ global $mod_strings;
 $focus = new User();
 
 if(isset($_REQUEST['record'])) {
-	$focus->retrieve_entity_info($_REQUEST['record'],"Users");
+	$focus->retrieve($_REQUEST['record']);
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 	$focus->id = "";
@@ -65,7 +65,7 @@ if ((is_admin($current_user) || $_REQUEST['record'] == $current_user->id) && $fo
 
 
 ?>
-<script type="text/javascript" language="JavaScript" src="include/js/general.js"></script>
+<script type="text/javascript" language="JavaScript" src="include/general.js"></script>
 <style>
 	.field {
     font-family: Verdana, Arial, Helvetica, San-serif;
@@ -154,7 +154,7 @@ if ((is_admin($current_user) || $_REQUEST['record'] == $current_user->id) && $fo
 </style>
 </head>
 <?
-		$tabavail="SELECT vtiger_tabid,name from vtiger_tab where presence !=2";
+		$tabavail="SELECT tabid,name from tab where presence !=2";
 		$tabrow=$adb->query($tabavail);
 		if($adb->num_rows($tabrow) != 0)
 		{
@@ -163,7 +163,7 @@ if ((is_admin($current_user) || $_REQUEST['record'] == $current_user->id) && $fo
 				$availabletab[]=$result;
 			}
 		}	
-		$tabsel="SELECT vtiger_tabid,name from vtiger_tab where presence=0 order by vtiger_tabsequence";
+		$tabsel="SELECT tabid,name from tab where presence=0 order by tabsequence";
 		$tabrow=$adb->query($tabsel);
 		if($adb->num_rows($tabrow) != 0)
 		{
@@ -280,7 +280,6 @@ if ((is_admin($current_user) || $_REQUEST['record'] == $current_user->id) && $fo
                                                 $clid = "cl".$keycolumncount;
                                                 $selectedTabID = $selectedtab[$j]['tabid'];
                                                 $tabName = $selectedtab[$j]['name'];
-						if ( ($j % 7) == 0 ) echo "</tr><tr>";
                                                 if ($keycolumncount == 1)
                                                         $unchangable = $tabName;
                                 ?>

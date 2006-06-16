@@ -8,14 +8,11 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: pt-br.js
  * 	Brazilian Portuguese language file.
  * 
  * File Authors:
  * 		Carlos Alberto Tomatis Loth (carlos.loth@conectait.com.br)
- * 		GibaPhp (www.xoopstotal.com.br)
  */
 
 var FCKLang =
@@ -44,8 +41,8 @@ RemoveLink			: "Remover Hiperlink",
 Anchor				: "Inserir/Editar Âncora",
 InsertImageLbl		: "Figura",
 InsertImage			: "Inserir/Editar Figura",
-InsertFlashLbl		: "Flash",
-InsertFlash			: "Insere/Edita Flash",
+InsertFlashLbl		: "Flash",	//MISSING
+InsertFlash			: "Insert/Edit Flash",	//MISSING
 InsertTableLbl		: "Tabela",
 InsertTable			: "Inserir/Editar Tabela",
 InsertLineLbl		: "Linha",
@@ -86,8 +83,6 @@ Find				: "Localizar",
 Replace				: "Substituir",
 SpellCheck			: "Verificar Ortografia",
 UniversalKeyboard	: "Teclado Universal",
-PageBreakLbl		: "Page Break",	//MISSING
-PageBreak			: "Insert Page Break",	//MISSING
 
 Form			: "Formulário",
 Checkbox		: "Caixa de Seleção",
@@ -109,11 +104,10 @@ InsertCell			: "Inserir Células",
 DeleteCells			: "Remover Células",
 MergeCells			: "Mesclar Células",
 SplitCell			: "Dividir Célular",
-TableDelete			: "Delete Table",	//MISSING
 CellProperties		: "Formatar Célula",
 TableProperties		: "Formatar Tabela",
 ImageProperties		: "Formatar Figura",
-FlashProperties		: "Propriedades Flash",
+FlashProperties		: "Flash Properties",	//MISSING
 
 AnchorProp			: "Formatar Âncora",
 ButtonProp			: "Formatar Botão",
@@ -137,9 +131,6 @@ UnknownToolbarItem	: "O item da barra de ferramentas \"%1\" não é reconhecido"
 UnknownCommand		: "O comando \"%1\" não é reconhecido",
 NotImplemented		: "O comando não foi implementado",
 UnknownToolbarSet	: "A barra de ferramentas \"%1\" não existe",
-NoActiveX			: "You browser's security settings could limit some features of the editor. You must enable the option \"Run ActiveX controls and plug-ins\". You may experience errors and notice missing features.",	//MISSING
-BrowseServerBlocked : "The resources browser could not be opened. Make sure that all popup blockers are disabled.",	//MISSING
-DialogBlocked		: "It was not possible to open the dialog window. Make sure all popup blockers are disabled.",	//MISSING
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -148,8 +139,8 @@ DlgBtnClose			: "Fechar",
 DlgBtnBrowseServer	: "Localizar no Servidor",
 DlgAdvancedTag		: "Avançado",
 DlgOpOther			: "&lt;Outros&gt;",
-DlgInfoTab			: "Info",
-DlgAlertUrl			: "Inserir a URL",
+DlgInfoTab			: "Info",	//MISSING
+DlgAlertUrl			: "Please insert the URL",	//MISSING
 
 // General Dialogs Labels
 DlgGenNotSet		: "&lt;não ajustado&gt;",
@@ -197,14 +188,14 @@ DlgImgAlertUrl		: "Por favor, digite o URL da figura.",
 DlgImgLinkTab		: "Hiperlink",
 
 // Flash Dialog
-DlgFlashTitle		: "Propriedades Flash",
-DlgFlashChkPlay		: "Tocar Automaticamente",
-DlgFlashChkLoop		: "Loop",
-DlgFlashChkMenu		: "Habilita Menu Flash",
-DlgFlashScale		: "Escala",
-DlgFlashScaleAll	: "Mostrar tudo",
-DlgFlashScaleNoBorder	: "Sem Borda",
-DlgFlashScaleFit	: "Escala Exata",
+DlgFlashTitle		: "Flash Properties",	//MISSING
+DlgFlashChkPlay		: "Auto Play",	//MISSING
+DlgFlashChkLoop		: "Loop",	//MISSING
+DlgFlashChkMenu		: "Enable Flash Menu",	//MISSING
+DlgFlashScale		: "Scale",	//MISSING
+DlgFlashScaleAll	: "Show all",	//MISSING
+DlgFlashScaleNoBorder	: "No Border",	//MISSING
+DlgFlashScaleFit	: "Exact Fit",	//MISSING
 
 // Link Dialog
 DlgLnkWindowTitle	: "Hiperlink",
@@ -224,7 +215,7 @@ DlgLnkAnchorById	: "Pelo Id do Elemento",
 DlgLnkNoAnchors		: "&lt;Não há âncoras disponíveis neste documento&gt;",
 DlgLnkEMail			: "Endereço E-Mail",
 DlgLnkEMailSubject	: "Assunto da Mensagem",
-DlgLnkEMailBody		: "Corpo da Mensagem",
+DlgLnkEMailBody		: "Corpo da Mesagem",
 DlgLnkUpload		: "Enviar ao Servidor",
 DlgLnkBtnUpload		: "Enviar ao Servidor",
 
@@ -284,7 +275,6 @@ DlgTableHeight		: "Altura",
 DlgTableCellSpace	: "Espaçamento",
 DlgTableCellPad		: "Enchimento",
 DlgTableCaption		: "Legenda",
-DlgTableSummary		: "Summary",	//MISSING
 
 // Table Cell Dialog
 DlgCellTitle		: "Formatar célula",
@@ -335,10 +325,10 @@ PasteErrorCopy	: "As configurações de segurança do seu navegador não permite
 PasteAsText		: "Colar como Texto sem Formatação",
 PasteFromWord	: "Colar do Word",
 
-DlgPasteMsg2	: "Transfira o link usado no box usando o teclado com (<STRONG>Ctrl+V</STRONG>) e <STRONG>OK</STRONG>.",
-DlgPasteIgnoreFont		: "Ignorar definições de fonte",
-DlgPasteRemoveStyles	: "Remove definições de estilo",
-DlgPasteCleanBox		: "Limpar Box",
+DlgPasteMsg2	: "Please paste inside the following box using the keyboard (<STRONG>Ctrl+V</STRONG>) and hit <STRONG>OK</STRONG>.",	//MISSING
+DlgPasteIgnoreFont		: "Ignore Font Face definitions",	//MISSING
+DlgPasteRemoveStyles	: "Remove Styles definitions",	//MISSING
+DlgPasteCleanBox		: "Clean Up Box",	//MISSING
 
 
 // Color Picker
@@ -363,7 +353,7 @@ DlgSpellBtnReplaceAll	: "Alterar Todas",
 DlgSpellBtnUndo			: "Desfazer",
 DlgSpellNoSuggestions	: "-sem sugestões de ortografia-",
 DlgSpellProgress		: "Verificação ortográfica em andamento...",
-DlgSpellNoMispell		: "Verificação encerrada: Não foram encontrados erros de ortografia",
+DlgSpellNoMispell		: "Verificação ortográfica encerrada: Não foram encontrados erros de ortografia",
 DlgSpellNoChanges		: "Verificação ortográfica encerrada: Não houve alterações",
 DlgSpellOneChange		: "Verificação ortográfica encerrada: Uma palavra foi alterada",
 DlgSpellManyChanges		: "Verificação ortográfica encerrada: %1 foram alteradas",
@@ -423,7 +413,7 @@ BulletedListProp	: "Formatar Marcadores",
 NumberedListProp	: "Formatar Numeração",
 DlgLstType			: "Tipo",
 DlgLstTypeCircle	: "Círculo",
-DlgLstTypeDisc		: "Disc",	//MISSING
+DlgLstTypeDisk		: "Disco",
 DlgLstTypeSquare	: "Quadrado",
 DlgLstTypeNumbers	: "Números (1, 2, 3)",
 DlgLstTypeLCase		: "Letras Minúsculas (a, b, c)",

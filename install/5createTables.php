@@ -12,188 +12,107 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________.
  ********************************************************************************/
+
 /*********************************************************************************
  * $Header: /advent/projects/wesat/vtiger_crm/sugarcrm/install/5createTables.php,v 1.58 2005/04/19 16:57:08 ray Exp $
  * Description:  Executes a step in the installation process.
  ********************************************************************************/
+
+if (is_file('../install_lock')) {
+    header("Location: ../index.php");
+    exit();
+}
+
 set_time_limit(600);
 
-if (isset($_REQUEST['db_name'])) $db_name  				= $_REQUEST['db_name'];
-if (isset($_REQUEST['db_drop_tables'])) $db_drop_tables 	= $_REQUEST['db_drop_tables'];
-if (isset($_REQUEST['db_create'])) $db_create 			= $_REQUEST['db_create'];
-if (isset($_REQUEST['db_populate'])) $db_populate		= $_REQUEST['db_populate'];
-if (isset($_REQUEST['admin_email'])) $admin_email		= $_REQUEST['admin_email'];
-if (isset($_REQUEST['admin_password'])) $admin_password	= $_REQUEST['admin_password'];
+if (isset($_REQUEST['db_name']))
+	$db_name = $_REQUEST['db_name'];
+	
+if (isset($_REQUEST['db_drop_tables']))
+	$db_drop_tables = $_REQUEST['db_drop_tables'];
+	
+if (isset($_REQUEST['db_create']))
+	$db_create = $_REQUEST['db_create'];
+
+if (isset($_REQUEST['db_populate']))
+	$db_populate = $_REQUEST['db_populate'];
+
+if (isset($_REQUEST['admin_email']))
+	$admin_email = $_REQUEST['admin_email'];
+
+if (isset($_REQUEST['admin_password']))
+	$admin_password	= $_REQUEST['admin_password'];
 
 ?>
-
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
 <HEAD>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>vtiger CRM 5.0.0 Beta Configuration Wizard: Step 5</title>
-<link rel="stylesheet" href="include/install/install.css" type="text/css" />
-<style type="text/css"><!--
-
-
-.percents {
- background: #eeeeee;
- border: 1px solid #dddddd;
- margin-left: 260px;
- height: 20px;
- position:absolute;
- width:575px;
- z-index:10;
- left: 10px;
- top: 203px;
- text-align: center;
-}
-
-.blocks {
- background: #aaaaaa;
- border: 1px solid #a1a1a1;
- margin-left: 260px;
- height: 20px;
- width: 10px;
- position: absolute;
- z-index:11;
- left: 12px;
- top: 203px;
- filter: alpha(opacity=50);
- -moz-opacity: 0.5;
- opacity: 0.5;
- -khtml-opacity: .5
-}
-
--->
-</style>
+<title>vtigerCRM 4.x Installer: Step 5</title>
+<link rel="stylesheet" href="install/install.css" type="text/css" />
 </head>
 <body leftMargin="0" topMargin="0" marginheight="0" marginwidth="0">
+<table width="75%" border="0" cellpadding="3" cellspacing="0" align="center" style="border-bottom: 1px dotted #CCCCCC;"><tbody>
+  <tr>
+      <td align="left"><a href="http://www.vtiger.com" target="_blank" title="vtigerCRM"><IMG alt="vtigerCRM" border="0" src="include/images/vtiger_crmlogo.gif"/></a></td>
+      <td align="right"><h2>Step 5 of 5</h2></td>
+      <td align="right"><IMG alt="vtigerCRM" border="0" src="include/images/spacer.gif" width="10" height="1"/></td>
+    </tr>
+</tbody></table>
+<table width="75%" align="center" cellpadding="10" cellspacing="0" border="0"><tbody>
 
+   <tr>
+      <td width="100%">
+		<table width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
+			  <td>
+			   <table width="100%" cellpadding="0" cellspacing="0" border="0"><tbody><tr>
 
-<table border=0 cellspacing=0 cellpadding=0 width=100%>
-<tr>
-	<td align=center>
-	<br><br>
-	<!--  Top Header -->
-	<table border="0" cellspacing="0" cellpadding="0" width="80%" style="background:url(include/install/images/cwTopBg.gif) repeat-x;">
-	<tr>
-		<td><img src="include/install/images/cwTopLeft.gif" alt="vtiger CRM" title="vtiger CRM"></td>
-		<td align=right><img src="include/install/images/cwTopRight.gif" alt="v5alpha4" title="v5alpha4"></td>
-	</tr>
-	</table>
-	
-	
-	
-	<!-- 5 of 5 header -->
-	<table border="0" cellspacing="0" cellpadding="5" width="75%" class=small> 
-	<tr>	
-		<td valign=top><img src="include/install/images/cwIcoDB.gif" alt="Create Database Tables" title="Create Database Tables"></td>
-		<td width=98% valign=top>
-			<table border=0 cellspacing=0 cellpadding=0 width=100%>
-			<tr>
-				<td><img src="include/install/images/cwHdrVtConfWiz.gif" alt="vtiger CRM Configuration Wizard" title="vtiger CRM Configuration Wizard"></td>
-				<td align=right><img src="include/install/images/cwStep5of5.gif" alt="Step 5 of 5" title="Step 5 of 5"></td>
-			</tr>
-			<tr>
-				<td colspan=2><img src="include/install/images/cwHdrCrDbTables.gif" alt="Create Database Tables" title="Create Database Tables"></td>
-			</tr>
-			</table>
-			<hr noshade size=1>
-		</td>
+				<td><h3>Create Database Tables</h3></td>
+				<td width="74%"><hr width="100%"></td>
 
-	</tr>
-	<tr>
-		<td></td>
-		<td>
-		<!--- code -->
+				</tr></tbody></table>
+			  </td>
+
+			  </tr>
+		</tbody></table>
+	  </td>
+          </tr>
+          <tr>
+            <td>
 <?php
 
-	// Output html instead of plain text for the web
-	$useHtmlEntities = true;
+// Output html instead of plain text for the web
+$useHtmlEntities = true;
 
-	require_once('install/5createTables.inc.php');
+require_once('install/5createTables.inc.php');
 
+if (is_file('install_lock'))
+	$is_writable = is_writable('install_lock');
+else
+	$is_writable = is_writable('.');
 	
-//populating forums data
+$config_lock = "/*\n\nInstallation Lock File\n\n";
+$config_lock .= "This File is Used to Prevent\n";
+$config_lock .= "Changes to An Existing Configuration\n";
+$config_lock .= "of vtiger.\n\n";
+$config_lock .= "To re-enable the installation mode,\n";
+$config_lock .= "delete this file, and use the\n";
+$config_lock .= "install.php file to restart the configuration.\n\n*/"; 
 
-//this is to rename the installation file and folder so that no one destroys the setup
-$renamefile = uniqid(rand(), true);
-//@rename("install.php", $renamefile."install.php.txt");
-if(!rename("install.php", $renamefile."install.php.txt"))
-{
-	if (copy ("install.php", $renamefile."install.php.txt"))
-       	{
-        	 unlink($renamefile."install.php.txt");
-     	}
+if ($is_writable && ($install_lock_file = @ fopen("install_lock", "w"))) {
+	fputs($install_lock_file, $config_lock, strlen($config_lock));
+	fclose($install_lock_file);
 }
-
-//@rename("install/", $renamefile."install/");
-if(!rename("install/", $renamefile."install/"))
-{
-	if (copy ("install/", $renamefile."install/"))
-       	{
-        	 unlink($renamefile."install/");
-     	}
-}
-//populate Calendar data
-
-
 ?>
-		<br><br>
-		
-		<table borde=0 cellspacing=0 cellpadding=5 width=100% style="background-color:#EEFFEE; border:1px dashed #ccddcc;">
-		<tr>
-			<td align=center class=small>
-			<b>vtigercrm-5.0.0 is all set to go!</b>
-			<hr noshade size=1>
-			<div style="width:100%;padding:10px; "align=left>
-			<ul>
-			<li>Your install.php file has been renamed to <?echo $renamefile;?>install.php.txt.
-		<li>Your install folder too has been renamed to <?echo $renamefile;?>install/.  
-			<li>Please log in using the "admin" user name and the password you entered in step 2.
-			</ul>
-			</div>
-
-			</td>
-		</tr>
-		</table>
-		
-		</td></tr>
-		<tr><td colspan=2 align="center">
-				 <form action="index.php" method="post" name="form" id="form">
-				 <input type="hidden" name="default_user_name" value="admin">
-			 <input  type="image" src="include/install/images/cwBtnFinish.gif" name="next" value="Finish" />
-				 </form>
-		</td></tr>
-		</table>		
-							<br><br>
-						<!-- Horizontal Shade -->
-					<table border="0" cellspacing="0" cellpadding="0" width="75%" style="background:url(include/install/images/cwShadeBg.gif) repeat-x;">
-					<tr>
-				<td><img src="include/install/images/cwShadeLeft.gif"></td>
-					<td align=right><img src="include/install/images/cwShadeRight.gif"></td>
-					</tr>
-					</table><br><br>
-
-		<!-- code -->
-		
-		</td>
-	</tr>
-	</table>
-	
-
-
-
-
-
-
-
-
-</td>
-</tr>
-</table>
-<!-- master vtiger_table closes -->
-
-
-</body></html>
+<HR></HR>
+total time: <?php echo "$deltaTime"; ?> seconds.<BR />
+</td></tr>
+<tr><td><hr></td></tr>
+<tr><td align=left><font color=green>Your system is now installed and configured for use. You need to log in for the first time using the "admin" user name and the password you entered in step 2.</font></td></tr>
+<tr><td align="right">
+         <form action="index.php" method="post" name="form" id="form">
+         <input type="hidden" name="default_user_name" value="admin">
+         <input class="button" type="submit" name="next" value="Finish" />
+         </form>
+</td></tr>
+</tbody></table></body></html>

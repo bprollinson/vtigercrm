@@ -1,6 +1,6 @@
 <?php
 /*
-V4.90 8 June 2006  (c) 2000-2006 John Lim (jlim#natsoft.com.my). All rights reserved.
+V4.72 21 Feb 2006  (c) 2000-2006 John Lim (jlim@natsoft.com.my). All rights reserved.
   Released under both BSD license and Lesser GPL library license. 
   Whenever there is any discrepancy between the two licenses, 
   the BSD license will take precedence.
@@ -58,16 +58,6 @@ class ADODB_mysqli extends ADOConnection {
 	    
 	}
 	
-	function SetTransactionMode( $transaction_mode ) 
-	{
-		$this->_transmode  = $transaction_mode;
-		if (empty($transaction_mode)) {
-			$this->Execute('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
-			return;
-		}
-		if (!stristr($transaction_mode,'isolation')) $transaction_mode = 'ISOLATION LEVEL '.$transaction_mode;
-		$this->Execute("SET SESSION TRANSACTION ".$transaction_mode);
-	}
 
 	// returns true or false
 	// To add: parameter int $port,
@@ -455,10 +445,6 @@ class ADODB_mysqli extends ADOConnection {
 	// "Innox - Juan Carlos Gonzalez" <jgonzalez#innox.com.mx>
 	function MetaForeignKeys( $table, $owner = FALSE, $upper = FALSE, $associative = FALSE )
 	{
-	 global $ADODB_FETCH_MODE;
-		
-		if ($ADODB_FETCH_MODE == ADODB_FETCH_ASSOC || $this->fetchMode == ADODB_FETCH_ASSOC) $associative = true;
-		
 	    if ( !empty($owner) ) {
 	       $table = "$owner.$table";
 	    }
@@ -694,7 +680,7 @@ class ADODB_mysqli extends ADOConnection {
   function GetCharSet()
   {
     //we will use ADO's builtin property charSet
-    if (!method_exists($this->_connectionID,'character_set_name'))
+    if (!is_callable($this->_connectionID,'character_set_name'))
     	return false;
     	
     $this->charSet = @$this->_connectionID->character_set_name();
@@ -708,7 +694,7 @@ class ADODB_mysqli extends ADOConnection {
   // SetCharSet - switch the client encoding
   function SetCharSet($charset_name)
   {
-    if (!method_exists($this->_connectionID,'set_charset'))
+    if (!is_callable($this->_connectionID,'set_charset'))
     	return false;
 
     if ($this->charSet !== $charset_name) {

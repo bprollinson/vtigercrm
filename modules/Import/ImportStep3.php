@@ -13,346 +13,434 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Import/ImportStep3.php,v 1.18.2.1 2005/09/02 11:11:26 cooljaguar Exp $
  * Description:  TODO: To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
-require_once('modules/Import/ImportLead.php');
-require_once('modules/Import/ImportAccount.php');
+require_once('XTemplate/xtpl.php');
+require_once('data/Tracker.php');
 require_once('modules/Import/ImportContact.php');
+require_once('modules/Import/ImportAccount.php');
 require_once('modules/Import/ImportOpportunity.php');
-require_once('modules/Import/ImportProduct.php');
-require_once('modules/Import/ImportMap.php');
-require_once('modules/Import/UsersLastImport.php');
+require_once('modules/Import/ImportLead.php');
+require_once('modules/Import/Forms.php');
 require_once('modules/Import/parse_utils.php');
-require_once('include/ListView/ListView.php');
+require_once('modules/Import/ImportMap.php');
 require_once('include/database/PearDatabase.php');
-require_once('modules/Import/ImportSave.php');
+require_once('include/CustomFieldUtil.php');
+require_once('modules/Import/ImportProduct.php');
 
-set_time_limit(0);
-ini_set("display_errors",'0');
-
-
-function p($str)
-{
-	global $adb;
-	$adb->println("IMP :".$str);
-}
-
-function implode_assoc($inner_delim, $outer_delim, $array) 
-{
-	$output = array();
-
-	foreach( $array as $key => $item )
-	{
-               $output[] = $key . $inner_delim . $item;
-	}
-
-       return implode($outer_delim, $output);
-}
+@session_unregister('column_position_to_field');
+@session_unregister('totalrows');
+@session_unregister('recordcount');
+@session_unregister('startval');
+@session_unregister('return_field_count');
+$_SESSION['totalrows'] = '';
+$_SESSION['recordcount'] = 500;
+$_SESSION['startval'] = 0;
 
 global $mod_strings;
+global $mod_list_strings;
 global $app_list_strings;
 global $app_strings;
 global $current_user;
 global $import_file_name;
-global $theme;
 global $upload_maxsize;
-global $site_URL;
+
+global $theme;
+global $outlook_contacts_field_map;
+global $act_contacts_field_map;
+global $salesforce_contacts_field_map;
+global $outlook_accounts_field_map;
+global $act_accounts_field_map;
+global $salesforce_accounts_field_map;
+global $salesforce_opportunities_field_map;
+global $import_dir;
+$focus = 0;
+$delimiter = ',';
+$max_lines = 3;
+
+$has_header = 0;
+
+if ( isset( $_REQUEST['has_header']))
+{
+	$has_header = 1;
+}
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
 
-$log->info("Upload Step 3");
 
 
-$delimiter = ',';
-// file handle
-$count = 0;
-$error = "";
-$col_pos_to_field = array();
-$header_to_field = array();
-$field_to_pos = array();
-$focus = 0;
-$current_bean_type = "";
-$id_exists_count = 0;
-$broken_ids = 0;
+$log->info($mod_strings['LBL_MODULE_NAME']." Upload Step 3");
 
-$has_header = 0;
-
-if ( isset( $_REQUEST['has_header']) && $_REQUEST['has_header'] == 'on')
+if (!is_uploaded_file($_FILES['userfile']['tmp_name']) )
 {
-	$has_header = 1;
+	show_error_import($mod_strings['LBL_IMPORT_MODULE_ERROR_NO_UPLOAD']);
+	exit;
 }
-if($_REQUEST['modulename'] != '')
-	$_REQUEST['module'] = $_REQUEST['modulename'];
-
-
-$import_object_array = Array(
-				"Leads"=>"ImportLead",
-				"Accounts"=>"ImportAccount",
-				"Contacts"=>"ImportContact",
-				"Potentials"=>"ImportOpportunity",
-				"Products"=>"ImportProduct"
-			    );
-
-if(isset($_REQUEST['module']) && $_REQUEST['module'] != '')
+else if ($_FILES['userfile']['size'] > $upload_maxsize)
 {
-	$current_bean_type = $import_object_array[$_REQUEST['module']];
+	show_error_import( $mod_strings['LBL_IMPORT_MODULE_ERROR_LARGE_FILE'] . " ". $upload_maxsize. " ". $mod_strings['LBL_IMPORT_MODULE_ERROR_LARGE_FILE_END']);
+	exit;
 }
-else
+if( !is_writable( $import_dir ))
 {
-	$current_bean_type = "ImportContact";
+	show_error_import($mod_strings['LBL_IMPORT_MODULE_NO_DIRECTORY'].$import_dir.$mod_strings['LBL_IMPORT_MODULE_NO_DIRECTORY_END']);
+	exit;
 }
 
-$focus = new $current_bean_type();
+$tmp_file_name = $import_dir. "IMPORT_".$current_user->id;
 
-//Constructing the custom vtiger_field Array
-require_once('include/CustomFieldUtil.php');
-$custFldArray = getCustomFieldArray($_REQUEST['module']);
-p("IMP 3: custFldArray");
-p($custFldArray);
+move_uploaded_file($_FILES['userfile']['tmp_name'], $tmp_file_name);
 
-//Initializing  an empty Array to store the custom vtiger_field Column Name and Value
-$resCustFldArray = Array();
-
-p("Getting from request");
-// loop through all request variables
-foreach ($_REQUEST as $name=>$value)
-{
-	p("name=".$name." value=".$value);
-	// only look for var names that start with "colnum"
-	if ( strncasecmp( $name, "colnum", 6) != 0 )
-	{	
-		continue;
-	}
-	if ($value == "-1")
-	{
-		
-		continue;
-	}
-
-	// this value is a user defined vtiger_field name
-	$user_field = $value;
-
-	// pull out the column position for this vtiger_field name
-	$pos = substr($name,6);
-
-	// make sure we haven't seen this vtiger_field defined yet
-	if ( isset( $field_to_pos[$user_field]) )
-	{
-		show_error_import($mod_strings['LBL_ERROR_MULTIPLE']);
-	        exit;
-
-	}
-
-	p("user_field=".$user_field." if=".$focus->importable_fields[$user_field]);
-	
-	// match up the "official" vtiger_field to the user 
-	// defined one, and map to columm position: 
-	if ( isset( $focus->importable_fields[$user_field] ) || isset( $custFldArray[$user_field] ))
-	{
-		p("user_field SET=".$user_field);
-		// now mark that we've seen this vtiger_field
-		$field_to_pos[$user_field] = $pos;
-		$col_pos_to_field[$pos] = $user_field;
-	}
-}
-
-p("field_to_pos");
-$adb->println($field_to_pos);
-p("col_pos_to_field");
-$adb->println($col_pos_to_field);
 
 // Now parse the file and look for errors
-$max_lines = -1;
-
 $ret_value = 0;
 
 if ($_REQUEST['source'] == 'act')
 {
-        $ret_value = parse_import_act($_REQUEST['tmp_file'],$delimiter,$max_lines,$has_header);
-}
+	$ret_value = parse_import_act($tmp_file_name,$delimiter,$max_lines,$has_header);
+} 
 else
 {
-	$ret_value = parse_import($_REQUEST['tmp_file'],$delimiter,$max_lines,$has_header);
+	$ret_value = parse_import($tmp_file_name,$delimiter,$max_lines,$has_header);
 }
 
-if (file_exists($_REQUEST['tmp_file']))
+if ($ret_value == -1)
 {
-	unlink($_REQUEST['tmp_file']);
-}
-
-$datarows = $ret_value['rows'];
-
-$ret_field_count = $ret_value['field_count'];
-
-$saved_ids = array();
-
-$firstrow = 0;
-
-if (! isset($datarows))
+	show_error_import( $mod_strings['LBL_CANNOT_OPEN'] );
+	exit;
+} 
+else if ($ret_value == -2)
 {
-	$error = $mod_strings['LBL_FILE_ALREADY_BEEN_OR'];
-	$datarows = array();
-}
-
-if ($has_header == 1)
-{
-	$firstrow = array_shift($datarows);
-}
-
-//Mark the last imported records as deleted which are imported by the current user in vtiger_users_last_import vtiger_table
-if(!isset($_REQUEST['startval']))
-{
-	$seedUsersLastImport = new UsersLastImport();
-	$seedUsersLastImport->mark_deleted_by_user_id($current_user->id);
-}
-$skip_required_count = 0;
-
-p("processing started ret_field_count=".$ret_field_count);
-$adb->println($datarows);
-
-$error = '';
-$focus = new $current_bean_type();
-
-
-// SAVE MAPPING IF REQUESTED
-if(isset($_REQUEST['save_map']) && $_REQUEST['save_map'] == 'on' && isset($_REQUEST['save_map_as']) && $_REQUEST['save_map_as'] != '')
-{
-	p("save map");
-	$serialized_mapping = '';
-
-	if( $has_header)
-	{
-		foreach($col_pos_to_field as $pos=>$field_name)
-		{
-			if ( isset($firstrow[$pos]) &&  isset( $field_name))
-			{
-				$header_to_field[ $firstrow[$pos] ] = $field_name;
-			}
-		}
-
-		$serialized_mapping = implode_assoc("=","&",$header_to_field);
-	}
-	else
-	{
-		$serialized_mapping = implode_assoc("=","&",$col_pos_to_field);
-	}
-
-	$mapping_file_name = $_REQUEST['save_map_as'];
-
-	$mapping_file = new ImportMap();
-
-	//$query_arr = array('assigned_user_id'=>$current_user->id,'name'=>$mapping_file_name);
-	//$mapping_file->retrieve_by_string_fields($query_arr, false);
-
-	$result = $mapping_file->save_map( $current_user->id,
-					$mapping_file_name,
-					$_REQUEST['module'],
-					$has_header,
-					$serialized_mapping );
-
-	$adb->println("Save map done");
-	$adb->println($result);
-}
-//save map - ends
-
-
-
-
-if(isset($_SESSION['totalrows']) && $_SESSION['totalrows'] != '')
-{
-	$xrows = $_SESSION['totalrows'];
-}
-else
-{
-	$xrows = $datarows;
-}
-if(isset($_SESSION['return_field_count']))
-{
-	$ret_field_count = $_SESSION['return_field_count'];
-}
-if(isset($_SESSION['column_position_to_field']))
-{
-	$col_pos_to_field = $_SESSION['column_position_to_field'];
-}
-if($xrows != '')
-{
-	$datarows = $xrows;
-}
-if($_REQUEST['skipped_record_count'] != '')
-	$skipped_record_count = $_REQUEST['skipped_record_count'];
-else
-	$_REQUEST['skipped_record_count'] = 0;
-
-if($_REQUEST['noofrows'] != '')
-	$totalnoofrows = $_REQUEST['noofrows'];
-else
-	$totalnoofrows = count($datarows);
-
-$loopcount = ($totalnoofrows/$RECORDCOUNT)+1;
-
-if($_REQUEST['startval'] != '')
-	$START = $_REQUEST['startval'];
-else
-	$START = $_SESSION['startval'];
-if($_REQUEST['recordcount'] != '')
-	$RECORDCOUNT = $_REQUEST['recordcount'];
-else
-	$RECORDCOUNT = $_SESSION['recordcount'];
-
-if(($START+$RECORDCOUNT) > $totalnoofrows)
-{
-	$RECORDCOUNT = $totalnoofrows - $START;
-}
-
-if($totalnoofrows > $RECORDCOUNT && $START < $totalnoofrows)
-{
-	$rows1 = Array();
-	for($j=$START;$j<$START+$RECORDCOUNT;$j++)
-	{
-		$rows1[] = $datarows[$j];
-	}
-
-	$res = InsertImportRecords($datarows,$rows1,$focus,$ret_field_count,$col_pos_to_field,$START,$RECORDCOUNT,$_REQUEST['module'],$totalnoofrows,$skipped_record_count);
-
-	if($START != 0)
-		echo '<b>'.$res.'</b>';
-
-	$count = $_REQUEST['count'];
-}
-else
-{
-	if($START == 0)
-	{
-		$res = InsertImportRecords($datarows,$datarows,$focus,$ret_field_count,$col_pos_to_field,$START,$totalnoofrows,$_REQUEST['module'],$totalnoofrows,$skipped_record_count);
-	}
-//	exit;
-}
-
-
-
-
-
-
-if ($error != "")
-{
-	show_error_import( $mod_strings['LBL_ERROR']." ". $error);
+	show_error_import( $mod_strings['LBL_NOT_SAME_NUMBER'] );
 	exit;
 }
-else 
+else if ( $ret_value == -3 )
 {
-	$message= urlencode($mod_strings['LBL_SUCCESS']."<BR>$count ". $mod_strings['LBL_MODULE_NAME']." ".$mod_strings['LBL_SUCCESSFULLY']."<br>".($broken_ids+$id_exists_count) ." ". $mod_strings['LBL_IDS_EXISTED_OR_LONGER']. "<br>$skip_required_count " .  $mod_strings['LBL_RECORDS_SKIPPED'] );
-
-	header("Location: index.php?module={$_REQUEST['module']}&action=Import&step=last&return_module={$_REQUEST['return_module']}&return_action={$_REQUEST['return_action']}&message=$message");
-exit;
+	show_error_import( $mod_strings['LBL_NO_LINES'] );
+	exit;
 }
+
+
+$rows = $ret_value['rows'];
+
+$ret_field_count = $ret_value['field_count'];
+//echo 'my return field count i s ' .$ret_field_count;
+$xtpl=new XTemplate ('modules/Import/ImportStep3.html');
+
+$xtpl->assign("TMP_FILE", $tmp_file_name );
+
+$xtpl->assign("SOURCE", $_REQUEST['source'] );
+
+$source_to_name = array( 'outlook'=>$mod_strings['LBL_MICROSOFT_OUTLOOK'],
+'act'=>$mod_strings['LBL_ACT'],
+'salesforce'=>$mod_strings['LBL_SALESFORCE'],
+'custom'=>$mod_strings['LBL_CUSTOM'],
+'other'=>$mod_strings['LBL_CUSTOM'],
+);
+
+$xtpl->assign("SOURCE_NAME", $source_to_name[$_REQUEST['source']] );
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+
+if (isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
+
+if (isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
+
+$xtpl->assign("THEME", $theme);
+
+$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+
+$xtpl->assign("HEADER", $app_strings['LBL_IMPORT']." ". $mod_strings['LBL_MODULE_NAME']);
+
+
+if (! isset( $_REQUEST['module'] ) || $_REQUEST['module'] == 'Contacts')
+{
+	$focus = new ImportContact();
+}
+else if ( $_REQUEST['module'] == 'Accounts')
+{
+	$focus = new ImportAccount();
+}
+else if ( $_REQUEST['module'] == 'Potentials')
+{
+	$focus = new ImportOpportunity();
+}
+else if ( $_REQUEST['module'] == 'Leads')
+{
+	$focus = new ImportLead();
+}
+else if ( $_REQUEST['module'] == 'Products')
+{
+	$focus = new ImportProduct();
+}
+
+
+
+//if ($has_header)
+//{
+//	$firstrow = array_shift($rows);
+//} 
+//else
+//{
+	$firstrow = $rows[0];
+//}
+
+$field_map = $outlook_contacts_field_map;
+
+if ( isset( $_REQUEST['source_id']))
+{
+	$mapping_file = new ImportMap();
+
+	//$mapping_file->retrieve_entity_info( $_REQUEST['source_id'],$_REQUEST['return_module']);
+	$mapping_file->retrieve( $_REQUEST['source_id'],false);
+	$adb->println("Shankar : ".$mapping_file->toString());
+
+	$mapping_content = $mapping_file->content;
+
+	$mapping_arr = array();
+
+	if ( isset($mapping_content) && $mapping_content != "")
+	{
+		$pairs = split("&",$mapping_content);
+	
+		foreach ($pairs as $pair)
+		{
+			list($name,$value) = split("=",$pair);
+			$mapping_arr["$name"] = $value;
+		}
+	}
+}
+
+if ( count($mapping_arr) > 0)
+{
+	$field_map = &$mapping_arr;
+}
+else if ($_REQUEST['source'] == 'other')
+{
+	if ($_REQUEST['module'] == 'Contacts')
+	{
+		$field_map = $outlook_contacts_field_map;
+	} 
+	else if ($_REQUEST['module'] == 'Accounts')
+	{
+		$field_map = $outlook_accounts_field_map;
+	}
+	else if ($_REQUEST['module'] == 'Potentials')
+	{
+		$field_map = $salesforce_opportunities_field_map;
+	}
+} 
+else if ($_REQUEST['source'] == 'act')
+{
+	if ($_REQUEST['module'] == 'Contacts')
+	{
+		$field_map = $act_contacts_field_map;
+	} 
+	else if ($_REQUEST['module'] == 'Accounts')
+	{
+		$field_map = $act_accounts_field_map;
+	}
+}
+else if ($_REQUEST['source'] == 'salesforce')
+{
+	if ($_REQUEST['module'] == 'Contacts')
+	{
+		$field_map = $salesforce_contacts_field_map;
+	} 
+	else if ($_REQUEST['module'] == 'Accounts')
+	{
+		$field_map = $salesforce_accounts_field_map;
+	}
+	else if ($_REQUEST['module'] == 'Potentials')
+	{
+		$field_map = $salesforce_opportunities_field_map;
+	}
+}
+else if ($_REQUEST['source'] == 'outlook')
+{
+	$xtpl->assign("IMPORT_FIRST_CHECKED", " CHECKED");
+	if ($_REQUEST['module'] == 'Contacts')
+	{
+		$field_map = $outlook_contacts_field_map;
+	} 
+	else if ($_REQUEST['module'] == 'Accounts')
+	{
+		$field_map = $outlook_accounts_field_map;
+	}
+
+}
+
+$add_one = 1;
+$start_at = 0;
+
+if ( $has_header)
+{
+	$xtpl->parse("main.table.toprow.headercell");
+	$add_one = 0;
+	$start_at = 1;
+} 
+
+for($row_count = $start_at; $row_count < count($rows); $row_count++ )
+{
+	$xtpl->assign("ROWCOUNT", $row_count + $add_one);
+	$xtpl->parse("main.table.toprow.topcell");
+}
+
+$xtpl->parse("main.table.toprow");
+
+$list_string_key = strtolower($_REQUEST['module']);
+$list_string_key .= "_import_fields";
+
+$translated_column_fields = $mod_list_strings[$list_string_key];
+
+//$adb->println("IMP3 : trans before");
+//$adb->println($translated_column_fields);
+
+// adding custom fields translations
+
+getCustomFieldTrans($_REQUEST['module'],&$translated_column_fields);
+
+$adb->println("IMP3 : trans");
+$adb->println($translated_column_fields);
+
+
+$cnt=1;
+for($field_count = 0; $field_count < $ret_field_count; $field_count++)
+{
+
+	$xtpl->assign("COLCOUNT", $field_count + 1);
+	$suggest = "";
+
+	if ($has_header && isset( $field_map[$firstrow[$field_count]] ) )
+	{
+		$suggest = $field_map[$firstrow[$field_count]];	
+	}
+	else if (isset($field_map[$field_count]))
+	{
+		$suggest = $field_map[$field_count];	
+	}
+
+	if($_REQUEST['module']=='Accounts')
+	{
+		$tablename='account';
+		$focus1=new Account();
+	}
+	if($_REQUEST['module']=='Contacts')
+	{
+		$tablename='contactdetails';
+		$focus1=new Contact();
+ 	}
+	if($_REQUEST['module']=='Leads')
+ 	{
+		$tablename='leaddetails';
+		$focus1=new Lead();
+	}
+	if($_REQUEST['module']=='Potentials')
+ 	{
+		$tablename='potential';
+		$focus1=new Potential();
+	}
+	if($_REQUEST['module']=='Products')
+ 	{
+ 		$tablename='products';
+ 		$focus1=new Product();
+ 	}
+
+	
+//echo 'xxxxxxxxxxxxxxxxxxxx';
+//print_r($focus->importable_fields);
+//print_r($focus->column_fields);
+/*
+	$xtpl->assign("SELECTFIELD", getFieldSelect(	$focus->importable_fields,
+							$requiredfieldval,
+							$focus1->required_fields,
+							$suggest,
+							$focus1->column_fields,
+							$tablename
+						   ));
+*/
+	$xtpl->assign("SELECTFIELD", getFieldSelect(	$focus->importable_fields,
+							$field_count,//requiredfieldval,
+							$focus1->required_fields,
+							$suggest,
+							$translated_column_fields,
+							$tablename
+						   ));
+
+/*		getFieldSelect(	$focus->importable_fields,
+				$field_count,
+				$focus->required_fields,
+				$suggest,
+				$translated_column_fields,
+				$_REQUEST['module']
+				));
+*/
+	$xtpl->parse("main.table.row.headcell");
+
+	$pos = 0;
+
+	foreach ( $rows as $row ) 
+	{
+		if ($cnt%2==0)
+			$xtpl->assign("ROWCLASS","evenListRow");
+		else
+			$xtpl->assign("ROWCLASS","oddListRow");
+		
+		if( isset($row[$field_count]) && $row[$field_count] != '')
+		{
+			$xtpl->assign("CELL",htmlspecialchars($row[$field_count]));
+			$xtpl->parse("main.table.row.cell");
+		} 
+		else
+		{
+			$xtpl->parse("main.table.row.cellempty");
+		}
+		
+		$cnt++;
+	}
+
+	$xtpl->parse("main.table.row");
+
+}
+
+$xtpl->parse("main.table");
+
+$module_key = "LBL_".strtoupper($_REQUEST['module'])."_NOTE_";
+
+for ($i = 1;isset($mod_strings[$module_key.$i]);$i++)
+{
+	$xtpl->assign("NOTETEXT", $mod_strings[$module_key.$i]);
+	$xtpl->parse("main.note");
+}
+
+
+
+if($has_header)
+{
+	$xtpl->assign("HAS_HEADER", 'on');
+} 
+else
+{
+	$xtpl->assign("HAS_HEADER", 'off');
+}
+
+
+$xtpl->assign("MODULE", $_REQUEST['module']);
+//$xtpl->assign("JAVASCRIPT", get_validate_import_fields_js($focus->required_fields,$translated_column_fields) );
+
+$xtpl->assign("JAVASCRIPT2", get_readonly_js() );
+
+
+$xtpl->parse("main");
+
+$xtpl->out("main");
 
 
 ?>

@@ -46,11 +46,9 @@ $app_strings = Array(
 
 'LBL_CHARSET'=>'ISO-8859-1',
 
-'LBL_BROWSER_TITLE'=>'vtiger CRM 5 - Commercial Open Source CRM',
+'LBL_BROWSER_TITLE'=>'vtiger CRM - Commercial Open Source CRM',
 
 'LBL_MY_ACCOUNT'=>'My Account',
-
-'LBL_MY_PREFERENCES'=>'My Preferences',
 
 'LBL_ADMIN'=>'Admin',
 
@@ -65,6 +63,8 @@ $app_strings = Array(
 'NTC_DESCRIPTION'=>"Use a valid username and password to login to the vtiger CRM.",
 
 'NTC_WELCOME'=>'Welcome',
+
+'NTC_SUPPORT_SUGARCRM'=>"Support the SugarCRM open source project with a donation through PayPal - it's fast, free and secure!",
 
 'NTC_NO_ITEMS_DISPLAY'=>'none',
 
@@ -104,8 +104,6 @@ $app_strings = Array(
 
 'LBL_DELETE_BUTTON'=>'Delete',
 
-'LBL_FIND_BUTTON'=>'Find',
-
 'LBL_CONVERT_BUTTON_TITLE'=>'Convert [Alt+C]',
 
 'LBL_CONVERT_BUTTON_KEY'=>'C',
@@ -137,8 +135,6 @@ $app_strings = Array(
 'LBL_SELECT_BUTTON_TITLE'=>'Select [Alt+T]',
 
 'LBL_CREATE_BUTTON_LABEL' =>'Create',
-
-'LBL_GENERATE'=>'Generate',
 
 'LBL_SAVE_BUTTON_KEY'=>'S',
 
@@ -228,19 +224,11 @@ $app_strings = Array(
 
 'LNK_IMPORT_LEADS'=>'Import Leads',
 
-'LBL_LOCATE_MAP'=>'Locate Map',
 
-'LBL_ADDRESS'=>'Address',
 
-'LBL_ADD_TAG'=>'+addtag',
+'LNK_ADVANCED_SEARCH'=>'Advanced',
 
-'LBL_TAG_IT'=>'Tag it',
-
-'LBL_CLOSE'=>'Close',
-
-'LNK_ADVANCED_SEARCH'=>'Advanced Search',
-
-'LNK_BASIC_SEARCH'=>'Basic Search',
+'LNK_BASIC_SEARCH'=>'Basic',
 
 'LNK_EDIT'=>'edit',
 
@@ -262,8 +250,6 @@ $app_strings = Array(
 
 'LNK_HELP'=>'Help',
 
-'LNK_VTDOCS'=>'vtiger Docs',
-
 'LNK_ABOUT'=>'About',
 
 'LNK_OUTLOOK'=>'./include/images/outlook_download.gif',
@@ -273,8 +259,6 @@ $app_strings = Array(
 'LNK_NEW_PRODUCT'=>'New Product',
 
 'LNK_NEW_CONTACT'=>'New Contact',
-
-'LNK_NEW_CAMPAIGN'=>'New Campaign',
 
 'LNK_NEW_LEAD'=>'New Lead',
 
@@ -295,6 +279,7 @@ $app_strings = Array(
 'LNK_NEW_INVOICE'=>'New Invoice',
 'LNK_NEW_VENDOR'=>'New Vendor',
 'LNK_NEW_PRICEBOOK'=>'New PriceBook',
+
 
 
 'NTC_REQUIRED'=>'Indicates required field',
@@ -360,13 +345,6 @@ $app_strings = Array(
 'LBL_EXPORT'=>'Export',
 
 'LBL_EXPORT_ALL'=>'Export All',
-
-'LBL_QUICK_CREATE'=>'Quick Create...',
-
-'Export'=>'Export',
-'Import'=>'Import',
-'Merge'=>'Merge',
-'ConvertLead'=>'ConvertLead',
 
 //3.2 release
 
@@ -435,44 +413,8 @@ $app_strings = Array(
 'LBL_CHANGE_STATUS'=>'Change Status',
 
 'LBL_MASS_DELETE'=>'Delete',
-//added by raju
 
-'LBL_ADD_ITEM'=>'Add',
 
-'LBL_ADD_NEW'=>'Add new',
-
-//Added for version 5
-
-'LBL_CALENDAR_TITLE'=>'Open Calendar...',
-'LBL_CALENDAR_ALT'=>'Open Calendar...',
-
-'LBL_CALCULATOR_TITLE'=>'Open Calculator...',
-'LBL_CALCULATOR_ALT'=>'Open Calculator...',
-
-'LBL_CLOCK_TITLE'=>'Show World Clock...',
-'LBL_CLOCK_ALT'=>'Show World Clock...',
-
-'LBL_ALL_MENU_TITLE'=>'Open All Menu...',
-'LBL_ALL_MENU_ALT'=>'Open All Menu...',
-
-'LBL_CHAT_TITLE'=>'Chat...',
-'LBL_CHAT_ALT'=>'Chat...',
-
-'LBL_SEARCH_TITLE'=>'Search in ',
-'LBL_SEARCH_ALT'=>'Search in ',
-
-'LBL_SEARCH_STRING'=>'Search...',
-
-'LBL_SEARCH_FOR'=>'Search for',
-'LBL_SEARCH_NOW_BUTTON'=>'Search Now',
-'LBL_GO_TO'=>'Go to',
-'LBL_FEWER_BUTTON'=>'Fewer',
-'LBL_IN'=>'In',
-
-'LBL_ADV_SEARCH_MSG_ANY'=>'Match Any of the Following',
-'LBL_ADV_SEARCH_MSG_ALL'=>'Match All of the Following',
-
-'COMBO_ALL'=>'All',
 
 // Added fields for Related Field Display Informations in Detail View of All Modules
 
@@ -480,17 +422,7 @@ $app_strings = Array(
 
 'LBL_HISTORY'=>'History',
 
-'LBL_ACTIVITY_HISTORY'=>'Activity History',
 
-'LBL_ATTACHMENTS'=>'Attachments',
-
-'LBL_ATTACHMENT'=>'Attachment',
-
-'LBL_TYPE'=>'Type',
-
-'LBL_ASSIGNED_TO'=>'Assigned To',
-
-'LBL_TIME'=>'Time',
 
 'LBL_ACTION'=>'Action',
 
@@ -498,15 +430,9 @@ $app_strings = Array(
 
 'LBL_RELATED_TO'=>'Related To',
 
-//added by raju for emails
-
-'LBL_MULTIPLE'=>'Multiple',
-
 'LBL_DUE_DATE'=>'Due Date',
 
 'LBL_LAST_MODIFIED'=>'Last Modified',
-
-'LBL_CREATED'=>'Created', // Armando Lüscher 26.09.2005 -> §visibleDescription -> Desc: Added
 
 'LBL_DESCRIPTION'=>'Description',
 
@@ -590,10 +516,7 @@ $app_strings = Array(
 
 'LBL_SELECT_PRODUCT_BUTTON_LABEL'=>'Select Product',
 
-'LBL_VIEW'=>'Filters :',
-// Mike Crowe Mod --------------------------------------------------------Added for group sort
-'LBL_GROUP_VIEW'=>'Group',
-
+'LBL_VIEW'=>'View:',
 
 'LBL_SALES_STAGE'=>'Sales Stage',
 
@@ -607,8 +530,7 @@ $app_strings = Array(
 
 'LBL_CALCULATOR'=>'Calculator',
 
-'LBL_CLOSE_WON' =>'Closed-Won',			# 'Closed Won'
-'LBL_CLOSE_LOST'=>'Closed-Lost',					# 'Closed Lost'
+
 
 'LBL_USER'=>'User',
 
@@ -638,7 +560,6 @@ $app_strings = Array(
 
 'COMBO_HELPDESK'=>'HelpDesk',
 
-'COMBO_USERS'=>'Users',
 
 
 'LBL_SELECT'=>'Select',
@@ -725,83 +646,16 @@ $app_strings = Array(
 
 'Leads'=>'Leads',
 'Accounts'=>'Accounts',
-'Accounts & Contacts'=>'Accounts & Contacts',
 'Contacts'=>'Contacts',
 'Potentials'=>'Potentials',
 'Products'=>'Products',
 'Emails'=>'Emails',
 'HelpDesk'=>'HelpDesk',
 'Activities'=>'Activities',
-'Events'=>'Events',
 'Quotes'=>'Quotes',
 'PriceBook'=>'Price Books',
-'PurchaseOrder'=>'Purchase Order',
-'SalesOrder'=> 'Sales Order',
-'Invoice'=>'Invoices',
-'Calendar'=>'Calendar',
-'Home'=>'Home',
-'Campaigns'=>'Campaigns',
-'PriceBooks'=>'PriceBooks',
-'Notes'=>'Notes',
-'Faq'=>'Faq',
-'Dashboards'=>'Dashboard',
-'Reports'=>'Reports',
-'Vendors'=>'Vendors',
-'Rss'=>'RSS',
-'Portal'=>'My Sites',
-'Webmails'=>'Webmails',
-'Attachments'=>'Attachments',
-'Activity History'=>'Activity History',
-'Ticket History'=>'Ticket History',
-'Purchase Order'=>'Purchase Order',
-'Sales Stage History'=>'Sales Stage History',
-'Users'=>'Users',
-
-
-
-//Added language for Parent Tab
-
-'My Home Page'=>'My Home Page',
-'Marketing'=>'Marketing',
-'Sales'=>'Sales',
-'Support'=>'Support',
-'Analytics'=>'Analytics',
-'Inventory'=>'Inventory',
-'Tools'=>'Tools',
-'Settings'=>'Settings',
-
-'LBL_INFORMATION'=>'Information',
-'LBL_MORE'=>'More',
-'LBL_BASIC'=>'Basic',
-'LBL_CREATING'=>'Creating',
-'LBL_EDITING'=>'Editing',
-'LBL_NEW'=>'New',
-
-//Added for Detail/Edit/Related List of all modules
-
-'Lead'=>'Lead',
-'Account'=>'Account',
-'Contact'=>'Contact',
-'Potential'=>'Potential',
-'Product'=>'Product',
-'Email'=>'Email',
-'Activity'=>'Activity',
-'Event'=>'Event',
-'Task'=>'Task',
-'Quote'=>'Quote',
-'PriceBook'=>'PriceBook',
-'PurchaseOrder'=>'Purchase Order',
-'Ticket'=>'Ticket',
-'SalesOrder'=> 'Sales Order',
-'Campaign'=>'Campaign',
-'Note'=>'Note',
-'Dashboard'=>'Dashboards',
-'Report'=>'Report',
-'Vendor'=>'Vendor',
-'Webmail'=>'Webmail',
-
-'LBL_NONE_INCLUDED'=>'None Included',
-'LBL_ADD_TO'=>'Add to',
+'Orders'=>'Orders',
+'Invoice'=>'Invoice',
 
 'LBL_SELECT_TEMPLATE_TO_MAIL_MERGE'=>'Select template to Mail Merge:',
 'LBL_TITLE_OR_DESCRIPTION'=>'Title / Description',
@@ -820,8 +674,6 @@ $app_strings = Array(
 'Quote Stage'=>'Quote Stage',
 'Potential Name'=>'Potential Name',
 'Total'=>'Total Amount',
-'First Name'=>'First Name',
-'Last Name'=>'Last Name',
   /* For purchase order related list in vendor */
 'LBL_PORDER_BUTTON_TITLE'=>'New Purchase Order [Alt+O]',
 'LBL_PORDER_BUTTON'=>'New Purchase Order',
@@ -886,28 +738,8 @@ $app_strings = Array(
 'LBL_JSCALENDAR_LANG'=>'en',
 'LNK_CV_EDIT'=>'Edit',
 'LNK_CV_DELETE'=>'Delete',
-'LNK_CV_CREATEVIEW'=>'New',
-//Added for 5.0
-'LBL_UPD_FIELD_ORD'=>'Update Field Order',
-'LBL_SEND_CUSTOM_MAIL_BUTTON'=>'Send Custom Mail',
-'LBL_UPDATED_TODAY'=>'Updated today',
-'LBL_UPDATED'=>'Updated',
-'LBL_DAY_AGO'=>'day ago',
-'LBL_DAYS_AGO'=>'days ago',
+'LNK_CV_CREATEVIEW'=>'Create View',
 
-//Added after 5.0 Alpha5
-'Campaign Name'=>'Campaign Name',
-'LBL_ACTIONS'=>'Actions',
-'LBL_SEND'=>'Send',
-'LBL_VAT'=>'VAT',
-'LBL_SALES'=>'Sales',
-'LBL_SERVICE'=>'Service',
-'LBL_TAX_DETAILS'=>'Tax Details',
-'LBL_TAX_CALCULATION'=>'Tax Calculation',
-'COVERED_PERCENTAGE'=>'(%)',
-
-'LBL_TAG_CLOUD'=>'Tag Cloud',
-'LBL_FOR'=>'for',
 );
 
 
@@ -932,25 +764,23 @@ $app_list_strings = Array(
 
 				, 'Potentials'=>'Potentials'
 
-				, 'Campaigns'=>'Campaigns'
-
 				, 'Notes'=>'Notes'
 
 				, 'Emails'=>'Emails'
 
 				, 'Activities'=>'Activities'
 
+				, 'MessageBoard'=>'MessageBoard'
+
 				, 'Products'=>'Products'
 
 				, 'HelpDesk'=>'HelpDesk'
-
-				, 'Faq'=>'Faq'
 
 				, 'Calendar'=>'Calendar'
 
 				, 'Quotes'=>'Quotes'
 		
-				, 'PurchaseOrder'=>'PurchaseOrder'
+				, 'Orders'=>'Orders'
 
 				, 'Invoice'=>'Invoice'
 
@@ -958,13 +788,9 @@ $app_list_strings = Array(
 				
 				, 'Reports'=>'Reports'
 				
-				, 'Vendors'=>'Vendors'
-				
-				, 'PriceBooks'=>'PriceBooks'
+				, 'Vendor'=>'Vendor'
 
-				, 'SalesOrder'=>'SalesOrder'
-
-				, 'Portal'=>'My Sites'
+				, 'SalesOrder'=>'Sales Order'
 				
 				),
 
@@ -1024,9 +850,13 @@ $app_list_strings = Array(
 
 
 
-'task_status_dom' => Array('Planned'=>'Planned'
+'task_status_dom' => Array('Not Started'=>'Not Started'
+
+		, 'In Progress'=>'In Progress'
 
 		, 'Completed'=>'Completed'
+
+		, 'Pending Input'=>'Pending Input'
 
 		, 'Deferred'=>'Deferred'
 
@@ -1094,8 +924,35 @@ $app_list_strings = Array(
 
 		'Opportunities' => 'Opportunity'),
 
+// AlphabeticalSearch values for UTF-8-aware procedure
+// Allows multicharacter elements
+
+'alphabetical_search_values' => Array('A'
+                                , 'B'
+                                , 'C'
+                                , 'D'
+                                , 'E'
+                                , 'F'
+                                , 'G'
+                                , 'H'
+                                , 'I'
+                                , 'J'
+                                , 'K'
+                                , 'L'
+                                , 'M'
+                                , 'N'
+                                , 'O'
+                                , 'P'
+                                , 'Q'
+                                , 'R'
+                                , 'S'
+                                , 'U'
+                                , 'V'
+                                , 'W'
+                                , 'X'
+                                , 'Y'
+                                , 'Z'                                
+                                  ),
 );
-
-
 
 ?>

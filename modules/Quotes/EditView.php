@@ -13,40 +13,42 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Quotes/EditView.php,v 1.18.2.3 2005/09/14 15:04:56 saraj Exp $
  * Description:  TODO To be written.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
 require_once('modules/Quotes/Quote.php');
+require_once('modules/Accounts/Forms.php');
 require_once('include/CustomFieldUtil.php');
 require_once('include/ComboUtil.php');
-require_once('include/utils/utils.php');
+require_once('include/uifromdbutil.php');
 require_once('include/FormValidationUtil.php');
 
-global $app_strings,$mod_strings,$log,$theme,$currentModule;
+global $app_strings;
+global $mod_strings;
+global $current_user;
+global $vtlog;
 
-$log->debug("Inside Quote EditView");
-
+$vtlog->logthis("Inside Quote EditView",'debug');
+		
 $focus = new Quote();
-$smarty = new vtigerCRM_Smarty;
 
-
-if(isset($_REQUEST['record']) && $_REQUEST['record'] != '') 
+if(isset($_REQUEST['record'])) 
 {
     $focus->id = $_REQUEST['record'];
     $focus->mode = 'edit'; 
-    $log->debug("Mode is Edit. Quoteid is ".$focus->id);
+    $vtlog->logthis("Mode is Edit. Quoteid is ".$focus->id,'debug');		
     $focus->retrieve_entity_info($_REQUEST['record'],"Quotes");		
     $focus->name=$focus->column_fields['subject']; 
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 	$num_of_products = getNoOfAssocProducts($module,$focus);
-	 $log->debug("Mode is Duplicate. Quoteid to be duplicated is ".$focus->id);
+    	$vtlog->logthis("Mode is Duplicate. Quoteid to be duplicated is ".$focus->id,'debug');		
         $associated_prod = getAssociatedProducts("Quotes",$focus);
 	$focus->id = "";
     	$focus->mode = ''; 	
@@ -55,19 +57,19 @@ if(isset($_REQUEST['potential_id']) && $_REQUEST['potential_id'] !='')
 {
         $focus->column_fields['potential_id'] = $_REQUEST['potential_id'];
 	$_REQUEST['account_id'] = get_account_info($focus->column_fields['potential_id']);
-	 $log->debug("Quotes EditView: Potential Id from the request is ".$_REQUEST['potential_id']);
+    	$vtlog->logthis("Quotes EditView: Potential Id from the request is ".$_REQUEST['potential_id'],'debug');
 	$num_of_products = getNoOfAssocProducts("Potentials",$focus,$focus->column_fields['potential_id']);
         $associated_prod = getAssociatedProducts("Potentials",$focus,$focus->column_fields['potential_id']);
 }
 if(isset($_REQUEST['product_id']) && $_REQUEST['product_id'] !='')
 {
         $focus->column_fields['product_id'] = $_REQUEST['product_id'];
-        $log->debug("Productid Id from the request is ".$_REQUEST['product_id']);
-	$num_of_products = getNoOfAssocProducts("Products",$focus,$focus->column_fields['product_id']);
+	$vtlog->logthis("Productid Id from the request is ".$_REQUEST['product_id'],'debug');
+        $num_of_products = getNoOfAssocProducts("Products",$focus,$focus->column_fields['product_id']);
         $associated_prod = getAssociatedProducts("Products",$focus,$focus->column_fields['product_id']);
 }
 
-// Get Account address if vtiger_account is given
+// Get Account address if account is given
 if(isset($_REQUEST['account_id']) && $_REQUEST['account_id']!='' && $_REQUEST['record']==''){
 	require_once('modules/Accounts/Account.php');
 	$acct_focus = new Account();
@@ -82,9 +84,48 @@ if(isset($_REQUEST['account_id']) && $_REQUEST['account_id']!='' && $_REQUEST['r
 	$focus->column_fields['ship_code']=$acct_focus->column_fields['ship_code'];
 	$focus->column_fields['bill_country']=$acct_focus->column_fields['bill_country'];
 	$focus->column_fields['ship_country']=$acct_focus->column_fields['ship_country'];
-	 $log->debug("Accountid Id from the request is ".$_REQUEST['account_id']);
+	$vtlog->logthis("Accountid Id from the request is ".$_REQUEST['account_id'],'debug');
+
 }
 
+//get Block 1 Information
+$block_1_header = getBlockTableHeader("LBL_QUOTE_INFORMATION");
+$block_1 = getBlockInformation("Quotes",1,$focus->mode,$focus->column_fields);
+
+
+
+//get Address Information
+
+$block_2_header = getBlockTableHeader("LBL_ADDRESS_INFORMATION");
+$block_2 = getBlockInformation("Quotes",2,$focus->mode,$focus->column_fields);
+
+//get Description Information
+
+$block_3_header = getBlockTableHeader("LBL_DESCRIPTION_INFORMATION");
+$block_3 = getBlockInformation("Quotes",3,$focus->mode,$focus->column_fields);
+
+$block_6_header = getBlockTableHeader("LBL_TERMS_INFORMATION");
+$block_6 = getBlockInformation("Quotes",6,$focus->mode,$focus->column_fields);
+
+$block_4_header = getBlockTableHeader("LBL_RELATED_PRODUCTS");
+
+//get Custom Field Information
+$block_5 = getBlockInformation("Quotes",5,$focus->mode,$focus->column_fields);
+if(trim($block_5) != '')
+{
+        $cust_fld = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="formOuterBorder">';
+        $cust_fld .=  '<tr><td>';
+	$block_5_header = getBlockTableHeader("LBL_CUSTOM_INFORMATION");
+        $cust_fld .= $block_5_header;
+        $cust_fld .= '<table width="100%" border="0" cellspacing="1" cellpadding="0">';
+        $cust_fld .= $block_5;
+        $cust_fld .= '</table>';
+        $cust_fld .= '</td></tr></table>';
+	$cust_fld .='<BR>';
+}
+
+
+global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 //retreiving the combo values array
@@ -92,133 +133,179 @@ $comboFieldNames = Array('accounttype'=>'account_type_dom'
                       ,'industry'=>'industry_dom');
 $comboFieldArray = getComboArray($comboFieldNames);
 
-$disp_view = getView($focus->mode);
-if($disp_view == 'edit_view')
-	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
-else	
-{
-	$bas_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS');
-	$adv_block = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV');
-	
-	$blocks['basicTab'] = $bas_block;
-	if(is_array($adv_block ))
-		$blocks['moreTab'] = $adv_block;
-	
-	$smarty->assign("BLOCKS",$blocks);
-	$smarty->assign("BLOCKS_COUNT",count($blocks));
-}
-$smarty->assign("OP_MODE",$disp_view);
-
-$smarty->assign("MODULE",$currentModule);
-$smarty->assign("SINGLE_MOD",$app_strings['Quote']);
-$category = getParentTab();
-$smarty->assign("CATEGORY",$category);
-
 
 require_once($theme_path.'layout_utils.php');
 
 $log->info("Quote view");
-$smarty->assign("MOD", $mod_strings);
-$smarty->assign("APP", $app_strings);
+
+$xtpl=new XTemplate ('modules/Quotes/EditView.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("BLOCK1", $block_1);
+$xtpl->assign("BLOCK1_HEADER", $block_1_header);
+$xtpl->assign("BLOCK2", $block_2);
+$xtpl->assign("BLOCK2_HEADER", $block_2_header);
+$xtpl->assign("BLOCK3", $block_3);
+$xtpl->assign("BLOCK3_HEADER", $block_3_header);
+$xtpl->assign("BLOCK4_HEADER", $block_4_header);
+$xtpl->assign("BLOCK6", $block_6);
+$xtpl->assign("BLOCK6_HEADER", $block_6_header);
 
 
-if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
-else $smarty->assign("NAME", "");
+if (isset($focus->name)) $xtpl->assign("NAME", $focus->name);
+else $xtpl->assign("NAME", "");
+
 if(isset($cust_fld))
 {
-
-	 $log->debug("Custom Field is present");
-        $smarty->assign("CUSTOMFIELD", $cust_fld);
+	
+    	$vtlog->logthis("Custom Field is present",'debug');		
+        $xtpl->assign("CUSTOMFIELD", $cust_fld);
 }
 
 
 
 if($focus->mode == 'edit')
 {
-	$smarty->assign("UPDATEINFO",updateInfo($focus->id));
 	$num_of_products = getNoOfAssocProducts($module,$focus);
-	$smarty->assign("ROWCOUNT", $num_of_products);
-	$associated_prod = getAssociatedProducts("Quotes",$focus);//getProductDetailsBlockInfo('edit','Quotes',$focus); 
-	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
-	$smarty->assign("MODE", $focus->mode);
-	$smarty->assign("TAXVALUE", $focus->column_fields['txtTax']);
-	$smarty->assign("ADJUSTMENTVALUE", $focus->column_fields['txtAdjustment']);
-	$smarty->assign("SUBTOTAL", $focus->column_fields['hdnSubTotal']);
-	$smarty->assign("GRANDTOTAL", $focus->column_fields['hdnGrandTotal']);
-
+	$xtpl->assign("ROWCOUNT", $num_of_products);
+	$associated_prod = getAssociatedProducts("Quotes",$focus);
+	$xtpl->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+	$xtpl->assign("MODE", $focus->mode);
+	$xtpl->assign("TAXVALUE", $focus->column_fields['txtTax']);
+	$xtpl->assign("ADJUSTMENTVALUE", $focus->column_fields['txtAdjustment']);
+	$xtpl->assign("SUBTOTAL", $focus->column_fields['hdnSubTotal']);
+	$xtpl->assign("GRANDTOTAL", $focus->column_fields['hdnGrandTotal']);
 }
 elseif(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
-        $smarty->assign("ROWCOUNT", $num_of_products);
-        $smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
-        $smarty->assign("MODE", $focus->mode);
-        $smarty->assign("TAXVALUE", $focus->column_fields['txtTax']);
-        $smarty->assign("ADJUSTMENTVALUE", $focus->column_fields['txtAdjustment']);
-        $smarty->assign("SUBTOTAL", $focus->column_fields['hdnSubTotal']);
-        $smarty->assign("GRANDTOTAL", $focus->column_fields['hdnGrandTotal']);
+        $xtpl->assign("ROWCOUNT", $num_of_products);
+        $xtpl->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+        $xtpl->assign("MODE", $focus->mode);
+        $xtpl->assign("TAXVALUE", $focus->column_fields['txtTax']);
+        $xtpl->assign("ADJUSTMENTVALUE", $focus->column_fields['txtAdjustment']);
+        $xtpl->assign("SUBTOTAL", $focus->column_fields['hdnSubTotal']);
+        $xtpl->assign("GRANDTOTAL", $focus->column_fields['hdnGrandTotal']);
 
 }
 elseif((isset($_REQUEST['potential_id']) && $_REQUEST['potential_id'] != '') || (isset($_REQUEST['product_id']) && $_REQUEST['product_id'] != '')) {
-        $smarty->assign("ROWCOUNT", $num_of_products);
-        $smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+        $xtpl->assign("ROWCOUNT", $num_of_products);
+        $xtpl->assign("ASSOCIATEDPRODUCTS", $associated_prod);
 	$InvTotal = getInventoryTotal($_REQUEST['return_module'],$_REQUEST['return_id']);
-        $smarty->assign("MODE", $focus->mode);
-        $smarty->assign("TAXVALUE", "0.000");
-        $smarty->assign("ADJUSTMENTVALUE", "0.000");
-        $smarty->assign("SUBTOTAL", $InvTotal.".00");
-        $smarty->assign("GRANDTOTAL", $InvTotal.".00");
+        $xtpl->assign("MODE", $focus->mode);
+        $xtpl->assign("TAXVALUE", "0.000");
+        $xtpl->assign("ADJUSTMENTVALUE", "0.000");
+        $xtpl->assign("SUBTOTAL", $InvTotal.".00");
+        $xtpl->assign("GRANDTOTAL", $InvTotal.".00");
 
-	//this is to display the Product Details in first row when we create new PO from Product relatedlist
-	if($_REQUEST['return_module'] == 'Products')
-	{
-		$smarty->assign("PRODUCT_ID",$_REQUEST['product_id']);
-		$smarty->assign("PRODUCT_NAME",getProductName($_REQUEST['product_id']));
-		$smarty->assign("UNIT_PRICE",getUnitPrice($_REQUEST['product_id']));
-		$smarty->assign("QTY_IN_STOCK",getPrdQtyInStck($_REQUEST['product_id']));
-		$smarty->assign("VAT_TAX",getProductTaxPercentage("VAT",$_REQUEST['product_id']));
-		$smarty->assign("SALES_TAX",getProductTaxPercentage("Sales",$_REQUEST['product_id']));
-		$smarty->assign("SERVICE_TAX",getProductTaxPercentage("Service",$_REQUEST['product_id']));
-	}
 }
 else
 {
-	$smarty->assign("ROWCOUNT", '1');
-	$smarty->assign("TAXVALUE", '0');
-	$smarty->assign("ADJUSTMENTVALUE", '0');
+	$xtpl->assign("ROWCOUNT", '1');
+	$xtpl->assign("TAXVALUE", '0');
+	$xtpl->assign("ADJUSTMENTVALUE", '0');
+	//Setting the first row
+    	$vtlog->logthis("Setting the first product row when the mode is create",'debug');		
+	$output ='';
+	$output .= '<tr id="row1" class="oddListRow">';
+        $output .= '<td height="25" style="padding:3px;" nowrap><input id="txtProduct1" name="txtProduct1" type="text" readonly> <img src="'.$image_path.'search.gif" onClick=\'productPickList(this)\' align="absmiddle" style=\'cursor:hand;cursor:pointer\'></td>';
+        $output .= '<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
+        $output .= '<td style="padding:3px;"><div id="qtyInStock1"></div>&nbsp;</td>';
+        $output .= '<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
+        $output .= '<td style="padding:3px;"><input type=text id="txtQty1" name="txtQty1" size="7" onBlur=\'calcTotal(this)\'></td>';
+        $output .='<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
+        $output .= '<td style="padding:3px;"><div id="unitPrice1"></div>&nbsp;</td>';
+        $output .= '<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
+        $output .= '<td style="padding:3px;"><input type=text id="txtListPrice1" name="txtListPrice1" value="0.00" size="12" onBlur="calcTotal(this)"> <img src="'.$image_path.'pricebook.gif" onClick=\'priceBookPickList(this)\' align="absmiddle" style="cursor:hand;cursor:pointer" title="Price Book"></td>';
+        $output .= '<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
+        $output .= '<td style="padding:3px;"><div id="total1" align="right"></div></td>';
+        $output .= '<td WIDTH="1" class="blackLine"><IMG SRC="'.$image_path.'blank.gif"></td>';
+        $output .= '<td style="padding:0px 3px 0px 3px;" align="center" width="50">';
+        $output .= '<input type="hidden" id="hdnProductId1" name="hdnProductId1">';
+        $output .= '<input type="hidden" id="hdnRowStatus1" name="hdnRowStatus1">';
+        $output .= '<input type="hidden" id="hdnTotal1" name="hdnTotal1">';
+        $output .= '</td></tr>';
+	$xtpl->assign("ROW1", $output);
+
 }
+	
+
+if(isset($_REQUEST['return_module'])) $xtpl->assign("RETURN_MODULE", $_REQUEST['return_module']);
+else $xtpl->assign("RETURN_MODULE","Quotes");
+if(isset($_REQUEST['return_action'])) $xtpl->assign("RETURN_ACTION", $_REQUEST['return_action']);
+else $xtpl->assign("RETURN_ACTION","index");
+if(isset($_REQUEST['return_id'])) $xtpl->assign("RETURN_ID", $_REQUEST['return_id']);
+$xtpl->assign("JAVASCRIPT", get_set_focus_js().get_validate_record_js());
+$xtpl->assign("THEME", $theme);
+$xtpl->assign("IMAGE_PATH", $image_path);$xtpl->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
+$xtpl->assign("ID", $focus->id);
 
 
-if(isset($_REQUEST['return_module'])) $smarty->assign("RETURN_MODULE", $_REQUEST['return_module']);
-else $smarty->assign("RETURN_MODULE","Quotes");
-if(isset($_REQUEST['return_action'])) $smarty->assign("RETURN_ACTION", $_REQUEST['return_action']);
-else $smarty->assign("RETURN_ACTION","index");
-if(isset($_REQUEST['return_id'])) $smarty->assign("RETURN_ID", $_REQUEST['return_id']);
-if(isset($_REQUEST['return_viewname'])) $smarty->assign("RETURN_VIEWNAME", $_REQUEST['return_viewname']);
-$smarty->assign("THEME", $theme);
-$smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
-$smarty->assign("ID", $focus->id);
-
-
-$smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
-$smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
+$xtpl->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
+$xtpl->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
 
 
-$quote_tables = Array('quotes','quotesbillads','quotesshipads','quotescf'); 
+
+
+$quote_tables = Array('quotes','quotesbillads','quotesshipads'); 
  $tabid = getTabid("Quotes");
  $validationData = getDBValidationData($quote_tables,$tabid);
- $data = split_validationdataArray($validationData);
- 
- $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
- $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
- $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+ $fieldName = '';
+ $fieldLabel = '';
+ $fldDataType = '';
 
-$smarty->assign("MODULE", $module);
+ $rows = count($validationData);
+ foreach($validationData as $fldName => $fldLabel_array)
+ {
+   if($fieldName == '')
+   {
+     $fieldName="'".$fldName."'";
+   }
+   else
+   {
+     $fieldName .= ",'".$fldName ."'";
+   }
+   foreach($fldLabel_array as $fldLabel => $datatype)
+   {
+	if($fieldLabel == '')
+	{
+			
+     		$fieldLabel = "'".$fldLabel ."'";
+	}		
+      else
+       {
+      $fieldLabel .= ",'".$fldLabel ."'";
+        }
+ 	if($fldDataType == '')
+         {
+      		$fldDataType = "'".$datatype ."'";
+    	}
+	 else
+        {
+       		$fldDataType .= ",'".$datatype ."'";
+     	}
+   }
+ }
 
-$check_button = Button_Check($module);
-$smarty->assign("CHECK", $check_button);
-if($focus->mode == 'edit')
-	$smarty->display("Inventory/InventoryEditView.tpl");
-else
-	$smarty->display('Inventory/InventoryCreateView.tpl');
+$xtpl->assign("VALIDATION_DATA_FIELDNAME",$fieldName);
+$xtpl->assign("VALIDATION_DATA_FIELDDATATYPE",$fldDataType);
+$xtpl->assign("VALIDATION_DATA_FIELDLABEL",$fieldLabel);
+
+
+
+
+
+
+
+
+
+
+//CustomField
+//$date_format = parse_calendardate($app_strings['NTC_DATE_FORMAT']);
+//$custfld = CustomFieldEditView($focus->id, "Accounts", "accountcf", "accountid", $app_strings, $theme);
+//$xtpl->assign("CUSTOMFIELD", $custfld);
+
+$xtpl->parse("main");
+
+$xtpl->out("main");
 
 ?>

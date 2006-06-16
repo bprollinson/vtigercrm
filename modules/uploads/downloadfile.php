@@ -15,34 +15,38 @@ require_once('include/database/PearDatabase.php');
 global $adb;
 global $fileId;
 
-$attachmentsid = $_REQUEST['fileid'];
-$entityid = $_REQUEST['entityid'];
+$fileid = $_REQUEST['fileid'];
+
+//$dbQuery = "SELECT * from seattachmentsrel where crmid = '" .$fileid ."'";
+//$attachmentsid = $adb->query_result($adb->query($dbQuery),0,'attachmentsid');
+$attachmentsid = $fileid;
 
 $returnmodule=$_REQUEST['return_module'];
 
-$dbQuery = "SELECT * FROM vtiger_attachments WHERE attachmentsid = " .$attachmentsid ;
+if($_REQUEST['activity_type']=='Attachments')
+	$attachmentsid=$fileid;
+
+$dbQuery = "SELECT * FROM attachments ";
+$dbQuery .= "WHERE attachmentsid = " .$attachmentsid ;
 
 $result = $adb->query($dbQuery) or die("Couldn't get file list");
 if($adb->num_rows($result) == 1)
 {
-	$fileType = @$adb->query_result($result, 0, "type");
-	$name = @$adb->query_result($result, 0, "name");
-	$filepath = @$adb->query_result($result, 0, "path");
-
-	$filesize = filesize($filepath.$name);
-	$fileContent = fread(fopen($filepath.$name, "r"), $filesize);
-
-	$org_filename = ltrim($name,$entityid.'_');
-
-	header("Content-type: $fileType");
-	header("Content-length: $filesize");
-	header("Cache-Control: private");
-	header("Content-Disposition: attachment; filename=$org_filename");
-	header("Content-Description: PHP Generated Data");
-	echo $fileContent;
+$fileType = @$adb->query_result($result, 0, "type");
+$name = @$adb->query_result($result, 0, "name");
+//echo 'filetype is ' .$fileType;
+$fileContent = @$adb->query_result($result, 0, "attachmentcontents");
+$size = @$adb->query_result($result, 0, "attachmentsize");
+header("Content-type: $fileType");
+//header("Content-length: $size");
+header("Cache-Control: private");
+header("Content-Disposition: attachment; filename=$name");
+header("Content-Description: PHP Generated Data");
+echo base64_decode($fileContent);
 }
 else
 {
-	echo "Record doesn't exist.";
+echo "Record doesn't exist.";
 }
 ?>
+

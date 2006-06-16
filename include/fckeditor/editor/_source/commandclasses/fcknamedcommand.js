@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fcknamedcommand.js
  * 	FCKNamedCommand Class: represents an internal browser command.
  * 

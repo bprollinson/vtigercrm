@@ -9,14 +9,10 @@
 *
  ********************************************************************************/
 
-$idlist = $_REQUEST['idlist'];
-$id_array=explode(';', $idlist);
-
-for($i=0;$i < count($id_array)-1;$i++)
-{
-		$sql = "delete from vtiger_emailtemplates where templateid =".$id_array[$i];
-		$adb->query($sql);
-}
+$filename = $_REQUEST["templatename"];
+$templateid = $_REQUEST["templateid"];
+$sql = "delete from emailtemplates where templateid =".$templateid;
+$adb->query($sql);
 
 header("Location:index.php?module=Users&action=listemailtemplates");
 

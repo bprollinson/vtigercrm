@@ -2,7 +2,7 @@
 
 
 /*
-V4.90 8 June 2006  (c) 2000-2006 John Lim (jlim#natsoft.com.my). All rights reserved.
+V4.72 21 Feb 2006  (c) 2000-2006 John Lim (jlim@natsoft.com.my). All rights reserved.
          Contributed by Ross Smith (adodb@netebb.com). 
   Released under both BSD license and Lesser GPL library license.
   Whenever there is any discrepancy between the two licenses,
@@ -26,7 +26,7 @@ V4.90 8 June 2006  (c) 2000-2006 John Lim (jlim#natsoft.com.my). All rights rese
 */
 
 if (!defined('_ADODB_LAYER')) {
-	require realpath(dirname(__FILE__) . '/../adodb.inc.php');
+	require_once realpath(dirname(__FILE__) . '/../adodb.inc.php');
 }
 
 if (defined('ADODB_SESSION')) return 1;
@@ -492,19 +492,6 @@ class ADODB_Session {
 	/////////////////////
 	// public methods
 	/////////////////////
-	
-	function config($driver, $host, $user, $password, $database=false,$options=false)
-	{
-		ADODB_Session::driver($driver);
-		ADODB_Session::host($host);
-		ADODB_Session::user($user);
-		ADODB_Session::password($password);
-		ADODB_Session::database($database);
-		
-		if (isset($options['table'])) ADODB_Session::table($options['table']);
-		if (isset($options['clob'])) ADODB_Session::table($options['clob']);
-		if (isset($options['field'])) ADODB_Session::dataFieldName($options['field']);
-	}
 
 	/*!
 		Create the connection to the database.
@@ -536,6 +523,7 @@ class ADODB_Session {
 #		assert('$driver');
 #		assert('$host');
 
+		// cannot use =& below - do not know why...
 		$conn =& ADONewConnection($driver);
 
 		if ($debug) {
@@ -630,10 +618,6 @@ class ADODB_Session {
 		If the data has not been modified since the last read(), we do not write.
 	*/
 	function write($key, $val) {
-	global $ADODB_SESSION_READONLY;
-	
-		if (!empty($ADODB_SESSION_READONLY)) return;
-		
 		$clob			= ADODB_Session::clob();
 		$conn			=& ADODB_Session::_conn();
 		$crc			= ADODB_Session::_crc();
@@ -662,19 +646,12 @@ class ADODB_Session {
 			if ($debug) {
 				echo '<p>Session: Only updating date - crc32 not changed</p>';
 			}
-			
-			$expirevar = '';
-			if ($expire_notify) {
-				$var = reset($expire_notify);
-				global $$var;
-				if (isset($$var)) {
-					$expirevar = $$var;
-				}
+			$sql = "UPDATE $table SET expiry = ".$conn->Param('0')." WHERE $binary sesskey = ".$conn->Param('1')." AND expiry >= ".$conn->Param('2');
+			$rs =& $conn->Execute($sql,array($expiry,$key,time()));
+			ADODB_Session::_dumprs($rs);
+			if ($rs) {
+				$rs->Close();
 			}
-			
-			
-			$sql = "UPDATE $table SET expiry = ".$conn->Param('0').",expireref=".$conn->Param('1')." WHERE $binary sesskey = ".$conn->Param('2')." AND expiry >= ".$conn->Param('3');
-			$rs =& $conn->Execute($sql,array($expiry,$expirevar,$key,time()));
 			return true;
 		}
 		$val = rawurlencode($val);
@@ -696,7 +673,7 @@ class ADODB_Session {
 		if (!$clob) {	// no lobs, simply use replace()
 			$arr[$data] = $conn->qstr($val);
 			$rs = $conn->Replace($table, $arr, 'sesskey', $autoQuote = true);
-			
+			ADODB_Session::_dumprs($rs);
 		} else {
 			// what value shall we insert/update for lob row?
 			switch ($driver) {
@@ -714,13 +691,13 @@ class ADODB_Session {
 					break;
 			}
 			
-			$expiryref = $conn->qstr($arr['expireref']);
 			// do we insert or update? => as for sesskey
 			$rs =& $conn->Execute("SELECT COUNT(*) AS cnt FROM $table WHERE $binary sesskey = $qkey");
+			ADODB_Session::_dumprs($rs);
 			if ($rs && reset($rs->fields) > 0) {
-				$sql = "UPDATE $table SET expiry = $expiry, $data = $lob_value, expireref=$expiryref WHERE  sesskey = $qkey";
+				$sql = "UPDATE $table SET expiry = $expiry, $data = $lob_value WHERE  sesskey = $qkey";
 			} else {
-				$sql = "INSERT INTO $table (expiry, $data, sesskey,expireref) VALUES ($expiry, $lob_value, $qkey,$expiryref)";
+				$sql = "INSERT INTO $table (expiry, $data, sesskey) VALUES ($expiry, $lob_value, $qkey)";
 			}
 			if ($rs) {
 				$rs->Close();
@@ -728,11 +705,12 @@ class ADODB_Session {
 
 			$err = '';
 			$rs1 =& $conn->Execute($sql);
+			ADODB_Session::_dumprs($rs1);
 			if (!$rs1) {
 				$err = $conn->ErrorMsg()."\n";
 			}
 			$rs2 =& $conn->UpdateBlob($table, $data, $val, " sesskey=$qkey", strtoupper($clob));
-			
+			ADODB_Session::_dumprs($rs2);
 			if (!$rs2) {
 				$err .= $conn->ErrorMsg()."\n";
 			}
@@ -923,8 +901,7 @@ class ADODB_Session {
 }
 
 ADODB_Session::_init();
-if (empty($ADODB_SESSION_READONLY))
-	register_shutdown_function('session_write_close');
+register_shutdown_function('session_write_close');
 
 // for backwards compatability only
 function adodb_sess_open($save_path, $session_name, $persist = true) {

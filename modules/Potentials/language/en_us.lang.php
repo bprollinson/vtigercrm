@@ -85,7 +85,7 @@ $mod_strings = Array(
 'LBL_NEW_CONTACT'=>'New Contact',
 'LBL_CONTACT_TITLE'=>'Contacts',
 
-//Added vtiger_fields after RC1 - Release
+//Added fields after RC1 - Release
 'LBL_ALL'=>'All',
 'LBL_WON'=>'Won',
 'LBL_LOST'=>'Lost',
@@ -106,7 +106,6 @@ $mod_strings = Array(
 'Sales Stage'=>'Sales Stage',
 'Assigned To'=>'Assigned To',
 'Probability'=>'Probability (%)',
-'Campaign Source'=>'Campaign Source',
 'Description'=>'Description',
 'Created Time'=>'Created Time',
 'Modified Time'=>'Modified Time',

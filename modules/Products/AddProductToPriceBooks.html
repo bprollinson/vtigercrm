@@ -102,6 +102,20 @@ function addtopricebook()
 document.addToPB.action="index.php?module=Products&action=addPbProductRelToDB&return_module=Products&return_action=DetailView&return_id={RETURN_ID}"
 }
 
+function updateListPrice(unitprice,fieldname)
+{
+	//document.addToPB.elements[fieldname].value=unitprice;
+	var elem=document.addToPB.elements;
+        var i;
+        for(i=0; i<elem.length; i++)
+        {
+                if(elem[i].name== fieldname)
+                {
+                        elem[i].value=unitprice;
+                }
+        }
+
+}
 
 function updateAllListPrice(unitprice)
 {
@@ -116,16 +130,22 @@ function updateAllListPrice(unitprice)
 }
 
 </script>
-<script language="javascript" src="modules/Products/Product.js"></script>
-<table width="95%" border="0" cellpadding="0" cellspacing="0">
-<tr><td colspan="3">&nbsp;</td></tr>
-<tr>
-		<td>&nbsp;</td>
-		<td class="showPanelBg">
+
+<script type="text/javascript" language="JavaScript">
+function clear_form(form) {
+	for (j = 0; j < form.elements.length; j++) {
+		if (form.elements[j].type == 'text' || form.elements[j].type == 'select-one') {
+			form.elements[j].value = '';
+		}
+	}
+}
+</script>
+<BR>
+<BR>
 {PRICEBOOKLISTHEADER}
-<table border="0" cellpadding="0" cellspacing="0"  width="100%">
+<table border="0" cellpadding="0" cellspacing="0" class="FormBorder" width="100%">
   <tr height="20"> 
-    <td  class="listFormHeaderLinks">
+    <td COLSPAN="18" class="listFormHeaderLinks">
 	 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 		<tr>
 			<td>&nbsp;{RECORD_COUNTS}</td>
@@ -134,23 +154,14 @@ function updateAllListPrice(unitprice)
 	 </table>
     </td>
    </tr>
-   <tr>
-   			<td>
-					<table style="background-color: rgb(204, 204, 204);" class="small" border="0" cellpadding="3" cellspacing="1" width="90%" align="center">
-							 {LISTHEADER}
-							 {LISTENTITY}
-					</table>
-			</td>
-   </tr>   
-   <tr><td>&nbsp;</td></tr>
+   <tr><td colspan="18" height="1" class="blackLine"><IMG SRC="{IMAGE_PATH}blank.gif"></td></tr>
+   {LISTHEADER}
+ 	<tr><td colspan="18" height="1" class="blackLine"><IMG SRC="{IMAGE_PATH}blank.gif"></td></tr>
+   {LISTENTITY}
    </form>
 </table>
 
 <!-- END: main -->
 </form>
-</table>
-</td>
-<td>&nbsp;</td>
-</tr>
 </table>
 

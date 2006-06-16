@@ -8,50 +8,58 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-require_once('Smarty_setup.php');
+require_once('XTemplate/xtpl.php');
 require_once('data/Tracker.php');
-require_once('include/utils/UserInfoUtil.php');
+require_once('modules/Users/UserInfoUtil.php');
 require_once('include/database/PearDatabase.php');
-global $adb;
-global $log;
+
 global $mod_strings;
 global $app_strings;
-global $current_language;
+global $app_list_strings;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 require_once($theme_path.'layout_utils.php');
-
-$log->info("Inside Email Template Detail View");
-
-$smarty = new vtigerCRM_smarty;
-
-$smarty->assign("APP", $app_strings);
-$smarty->assign("THEME", $theme);
-$smarty->assign("UMOD", $mod_strings);
-$smod_strings = return_module_language($current_language,'Settings');
-$smarty->assign("MOD", $smod_strings);
-$smarty->assign("MODULE", 'Settings');
-$smarty->assign("IMAGE_PATH", $image_path);
+$xtpl=new XTemplate ('modules/Users/detailviewemailtemplate.html');
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("APP", $app_strings);
+$xtpl->assign("THEME", $theme);
 
 if(isset($_REQUEST['templateid']) && $_REQUEST['templateid']!='')
 {
-	$log->info("The templateid is set");
 	$tempid = $_REQUEST['templateid'];
-	$sql = "select * from vtiger_emailtemplates where templateid=".$tempid;
+	$sql = "select * from emailtemplates where templateid=".$tempid;
 	$result = $adb->query($sql);
+/*	$temprow = $adb->fetch_array($result);
+	$cnt=1;
+	$selcount = $_REQUEST['templatename'];	
+	do
+	{
+	  if ($cnt == $selcount)
+  	  {
+	      $templatename = $temprow["templatename"]; 
+  	  }
+	  $cnt++;
+	}while($temprow = $adb->fetch_array($result));
+
+	$result = fetchEmailTemplateInfo($templatename);
+*/
+//
 	$emailtemplateResult = $adb->fetch_array($result);
 }
-$smarty->assign("FOLDERNAME", $emailtemplateResult["foldername"]);
+$xtpl->assign("FOLDERNAME", $emailtemplateResult["foldername"]);
 
-$smarty->assign("TEMPLATENAME", $emailtemplateResult["templatename"]);
-$smarty->assign("DESCRIPTION", $emailtemplateResult["description"]);
-$smarty->assign("TEMPLATEID", $emailtemplateResult["templateid"]);
+$xtpl->assign("TEMPLATENAME", $emailtemplateResult["templatename"]);
+$xtpl->assign("DESCRIPTION", $emailtemplateResult["description"]);
+$xtpl->assign("TEMPLATEID", $emailtemplateResult["templateid"]);
 
-$smarty->assign("SUBJECT", $emailtemplateResult["subject"]);
-$smarty->assign("BODY", nl2br($emailtemplateResult["body"]));
+$xtpl->assign("SUBJECT", $emailtemplateResult["subject"]);
+$xtpl->assign("BODY", nl2br($emailtemplateResult["body"]));
 
-$smarty->display("DetailViewEmailTemplate.tpl");
+$xtpl->parse("main");
+$xtpl->out("main");
+
+
 
 ?>
 

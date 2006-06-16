@@ -6,162 +6,428 @@
  * The Initial Developer of the Original Code is vtiger.
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
- *
+*
  ********************************************************************************/
-
-
-require_once('include/fpdf/pdf.php');
+require('include/fpdf/fpdf.php');
 require_once('modules/Invoice/Invoice.php');
-require_once('include/database/PearDatabase.php');
-
-global $adb,$app_strings,$products_per_page;
-$sql="select currency_symbol from vtiger_currency_info";
-$result = $adb->query($sql);
-$currency_symbol = $adb->query_result($result,0,'currency_symbol');
-
-// would you like and end page?  1 for yes 0 for no
-$endpage="1";
-$products_per_page="6";
 
 $id = $_REQUEST['record'];
-
-//retreiving the vtiger_invoice info
+global $adb;
+//retreiving the invoice info
 $focus = new Invoice();
 $focus->retrieve_entity_info($_REQUEST['record'],"Invoice");
 $account_name = getAccountName($focus->column_fields[account_id]);
-
-
-// **************** BEGIN POPULATE DATA ********************
-
-
-// populate data
+$iData[] = $account_name;
+$iData[] = $id;
+$iData[] = date('Y-m-d');
+//newly added for Sales Order No.
 if($focus->column_fields["salesorder_id"] != '')
+{
 	$so_name = getSoName($focus->column_fields["salesorder_id"]);
+}
 else
-	$so_name = '';
-$po_name = $focus->column_fields["purchaseorder"];
+{
+	$so_name = ' ';
+}	
 
-$valid_till = $focus->column_fields["duedate"];
-$valid_till = getDisplayDate($valid_till);
-$bill_street = $focus->column_fields["bill_street"];
-$bill_city = $focus->column_fields["bill_city"];
-$bill_state = $focus->column_fields["bill_state"];
-$bill_code = $focus->column_fields["bill_code"];
-$bill_country = $focus->column_fields["bill_country"];
+$iData[] = $so_name;
 
-$ship_street = $focus->column_fields["ship_street"];
-$ship_city = $focus->column_fields["ship_city"];
-$ship_state = $focus->column_fields["ship_state"];
-$ship_code = $focus->column_fields["ship_code"];
-$ship_country = $focus->column_fields["ship_country"];
+//setting the Customer Data
+$iCustData[] = $account_name;
 
-$conditions = $focus->column_fields["terms_conditions"];
-$description = $focus->column_fields["description"];
-$status = $focus->column_fields["invoicestatus"];
+if($focus->column_fields["purchaseorder"] != '')
+{
+	$po_name = $focus->column_fields["purchaseorder"];
+}
+else
+{
+	$po_name = ' ';
+}
+$iCustData[] = $po_name;
 
-// Company information
-$add_query = "select * from vtiger_organizationdetails";
+if($focus->column_fields["duedate"] != '')
+{
+	$due_date = $focus->column_fields["duedate"];
+}
+else
+{
+	$due_date = ' ';
+}
+$iCustData[] = $due_date;
+
+//setting the billing address
+$bdata[] = $account_name;
+if($focus->column_fields["bill_street"] != '')
+{
+        $bill_street = $focus->column_fields["bill_street"];
+	$bdata[] = $bill_street;
+	
+}
+
+if($focus->column_fields["bill_city"] != '')
+{
+        $bill_city = $focus->column_fields["bill_city"];
+	$bdata[] = $bill_city;
+}
+
+
+if($focus->column_fields["bill_state"] != '')
+{
+        $bill_state = $focus->column_fields["bill_state"];
+	$bdata[] = $bill_state;
+}
+
+
+if($focus->column_fields["bill_code"] != '')
+{
+        $bill_code = $focus->column_fields["bill_code"];
+	$bdata[] = $bill_code;
+}
+
+
+if($focus->column_fields["bill_country"] != '')
+{
+        $bill_country = $focus->column_fields["bill_country"];
+	$bdata[] = $bill_country;
+}
+
+for($i =0; $i <5; $i++)
+{
+	if(sizeof($bdata) < 6)
+	{
+		$bdata[] = ' '; 
+	}
+}
+
+//setting the shipping address
+$sdata[] = $account_name;
+if($focus->column_fields["ship_street"] != '')
+{
+        $ship_street = $focus->column_fields["ship_street"];
+	$sdata[] = $ship_street;
+}
+
+if($focus->column_fields["ship_city"] != '')
+{
+        $ship_city = $focus->column_fields["ship_city"];
+	$sdata[] = $ship_city;
+}
+
+
+if($focus->column_fields["ship_state"] != '')
+{
+        $ship_state = $focus->column_fields["ship_state"];
+	$sdata[] = $ship_state;
+}
+
+
+if($focus->column_fields["ship_code"] != '')
+{
+        $ship_code = $focus->column_fields["ship_code"];
+	$sdata[] = $ship_code;
+}
+
+
+if($focus->column_fields["ship_country"] != '')
+{
+        $ship_country = $focus->column_fields["ship_country"];
+	$sdata[] = $ship_country;
+}
+
+for($i =0; $i <5; $i++)
+{
+	if(sizeof($sdata) < 6)
+	{
+		$sdata[] = ' '; 
+	}
+}
+
+//Getting the terms_conditions
+
+if($focus->column_fields["terms_conditions"] != '')
+{
+        $conditions = $focus->column_fields["terms_conditions"];
+}
+else
+{
+        $conditions = ' ';
+}
+
+//Getting the Company Address
+$add_query = "select * from organizationdetails";
 $result = $adb->query($add_query);
 $num_rows = $adb->num_rows($result);
+$org_field_array = Array('organizationame','address','city','state','country','code','phone','fax','website');
 
+$companyaddress = Array();
+$logo_name = '';
+	
 if($num_rows == 1)
 {
-		$org_name = $adb->query_result($result,0,"organizationame");
-		$org_address = $adb->query_result($result,0,"address");
-		$org_city = $adb->query_result($result,0,"city");
-		$org_state = $adb->query_result($result,0,"state");
-		$org_country = $adb->query_result($result,0,"country");
-		$org_code = $adb->query_result($result,0,"code");
-		$org_phone = $adb->query_result($result,0,"phone");
-		$org_fax = $adb->query_result($result,0,"fax");
-		$org_website = $adb->query_result($result,0,"website");
-		$logo_name = $adb->query_result($result,0,"logoname");
-}
+	$org_name = $adb->query_result($result,0,"organizationame");
+	$org_address = $adb->query_result($result,0,"address");
+	$org_city = $adb->query_result($result,0,"city");
+	$org_state = $adb->query_result($result,0,"state");
+	$org_country = $adb->query_result($result,0,"country");
+	$org_code = $adb->query_result($result,0,"code");
+	$org_phone = $adb->query_result($result,0,"phone");
+	$org_fax = $adb->query_result($result,0,"fax");
+	$org_website = $adb->query_result($result,0,"website");
 
-//getting the Total Array
-$price_subtotal = $currency_symbol.number_format(StripLastZero($focus->column_fields["hdnSubTotal"]),2,'.',',');
-$price_tax = $currency_symbol.number_format(StripLastZero($focus->column_fields["txtTax"]),2,'.',',');
-$price_adjustment = $currency_symbol.number_format(StripLastZero($focus->column_fields["txtAdjustment"]),2,'.',',');
-$price_total = $currency_symbol.number_format(StripLastZero($focus->column_fields["hdnGrandTotal"]),2,'.',',');
+	if($org_name != '')
+	{
+		$companyaddress[] =  $org_name;
+	}
+	if($org_address != '' || $org_city != '' || $org_state != '')
+	{
+		$companyaddress[] = $org_address.' '.$org_city.' '.$org_state;
+	}
+	if($org_country != '' || $org_code!= '')
+	{
+		$companyaddress[] = $org_country.' '.$org_code;
+	}
+	if($org_phone != '' || $org_fax != '')
+	{
+		$companyaddress[] = $org_phone.' '.$org_fax;
+	}
+	if($org_website != '')
+	{
+		$companyaddress[] = $org_website;
+	}
+	
+	for($i =0; $i < 4; $i++)
+	{
+		if(sizeof($companyaddress) < 5)
+		{
+			$companyaddress[] = ' '; 
+		}
+	}	
+
+	$logo_name = $adb->query_result($result,0,"logoname");
+}
+//Getting the logo
+
 
 //getting the Product Data
-$query="select vtiger_products.productname,vtiger_products.unit_price,vtiger_products.product_description,vtiger_invoiceproductrel.* from vtiger_invoiceproductrel inner join vtiger_products on vtiger_products.productid=vtiger_invoiceproductrel.productid where vtiger_invoiceid=".$id;
+$query="select products.productname,products.unit_price,invoiceproductrel.* from invoiceproductrel inner join products on products.productid=invoiceproductrel.productid where invoiceid=".$id;
 
-global $result;
 $result = $adb->query($query);
-$num_products=$adb->num_rows($result);
-for($i=0;$i<$num_products;$i++) {
-		$product_name[$i]=$adb->query_result($result,$i,'productname');
-		$prod_description[$i]=$adb->query_result($result,$i,'product_description');
-		$product_id[$i]=$adb->query_result($result,$i,'productid');
-		$qty[$i]=$adb->query_result($result,$i,'quantity');
-
-		$unit_price[$i]= $currency_symbol.number_format($adb->query_result($result,$i,'unit_price'),2,'.',',');
-		$list_price[$i]= $currency_symbol.number_format(StripLastZero($adb->query_result($result,$i,'listprice')),2,'.',',');
-		$list_pricet[$i]= $adb->query_result($result,$i,'listprice');
-		$prod_total[$i]= $qty[$i]*$list_pricet[$i];
-
-
-		$product_line[] = array( "Product Name"    => $product_name[$i],
-				"Description"  => $prod_description[$i],
-				"Qty"     => $qty[$i],
-				"List Price"      => $list_price[$i],
-				"Unit Price" => $unit_price[$i],
-				"Total" => $currency_symbol.number_format($prod_total[$i]),2,'.',',');
-}
-
-	$total[]=array("Unit Price" => $app_strings['LBL_SUB_TOTAL'],
-		"Total" => $price_subtotal);
-
-	$total[]=array("Unit Price" => $app_strings['LBL_ADJUSTMENT'],
-		"Total" => $price_adjustment);
-
-	$total[]=array("Unit Price" => $app_strings['LBL_TAX'],
-		"Total" => $price_tax);
-
-	$total[]=array("Unit Price" => $app_strings['LBL_GRAND_TOTAL'],
-		"Total" => $price_total);
-
-
-// ************************ END POPULATE DATA ***************************8
-
-$page_num='1';
-$pdf = new PDF( 'P', 'mm', 'A4' );
-$pdf->Open();
-
-$num_pages=ceil(($num_products/$products_per_page));
-
-
-$current_product=0;
-for($l=0;$l<$num_pages;$l++)
+$num_rows=$adb->num_rows($result);
+for($i=1;$i<=$num_rows;$i++)
 {
-	$line=array();
-	if($num_pages == $page_num)
-		$lastpage=1;
+	$temp_data = Array();
+        $productname=$adb->query_result($result,$i-1,'productname');
+        $unitprice=$adb->query_result($result,$i-1,'unit_price');
+        $productid=$adb->query_result($result,$i-1,'productid');
+        $qty=$adb->query_result($result,$i-1,'quantity');
+        $listprice=$adb->query_result($result,$i-1,'listprice');
+        $total = $qty*$listprice;
 
-	while($current_product != $page_num*$products_per_page)
+	$temp_data['productname'] = $productname;
+	$temp_data['qty'] = $qty;
+	$temp_data['unitprice'] = $unitprice;
+	$temp_data['listprice'] = $listprice;
+	$temp_data['total'] = $total;
+	$iDataDtls[] = $temp_data;
+
+}
+//getting the Total Array
+$price_total[] = $focus->column_fields["hdnSubTotal"];
+$price_total[] = $focus->column_fields["txtTax"];
+$price_total[] = $focus->column_fields["txtAdjustment"];
+$price_total[] = $focus->column_fields["hdnGrandTotal"];
+
+class PDF extends FPDF
+{
+
+// Invoice Title
+function setInvoiceTitle($title,$logo_name,$caddress)
+{
+	if($title != "")
 	{
-		$line[]=$product_line[$current_product];
-		$current_product++;
-	}
+		if(isset($logo_name) && $logo_name != '')
+		{
+			$this->Image('test/logo/'.$logo_name,10,10,0,0);
+		}
+		else
+		{
+			//$this->Image('themes/Aqua/images/blank.jpg',10,10,0,0);
+		}
+		for($i=0;$i<count($caddress);$i++)
+		{
 
-	$pdf->AddPage();
-	include("pdf_templates/header.php");
-	include("include/fpdf/templates/body.php");
-	include("pdf_templates/footer.php");
+			$this->Ln();
+			$this->Cell(40);
+			$this->SetFont('','',10);
+			$this->Cell(0,5,$caddress[$i],0,0,'L',0);
+		}
+		$this->Ln();
+		$this->SetFillColor(224,235,255);
+    		$this->SetTextColor(0);
+    		$this->SetFont('','B',18);
+    		$this->Cell(0,10,$title,0,0,'C',0);
 
-	$page_num++;
-
-	if (($endpage) && ($lastpage))
-	{
-		$pdf->AddPage();
-		include("pdf_templates/header.php");
-		include("pdf_templates/lastpage/body.php");
-		include("pdf_templates/lastpage/footer.php");
 	}
 }
+//Invoice Address
+function setAddress($billing="",$shipping="")
+{
+	
+	$this->Ln();
+	$this->SetFillColor(224,235,255);
+ 	$this->SetTextColor(0);
+    	$this->SetFont('','B',10);
+	$this->Cell(130,10,"Bill To:",0,0,'L',0);
+ 	$this->Cell(0,10,"Ship To:",0,0,'L',0);
+	for($i=0;$i<count($billing);$i++)
+	{
+		$this->Cell(17);
+		$this->SetFont('','',10);
+		$this->Cell(130,5,$billing[$i],0,0,'L',0);
+		$this->Cell(0,5,$shipping[$i],0,0,'L',0);
+		$this->Ln();
+	}
 
+}
+//Invoice from
+function setInvoiceDetails($iHeader,$iData)
+{
+    $this->Ln();
+    $this->SetFillColor(162,200,243);
+    $this->SetTextColor(0);
+    $this->SetDrawColor(61,121,206);
+    //$this->SetLineWidth(.3);
+    $this->SetFont('Arial','B',10);
+    //Header
+    $this->Cell(15);
+    foreach($iHeader as $value)
+    {
+        $this->Cell(40,7,$value,1,0,'L',1);
+    }
+    $this->Ln();
+    $this->SetFillColor(233,241,253);
+    $this->SetTextColor(0);
+    $this->SetFont('');
+    //Data
+    $this->Cell(15);
+    $fill=0;
+    foreach($iData as $value)
+    {
+		$this->Cell(40,6,$value,1,0,'L',0);
+    }
+    $this->Ln();
+}
 
-$pdf->Output('Invoice.pdf','D'); //added file name to make it work in IE, also forces the download giving the user the option to save
+//customer Details
+function setCustomerDetails($iCHeader,$iCData)
+{
+    $this->Ln();
+    //$this->Cell(0);
+    $this->SetFillColor(162,200,243);
+    $this->SetTextColor(0);
+    $this->SetDrawColor(61,121,206);
+    //$this->SetLineWidth(.3);
+    $this->SetFont('Arial','B',10);
+    //Header
+    //$this->Cell(15);
+    foreach($iCHeader as $value)
+    {
+        $this->Cell(63,7,$value,1,0,'L',1);
+    }
+    $this->Ln();
+    $this->SetFillColor(233,241,253);
+    $this->SetTextColor(0);
+    $this->SetFont('');
+    //Data
+    //$this->Cell(15);
+    $fill=0;
+    foreach($iCData as $value)
+    {
+		$this->Cell(63,6,$value,1,0,'L',0);
+    }
+    $this->Ln();
+}
 
+//Product Details
+function setProductDetails($ivHeader,$ivData)
+{
+    $this->Ln();
+    $this->Ln();
+    $this->SetFillColor(162,200,243);
+    $this->SetTextColor(0);
+    $this->SetDrawColor(61,121,206);
+    $this->SetLineWidth(.3);
+    $this->SetFont('Arial','B',10);
+    //Header
+    foreach($ivHeader as $value)
+    {
+        $this->Cell(38,7,$value,0,0,'L',0);
+    }
+    $this->Ln();
+    $this->SetDrawColor(0,0,0);
+    $this->SetLineWidth(.5);
+    $this->line(10,140,200,140);
+    $this->SetFillColor(233,241,253);
+    $this->SetTextColor(0);
+    $this->SetFont('');
+    //Data
+    $fill=0;
+    	if($ivData) foreach($ivData as $key=>$value)
+	{
+    		$this->Cell(38,6,$value['productname'],0,0,'L',0);
+		$this->Cell(38,6,$value['qty'],0,0,'L',0);
+		$this->Cell(38,6,$value['unitprice'],0,0,'L',0);
+		$this->Cell(38,6,$value['listprice'],0,0,'L',0);
+		$this->Cell(38,6,$value['total'],0,0,'R',0);
+		$this->Ln();
+	}
+    $this->Ln();
+}
+
+function setTotal($price_total="",$conditions="")
+{
+	$this->Ln();
+	$this->SetDrawColor(0,0,0);
+	$this->SetLineWidth(.3);
+//	$this->line(10,200,200,200);
+	$this->SetFillColor(224,235,255);
+ 	$this->SetTextColor(0);
+    	$this->SetFont('','B',10);
+	$this->Cell(140,6,"Sub Total: ",0,0,'R',0);
+ 	$this->Cell(0,6,$price_total[0],1,0,'R',0);
+    	$this->Ln(4);
+	$this->Ln(4);
+	$this->Cell(140,6,"Tax: ",0,0,'R',0);
+ 	$this->Cell(0,6,$price_total[1],1,0,'R',0);
+	$this->Ln(4);
+	$this->Ln(4);
+	$this->Cell(140,6,"Adjustment: ",0,0,'R',0);
+ 	$this->Cell(0,6,$price_total[2],1,0,'R',0);
+    	$this->Ln(4);
+	$this->Ln(4);
+	$this->Cell(140,6,"Grand total: ",0,0,'R',0);
+ 	$this->Cell(0,6,$price_total[3],1,0,'R',0);
+	$this->Ln();
+	$this->Ln();
+	$this->Cell(0,8,"Terms & Conditions: ",0,0,'L',0);
+	$this->Ln();
+	$this->Cell(0,8,$conditions,0,0,'L',0);
+}
+}
+$iHead = array("Company","Invoice No.","Date","Sales Order No.");
+$iCustHeadDtls = array("Customer Name","Purchase Order","Due Date");
+$iHeadDtls = array("Product Name","Quantity","List Price","Unit Price","Total");
+
+$pdf = new PDF('P','mm','A4');
+$pdf->SetFont('Arial','',10);
+$pdf->AddPage();
+$pdf->setInvoiceTitle("Invoice",$logo_name,$companyaddress);
+$pdf->Ln();
+$pdf->setInvoiceDetails($iHead,$iData);
+$pdf->setAddress($bdata,$sdata);
+$pdf->setCustomerDetails($iCustHeadDtls,$iCustData);
+$pdf->setProductDetails($iHeadDtls,$iDataDtls);
+$pdf->setTotal($price_total,$conditions);
+$pdf->Output('Invoice.pdf','D');
+exit;
 ?>

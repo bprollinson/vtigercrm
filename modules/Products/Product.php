@@ -14,13 +14,24 @@ require_once('include/logging.php');
 require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('data/CRMEntity.php');
-require_once('include/utils/utils.php');
-require_once('include/RelatedListView.php');
+require_once('include/utils.php');
+
 
 class Product extends CRMEntity {
 	var $log;
 	var $db;
 
+
+	// Stored fields
+	var $id;
+	var $mode;
+
+	// These are related
+	var $name;
+	var $vendorid;
+	var $contactname;
+	var $contactid;
+	
 	 // Josh added for importing and exporting -added in patch2
         var $unit_price;
         var $table_name = "products";
@@ -31,13 +42,13 @@ class Product extends CRMEntity {
         );
 
 
-	var $tab_name = Array('vtiger_crmentity','vtiger_products','vtiger_productcf','vtiger_seproductsrel','vtiger_producttaxrel','vtiger_attachments');
-	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_products'=>'productid','vtiger_productcf'=>'productid','vtiger_seproductsrel'=>'productid','vtiger_producttaxrel'=>'productid','vtiger_attachments'=>'attachmentsid');
+	var $tab_name = Array('crmentity','products','productcf','seproductsrel');
+	var $tab_name_index = Array('crmentity'=>'crmid','products'=>'productid','productcf'=>'productid','seproductsrel'=>'productid');
 	var $column_fields = Array();
 
 	var $sortby_fields = Array('productname','productcode','commissionrate');		  
 
-        // This is the list of vtiger_fields that are in the lists.
+        // This is the list of fields that are in the lists.
         var $list_fields = Array(
                                 'Product Name'=>Array('products'=>'productname'),
                                 'Product Code'=>Array('products'=>'productcode'),
@@ -54,6 +65,10 @@ class Product extends CRMEntity {
                                      );
         var $list_link_field= 'productname';
 
+
+	var $list_mode;
+	var $popup_type;
+
 	var $search_fields = Array(
                                 'Product Name'=>Array('products'=>'productname'),
                                 'Product Code'=>Array('products'=>'productcode'),
@@ -65,475 +80,234 @@ class Product extends CRMEntity {
                                         'Unit Price'=>'unit_price'
                                      );
 	
-	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'productname';
-	var $default_sort_order = 'ASC';
+	var $combofieldNames = Array('manufacturer'=>'manufacturer_dom'
+                      ,'productcategory'=>'productcategory_dom');
+
 
 	function Product() {
 		$this->log =LoggerManager::getLogger('product');
-		$this->log->debug("Entering Product() method ...");
 		$this->db = new PearDatabase();
 		$this->column_fields = getColumnFields('Products');
-		$this->log->debug("Exiting Product method ...");
-	}
-	
-	function getSortOrder()
-	{
-		global $log;
-		$log->debug("Entering getSortOrder() method ...");
-		if(isset($_REQUEST['sorder']))
-			$sorder = $_REQUEST['sorder'];
-		else
-			$sorder = (($_SESSION['PRODUCTS_SORT_ORDER'] != '')?($_SESSION['PRODUCTS_SORT_ORDER']):($this->default_sort_order));
-		$log->debug("Exiting getSortOrder() method ...");
-		return $sorder;
 	}
 
-	function getOrderBy()
-	{
-		global $log;
-		$log->debug("Entering getOrderBy() method ...");
-		if (isset($_REQUEST['order_by']))
-			$order_by = $_REQUEST['order_by'];
-		else
-			$order_by = (($_SESSION['PRODUCTS_ORDER_BY'] != '')?($_SESSION['PRODUCTS_ORDER_BY']):($this->default_order_by));
-		$log->debug("Exiting getOrderBy method ...");
-		return $order_by;
-	}
+  function get_summary_text()
+        {
+                return $this->name;
+        }
 
+  		
 	function get_attachments($id)
-	{
-		global $log;
-		$log->debug("Entering get_attachments(".$id.") method ...");
-		// Armando Lüscher 18.10.2005 -> §visibleDescription
-		// Desc: Inserted vtiger_crmentity.createdtime, vtiger_notes.notecontent description, vtiger_users.user_name
-		// Inserted inner join vtiger_users on vtiger_crmentity.smcreatorid= vtiger_users.id
-		$query = "SELECT vtiger_notes.title, 'Notes      ' AS ActivityType,
-			vtiger_notes.filename, vtiger_attachments.type  AS FileType,
-				crm2.modifiedtime AS lastmodified,
-			vtiger_seattachmentsrel.attachmentsid AS vtiger_attachmentsid,
-			vtiger_notes.notesid AS crmid, vtiger_crmentity.createdtime,
-			vtiger_notes.notecontent AS description,
-			vtiger_users.user_name
-			FROM vtiger_notes
-			INNER JOIN vtiger_senotesrel
-				ON vtiger_senotesrel.notesid = vtiger_notes.notesid
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_senotesrel.crmid
-			INNER JOIN vtiger_crmentity AS crm2
-				ON crm2.crmid = vtiger_notes.notesid
-				AND crm2.deleted = 0
-			LEFT JOIN vtiger_seattachmentsrel
-				ON vtiger_seattachmentsrel.crmid = vtiger_notes.notesid
-			LEFT JOIN vtiger_attachments
-				ON vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid
-			INNER JOIN vtiger_users
-				ON vtiger_crmentity.smcreatorid = vtiger_users.id
-			WHERE vtiger_crmentity.crmid = ".$id."
-		UNION ALL
-			SELECT vtiger_attachments.description AS title,
-				'Attachments' AS ActivityType,
-			vtiger_attachments.name AS filename,
-			vtiger_attachments.type AS FileType,
-				crm2.modifiedtime AS lastmodified,
-			vtiger_attachments.attachmentsid AS vtiger_attachmentsid,
-			vtiger_seattachmentsrel.attachmentsid AS crmid,
-			vtiger_crmentity.createdtime,
-			vtiger_attachments.description, vtiger_users.user_name
-			FROM vtiger_attachments
-			INNER JOIN vtiger_seattachmentsrel
-				ON vtiger_seattachmentsrel.attachmentsid = vtiger_attachments.attachmentsid
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_seattachmentsrel.crmid
-			INNER JOIN vtiger_crmentity AS crm2
-				ON crm2.crmid = vtiger_attachments.attachmentsid
-			INNER JOIN vtiger_users
-				ON vtiger_crmentity.smcreatorid = vtiger_users.id
-			WHERE vtiger_crmentity.crmid = ".$id;	
+        {
+	
+		$query = "select notes.title,'Notes      ' ActivityType, notes.filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, seattachmentsrel.attachmentsid attachmentsid, notes.notesid crmid from notes inner join senotesrel on senotesrel.notesid= notes.notesid inner join crmentity on crmentity.crmid= senotesrel.crmid inner join crmentity crm2 on crm2.crmid=notes.notesid and crm2.deleted=0 left join seattachmentsrel  on seattachmentsrel.crmid =notes.notesid left join attachments on seattachmentsrel.attachmentsid = attachments.attachmentsid where crmentity.crmid=".$id;
+                $query .= ' union all ';
+                $query .= "select attachments.description title ,'Attachments'  ActivityType, attachments.name  filename, attachments.type  FileType,crm2.modifiedtime  lastmodified, attachments.attachmentsid attachmentsid, seattachmentsrel.attachmentsid crmid from attachments inner join seattachmentsrel on seattachmentsrel.attachmentsid= attachments.attachmentsid inner join crmentity on crmentity.crmid= seattachmentsrel.crmid inner join crmentity crm2 on crm2.crmid=attachments.attachmentsid where crmentity.crmid=".$id;	
 
-		$log->debug("Exiting get_attachments method ...");
-        	return getAttachmentsAndNotes('Products',$query,$id);
-		}
+		renderRelatedAttachments($query,$id);
+        }
 
 	function get_opportunities($id)
-	{
-		global $log;
-		$log->debug("Entering get_opportunities(".$id.") method ...");
-		$query = "SELECT vtiger_potential.potentialid, vtiger_potential.potentialname,
-			vtiger_potential.potentialtype, vtiger_products.productid,
-			vtiger_products.productname, vtiger_products.qty_per_unit,
-			vtiger_products.unit_price, vtiger_products.expiry_date
-			FROM vtiger_potential
-			INNER JOIN vtiger_products
-				ON vtiger_potential.productid = vtiger_products.productid
-			LEFT JOIN vtiger_potentialgrouprelation
-				ON vtiger_potential.potentialid = vtiger_potentialgrouprelation.potentialid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_potentialgrouprelation.groupname
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_products.productid = ".$id;
-		$log->debug("Exiting get_opportunities method ...");
+        {
+		$query = 'select potential.potentialid, potential.potentialname, potential.potentialtype,  products.productid, products.productname, products.qty_per_unit, products.unit_price, products.expiry_date from potential inner join products on potential.productid = products.productid where products.productid='.$id;
           renderRelatedPotentials($query);
         }
 
 	function get_tickets($id)
+        {
+		//$query = 'select users.user_name, users.id, products.productid,products.productname, troubletickets.ticketid, troubletickets.parent_id, troubletickets.title, troubletickets.status, troubletickets.priority, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from products  inner join seticketsrel on seticketsrel.crmid = products.productid inner join troubletickets on troubletickets.ticketid = seticketsrel.ticketid inner join crmentity on crmentity.crmid = troubletickets.ticketid left join users on users.id=crmentity.smownerid where products.productid= '.$id.' and crmentity.deleted=0';
+		$query = "select users.user_name, users.id, products.productid,products.productname, troubletickets.ticketid, troubletickets.parent_id, troubletickets.title, troubletickets.status, troubletickets.priority, crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime from troubletickets inner join crmentity on crmentity.crmid = troubletickets.ticketid left join products on products.productid=troubletickets.product_id left join users on users.id=crmentity.smownerid where crmentity.deleted=0 and products.productid=".$id;
+          renderRelatedTickets($query,$id);
+        }
+
+	function get_meetings($id)
 	{
-		global $log;
-		$log->debug("Entering get_tickets(".$id.") method ...");
-		global $mod_strings;
-		require_once('modules/HelpDesk/HelpDesk.php');
-		$focus = new HelpDesk();
-
-		$button = '';
-
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT vtiger_users.user_name, vtiger_users.id,
-			vtiger_products.productid, vtiger_products.productname,
-			vtiger_troubletickets.ticketid,
-			vtiger_troubletickets.parent_id, vtiger_troubletickets.title,
-			vtiger_troubletickets.status, vtiger_troubletickets.priority,
-			vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
-			vtiger_crmentity.modifiedtime
-			FROM vtiger_troubletickets
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_troubletickets.ticketid
-			LEFT JOIN vtiger_products
-				ON vtiger_products.productid = vtiger_troubletickets.product_id
-			LEFT JOIN vtiger_users
-				ON vtiger_users.id = vtiger_crmentity.smownerid
-			LEFT JOIN vtiger_ticketgrouprelation
-				ON vtiger_troubletickets.ticketid = vtiger_ticketgrouprelation.ticketid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_ticketgrouprelation.groupname
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_products.productid = ".$id;
-	$log->debug("Exiting get_tickets method ...");
-		return GetRelatedList('Products','HelpDesk',$focus,$query,$button,$returnset);
+		$query = "SELECT meetings.name,meetings.location,meetings.date_start from meetings inner join seactivityrel on seactivityrel.activityid=meetings.meetingid and seactivityrel.crmid=".$id."";
+		renderRelatedMeetings($query);
 	}
-
 
 	function get_activities($id)
 	{
-		global $log;
-		$log->debug("Entering get_activities(".$id.") method ...");
-		global $app_strings;
-	
-		require_once('modules/Activities/Activity.php');
-
-        	//if($this->column_fields['contact_id']!=0 && $this->column_fields['contact_id']!='')
-        	$focus = new Activity();
-
-		$button = '';
-
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT vtiger_contactdetails.lastname,
-			vtiger_contactdetails.firstname,
-			vtiger_contactdetails.contactid,
-			vtiger_activity.*,
-			vtiger_seactivityrel.*,
-			vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
-			vtiger_crmentity.modifiedtime,
-			vtiger_users.user_name,
-			vtiger_recurringevents.recurringtype
-			FROM vtiger_activity
-			INNER JOIN vtiger_seactivityrel
-				ON vtiger_seactivityrel.activityid = vtiger_activity.activityid
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid=vtiger_activity.activityid
-			LEFT JOIN vtiger_cntactivityrel
-				ON vtiger_cntactivityrel.activityid = vtiger_activity.activityid
-			LEFT JOIN vtiger_contactdetails
-				ON vtiger_contactdetails.contactid = vtiger_cntactivityrel.contactid
-			LEFT JOIN vtiger_users
-				ON vtiger_users.id = vtiger_crmentity.smownerid
-			LEFT OUTER JOIN vtiger_recurringevents
-				ON vtiger_recurringevents.activityid = vtiger_activity.activityid
-			LEFT JOIN vtiger_activitygrouprelation
-				ON vtiger_activitygrouprelation.activityid = vtiger_crmentity.crmid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_activitygrouprelation.groupname
-			WHERE vtiger_seactivityrel.crmid=".$id."
-			AND (activitytype = 'Task'
-				OR vtiger_activitytype = 'Call'
-				OR vtiger_activitytype = 'Meeting')";
-		$log->debug("Exiting get_activities method ...");
-		return GetRelatedList('Products','Activities',$focus,$query,$button,$returnset);
+		//$query = "SELECT activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join users on users.id=crmentity.smownerid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting')";
+		$query = "SELECT contactdetails.lastname, contactdetails.firstname, contactdetails.contactid, activity.*,seactivityrel.*,crmentity.crmid, crmentity.smownerid, crmentity.modifiedtime, users.user_name,recurringevents.recurringtype from activity inner join seactivityrel on seactivityrel.activityid=activity.activityid inner join crmentity on crmentity.crmid=activity.activityid left join cntactivityrel on cntactivityrel.activityid= activity.activityid left join contactdetails on contactdetails.contactid = cntactivityrel.contactid left join users on users.id=crmentity.smownerid left outer join recurringevents on recurringevents.activityid=activity.activityid where seactivityrel.crmid=".$id." and (activitytype='Task' or activitytype='Call' or activitytype='Meeting')";
+		renderRelatedActivities($query,$id);
 	}
 	function get_quotes($id)
-	{
-		global $log;
-		$log->debug("Entering get_quotes(".$id.") method ...");	
-		global $app_strings;
-		require_once('modules/Quotes/Quote.php');	
-		$focus = new Quote();
-	
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT vtiger_crmentity.*,
-			vtiger_quotes.*,
-			vtiger_potential.potentialname,
-			vtiger_account.accountname,
-			vtiger_quotesproductrel.productid
-			FROM vtiger_quotes
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_quotes.quoteid
-			INNER JOIN vtiger_quotesproductrel
-				ON vtiger_quotesproductrel.quoteid = vtiger_quotes.quoteid
-			LEFT OUTER JOIN vtiger_account
-				ON vtiger_account.accountid = vtiger_quotes.accountid
-			LEFT OUTER JOIN vtiger_potential
-				ON vtiger_potential.potentialid = vtiger_quotes.potentialid
-			LEFT JOIN vtiger_quotegrouprelation
-				ON vtiger_quotes.quoteid = vtiger_quotegrouprelation.quoteid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_quotegrouprelation.groupname
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_quotesproductrel.productid = ".$id;
-		$log->debug("Exiting get_quotes method ...");
-		return GetRelatedList('Products','Quotes',$focus,$query,$button,$returnset);
+ 	{
+		$query = "select crmentity.*, quotes.*,potential.potentialname,account.accountname,quotesproductrel.productid from quotes inner join crmentity on crmentity.crmid=quotes.quoteid inner join quotesproductrel on quotesproductrel.quoteid=quotes.quoteid left outer join account on account.accountid=quotes.accountid left outer join potential on potential.potentialid=quotes.potentialid where crmentity.deleted=0 and quotesproductrel.productid=".$id;
+		renderRelatedQuotes($query,$id,$this->column_fields['contact_id'],$this->column_fields['parent_id']);
 	}
 	function get_purchase_orders($id)
 	{
-		global $log;
-		$log->debug("Entering get_purchase_orders(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/PurchaseOrder/PurchaseOrder.php');
-		$focus = new Order();
-
-		$button = '';
-
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT vtiger_crmentity.*,
-			vtiger_purchaseorder.*,
-			vtiger_products.productname,
-			vtiger_poproductrel.productid
-			FROM vtiger_purchaseorder
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_purchaseorder.purchaseorderid
-			INNER JOIN vtiger_poproductrel
-				ON vtiger_poproductrel.purchaseorderid = vtiger_purchaseorder.purchaseorderid
-			INNER JOIN vtiger_products
-				ON vtiger_products.productid = vtiger_poproductrel.productid
-			LEFT JOIN vtiger_pogrouprelation
-				ON vtiger_purchaseorder.purchaseorderid = vtiger_pogrouprelation.purchaseorderid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_pogrouprelation.groupname
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_products.productid = ".$id;
-		$log->debug("Exiting get_purchase_orders method ...");
-		return GetRelatedList('Products','PurchaseOrder',$focus,$query,$button,$returnset);
-	}
+		$query = "select crmentity.*, purchaseorder.*,products.productname,poproductrel.productid from purchaseorder inner join crmentity on crmentity.crmid=purchaseorder.purchaseorderid inner join poproductrel on poproductrel.purchaseorderid=purchaseorder.purchaseorderid inner join products on products.productid=poproductrel.productid where crmentity.deleted=0 and products.productid=".$id;
+	      	renderProductPurchaseOrders($query,$id,$this->column_fields['vendor_id'],$this->column_fields['contact_id']);
+        }
 	function get_salesorder($id)
 	{
-		global $log;
-		$log->debug("Entering get_salesorder(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/SalesOrder/SalesOrder.php');
-        $focus = new SalesOrder();
- 
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-		$query = "SELECT vtiger_crmentity.*,
-			vtiger_salesorder.*,
-			vtiger_products.productname AS productname,
-			vtiger_account.accountname
-			FROM vtiger_salesorder
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_salesorder.salesorderid
-			INNER JOIN vtiger_soproductrel
-				ON vtiger_soproductrel.salesorderid = vtiger_salesorder.salesorderid
-			INNER JOIN vtiger_products
-				ON vtiger_products.productid = vtiger_soproductrel.productid
-			LEFT OUTER JOIN vtiger_account
-				ON vtiger_account.accountid = vtiger_salesorder.accountid
-			LEFT JOIN vtiger_sogrouprelation
-				ON vtiger_salesorder.salesorderid = vtiger_sogrouprelation.salesorderid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_sogrouprelation.groupname
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_products.productid = ".$id;
-		$log->debug("Exiting get_salesorder method ...");
-		return GetRelatedList('Products','SalesOrder',$focus,$query,$button,$returnset);
+		$query = "select crmentity.*, salesorder.*, products.productname as productname, account.accountname from salesorder inner join crmentity on crmentity.crmid=salesorder.salesorderid inner join soproductrel on soproductrel.salesorderid=salesorder.salesorderid inner join products on products.productid=soproductrel.productid left outer join account on account.accountid=salesorder.accountid where crmentity.deleted=0 and products.productid = ".$id;
+		renderProductSalesOrders($query,$id,$this->column_fields['contact_id'],$this->column_fields['parent_id']);	
 	}
 	function get_invoices($id)
 	{
-		global $log;
-		$log->debug("Entering get_invoices(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/Invoice/Invoice.php');
-		$focus = new Invoice();
-
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT vtiger_crmentity.*,
-			vtiger_invoice.*,
-			vtiger_invoiceproductrel.quantity,
-			vtiger_account.accountname
-			FROM vtiger_invoice
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_invoice.invoiceid
-			LEFT OUTER JOIN vtiger_account
-				ON vtiger_account.accountid = vtiger_invoice.accountid
-			INNER JOIN vtiger_invoiceproductrel
-				ON vtiger_invoiceproductrel.invoiceid = vtiger_invoice.invoiceid
-			LEFT JOIN vtiger_invoicegrouprelation
-				ON vtiger_invoice.invoiceid = vtiger_invoicegrouprelation.invoiceid
-			LEFT JOIN vtiger_groups
-				ON vtiger_groups.groupname = vtiger_invoicegrouprelation.groupname
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_invoiceproductrel.productid = ".$id;
-		$log->debug("Exiting get_invoices method ...");
-		return GetRelatedList('Products','Invoice',$focus,$query,$button,$returnset);
+		$query = "select crmentity.*, invoice.*, invoiceproductrel.quantity, account.accountname from invoice inner join crmentity on crmentity.crmid=invoice.invoiceid left outer join account on account.accountid=invoice.accountid inner join invoiceproductrel on invoiceproductrel.invoiceid=invoice.invoiceid where crmentity.deleted=0 and invoiceproductrel.productid=".$id;
+		renderRelatedInvoices($query,$id,$this->column_fields['parent_id']);
 	}
 	function get_product_pricebooks($id)
-	{     
-		global $log;
-		$log->debug("Entering get_product_pricebooks(".$id.") method ...");
-		global $mod_strings;
-		require_once('modules/PriceBooks/PriceBook.php');
-		$focus = new PriceBook();
-		$button = '';
-		$returnset = '&return_module=Products&return_action=DetailView&return_id='.$id;
-
-
-		$query = "SELECT vtiger_crmentity.crmid,
-			vtiger_pricebook.*,
-			vtiger_pricebookproductrel.productid as prodid
-			FROM vtiger_pricebook
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_pricebook.pricebookid
-			INNER JOIN vtiger_pricebookproductrel
-				ON vtiger_pricebookproductrel.pricebookid = vtiger_pricebook.pricebookid
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_pricebookproductrel.productid = ".$id; 
-		$log->debug("Exiting get_product_pricebooks method ...");
-		return GetRelatedList('Products','PriceBooks',$focus,$query,$button,$returnset);
+        {                                                                                                                     
+       	 	$query = 'select crmentity.crmid, pricebook.*,pricebookproductrel.productid as prodid from pricebook inner join crmentity on crmentity.crmid=pricebook.pricebookid inner join pricebookproductrel on pricebookproductrel.pricebookid=pricebook.pricebookid where crmentity.deleted=0 and pricebookproductrel.productid='.$id; 
+	 	renderProductRelatedPriceBooks($query,$id);                                                                  
 	}
-
 	function product_novendor()
 	{
-		global $log;
-		$log->debug("Entering product_novendor() method ...");
-		$query = "SELECT vtiger_products.productname, vtiger_crmentity.deleted
-			FROM vtiger_products
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_products.productid
-			WHERE vtiger_crmentity.deleted = 0
-			AND vtiger_products.vendor_id = ''";
+		$query = "SELECT products.productname,crmentity.deleted from products inner join crmentity on crmentity.crmid=products.productid where crmentity.deleted=0 and products.vendor_id=''";
 		$result=$this->db->query($query);
-		$log->debug("Exiting product_novendor method ...");
 		return $this->db->num_rows($result);
 	}
 	
+ //method added to construct the query to fetch the custom fields
+	function constructCustomQueryAddendum()
+	{
+		global $adb;
+		//get all the custom fields created
+		$sql1 = "select columnname,fieldlabel from field where generatedtype=2 and tabid=14";
+		$result = $adb->query($sql1);
+		$numRows = $adb->num_rows($result);
+		//select accountscf.columnname fieldlabel,accountscf.columnname fieldlabel
+		$sql3 = "select ";
+		for($i=0; $i < $numRows;$i++)
+		{
+			$columnName = $adb->query_result($result,$i,"columnname");
+			$fieldlable = $adb->query_result($result,$i,"fieldlabel");
+			//construct query as below
+			if($i == 0)
+			{
+				$sql3 .= "productcf.".$columnName. " '" .$fieldlable."'";
+			}
+			else
+			{
+				$sql3 .= ", productcf.".$columnName. " '" .$fieldlable."'";
+			}
+
+		}
+		return $sql3;
+
+	}
+
+
+	//check if the custom table exists or not in the first place
+	function checkIfCustomTableExists()
+	{
+		//$result = mysql_query("select * from accountcf");
+		//$testrow = mysql_num_fields($result);
+		$result = $this->db->query("select * from productcf");
+		$testrow = $this->db->num_fields($result);
+		if($testrow > 1)
+		{
+			$exists=true;
+		}
+		else
+		{
+			$exists=false;
+		}
+		return $exists;
+	}
+
+
 	
 	function create_export_query(&$order_by, &$where)
 	{
-		global $log;
-		$log->debug("Entering create_export_query(".$order_by.",".$where.") method ...");
-		if($this->checkIfCustomTableExists('productcf'))
+		if($this->checkIfCustomTableExists())
 		{
 
-		$query = $this->constructCustomQueryAddendum('productcf','Products') ."    
-			vtiger_products.productid AS productid,
-			vtiger_products.productname AS productname,
-			vtiger_products.productcode AS productcode,
-			vtiger_products.productcategory AS vtiger_productcategory,
-			vtiger_products.manufacturer AS vtiger_manufacturer,
-			vtiger_products.product_description AS product_description,
-			vtiger_products.qty_per_unit AS qty_per_unit,
-			vtiger_products.unit_price AS unit_price,
-			vtiger_products.weight AS weight,
-			vtiger_products.pack_size AS pack_size,
-				DATE_FORMAT(vtiger_products.start_date, '%Y-%M-%D') AS start_date,
-				DATE_FORMAT(vtiger_products.expiry_date, '%Y-%M-%D') AS expiry_date,
-			vtiger_products.cost_factor AS cost_factor,
-			vtiger_products.commissionrate AS commissionrate,
-			vtiger_products.commissionmethod AS commissionmethod,
-			vtiger_products.discontinued AS discontinued,
-			vtiger_products.sales_start_date AS sales_start_date,
-			vtiger_products.sales_end_date AS sales_end_date,
-			vtiger_products.usageunit AS vtiger_usageunit,
-			vtiger_products.serialno AS serialno,
-			vtiger_products.currency AS vtiger_currency,
-			vtiger_products.reorderlevel AS reorderlevel,
-			vtiger_products.website AS website,
-			vtiger_products.taxclass AS vtiger_taxclass,
-			vtiger_products.mfr_part_no AS mfr_part_no,
-			vtiger_products.vendor_part_no AS vtiger_vendor_part_no,
-			vtiger_products.qtyinstock AS qtyinstock,
-			vtiger_products.productsheet AS vtiger_productsheet,
-			vtiger_products.qtyindemand AS qtyindemand
-			FROM ".$this->entity_table."
-			INNER JOIN vtiger_products
-				ON vtiger_crmentity.crmid = vtiger_products.productid
-			INNER JOIN vtiger_users
-				ON vtiger_users.id = vtiger_crmentity.smownerid 
-			LEFT JOIN vtiger_productcf
-				ON vtiger_productcf.productid = vtiger_products.productid";
+			$query = $this->constructCustomQueryAddendum() . 
+				",    
+				products.productid productid,
+			products.productname productname,
+			products.productcode productcode,
+			products.productcategory productcategory,
+			products.manufacturer manufacturer,
+			products.product_description product_description,
+			products.qty_per_unit qty_per_unit,
+			products.unit_price unit_price,
+			products.weight weight,
+			products.pack_size pack_size,
+			DATE_FORMAT(products.start_date, '%Y-%M-%D') AS start_date,
+			DATE_FORMAT(products.expiry_date, '%Y-%M-%D') AS expiry_date,
+			products.cost_factor cost_factor,
+			products.commissionrate commissionrate,
+			products.commissionmethod commissionmethod,
+			products.discontinued discontinued,
+			products.sales_start_date AS sales_start_date,
+			products.sales_end_date AS sales_end_date,
+			products.usageunit AS usageunit,
+			products.serialno AS serialno,
+			products.currency AS currency,
+			products.reorderlevel AS reorderlevel,
+			products.website AS website,
+			products.taxclass AS taxclass,
+			products.mfr_part_no AS mfr_part_no,
+			products.vendor_part_no AS vendor_part_no,
+			products.qtyinstock AS qtyinstock,
+			products.productsheet AS productsheet,
+			products.qtyindemand AS qtyindemand
+				FROM ".$this->entity_table."
+				INNER JOIN products ON
+				crmentity.crmid = products.productid
+				INNER JOIN users on users.id=crmentity.smownerid 
+				LEFT JOIN productcf ON
+				productcf.productid = products.productid";
 
 		}
 		else
 		{
-			$query = "SELECT vtiger_products.productid AS productid,
-			vtiger_products.productname AS productname,
-			vtiger_products.productcode AS productcode,
-			vtiger_products.productcategory AS vtiger_productcategory,
-			vtiger_products.manufacturer AS vtiger_manufacturer,
-			vtiger_products.product_description AS product_description,
-			vtiger_products.qty_per_unit AS qty_per_unit,
-			vtiger_products.unit_price AS unit_price,
-			vtiger_products.weight AS weight,
-			vtiger_products.pack_size AS pack_size,
-				DATE_FORMAT(vtiger_products.start_date, '%Y-%M-%D') AS start_date,
-				DATE_FORMAT(vtiger_products.expiry_date, '%Y-%M-%D') AS expiry_date,
-			vtiger_products.cost_factor AS cost_factor,
-			vtiger_products.commissionrate AS commissionrate,
-			vtiger_products.commissionmethod AS commissionmethod,
-			vtiger_products.discontinued AS discontinued,
-			vtiger_products.sales_start_date AS sales_start_date,
-			vtiger_products.sales_end_date AS sales_end_date,
-			vtiger_products.usageunit AS vtiger_usageunit,
-			vtiger_products.serialno AS serialno,
-			vtiger_products.currency AS vtiger_currency,
-			vtiger_products.reorderlevel AS reorderlevel,
-			vtiger_products.website AS website,
-			vtiger_products.taxclass AS vtiger_taxclass,
-			vtiger_products.mfr_part_no AS mfr_part_no,
-			vtiger_products.vendor_part_no AS vtiger_vendor_part_no,
-			vtiger_products.qtyinstock AS qtyinstock,
-			vtiger_products.productsheet AS vtiger_productsheet,
-			vtiger_products.qtyindemand AS qtyindemand
-			FROM ".$this->table_name ."
-			INNER JOIN vtiger_crmentity
-				ON vtiger_crmentity.crmid = vtiger_products.productid 
-			INNER JOIN vtiger_users
-				ON vtiger_users.id=vtiger_crmentity.smownerid ";
+			$query = "SELECT
+				products.productid productid,
+			products.productname productname,
+			products.productcode productcode,
+			products.productcategory productcategory,
+			products.manufacturer manufacturer,
+			products.product_description product_description,
+			products.qty_per_unit qty_per_unit,
+			products.unit_price unit_price,
+			products.weight weight,
+			products.pack_size pack_size,
+			DATE_FORMAT(products.start_date, '%Y-%M-%D') AS start_date,
+			DATE_FORMAT(products.expiry_date, '%Y-%M-%D') AS expiry_date,
+			products.cost_factor cost_factor,
+			products.commissionrate commissionrate,
+			products.commissionmethod commissionmethod,
+			products.discontinued discontinued,
+			products.sales_start_date AS sales_start_date,
+			products.sales_end_date AS sales_end_date,
+			products.usageunit AS usageunit,
+			products.serialno AS serialno,
+			products.currency AS currency,
+			products.reorderlevel AS reorderlevel,
+			products.website AS website,
+			products.taxclass AS taxclass,
+			products.mfr_part_no AS mfr_part_no,
+			products.vendor_part_no AS vendor_part_no,
+			products.qtyinstock AS qtyinstock,
+			products.productsheet AS productsheet,
+			products.qtyindemand AS qtyindemand
+			FROM ".$this->table_name ." INNER JOIN crmentity on 
+			crmentity.crmid = products.productid 
+			INNER JOIN users on users.id=crmentity.smownerid ";
 
 		}
 	
-		  $where_auto = " vtiger_users.status = 'Active'
-                        AND vtiger_crmentity.deleted = 0 ";
+		  $where_auto = " users.status='Active'
+                        AND crmentity.deleted=0 ";
 
 
 
 		 if($where != "")
-                        $query .= " WHERE ($where) AND ".$where_auto;
+                        $query .= " where ($where) AND ".$where_auto;
                 else
-                        $query .= " WHERE ".$where_auto;
+                        $query .= " where ".$where_auto;
 
                 if(!empty($order_by))
                         $query .= " ORDER BY $order_by";
 
-		$log->debug("Exiting create_export_query method ...");
                 return $query;
 
 	}

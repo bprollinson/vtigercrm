@@ -17,7 +17,9 @@ require_once('include/logging.php');
 include('adodb/adodb.inc.php');
 require_once("adodb/adodb-xmlschema.inc.php");
 
-$log =& LoggerManager::getLogger('VT');
+require_once('vtigerlogger.php');
+global $vtlog;
+$vtlog = new vtigerLogger();
 
 class PearDatabase{
 	var $database = null;
@@ -42,11 +44,11 @@ class PearDatabase{
 		$log1 =& LoggerManager::getLogger('VT');
 		if(is_array($msg))
 		{
-			$log1->info("PearDatabse ->".print_r($msg,true));
+			$log1->fatal("PearDatabse ->".print_r($msg,true));
 		}
 		else
 		{
-			$log1->info("PearDatabase ->".$msg);
+			$log1->fatal("PearDatabase ->".$msg);
 		}
 		return $msg;
 	}
@@ -88,7 +90,7 @@ class PearDatabase{
 
 	function startTransaction()
 	{
-		//$this->println("TRANS Started");
+		$this->println("TRANS Started");
 		$this->checkConnection();
 		$this->database->StartTrans();
 	}
@@ -183,7 +185,7 @@ class PearDatabase{
 	 * Contributor(s): ______________________________________..
 	*/
 	function checkConnection(){
-global $log;
+global $vtlog;
 			if(!isset($this->database))
 			{
 				$this->println("TRANS creating new connection");
@@ -200,8 +202,7 @@ global $log;
 			else
 			{
 		//		$this->println("checkconnect using old connection");
-				/*** Delibrately commented as per Richie's advice(printed frequently)***/
-				// $log->debug('checkconnect using old connection');
+				 $vtlog->logthis('checkconnect using old connection','info');
 			}
 	}
 
@@ -226,9 +227,9 @@ global $log;
 
 	function query($sql, $dieOnError=false, $msg='')
 	{
-		global $log;
+		global $vtlog;
 		//$this->println("ADODB query ".$sql);		
-		$log->debug('query being executed : '.$sql);
+		$vtlog->logthis('query being executed : '.$sql,'debug');
 		$this->checkConnection();
 		$result = & $this->database->Execute($sql);
 		$this->lastmysqlrow = -1;
@@ -281,9 +282,9 @@ global $log;
 	
 	function limitQuery($sql,$start,$count, $dieOnError=false, $msg='')
 	{
-		global $log;
+		global $vtlog;
 		//$this->println("ADODB limitQuery sql=".$sql." st=".$start." co=".$count);
-		$log->debug(' limitQuery sql = '.$sql .' st = '.$start .' co = '.$count);
+		$vtlog->logthis(' limitQuery sql = '.$sql .' st = '.$start .' co = '.$count,'debug');
 		$this->checkConnection();
 		$result =& $this->database->SelectLimit($sql,$count,$start);
 		if(!$result) $this->checkError($msg.' Limit Query Failed:' . $sql . '::', $dieOnError);
@@ -396,12 +397,12 @@ global $log;
 	*/
 	
 	function getRowCount(&$result){
-		global $log;
+		global $vtlog;
 		//$this->println("ADODB getRowCount");
 		if(isset($result) && !empty($result))
 			$rows= $result->RecordCount();			
 		//$this->println("ADODB getRowCount rows=".$rows);	
-		//$log->debug('getRowCount rows= '.$rows);
+		$vtlog->logthis('getRowCount rows= '.$rows,'debug');
 		return $rows;			
 	}
 
@@ -439,7 +440,7 @@ global $log;
 		$result->Move($row);
 		$rowdata = $this->change_key_case($result->FetchRow());
 		//$this->println($rowdata);
-		$coldata = strip_selected_tags($rowdata[$col],'script');
+		$coldata = to_html($rowdata[$col]);
 		//$this->println("ADODB query_result ". $coldata);
 		return $coldata;
 	}
@@ -458,12 +459,12 @@ global $log;
 	}*/
 
 	function getAffectedRowCount(&$result){
-		global $log;
+		global $vtlog;
 //		$this->println("ADODB getAffectedRowCount");
-	$log->debug('getAffectedRowCount');
+	$vtlog->logthis('getAffectedRowCount','debug');
 		$rows =$this->database->Affected_Rows(); 
 	//	$this->println("ADODB getAffectedRowCount rows=".rows);
-	$log->debug('getAffectedRowCount rows = '.$rows);
+	$vtlog->logthis('getAffectedRowCount rows = '.$rows,'debug');
 		return $rows;
 	}
 			
@@ -573,10 +574,10 @@ global $log;
 	*/
 	
 	function getNextRow(&$result, $encode=true){
-		global $log;
+		global $vtlog;
 
 		//$this->println("ADODB getNextRow");
-		$log->info('getNextRow');
+		$vtlog->logthis('getNextRow','info');
 		if(isset($result)){
 			$row = $this->change_key_case($result->FetchRow());
 			if($row && $encode&& is_array($row))return array_map('to_html', $row);	
@@ -742,8 +743,20 @@ global $log;
         }
 }
 
+/* ADODB converted	
 function quote($string){
-	return $this->database->qstr($string);	
+	global $dbconfig;
+	if($dbconfig['db_type'] == 'mysql'){
+		$string = mysql_escape_string($string);
+	}else {$string = quoteSmart($string);}
+	}else {$string = $this->database->qstr($string,get_magic_quotes_gpc());}
+	//$string = strtr($string, array('_' => '\_', '%'=>'\%'));
+	return $string;
+}*/
+
+
+function quote($string){
+	return ADOConnection::qstr($string);	
 }
 
 

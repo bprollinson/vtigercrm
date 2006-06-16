@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: fcktoolbarfontsizecombo.js
  * 	FCKToolbarPanelButton Class: Handles the Fonts combo selector.
  * 
@@ -17,12 +15,9 @@
  * 		Frederico Caldeira Knabben (fredck@fckeditor.net)
  */
 
-var FCKToolbarFontSizeCombo = function( tooltip, style )
+var FCKToolbarFontSizeCombo = function()
 {
-	this.Command	= FCKCommands.GetCommand( 'FontSize' ) ;
-	this.Label		= this.GetLabel() ;
-	this.Tooltip	= tooltip ? tooltip : this.Label ;
-	this.Style		= style ? style : FCK_TOOLBARITEM_ICONTEXT ;
+	this.Command =  FCKCommands.GetCommand( 'FontSize' ) ;
 }
 
 // Inherit from FCKToolbarSpecialCombo.

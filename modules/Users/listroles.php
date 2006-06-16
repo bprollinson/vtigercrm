@@ -11,149 +11,86 @@
  ********************************************************************************/
 
 
-require_once('include/utils/UserInfoUtil.php');
-require_once('Smarty_setup.php');
-$smarty = new vtigerCRM_Smarty;
+require_once('include/database/PearDatabase.php');
+require_once('XTemplate/xtpl.php');
+require_once('themes/'.$theme.'/layout_utils.php');
+require_once('modules/Users/UserInfoUtil.php');
 
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
 
-
+echo '<form action="index.php" method="post" name="new" id="form">';
+echo get_module_title("Users",'Roles', true);
 
 global $adb;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
+require_once($theme_path.'layout_utils.php');
 
 
-//Retreiving the hierarchy
-$hquery = "select * from vtiger_role order by parentrole asc";
-$hr_res = $adb->query($hquery);
-$num_rows = $adb->num_rows($hr_res);
-$hrarray= Array();
+$xtpl=new XTemplate ('modules/Users/listroles.html');
 
-for($l=0; $l<$num_rows; $l++)
+$sql = "select * from role";
+$roleListResult = $adb->query($sql);
+$noofrows = $adb->num_rows($roleListResult);
+
+$standCustFld = getStdOutput($roleListResult, $noofrows, $mod_strings);
+
+//Standard PickList Fields
+function getStdOutput($roleListResult, $noofrows, $mod_strings)
 {
-	$roleid = $adb->query_result($hr_res,$l,'roleid');
-	$parent = $adb->query_result($hr_res,$l,'parentrole');
-	$temp_list = explode('::',$parent);
-	$size = sizeof($temp_list);
-	$i=0;
-	$k= Array();
-	$y=$hrarray;
-	if(sizeof($hrarray) == 0)
-	{
-		$hrarray[$temp_list[0]]= Array();
-	}
-	else
-	{
-		while($i<$size-1)
-		{
-			$y=$y[$temp_list[$i]];
-			$k[$temp_list[$i]] = $y;
-			$i++;
-
-		}
-		$y[$roleid] = Array();
-		$k[$roleid] = Array();
-
-		//Reversing the Array
-		$rev_temp_list=array_reverse($temp_list);
-		$j=0;
-		//Now adding this into the main array
-		foreach($rev_temp_list as $value)
-		{
-			if($j == $size-1)
-			{
-				$hrarray[$value]=$k[$value];
-			}
-			else
-			{
-				$k[$rev_temp_list[$j+1]][$value]=$k[$value];
-			}
-			$j++;
-		}
-	}
-
-}
-//Constructing the Roledetails array
-$role_det = getAllRoleDetails();
-$query = "select * from vtiger_role";
-$result = $adb->query($query);
-$num_rows=$adb->num_rows($result);
-
-$roleout ='';
-$roleout .= indent($hrarray,$roleout,$role_det);
-function indent($hrarray,$roleout,$role_det)
-{
-	global $theme;
-	$theme_path="themes/".$theme."/";
-	$image_path=$theme_path."images/";
-	foreach($hrarray as $roleid => $value)
-	{
+	global $adb;
+	global $app_strings;
+	//echo get_form_header("Profiles", "", false );
+	$standCustFld= '';
+	$standCustFld .= '<input type="hidden" name="module" value="Users">';
+	$standCustFld .= '<input type="hidden" name="action" value="createrole">';
+	$standCustFld .= '<br><input title="New" accessKey="C" class="button" type="submit" name="New" value="'.$mod_strings['LBL_TITLE_ROLE_NAME'].'">';
+	$standCustFld .= '<br><BR>'; 
+	$standCustFld .= '<table border="0" cellpadding="5" cellspacing="1" class="FormBorder" width="30%">';
+	$standCustFld .=  '<tr>';
+	$standCustFld .=   '<td class="ModuleListTitle" width="18%" height="21" style="padding:0px 3px 0px 3px;"><div><b>Operation</b></div></td>';
+	$standCustFld .=   '<td class="ModuleListTitle" height="21" style="padding:0px 3px 0px 3px;"><b>'.$mod_strings['LBL_ROLE_NAME'].'</b></td>';
+	$standCustFld .=  '</tr>';
 	
-		//retreiving the vtiger_role details
-		$role_det_arr=$role_det[$roleid];
-		$roleid_arr=$role_det_arr[2];
-		$rolename = $role_det_arr[0];
-		$roledepth = $role_det_arr[1]; 
-		$roleout .= '<ul class="uil" id="'.$roleid.'" style="display:block;list-style-type:none;">';
-		$roleout .=  '<li ><table border="0" cellpadding="0" cellspacing="0" onMouseOver="fnVisible(\'layer_'.$roleid.'\')" onMouseOut="fnInVisible(\'layer_'.$roleid.'\')">';
-		$roleout.= '<tr><td nowrap>';
-		if(sizeof($value) >0 && $roledepth != 0)
-		{	
-			$roleout.='<b style="font-weight:bold;margin:0;padding:0;cursor:pointer;">';
-			$roleout .= '<img src="'.$image_path.'/minus.gif" id="img_'.$roleid.'" border="0"  alt="Expand/Collapse" title="Expand/Collapse" align="absmiddle" onClick="showhide(\''.$roleid_arr.'\',\'img_'.$roleid.'\')" style="cursor:pointer;">';
-		}
-		else if($roledepth != 0){
-			$roleout .= '<img src="'.$image_path.'/vtigerDevDocs.gif" id="img_'.$roleid.'" border="0"  alt="Expand/Collapse" title="Expand/Collapse" align="absmiddle">';	
-		}
-		else{
-			$roleout .= '<img src="'.$image_path.'/menu_root.gif" id="img_'.$roleid.'" border="0"  alt="Root" title="Root" align="absmiddle">';
-		}	
-		if($roledepth == 0 ){
-			$roleout .= '&nbsp;<b class="genHeaderGray">'.$rolename.'</b></td>';
-			$roleout .= '<td nowrap><div id="layer_'.$roleid.'" class="drag_Element"><a href="index.php?module=Users&action=createrole&parenttab=Settings&parent='.$roleid.'"><img src="'.$image_path.'/Rolesadd.gif" align="absmiddle" border="0" alt="Add Role" title="Add Role"></a></div></td></tr></table>';
-		}
-		else{
-			$roleout .= '&nbsp;<a href="javascript:put_child_ID(\'user_'.$roleid.'\');" class="x" id="user_'.$roleid.'">'.$rolename.'</a></td>';
-
-			$roleout.='<td nowrap><div id="layer_'.$roleid.'" class="drag_Element">
-													<a href="index.php?module=Users&action=createrole&parenttab=Settings&parent='.$roleid.'"><img src="'.$image_path.'/Rolesadd.gif" align="absmiddle" border="0" alt="Add Role" title="Add Role"></a>
-													<a href="index.php?module=Users&action=createrole&roleid='.$roleid.'&parenttab=Settings&mode=edit"><img src="'.$image_path.'/RolesEdit.gif" align="absmiddle" border="0" alt="Edit Role" title="Edit Role"></a>
-													<a href="index.php?module=Users&action=RoleDeleteStep1&roleid='.$roleid.'&parenttab=Settings"><img src="'.$image_path.'/RolesDelete.gif" align="absmiddle" border="0" alt="Delete Role" title="Delete Role"></a>
-													<a href="#" class="small" onClick="get_parent_ID(this,\'user_'.$roleid.'\')"><img src="'.$image_path.'/RolesMove.gif" align="absmiddle" border="0" alt="Move Role" title="Move Role"></a>
-												</div></td></tr></table>';
-//			$roleout .=	'&nbsp;<a href="index.php?module=Users&action=createrole&parenttab=Settings&parent='.$roleid.'">Add</a> | <a href="index.php?module=Users&action=createrole&roleid='.$roleid.'&parenttab=Settings&mode=edit">Edit</a> | <a href="index.php?module=Users&action=RoleDeleteStep1&roleid='.$roleid.'&parenttab=Settings">Delete</a> | <a href="index.php?module=Users&action=RoleDetailView&parenttab=Settings&roleid='.$roleid.'">View</a>';		
-
-
-		}
- 		$roleout .=  '</li>';
-		if(sizeof($value) > 0 )
+	$row=1;
+	for($i=0; $i<$noofrows; $i++,$row++)
+	{
+		if ($row%2==0)
 		{
-			$roleout = indent($value,$roleout,$role_det);
+			$trowclass = 'evenListRow';
+		}
+		else
+		{	
+			$trowclass = 'oddListRow';
 		}
 
-		$roleout .=  '</ul>';
-
+		$standCustFld .= '<tr class="'.$trowclass.'">';
+		$role_name = $adb->query_result($roleListResult,$i,"name");
+		$role_id = $adb->query_result($roleListResult,$i,"roleid");
+		$standCustFld .= '<td width="18%" height="21" style="padding:0px 3px 0px 3px;"><div>';
+		$standCustFld .= '<a href="index.php?module=Users&action=createrole&mode=edit&roleid='.$role_id.'">'.$app_strings['LNK_EDIT'].'</a>';
+		global $current_user;
+        	$current_role = fetchUserRole($current_user->id);
+        	if($role_id != 1 && $role_id != 2 && $role_id != $current_role)
+        	{
+		$standCustFld .=' | <a href="index.php?module=Users&action=RoleDeleteStep1&roleid='.$role_id.'">'.$app_strings['LNK_DELETE'].'</a>';
+		}
+		$standCustFld .= '</div></td>';	
+		$standCustFld .= '<td height="21" style="padding:0px 3px 0px 3px;"><a href="index.php?module=Users&action=RoleDetailView&roleid='.$role_id.'">'.$role_name.'</a></td></tr>';
+		
 	}
+	$standCustFld .='</table>';
+	//echo $standCustFld;	
+	return $standCustFld;
+}
+$xtpl->assign("MOD", $mod_strings);
+$xtpl->assign("ROLES", $standCustFld);
 
-	return $roleout;
-}
-$smarty->assign("THEME",$theme_path);
-$smarty->assign("IMAGE_PATH",$image_path);
-$smarty->assign("APP", $app_strings);
-$smarty->assign("MOD", return_module_language($current_language,'Settings'));
-$smarty->assign("CMOD", $mod_strings);
-$smarty->assign("ROLETREE", $roleout);
 
-if($_REQUEST['ajax'] == 'true')
-{
-	$smarty->display("RoleTree.tpl");
-}
-else
-{
-	$smarty->display("ListRoles.tpl");
-}
+$xtpl->parse("main");
+$xtpl->out("main");
+
 ?>

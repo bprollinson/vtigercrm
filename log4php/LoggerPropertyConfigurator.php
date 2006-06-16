@@ -85,7 +85,7 @@ define('LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_INTERNAL_ROOT_NAME',   "root");
  * for details.</p>
  *
  * @author VxR <vxr@vxr.it>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.1 $
  * @package log4php
  * @since 0.5 
  */
@@ -336,13 +336,16 @@ class LoggerPropertyConfigurator extends LoggerConfigurator {
      */
     function doConfigureProperties($properties, &$hierarchy)
     {
-        $value = @$properties[LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_LOGGER_DEBUG_KEY];
-        
+		if(array_key_exists(LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_LOGGER_DEBUG_KEY, $properties))
+    		$value = @$properties[LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_LOGGER_DEBUG_KEY];
+		
         if (!empty($value)) {
             LoggerLog::internalDebugging(LoggerOptionConverter::toBoolean($value, LoggerLog::internalDebugging()));
         }
 
-        $thresholdStr = @$properties[LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_THRESHOLD_PREFIX];
+        $thresholdStr = null;
+		if(array_key_exists(LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_THRESHOLD_PREFIX, $properties))
+        	$thresholdStr = @$properties[LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_THRESHOLD_PREFIX];
         $hierarchy->setThreshold(LoggerOptionConverter::toLevel($thresholdStr, LoggerLevel::getLevelAll()));
         
         $this->configureRootCategory($properties, $hierarchy);
@@ -373,7 +376,8 @@ class LoggerPropertyConfigurator extends LoggerConfigurator {
      */
     function configureLoggerFactory($props)
     {
-        $factoryFqcn = @$props[LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_LOGGER_FACTORY_KEY];
+		if(array_key_exists(LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_LOGGER_FACTORY_KEY, $props))
+        	$factoryFqcn = @$props[LOG4PHP_LOGGER_PROPERTY_CONFIGURATOR_LOGGER_FACTORY_KEY];
         if(!empty($factoryFqcn)) {
             $factoryClassName = basename($factoryFqcn);
             LoggerLog::debug(

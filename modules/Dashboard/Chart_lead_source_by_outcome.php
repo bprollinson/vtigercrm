@@ -13,14 +13,14 @@
  * Contributor(s): ______________________________________.
  ********************************************************************************/
 /*********************************************************************************
- * $Header$
+ * $Header: /cvsroot/vtigercrm/vtiger_crm/modules/Dashboard/Chart_lead_source_by_outcome.php,v 1.17 2005/05/03 13:18:53 saraj Exp $
  * Description:  returns HTML for client-side image map.
  * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc.
  * All Rights Reserved.
  * Contributor(s): ______________________________________..
  ********************************************************************************/
 
-require_once('include/utils/utils.php');
+require_once('include/utils.php');
 require_once('include/logging.php');
 require_once("modules/Potentials/Charts.php");
 require_once('include/ComboUtil.php');
@@ -89,7 +89,7 @@ else {
 	$ids = array_keys($ids);
 }
 
-//create unique prefix based on selected vtiger_users for image vtiger_files
+//create unique prefix based on selected users for image files
 $id_hash = '';
 if (isset($ids)) {
 	sort($ids);
@@ -101,8 +101,10 @@ $log->debug($ids);
 $cache_file_name = $id_hash."_lead_source_by_outcome_".$current_language."_".crc32(implode('',$datax)).".png";
 $log->debug("cache file name is: $cache_file_name");
 
-if(isPermitted('Potentials','index')=="yes")
-{
+if (substr(phpversion(), 0, 1) == "5") { // php5 }
+	echo "<em>Charts not supported in PHP 5.</em>";
+}
+else {
 $draw_this = new jpgraph();
 echo $draw_this->lead_source_by_outcome($datax, $ids, $tmp_dir.$cache_file_name, $refresh);
 echo "<P><font size='1'><em>".$current_module_strings['LBL_LEAD_SOURCE_BY_OUTCOME_DESC']."</em></font></P>";
@@ -138,9 +140,4 @@ else {
 [<a href="index.php?module=<?php echo $currentModule;?>&action=<?php echo $action;?>&lsbo_edit=true"><?php echo $current_module_strings['LBL_EDIT'];?></a>]
 </FONT></div>
 <?php } 
-}
-else
-{
-        echo $mod_strings['LBL_NO_PERMISSION'];
-}
-?>
+}?>

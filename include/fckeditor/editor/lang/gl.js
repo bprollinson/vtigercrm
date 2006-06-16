@@ -8,8 +8,6 @@
  * For further information visit:
  * 		http://www.fckeditor.net/
  * 
- * "Support Open Source software. What about a donation today?"
- * 
  * File Name: gl.js
  * 	Galician language file.
  * 
@@ -85,8 +83,6 @@ Find				: "Procurar",
 Replace				: "Substituir",
 SpellCheck			: "Corrección Ortográfica",
 UniversalKeyboard	: "Teclado Universal",
-PageBreakLbl		: "Salto de Páxina",
-PageBreak			: "Inserir Salto de Páxina",
 
 Form			: "Formulario",
 Checkbox		: "Cadro de Verificación",
@@ -108,7 +104,6 @@ InsertCell			: "Inserir Cela",
 DeleteCells			: "Borrar Cela",
 MergeCells			: "Unir Celas",
 SplitCell			: "Partir Celas",
-TableDelete			: "Borrar Taboa",
 CellProperties		: "Propriedades da Cela",
 TableProperties		: "Propriedades da Taboa",
 ImageProperties		: "Propriedades Imaxe",
@@ -136,9 +131,6 @@ UnknownToolbarItem	: "Ítem de ferramentas descoñecido \"%1\"",
 UnknownCommand		: "Nome de comando descoñecido \"%1\"",
 NotImplemented		: "Comando non implementado",
 UnknownToolbarSet	: "O conxunto de ferramentas \"%1\" non existe",
-NoActiveX			: "As opcións de seguridade do seu navegador poderían limitar algunha das características de editor. Debe activar a opción \"Executar controis ActiveX e plug-ins\". Pode notar que faltan características e experimentar erros",
-BrowseServerBlocked : "Non se poido abrir o navegador de recursos. Asegúrese de que están desactivados os bloqueadores de xanelas emerxentes",
-DialogBlocked		: "Non foi posible abrir a xanela de diálogo. Asegúrese de que están desactivados os bloqueadores de xanelas emerxentes",
 
 // Dialogs
 DlgBtnOK			: "OK",
@@ -283,7 +275,6 @@ DlgTableHeight		: "Altura",
 DlgTableCellSpace	: "Marxe entre Celas",
 DlgTableCellPad		: "Marxe interior",
 DlgTableCaption		: "Título",
-DlgTableSummary		: "Sumario",
 
 // Table Cell Dialog
 DlgCellTitle		: "Propriedades da Cela",
@@ -422,7 +413,7 @@ BulletedListProp	: "Propriedades das Marcas",
 NumberedListProp	: "Propriedades da Lista de Numeración",
 DlgLstType			: "Tipo",
 DlgLstTypeCircle	: "Círculo",
-DlgLstTypeDisc		: "Disco",
+DlgLstTypeDisk		: "Disco",
 DlgLstTypeSquare	: "Cuadrado",
 DlgLstTypeNumbers	: "Números (1, 2, 3)",
 DlgLstTypeLCase		: "Letras Minúsculas (a, b, c)",

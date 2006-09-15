@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://vtiger/skin/vtigercrm_overlay.css" type="text/css"?>
+
+<!--/* ********************************************************************************
+* The contents of this file are subject to the vtiger CRM Public License Version 1.0
+ * ("License"); You may not use this file except in compliance with the License
+ * The Original Code is:  vtiger CRM Open Source
+ * The Initial Developer of the Original Code is vtiger.
+ * Portions created by vtiger are Copyright (C) vtiger.
+ * All Rights Reserved.
+*
+******************************************************************************* */-->
+
+<overlay id="VTIGER-Overlay"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+	<script type="application/x-javascript" src="chrome://vtiger/content/vtigercrm_toolbar.js" />
+	<script type="application/x-javascript" src="chrome://vtiger/content/vtiger_uninstall.js"/>
+			
+	<toolbox id="navigator-toolbox" onload="alert('here');">
+		<toolbar id="vtigerCRM-Toolbar" accesskey="v" class="chromeclass-toolbar"
+        		context="toolbar-context-menu" toolbarname="vtiger Toolbar"
+         		hidden="false" persist="hidden">
+  			<toolbaritem flex="0">
+				<toolbarbutton id="VTIGER-MainMenu" label="vtigerCRM " type="menu" tooltiptext="Toolbar Main Menu">
+					<menupopup>
+						       
+					<menuitem label="Login to vtigerCRM" tooltiptext="configure login detail" onclick="window.openDialog('chrome://vtiger/content/vtiger_loginconfig.xul','','chrome,resizable=no,titlebar,modal,centerscreen');check_temp_variable();" />
+						
+						<menuseparator/>
+
+						<menu label="TalkBack">
+							<menupopup>
+             							<menuitem label="About Us"
+									  oncommand="VTIGER_LoadURL('http://www.vtiger.com/aboutus.html')"/>
+              							<menuitem label="Contact Us"
+						                          oncommand="VTIGER_LoadURL('http://www.vtiger.com/contactus.html')"/>
+              							<menuitem label="Support"
+									oncommand="VTIGER_LoadURL('http://www.vtiger.com/portal/index.php')"/>    
+           						 </menupopup>
+						 </menu>
+					 	 
+						 <menuitem label="Blogs" tooltiptext="vtigerCRM Blogs" oncommand="VTIGER_LoadURL('http://blogs.vtiger.com')" />
+						 						
+						<menuseparator/>		
+					<menuitem label="Logout" tooltiptext="Logout" onclick="logout();" />	
+					</menupopup>
+					
+				</toolbarbutton>
+				
+  			</toolbaritem>
+
+			<toolbarseparator/>
+			
+			<toolbarbutton id="VTIGER-LEAD" disabled="true" label="Create Lead" tooltiptext="Click to create New Lead"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_lead.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+
+			<toolbarbutton id="VTIGER-CONTACT" disabled="true" label="Create Contact" tooltiptext="Click to create New Contact"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_contact.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+
+			<toolbarbutton id="VTIGER-ACCOUNT" disabled="true" label="Create Account" tooltiptext="Click to create New Account"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_account.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+
+			<toolbarbutton id="VTIGER-TICKET" disabled="true" label="Create Ticket" tooltiptext="Click to create New Ticket"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_ticket.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+			<toolbarbutton id="VTIGER-VENDOR" disabled="true" label="Create Vendor" tooltiptext="Click to create New Vendor"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_vendor.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+			<toolbarbutton id="VTIGER-PRODUCT" disabled="true" label="Create Product" tooltiptext="Click to create New Product"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_product.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+			<toolbarbutton id="VTIGER-NOTE" disabled="true" label="Create Note" tooltiptext="Click to create New Note"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_note.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+			<toolbarbutton id="VTIGER-SITE" disabled="true" label="Create Site" tooltiptext="Click to create New Site"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_site.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+			<toolbarbutton id="VTIGER-RSS" disabled="true" label="Create RSS" tooltiptext="Click to create New RSS"  class="menuitem-iconic" oncommand="window.openDialog('chrome://vtiger/content/create_rss.xul','','chrome,resizable=no,titlebar,modal,centerscreen');" />
+
+			
+			<toolbarseparator/>
+		</toolbar>
+	
+	</toolbox>
+</overlay>	
+

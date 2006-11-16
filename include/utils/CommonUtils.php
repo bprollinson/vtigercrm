@@ -1070,26 +1070,29 @@ function getBlocks($module,$disp_view,$mode,$col_fields='',$info_type='')
 	$log->debug("Exiting getBlocks method ...");
 	$index_count =1;
 	$max_index =0;
-	foreach($getBlockInfo as $label=>$contents)
+	if(count($getBlockInfo) > 0)
 	{
+		foreach($getBlockInfo as $label=>$contents)
+		{
 			$no_rows = count($contents);	
 			$index_count = $max_index+1;
-		foreach($contents as $block_row => $elements)
-		{
-			$max_index= $no_rows+$index_count;
-			
-			for($i=0;$i<count($elements);$i++)
-			{	
-				if(sizeof($getBlockInfo[$label][$block_row][$i])!=0)
-				{
-					if($i==0)
-					$getBlockInfo[$label][$block_row][$i][]=array($index_count);
-					else
-					$getBlockInfo[$label][$block_row][$i][]=array($max_index);
+			foreach($contents as $block_row => $elements)
+			{
+				$max_index= $no_rows+$index_count;
+
+				for($i=0;$i<count($elements);$i++)
+				{	
+					if(sizeof($getBlockInfo[$label][$block_row][$i])!=0)
+					{
+						if($i==0)
+						$getBlockInfo[$label][$block_row][$i][]=array($index_count);
+						else
+						$getBlockInfo[$label][$block_row][$i][]=array($max_index);
+					}
 				}
+				$index_count++;
+
 			}
-			$index_count++;
-			
 		}
 	}
 	return $getBlockInfo;
@@ -1821,20 +1824,6 @@ function getQuickCreateModules()
          global $mod_strings;
 
 
-	$new_label=Array('Leads'=>'LNK_NEW_LEAD',
-			 'Accounts'=>'LNK_NEW_ACCOUNT',
-			 'Calendar'=>'LNK_NEW_TASK',
-			 'Campaigns'=>'LNK_NEW_CAMPAIGN',
-			 'Emails'=>'LNK_NEW_EMAIL',
-			 'Events'=>'LNK_NEW_EVENT',
-			 'HelpDesk'=>'LNK_NEW_HDESK',
-			 'Notes'=>'LNK_NEW_NOTE',
-			 'Potentials'=>'LNK_NEW_OPPORTUNITY',
-			 'PriceBooks'=>'LNK_NEW_PRICEBOOK',
-			 'Products'=>'LNK_NEW_PRODUCT',
-			 'Contacts'=>'LNK_NEW_CONTACT',
-			 'Vendors'=>'LNK_NEW_VENDOR'); 	
-
 $qc_query = "select distinct vtiger_tab.tablabel,vtiger_tab.name from vtiger_field inner join vtiger_tab on vtiger_tab.tabid = vtiger_field.tabid where quickcreate=0 order by vtiger_tab.tablabel";
 $result = $adb->query($qc_query);
 $noofrows = $adb->num_rows($result);
@@ -1844,7 +1833,7 @@ for($i = 0; $i < $noofrows; $i++)
          $tablabel = $adb->query_result($result,$i,'tablabel');
 
          $tabname = $adb->query_result($result,$i,'name');
-	 $tablabel = $new_label[$tabname];
+	 $tablabel = "SINGLE_$tabname";
 	 if(isPermitted($tabname,'EditView','') == 'yes')
 	 {
          	$return_qcmodule[] = $tablabel;
@@ -2528,4 +2517,17 @@ function getrecurringObjValue()
 	}
 	
 }
+
+/**	Function used to get the translated string to the input string
+ *	@param string $str - input string which we want to translate
+ *	@return string $str - translated string, if the translated string is available then the translated string other wise original string will be returned
+ */
+function getTranslatedString($str)
+{
+	global $app_strings, $mod_strings, $log;
+	$str = ($app_strings[$str] != '')?$app_strings[$str]:(($mod_strings[$str] != '')?$mod_strings[$str]:$str);
+	$log->debug("function getTranslatedString($str) - translated to ($str)");
+	return $str;
+}
+
 ?>

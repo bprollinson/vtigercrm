@@ -764,7 +764,12 @@ class CustomView extends CRMEntity{
 					//Ends
 					
 					$tablefield[$list[0]] = $list[1];
-					$fieldlabel = trim(str_replace($this->escapemodule," ",$list[3]));
+
+					//Changed as the replace of module name may replace the string if the fieldname has module name in it -- Jeri
+					$fieldinfo = explode('_',$list[3],2);
+					$fieldlabel = $fieldinfo[1];
+					$fieldlabel = str_replace("_"," ",$fieldlabel);
+					
 					$this->list_fields[$fieldlabel] = $tablefield;
 					$this->list_fields_name[$fieldlabel] = $list[2];
 				}
@@ -1112,6 +1117,9 @@ class CustomView extends CRMEntity{
 			}elseif(trim($value) == "" && $datatype == "V")
 			{
 				$rtvalue = " = ".$adb->quote($value);	
+			}elseif(trim($value) == "" && $datatype == "E")
+			{
+				$rtvalue = " = ".$adb->quote($value);	
 			}else
 			{
 				$rtvalue = " is NULL";
@@ -1126,6 +1134,9 @@ class CustomView extends CRMEntity{
 			{
 				$rtvalue = " <> ".$adb->quote($value);
 			}elseif(trim($value) == "" && $datatype == "V")
+			{
+				$rtvalue = " <> ".$adb->quote($value);	
+			}elseif(trim($value) == "" && $datatype == "E")
 			{
 				$rtvalue = " <> ".$adb->quote($value);	
 			}else

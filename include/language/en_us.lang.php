@@ -85,6 +85,7 @@ $app_strings = Array(
 'LBL_OR'=>'or',
 
 'LBL_ALT_HOT_KEY'=>'Alt+',
+
 //added for 4.2
 'LBL_SAVE_LABEL'=>'Save',
 
@@ -94,7 +95,6 @@ $app_strings = Array(
 'LBL_SAVE_BUTTON_TITLE'=>'Save [Alt+S]',
 
 'LBL_EDIT_BUTTON_TITLE'=>'Edit [Alt+E]',
-
 'LBL_CONVERTSO_BUTTON_TITLE'=>'Create SalesOrder',
 'LBL_CONVERTINVOICE_BUTTON_TITLE'=>'Create Invoice',
 
@@ -1249,7 +1249,4 @@ $app_list_strings = Array(
 		'Opportunities' => 'Opportunity'),
 
 );
-
-
-
 ?>

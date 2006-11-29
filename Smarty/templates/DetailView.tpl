@@ -54,7 +54,7 @@ function tagvalidate()
 		return false;
 	{rdelim}
 {rdelim}
-function DeleteTag(id)
+function DeleteTag(id,recordid)
 {ldelim}
 	$("vtbusy_info").style.display="inline";
 	Effect.Fade('tag_'+id);
@@ -62,7 +62,7 @@ function DeleteTag(id)
 		'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
                         method: 'post',
-                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&tagid=" +id,
+                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&recordid="+recordid+"&tagid=" +id,
                         onComplete: function(response) {ldelim}
 						getTagCloud();
 						$("vtbusy_info").style.display="none";
@@ -128,7 +128,7 @@ function DeleteTag(id)
 				<table border=0 cellspacing=0 cellpadding=3 width=100% class="small">
 				<tr>
 					<td class="dvtTabCache" style="width:10px" nowrap>&nbsp;</td>
-					{if $MODULE eq 'Notes' || $MODULE eq 'Faq' || $MODULE eq 'Webmails' || ($MODULE eq 'Calendar' && $ACTIVITY_MODE eq 'Task')}
+					{if $IS_REL_LIST eq 'false'}
 					<td class="dvtSelectedCell" align=center nowrap>{$APP[$SINGLE_MOD]} {$APP.LBL_INFORMATION}</td>
 					<td class="dvtTabCache" style="width:100%">&nbsp;</td>
 					{else}
@@ -380,7 +380,7 @@ function DeleteTag(id)
 </td></tr>
 {/if}
 </form>
-			{if $SinglePane_View eq 'true'}
+			{if $SinglePane_View eq 'true' && $IS_REL_LIST eq 'true'}
 				{include file= 'RelatedListNew.tpl'}
 			{/if}
 		</table>

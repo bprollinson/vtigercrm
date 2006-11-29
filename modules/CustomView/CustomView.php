@@ -186,20 +186,28 @@ class CustomView extends CRMEntity{
 		$tabid = getTabid($module);
 		global $current_user;
 	        require('user_privileges/user_privileges_'.$current_user->id.'.php');
+		if($tabid == 4 || $tabid ==7)
+		{
+			$display_type = " vtiger_field.displaytype in (1,2,3)";
+		}else
+		{
+			$display_type = " vtiger_field.displaytype in (1,2)";
+		}
 
 		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
 		{
 			$sql = "select * from vtiger_field ";
 			$sql.= " where vtiger_field.tabid=".$tabid." and vtiger_field.block in (".$block.") and";
-			$sql.= " vtiger_field.displaytype in (1,2)";
+			$sql.= $display_type;
 			$sql.= " order by sequence";
 		}
 		else
 		{
+
 			$profileList = getCurrentUserProfileList();
 			$sql = "select * from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid ";
 			$sql.= " where vtiger_field.tabid=".$tabid." and vtiger_field.block in (".$block.") and";
-			$sql.= " vtiger_field.displaytype in (1,2) and vtiger_profile2field.visible=0";
+			$sql.= "$display_type and vtiger_profile2field.visible=0";
 			$sql.= " and vtiger_def_org_field.visible=0  and vtiger_profile2field.profileid in ".$profileList." order by sequence";
 		}	
 
@@ -764,7 +772,12 @@ class CustomView extends CRMEntity{
 					//Ends
 					
 					$tablefield[$list[0]] = $list[1];
-					$fieldlabel = trim(str_replace($this->escapemodule," ",$list[3]));
+
+					//Changed as the replace of module name may replace the string if the fieldname has module name in it -- Jeri
+					$fieldinfo = explode('_',$list[3],2);
+					$fieldlabel = $fieldinfo[1];
+					$fieldlabel = str_replace("_"," ",$fieldlabel);
+					
 					$this->list_fields[$fieldlabel] = $tablefield;
 					$this->list_fields_name[$fieldlabel] = $list[2];
 				}
@@ -1112,6 +1125,9 @@ class CustomView extends CRMEntity{
 			}elseif(trim($value) == "" && $datatype == "V")
 			{
 				$rtvalue = " = ".$adb->quote($value);	
+			}elseif(trim($value) == "" && $datatype == "E")
+			{
+				$rtvalue = " = ".$adb->quote($value);	
 			}else
 			{
 				$rtvalue = " is NULL";
@@ -1126,6 +1142,9 @@ class CustomView extends CRMEntity{
 			{
 				$rtvalue = " <> ".$adb->quote($value);
 			}elseif(trim($value) == "" && $datatype == "V")
+			{
+				$rtvalue = " <> ".$adb->quote($value);	
+			}elseif(trim($value) == "" && $datatype == "E")
 			{
 				$rtvalue = " <> ".$adb->quote($value);	
 			}else

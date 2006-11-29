@@ -83,6 +83,8 @@ class Invoice extends CRMEntity {
 	var $default_order_by = 'crmid';
 	var $default_sort_order = 'ASC';
 
+	var $groupTable = Array('vtiger_invoicegrouprelation','invoiceid');
+
 	/**	Constructor which will set the column_fields in this object
 	 */
 	function Invoice() {
@@ -107,8 +109,13 @@ class Invoice extends CRMEntity {
         		$query1 = "update vtiger_salesorder set sostatus='Approved' where salesorderid=".$so_id;
         		$this->db->query($query1);
 		}
-		//Based on the total Number of rows we will save the product relationship with this entity
-		saveInventoryProductDetails(&$this, 'Invoice');
+
+		//in ajax save we should not call this function, because this will delete all the existing product values
+		if($_REQUEST['action'] != 'InvoiceAjax' && $_REQUEST['ajxaction'] != 'DETAILVIEW')
+		{
+			//Based on the total Number of rows we will save the product relationship with this entity
+			saveInventoryProductDetails(&$this, 'Invoice');
+		}
 	}
 
 

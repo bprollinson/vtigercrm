@@ -31,15 +31,15 @@ function show_msg($mails,$start_message) {
 
         $displayed_msgs++;
         if ($mails[$start_message]->deleted && !$show_hidden) {
-                $flags = "<tr id='row_".$num."' class='deletedRow' style='display:none'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
+                $flags = "<tr id='row_".$num."' class='mailSelected' style='display:none'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
         $displayed_msgs--;
         } elseif ($mails[$start_message]->deleted && $show_hidden)
-                $flags = "<tr id='row_".$num."' class='deletedRow'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
+                $flags = "<tr id='row_".$num."' class='mailSelected'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
         elseif (!$mails[$start_message]->seen || $mails[$start_message]->recent) {
-                $flags = "<tr class='unread_email' id='row_".$num."'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
+                $flags = "<tr class='mailSelected' id='row_".$num."'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
                 $new_msgs++;
         } else
-                $flags = "<tr id='row_".$num."'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
+                $flags = "<tr onmouseover='this.className=\"tabSelected\"' onmouseout='this.className=\"\"' id='row_".$num."'><td width='2px'><input type='checkbox' name='checkbox_".$num."' class='msg_check'></td><td colspan='1'>";
 
         // Attachment Icons
         if($msg_ob->has_attachments)
@@ -87,7 +87,7 @@ function show_msg($mails,$start_message) {
         }
 
         if($mails[$start_message]->deleted)
-                $listview_entries[$num][] = '<td nowrap align="center" id="deleted_td_'.$num.'"><span id="del_link_'.$num.'"><a href="javascript:void(0);" onclick="runEmailCommand(\'undelete_msg\','.$num.');"><img src="modules/Webmails/images/gnome-fs-trash-full.png" border="0" width="14" height="14" alt="del"></a></span></td></tr>';
+                $listview_entries[$num][] = '<td nowrap align="center" id="deleted_td_'.$num.'"><span id="del_link_'.$num.'"><a href="javascript:void(0);" onclick="runEmailCommand(\'undelete_msg\','.$num.');"><img src="modules/Webmails/images/gnome-fs-trash-empty.png" border="0" width="14" height="14" alt="del"></a></span></td></tr>';
         else
                 $listview_entries[$num][] = '<td nowrap align="center" id="ndeleted_td_'.$num.'"><span id="del_link_'.$num.'"><a href="javascript:void(0);" onclick="runEmailCommand(\'delete_msg\','.$num.');"><img src="modules/Webmails/images/gnome-fs-trash-empty.png" border="0" width="14" height="14" alt="del"></a></span></td></tr>';
 

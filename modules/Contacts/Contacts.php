@@ -122,6 +122,8 @@ class Contacts extends CRMEntity {
 	var $default_order_by = 'lastname';
 	var $default_sort_order = 'ASC';
 
+	var $groupTable = Array('vtiger_contactgrouprelation','contactid');
+
 	function Contacts() {
 		$this->log = LoggerManager::getLogger('contact');
 		$this->db = new PearDatabase();
@@ -659,10 +661,10 @@ class Contacts extends CRMEntity {
 		$sql = getPermittedFieldsQuery("Contacts", "detail_view");
 		$fields_list = getFieldsListFromQuery($sql);
 
-		$query = "SELECT $fields_list 
+		$query = "SELECT $fields_list, vtiger_contactgrouprelation.groupname as 'Assigned To Group' 
                                 FROM vtiger_contactdetails
                                 inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_contactdetails.contactid
-                                LEFT JOIN vtiger_users ON vtiger_crmentity.smownerid=vtiger_users.id
+                                LEFT JOIN vtiger_users ON vtiger_crmentity.smownerid=vtiger_users.id and vtiger_users.status='Active' 
                                 LEFT JOIN vtiger_account on vtiger_contactdetails.accountid=vtiger_account.accountid
 				left join vtiger_contactaddress on vtiger_contactaddress.contactaddressid=vtiger_contactdetails.contactid
 				left join vtiger_contactsubdetails on vtiger_contactsubdetails.contactsubscriptionid=vtiger_contactdetails.contactid
@@ -674,7 +676,7 @@ class Contacts extends CRMEntity {
                         	        ON vtiger_groups.groupname = vtiger_contactgrouprelation.groupname
 				LEFT JOIN vtiger_contactdetails vtiger_contactdetails2
 					ON vtiger_contactdetails2.contactid = vtiger_contactdetails.reportsto
-				where vtiger_crmentity.deleted=0 and vtiger_users.status='Active' ";
+				where vtiger_crmentity.deleted=0";
 				//vtiger_contactdetails2 is added to get the Reports To of Contact
 
 		require('user_privileges/user_privileges_'.$current_user->id.'.php');

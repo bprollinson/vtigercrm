@@ -87,34 +87,47 @@ if($_POST["command"] == "check_mbox_all") {
 if($_POST["command"] == "check_mbox") {
         $adb->println("Inside check_mbox AJAX command");
 
-        $search = imap_search($MailBox->mbox, "ALL NEW");
+	$criteria = 'ALL NEW';
+        $search = imap_search($MailBox->mbox, $criteria);
         if($search === false) {echo "failed";flush();exit();}
 
+	$adb->println("imap_search($MailBox->mbox, $criteria) ===> ");
+	$adb->println($search);
+	
         $data = imap_fetch_overview($MailBox->mbox,implode(',',$search));
         $num=sizeof($data);
+
+	$adb->println("fetched data using imap_fetch_overview ==>");
+	$adb->println($data);
 
         $ret = '';
         if($num > 0) {
                 $ret = '{"mails":[';
-                for($i=0;$i<$num;$i++) {
-                        $ret .= '{"mail":';
-                        $ret .= '{';
-                        $ret .= '"mailid":"'.$data[$i]->msgno.'",';
-                        $ret .= '"subject":"'.substr($data[$i]->subject,0,40).'",';
-                        $ret .= '"date":"'.substr($data[$i]->date,0,30).'",';
-                        $ret .= '"from":"'.substr($data[$i]->from,0,20).'",';
-                        $ret .= '"to":"'.$data[$i]->to.'",';
-                        $email = new Webmail($MailBox->mbox,$data[$i]->msgno);
-                        if($email->has_attachments)
-                                $ret .= '"attachments":"1"}';
-                        else
-                                $ret .= '"attachments":"0"}';
-                        if(($i+1) == $num)
-                                $ret .= '}';
-                        else
-                                $ret .= '},';
+                for($i=0;$i<$num;$i++) 
+		{
+			//Added condition to avoid show the deleted mails and readed mails
+			if($data[$i]->deleted == 0)// && $data[$i]->seen == 0)
+			{
+                        	$ret .= '{"mail":';
+                        	$ret .= '{';
+                        	$ret .= '"mailid":"'.$data[$i]->msgno.'",';
+                       		$ret .= '"subject":"'.substr($data[$i]->subject,0,40).'",';
+                        	$ret .= '"date":"'.substr($data[$i]->date,0,30).'",';
+                        	$ret .= '"from":"'.substr($data[$i]->from,0,20).'",';
+                        	$ret .= '"to":"'.$data[$i]->to.'",';
+                        	$email = new Webmail($MailBox->mbox,$data[$i]->msgno);
+                        	if($email->has_attachments)
+                        	        $ret .= '"attachments":"1"}';
+                        	else
+                        	        $ret .= '"attachments":"0"}';
+                        	if(($i+1) == $num)
+                        	        $ret .= '}';
+                        	else
+                        	        $ret .= '},';
+			}
                 }
                 $ret .= ']}';
+		$adb->println("Ret Value ==> $ret");
         }
 
         echo $ret;
@@ -176,6 +189,8 @@ $user_dir=$save_path."/".$_SESSION["authenticated_user_id"];
 $elist = $MailBox->mailList;
 $numEmails = $elist["count"];
 $headers = $elist["headers"];
+
+$mails_per_page = $MailBox->mails_per_page;
 
 if($start == 1 || $start == "") {
 	$start_message=$numEmails;
@@ -265,31 +280,32 @@ $list = imap_getmailboxes($MailBox->mbox, "{".$MailBox->imapServerAddress."}", "
 sort($list);
 $i=0;
 if (is_array($list)) {
-      	$boxes = '<select name="mailbox" id="mailbox_select">';
+      	$boxes = '<select name="mailbox" id="mailbox_select" onChange="move_messages();">';
+        $boxes .= '<option value="move_to" SELECTED>Move To...</option>';
         foreach ($list as $key => $val) {
 		$tmpval = preg_replace(array("/\{.*?\}/i"),array(""),$val->name);
 		if(preg_match("/trash/i",$tmpval))
 			$img = "webmail_trash.gif";
 		elseif(preg_match("/sent/i",$tmpval))
-			$img = "webmail_uparrow.gif";
+			$img = "emailOutFolder.gif";
 		else
-			$img = "webmail_downarrow.gif";
+			$img = "emailInFolder.gif";
 
 		$i++;
 
 		if ($_REQUEST["mailbox"] == $tmpval) {
-                        $boxes .= '<option value="'.$tmpval.'" SELECTED>'.$tmpval;
+                        $boxes .= '<option value="'.$tmpval.'">'.$tmpval;
 			$_SESSION["mailboxes"][$tmpval] = $new_msgs;
 
 			if($numEmails==0) {$num=$numEmails;} else {$num=($numEmails-1);}
-			$folders .= '<li><img src="'.$image_path.'/'.$img.'" align="absmiddle" />&nbsp;&nbsp;<a href="javascript:changeMbox(\''.$tmpval.'\');" class="webMnu" onmouseover="show_remfolder(\''.$tmpval.'\');" onmouseout="show_remfolder(\''.$tmpval.'\');">'.$tmpval.'</a>&nbsp;&nbsp;<span id="'.$tmpval.'_count" style="font-weight:bold">(<span id="'.$tmpval.'_unread">'.$new_msgs.'</span> of <span id="'.$tmpval.'_read">'.$num.'</span>)</span>&nbsp;&nbsp;<span id="remove_'.$tmpval.'" style="position:relative;display:none">Remove</span></li>';
+			$folders .= '<li class="tabUnSelected" style="padding-left:0px;"><img src="'.$image_path.'/'.$img.'" align="absmiddle" />&nbsp;&nbsp;<a href="javascript:changeMbox(\''.$tmpval.'\');" class="webMnu" onmouseover="show_remfolder(\''.$tmpval.'\');" onmouseout="show_remfolder(\''.$tmpval.'\');">'.$tmpval.'</a>&nbsp;&nbsp;<span id="'.$tmpval.'_count" style="font-weight:bold">(<span id="'.$tmpval.'_unread">'.$new_msgs.'</span> of <span id="'.$tmpval.'_read">'.$num.'</span>)</span>&nbsp;&nbsp;<span id="remove_'.$tmpval.'" style="position:relative;display:none">Remove</span></li>';
 		} else {
 			$box = imap_status($MailBox->mbox, "{".$MailBox->imapServerAddress."}".$tmpval, SA_ALL);
 			$_SESSION["mailboxes"][$tmpval] = $box->unseen;
 
 			if($box->messages==0) {$num=$box->messages;} else {$num=($box->messages-1);}
                       	$boxes .= '<option value="'.$tmpval.'">'.$tmpval;
-			$folders .= '<li><img src="'.$image_path.'/'.$img.'" align="absmiddle" />&nbsp;&nbsp;<a href="javascript:changeMbox(\''.$tmpval.'\');" class="webMnu">'.$tmpval.'</a>&nbsp;<span id="'.$tmpval.'_count" style="font-weight:bold">(<span id="'.$tmpval.'_unread">'.$box->unseen.'</span> of <span id="'.$tmpval.'_read">'.$num.'</span>)</span></li>';
+			$folders .= '<li class="lvtColData" onmouseover="this.className=\'lvtColDataHover\'" onmouseout="this.className=\'lvtColData\'"><img src="'.$image_path.'/'.$img.'" align="absmiddle" />&nbsp;&nbsp;<a href="javascript:changeMbox(\''.$tmpval.'\');" class="webMnu">'.$tmpval.'</a>&nbsp;<span id="'.$tmpval.'_count" style="font-weight:bold">(<span id="'.$tmpval.'_unread">'.$box->unseen.'</span> of <span id="'.$tmpval.'_read">'.$num.'</span>)</span></li>';
 		}
  	}
         $boxes .= '</select>';

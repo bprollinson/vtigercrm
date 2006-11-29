@@ -95,6 +95,7 @@ class SalesOrder extends CRMEntity {
 	//Added these variables which are used as default order by and sortorder in ListView
 	var $default_order_by = 'subject';
 	var $default_sort_order = 'ASC';
+	var $groupTable = Array('vtiger_sogrouprelation','salesorderid');
 
 
 	/** Constructor Function for SalesOrder class
@@ -118,10 +119,12 @@ class SalesOrder extends CRMEntity {
         		$this->db->query($query1);
 		}
 
-		//Based on the total Number of rows we will save the product relationship with this entity
-		saveInventoryProductDetails(&$this, 'SalesOrder');	
-
-		
+		//in ajax save we should not call this function, because this will delete all the existing product values
+		if($_REQUEST['action'] != 'SalesOrderAjax' && $_REQUEST['ajxaction'] != 'DETAILVIEW')
+		{
+			//Based on the total Number of rows we will save the product relationship with this entity
+			saveInventoryProductDetails(&$this, 'SalesOrder');	
+		}
 	}	
 	
 	/**	Function used to get the sort order for Sales Order listview

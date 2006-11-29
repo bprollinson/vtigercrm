@@ -101,10 +101,11 @@
 			</td>
 			<td width="30%" align=left class="dvtCellInfo">
 			   <select MULTIPLE name="{$fldname}[]" size="4" style="width:160px;" tabindex="{$vt_tab}" class="small">
-				                    									{foreach key=sel_value item=value from=$arr}
-                    										<option value="{$sel_value}" {$value}>{if $APP.$sel_value}{$APP.$sel_value}{else}{$sel_value}{/if}</option>
-                    									
-                    									{/foreach}
+				{foreach item=arr from=$fldvalue}
+					{foreach key=sel_value item=value from=$arr}
+						<option value="{$sel_value}" {$value}>{if $APP.$sel_value}{$APP.$sel_value}{else}{$sel_value}{/if}</option>
+					{/foreach}
+				{/foreach}
 			   </select>
 			</td>
 
@@ -534,9 +535,19 @@
 				{foreach item=arr from=$fldvalue}
 					{foreach key=sel_value item=value from=$arr}
 						<option value="{$sel_value}" {$value}>{$sel_value}</option>
+						<!-- code added to pass Status field value, if Disabled for nonadmin -->
+						{if $value eq 'selected'}
+							{assign var="user_stat" value="$sel_value"}
+						{/if}
+						<!--code ends -->
 					{/foreach}
 				{/foreach}
 			   </select>
+			<!-- code added to pass Status field value, if Disabled for nonadmin -->
+			{if $user_stat neq ''}
+				<input name="{$fldname}" type="hidden" value="{$user_stat}">
+			{/if}
+			<!--code ends -->
 			</td>
 			{elseif $uitype eq 105}
 			<td width="20%" class="dvtCellLabel" align=right>
@@ -575,9 +586,19 @@
 				{foreach item=arr key=uivalueid from=$fldvalue}
 					{foreach key=sel_value item=value from=$arr}
 						<option value="{$uivalueid}" {$value}>{$sel_value}</option>
+						<!-- code added to pass Currency field value, if Disabled for nonadmin -->
+						{if $value eq 'selected'}
+							{assign var="curr_stat" value="$uivalueid"}
+						{/if}
+						<!--code ends -->
 					{/foreach}
 				{/foreach}
 			   </select>
+			<!-- code added to pass Currency field value, if Disabled for nonadmin -->
+			{if $curr_stat neq ''}
+				<input name="{$fldname}" type="hidden" value="{$curr_stat}">
+			{/if}
+			<!--code ends -->
 			</td>
 			{elseif $uitype eq 106}
 			<td width=20% class="dvtCellLabel" align=right>

@@ -330,6 +330,42 @@ function getTabid($module)
 
 }
 
+
+/**
+ * Function to get the ownedby value for the specified module 
+ * Takes the input as $module - module name
+ * returns the tabid, integer type
+ */
+
+function getTabOwnedBy($module)
+{
+	global $log;
+	$log->debug("Entering getTabid(".$module.") method ...");
+
+	$tabid=getTabid($module);
+	
+	if (file_exists('tabdata.php') && (filesize('tabdata.php') != 0)) 
+	{
+		include('tabdata.php');
+		$tab_ownedby= $tab_ownedby_array[$tabid];
+	}
+	else
+	{	
+
+        	$log->info("module  is ".$module);
+        	global $adb;
+		$sql = "select ownedby from vtiger_tab where name='".$module."'";
+		$result = $adb->query($sql);
+		$tab_ownedby=  $adb->query_result($result,0,"ownedby");
+	}
+	$log->debug("Exiting getTabid method ...");
+	return $tab_ownedby;
+
+}
+
+
+
+
 /**
  * Function to get the tabid 
  * Takes the input as $module - module name
@@ -617,6 +653,14 @@ function getGroupName($id, $module)
         {
                $sql = "select vtiger_activitygrouprelation.groupname,vtiger_groups.groupid from vtiger_activitygrouprelation inner join vtiger_groups on vtiger_groups.groupname=vtiger_activitygrouprelation.groupname where vtiger_activitygrouprelation.activityid=".$id;
 	}
+	else
+        {
+		$modObj = new $module();
+			
+               $sql = "select ".$modObj->groupTable[0].".groupname,vtiger_groups.groupid from ".$modObj->groupTable[0]." inner join vtiger_groups on vtiger_groups.groupname=".$modObj->groupTable[0].".groupname where ".$modObj->groupTable[0].".".$modObj->groupTable[1]."=".$id;
+	}
+	
+	
 	$result = $adb->query($sql);
         $group_info[] = $adb->query_result($result,0,"groupname");
         $group_info[] = $adb->query_result($result,0,"groupid");
@@ -1070,26 +1114,29 @@ function getBlocks($module,$disp_view,$mode,$col_fields='',$info_type='')
 	$log->debug("Exiting getBlocks method ...");
 	$index_count =1;
 	$max_index =0;
-	foreach($getBlockInfo as $label=>$contents)
+	if(count($getBlockInfo) > 0)
 	{
+		foreach($getBlockInfo as $label=>$contents)
+		{
 			$no_rows = count($contents);	
 			$index_count = $max_index+1;
-		foreach($contents as $block_row => $elements)
-		{
-			$max_index= $no_rows+$index_count;
-			
-			for($i=0;$i<count($elements);$i++)
-			{	
-				if(sizeof($getBlockInfo[$label][$block_row][$i])!=0)
-				{
-					if($i==0)
-					$getBlockInfo[$label][$block_row][$i][]=array($index_count);
-					else
-					$getBlockInfo[$label][$block_row][$i][]=array($max_index);
+			foreach($contents as $block_row => $elements)
+			{
+				$max_index= $no_rows+$index_count;
+
+				for($i=0;$i<count($elements);$i++)
+				{	
+					if(sizeof($getBlockInfo[$label][$block_row][$i])!=0)
+					{
+						if($i==0)
+						$getBlockInfo[$label][$block_row][$i][]=array($index_count);
+						else
+						$getBlockInfo[$label][$block_row][$i][]=array($max_index);
+					}
 				}
+				$index_count++;
+
 			}
-			$index_count++;
-			
 		}
 	}
 	return $getBlockInfo;
@@ -1641,13 +1688,17 @@ function create_tab_data_file()
         $num_rows=$adb->num_rows($result);
         $result_array=Array();
 	$seq_array=Array();
+	$ownedby_array=Array();
+	
         for($i=0;$i<$num_rows;$i++)
         {
                 $tabid=$adb->query_result($result,$i,'tabid');
                 $tabname=$adb->query_result($result,$i,'name');
 		$presence=$adb->query_result($result,$i,'presence');
+		$ownedby=$adb->query_result($result,$i,'ownedby');
                 $result_array[$tabname]=$tabid;
 		$seq_array[$tabid]=$presence;
+		$ownedby_array[$tabid]=$ownedby;
 
         }
 
@@ -1696,6 +1747,8 @@ if (file_exists($filename)) {
                 $newbuf .= "\$tab_info_array=".constructArray($result_array).";\n";
                 $newbuf .= "\n";
                 $newbuf .= "\$tab_seq_array=".constructArray($seq_array).";\n";
+		$newbuf .= "\n";
+		$newbuf .= "\$tab_ownedby_array=".constructArray($ownedby_array).";\n";
 		$newbuf .= "\n";
                 $newbuf .= "\$action_id_array=".constructSingleStringKeyAndValueArray($actionid_array).";\n";
 		$newbuf .= "\n";
@@ -1821,20 +1874,6 @@ function getQuickCreateModules()
          global $mod_strings;
 
 
-	$new_label=Array('Leads'=>'LNK_NEW_LEAD',
-			 'Accounts'=>'LNK_NEW_ACCOUNT',
-			 'Calendar'=>'LNK_NEW_TASK',
-			 'Campaigns'=>'LNK_NEW_CAMPAIGN',
-			 'Emails'=>'LNK_NEW_EMAIL',
-			 'Events'=>'LNK_NEW_EVENT',
-			 'HelpDesk'=>'LNK_NEW_HDESK',
-			 'Notes'=>'LNK_NEW_NOTE',
-			 'Potentials'=>'LNK_NEW_OPPORTUNITY',
-			 'PriceBooks'=>'LNK_NEW_PRICEBOOK',
-			 'Products'=>'LNK_NEW_PRODUCT',
-			 'Contacts'=>'LNK_NEW_CONTACT',
-			 'Vendors'=>'LNK_NEW_VENDOR'); 	
-
 $qc_query = "select distinct vtiger_tab.tablabel,vtiger_tab.name from vtiger_field inner join vtiger_tab on vtiger_tab.tabid = vtiger_field.tabid where quickcreate=0 order by vtiger_tab.tablabel";
 $result = $adb->query($qc_query);
 $noofrows = $adb->num_rows($result);
@@ -1844,7 +1883,7 @@ for($i = 0; $i < $noofrows; $i++)
          $tablabel = $adb->query_result($result,$i,'tablabel');
 
          $tabname = $adb->query_result($result,$i,'name');
-	 $tablabel = $new_label[$tabname];
+	 $tablabel = "SINGLE_$tabname";
 	 if(isPermitted($tabname,'EditView','') == 'yes')
 	 {
          	$return_qcmodule[] = $tablabel;
@@ -2528,4 +2567,17 @@ function getrecurringObjValue()
 	}
 	
 }
+
+/**	Function used to get the translated string to the input string
+ *	@param string $str - input string which we want to translate
+ *	@return string $str - translated string, if the translated string is available then the translated string other wise original string will be returned
+ */
+function getTranslatedString($str)
+{
+	global $app_strings, $mod_strings, $log;
+	$str = ($app_strings[$str] != '')?$app_strings[$str]:(($mod_strings[$str] != '')?$mod_strings[$str]:$str);
+	$log->debug("function getTranslatedString($str) - translated to ($str)");
+	return $str;
+}
+
 ?>

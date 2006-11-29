@@ -125,7 +125,7 @@ function getListViewHeader($focus, $module,$sort_qry='',$sorder='',$order_by='',
 			$fieldname = $focus->list_fields_name[$name];
 		}
 
-		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0 || in_array($fieldname,$field))
+		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0 || in_array($fieldname,$field) || $fieldname == '')
 		{
 			if(isset($focus->sortby_fields) && $focus->sortby_fields !='')
 			{
@@ -570,7 +570,7 @@ function getListViewEntries($focus, $module,$list_result,$navigation_array,$rela
 				}
 			}
 
-			if($is_admin==true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0 || in_array($fieldname,$field))
+			if($is_admin==true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0 || in_array($fieldname,$field) || $fieldname == '')
 			{
 
 
@@ -1358,7 +1358,7 @@ function getValue($field_result, $list_result,$fieldname,$focus,$module,$entity_
 					$qty_stock=$adb->query_result($list_result,$list_result_count,'qtyinstock');
 
 					$temp_val = popup_from_html($temp_val);
-					$value = '<a href="javascript:window.close();" onclick=\'set_return_inventory("'.$entity_id.'", "'.br2nl($temp_val).'", "'.$unitprice.'", "'.$qty_stock.'","'.$tax_str.'","'.$row_id.'");\'>'.$temp_val.'</a>';
+					$value = '<a href="javascript:window.close();" onclick=\'set_return_inventory("'.$entity_id.'", "'.$temp_val.'", "'.$unitprice.'", "'.$qty_stock.'","'.$tax_str.'","'.$row_id.'");\'>'.$temp_val.'</a>';
 				}
 				elseif($popuptype == "inventory_prod_po")
 				{
@@ -1594,8 +1594,9 @@ function getListQuery($module,$where='')
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	$tab_id = getTabid($module);	
-	if($module == "HelpDesk")
+	switch($module)
 	{
+	Case "HelpDesk":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
 			vtiger_troubletickets.title, vtiger_troubletickets.status,
 			vtiger_troubletickets.priority, vtiger_troubletickets.parent_id,
@@ -1627,10 +1628,9 @@ function getListQuery($module,$where='')
 				$query .= $sec_parameter;
 
 		}
+			break;
 
-	}
-	if($module == "Accounts")
-	{
+	Case "Accounts":
 		//Query modified to sort by assigned to
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
 			vtiger_account.accountname, vtiger_account.email1,
@@ -1689,10 +1689,9 @@ function getListQuery($module,$where='')
 					WHERE userid=".$current_user->id."
 					AND tabid=".$tab_id.")))) ";
                 }
+			break;
 
-	}
-	if ($module == "Potentials")
-	{
+	Case "Potentials":
 		//Query modified to sort by assigned to
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
 			vtiger_account.accountname,
@@ -1722,10 +1721,9 @@ function getListQuery($module,$where='')
 			$query .= $sec_parameter;
 		}
 
+			break;
 
-	}
-	if($module == "Leads")
-	{
+	Case "Leads":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
 			vtiger_leaddetails.firstname, vtiger_leaddetails.lastname,
 			vtiger_leaddetails.company, vtiger_leadaddress.phone,
@@ -1753,9 +1751,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;
                 }				
-	}
-	if($module == "Products")
-	{
+			break;
+	Case "Products":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_products.*, vtiger_productcf.*
 			FROM vtiger_products
 			INNER JOIN vtiger_crmentity
@@ -1772,9 +1769,8 @@ function getListQuery($module,$where='')
 				OR vtiger_seproductsrel.crmid IN (".getReadEntityIds('Accounts').")
 				OR vtiger_seproductsrel.crmid IN (".getReadEntityIds('Potentials').")
 				OR vtiger_products.contactid IN (".getReadEntityIds('Contacts').")) ";
-	}
-        if($module == "Notes")
-        {
+			break;
+	Case "Notes":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.modifiedtime,
 			vtiger_notes.title, vtiger_notes.contact_id, vtiger_notes.filename,
 			vtiger_senotesrel.crmid AS relatedto,
@@ -1799,9 +1795,8 @@ function getListQuery($module,$where='')
 				OR vtiger_senotesrel.crmid IN (".getReadEntityIds('PurchaseOrder').")
 				OR vtiger_senotesrel.crmid IN (".getReadEntityIds('SalesOrder').")
 				OR vtiger_notes.contact_id IN (".getReadEntityIds('Contacts').")) ";
-        }
-	if($module == "Contacts")
-        {
+			break;
+	Case "Contacts":
 		//Query modified to sort by assigned to
 		$query = "SELECT vtiger_contactdetails.firstname, vtiger_contactdetails.lastname,
 			vtiger_contactdetails.title, vtiger_contactdetails.accountid,
@@ -1831,9 +1826,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;
 		}
-        }
-	if($module == "Calendar")
-        {
+			break;
+	Case "Calendar":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.smownerid, vtiger_crmentity.setype,
 			vtiger_activity.*,
 			vtiger_contactdetails.lastname, vtiger_contactdetails.firstname,
@@ -1871,9 +1865,8 @@ function getListQuery($module,$where='')
 		}
 		//$query .=" group by vtiger_activity.activityid ";
 		//included by Jaguar
-        }
-	if($module == "Emails")
-        {
+			break;
+	Case "Emails":
 		$query = "SELECT DISTINCT vtiger_crmentity.crmid, vtiger_crmentity.smownerid,
 			vtiger_activity.activityid, vtiger_activity.subject,
 			vtiger_activity.date_start,
@@ -1906,10 +1899,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
-	}
-
-	if($module == "Faq")
-	{
+			break;
+	Case "Faq":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_crmentity.createdtime, vtiger_crmentity.modifiedtime,
 			vtiger_faq.*
 			FROM vtiger_faq
@@ -1923,27 +1914,23 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
+			break;
 
-	}
-	
-	if($module == "Vendors")
-	{
+	Case "Vendors":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_vendor.*
 			FROM vtiger_vendor
 			INNER JOIN vtiger_crmentity
 				ON vtiger_crmentity.crmid = vtiger_vendor.vendorid
 			WHERE vtiger_crmentity.deleted = 0";
-	}
-	if($module == "PriceBooks")
-	{
+			break;
+	Case "PriceBooks":
 		$query = "SELECT vtiger_crmentity.crmid, vtiger_pricebook.*
 			FROM vtiger_pricebook
 			INNER JOIN vtiger_crmentity
 				ON vtiger_crmentity.crmid = vtiger_pricebook.pricebookid
 			WHERE vtiger_crmentity.deleted = 0";
-	}
-	if($module == "Quotes")
-	{
+			break;
+	Case "Quotes":
 		//Query modified to sort by assigned to
 		$query = "SELECT vtiger_crmentity.*,
 			vtiger_quotes.*,
@@ -1976,9 +1963,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
-	}
-	if($module == "PurchaseOrder")
-        {
+			break;
+	Case "PurchaseOrder":
 		//Query modified to sort by assigned to
                 $query = "SELECT vtiger_crmentity.*,
 			vtiger_purchaseorder.*,
@@ -2008,9 +1994,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
-        }
-        if($module == "SalesOrder")
-        {
+			break;
+	Case "SalesOrder":
 		//Query modified to sort by assigned to
                 $query = "SELECT vtiger_crmentity.*,
 			vtiger_salesorder.*,
@@ -2043,9 +2028,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
-        }
-	if($module == "Invoice")
-	{
+			break;
+	Case "Invoice":
 		//Query modified to sort by assigned to
 		//query modified -Code contribute by Geoff(http://forums.vtiger.com/viewtopic.php?t=3376)
 		$query = "SELECT vtiger_crmentity.*,
@@ -2079,9 +2063,8 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
-	}
-	if($module == "Campaigns")
-	{
+			break;
+	Case "Campaigns":
 		//Query modified to sort by assigned to
 		//query modified -Code contribute by Geoff(http://forums.vtiger.com/viewtopic.php?t=3376)
 		$query = "SELECT vtiger_crmentity.*,
@@ -2103,12 +2086,14 @@ function getListQuery($module,$where='')
 			$sec_parameter=getListViewSecurityParameter($module);
 			$query .= $sec_parameter;	
 		}
-	}
-	if($module == "Users")
-	{
+			break;
+	Case "Users":
 		$query = "select id,user_name,roleid,first_name,last_name,email1,phone_mobile,phone_work,is_admin,status from vtiger_users inner join vtiger_user2role on vtiger_user2role.userid=vtiger_users.id where deleted=0 ".$where ;
+			break;
+	default:
+		$focus = new $module();	
+		$query = $focus->getListQuery($module);
 	}
-	
 
 	$log->debug("Exiting getListQuery method ...");
 	return $query;

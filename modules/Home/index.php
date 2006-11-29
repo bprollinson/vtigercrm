@@ -67,8 +67,10 @@ foreach ( explode(",",$home_section_order) as $section )
 	{
 		$activities = Array();
                 include("modules/Calendar/OpenListView.php") ;
-                $activities[] = getPendingActivities(0);
-                $activities[] = getPendingActivities(1);
+                $activities[] = getPendingActivities(0,"today");
+                $activities[] = getPendingActivities(0,"all");
+                $activities[] = getPendingActivities(1,"today");
+                $activities[] = getPendingActivities(1,"all");
 	}
             break;
         case 'ALVT':
@@ -173,9 +175,13 @@ function getActivityType($id)
 }
 
 global $current_language;
+
+global $current_user;
+$user_name = $current_user->column_fields[user_name];
 $current_module_strings = return_module_language($current_language, 'Calendar');
 
 $t=Date("Ymd");
+//echo '<pre>';print_r($home_values); echo '</pre>'; 
 $buttoncheck['Calendar'] = isPermitted('Calendar','index');
 $smarty->assign("CHECK",$buttoncheck);
 $smarty->assign("IMAGE_PATH",$image_path);
@@ -186,6 +192,7 @@ $smarty->assign("CATEGORY",getParenttab('Home'));
 $smarty->assign("HOMEDETAILS",$home_values);
 $smarty->assign("HOMEDEFAULTVIEW",DefHomeView());
 $smarty->assign("ACTIVITIES",$activities);
+$smarty->assign("CURRENTUSER",$user_name);
 $freetag = new freetag();
 $smarty->assign("ALL_TAG",$freetag->get_tag_cloud_html("",$current_user->id));
 $smarty->display("HomePage.tpl");

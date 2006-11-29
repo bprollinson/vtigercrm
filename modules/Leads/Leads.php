@@ -35,7 +35,7 @@ class Leads extends CRMEntity {
 	var $tab_name = Array('vtiger_crmentity','vtiger_leaddetails','vtiger_leadsubdetails','vtiger_leadaddress','vtiger_leadscf');
 	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_leaddetails'=>'leadid','vtiger_leadsubdetails'=>'leadsubscriptionid','vtiger_leadaddress'=>'leadaddressid','vtiger_leadscf'=>'leadid');
 
-
+	var $entity_table = "vtiger_crmentity";
 
 	//construct this from database;	
 	var $column_fields = Array();
@@ -80,6 +80,8 @@ class Leads extends CRMEntity {
 	var $default_order_by = 'lastname';
 	var $default_sort_order = 'ASC';
 
+	var $groupTable = Array('vtiger_leadgrouprelation','leadid');
+	
 	function Leads()	{
 		$this->log = LoggerManager::getLogger('lead');
 		$this->log->debug("Entering Leads() method ...");
@@ -149,7 +151,8 @@ class Leads extends CRMEntity {
 		$sql = getPermittedFieldsQuery("Leads", "detail_view");
 		$fields_list = getFieldsListFromQuery($sql);
 
-		$query = "SELECT $fields_list  FROM ".$this->entity_table."
+		$query = "SELECT $fields_list, vtiger_leadgrouprelation.groupname as 'Assigned To Group' 
+	      			FROM ".$this->entity_table."
 				INNER JOIN vtiger_leaddetails
 					ON vtiger_crmentity.crmid=vtiger_leaddetails.leadid
 				LEFT JOIN vtiger_leadsubdetails
@@ -163,12 +166,11 @@ class Leads extends CRMEntity {
 	                        LEFT JOIN vtiger_groups
                         	        ON vtiger_groups.groupname = vtiger_leadgrouprelation.groupname
 				LEFT JOIN vtiger_users
-					ON vtiger_crmentity.smownerid = vtiger_users.id 
+					ON vtiger_crmentity.smownerid = vtiger_users.id and vtiger_users.status='Active'
 				";
 
 
-		$where_auto = " vtiger_users.status='Active'
-			AND vtiger_crmentity.deleted=0 AND vtiger_leaddetails.converted =0";
+		$where_auto = " vtiger_crmentity.deleted=0 AND vtiger_leaddetails.converted =0";
 
 		if($where != "")
 			$query .= "where ($where) AND ".$where_auto;

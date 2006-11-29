@@ -595,7 +595,7 @@ function AddContacts($username,$cntdtls)
 	{
 		if(isset($cntrow))
 		{
-		  		$contact->column_fields[salutation]=in_array('salutation',$permitted_lists) ? $cntrow["title"] : "";		
+		  		$contact->column_fields[salutationtype]=in_array('salutationtype',$permitted_lists) ? $cntrow["title"] : "";		
      			$contact->column_fields[firstname]=in_array('firstname',$permitted_lists) ? $cntrow["firstname"] : "";
     			
     			if($cntrow["middlename"] != "")
@@ -677,7 +677,7 @@ function UpdateContacts($username,$cntdtls)
 		if(isset($cntrow))
 		{
 			$contact->retrieve_entity_info($cntrow["id"],"Contacts");
-			$contact->column_fields[salutation]=in_array('salutation',$permitted_lists) ? $cntrow["title"] : "";		
+			$contact->column_fields[salutationtype]=in_array('salutationtype',$permitted_lists) ? $cntrow["title"] : "";		
 			$contact->column_fields[firstname]=in_array('firstname',$permitted_lists) ? $cntrow["firstname"] : "";
 			if($cntrow["middlename"] != "")
 			{
@@ -751,7 +751,7 @@ function retrieve_account_id($account_name,$user_id)
 		return null;
 	}
 
-	$query = "select vtiger_account.accountname accountname,vtiger_account.accountid accountid from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid where vtiger_crmentity.deleted=0 and vtiger_account.accountname='" .$account_name."'";
+	$query = "select vtiger_account.accountname accountname,vtiger_account.accountid accountid from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid where vtiger_crmentity.deleted=0 and vtiger_account.accountname='" .addslashes($account_name)."'";
 
 
 	$db = new PearDatabase();

@@ -65,8 +65,8 @@ $mod_strings = Array(
 'LBL_CC'=>'CC :',
 'LBL_REPLY_TO_SENDER'=>'Reply to Sender',
 'LBL_REPLY_ALL'=>'Reply All',
-'LBL_SHOW_HIDDEN'=>'Show Hidden',
-'LBL_EXPUNGE_MAILBOX'=>'Expunge Mailbox',
+'LBL_SHOW_HIDDEN'=>'Show Hidden Mails',
+'LBL_EXPUNGE_MAILBOX'=>'Trim Mailbox',
 
 'NTC_REMOVE_INVITEE'=>'Are you sure you want to remove this recipient from the email?',
 'LBL_INVITEE'=>'Recipients',

@@ -16,16 +16,20 @@
  */
 function getSharedUserId($id)
 {
-        global $adb;
-	$sharedid = Array();
-        $query = "SELECT * from vtiger_sharedcalendar where userid=".$id;
+	global $adb;
+        $sharedid = Array();
+        $query = "SELECT vtiger_users.user_name,vtiger_sharedcalendar.* from vtiger_sharedcalendar left join vtiger_users on vtiger_sharedcalendar.sharedid=vtiger_users.id where userid=".$id;
         $result = $adb->query($query);
         $rows = $adb->num_rows($result);
         for($j=0;$j<$rows;$j++)
         {
-	        $sharedid[] = $adb->query_result($result,$j,'sharedid');
+
+                $id = $adb->query_result($result,$j,'sharedid');
+                $sharedname = $adb->query_result($result,$j,'user_name');
+                $sharedid[$id]=$sharedname;
+
         }
-        return $sharedid;
+	return $sharedid;
 }
 
 /**
@@ -50,18 +54,13 @@ function getSharedCalendarId($sharedid)
 /**
  * To get userid and username of all vtiger_users except the current user
  * @param $id -- The user id :: Type integer
- * @param $check -- true/false :: Type boolean
  * @returns $user_details -- Array in the following format:
  * $user_details=Array($userid1=>$username, $userid2=>$username,............,$useridn=>$username);
  */
-function getOtherUserName($id,$check)
+function getOtherUserName($id)
 {
-	global $adb,$current_user;
-	require('user_privileges/user_privileges_'.$current_user->id.'.php');
-	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
+	global $adb;
 	$user_details=Array();
-	if($check)
-	{
 		$query="select * from vtiger_users where deleted=0 and status='Active' and id!=".$id;
 		$result = $adb->query($query);
 		$num_rows=$adb->num_rows($result);
@@ -71,10 +70,23 @@ function getOtherUserName($id,$check)
 			$username=$adb->query_result($result,$i,'user_name');
 			$user_details[$userid]=$username;
 		}
+		return $user_details;
+}
 
-	}
-	else
-	{
+/**
+ * To get userid and username of vtiger_users in hierarchy level
+ * @param $id -- The user id :: Type integer
+ * @returns $user_details -- Array in the following format:
+ * $user_details=Array($userid1=>$username, $userid2=>$username,............,$useridn=>$username);
+ */
+
+function getSharingUserName($id)
+{
+	global $adb,$current_user;
+        require('user_privileges/user_privileges_'.$current_user->id.'.php');
+        require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
+        $user_details=Array();
+
 		if($is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[getTabid('Calendar')] == 3 or $defaultOrgSharingPermission[getTabid('Calendar')] == 0))
 		{
 			$user_details = get_user_array(FALSE, "Active", $id, 'private');
@@ -85,7 +97,6 @@ function getOtherUserName($id,$check)
 			$user_details = get_user_array(FALSE, "Active", $id);
 			unset($user_details[$id]);
 		}
-	}
 	return $user_details;
 }
 
@@ -348,4 +359,42 @@ function getAssignedTo($tabid)
 }
 
 //Code Added by Minnie -Ends
+/**
+ * Function to get the vtiger_activity details for mail body
+ * @param   string   $description       - activity description
+ * return   string   $list              - HTML in string format
+ */
+function getActivityDetails($description,$inviteeid='')
+{
+        global $log,$current_user;
+        global $adb,$mod_strings;
+        $log->debug("Entering getActivityDetails(".$description.") method ...");
+
+        $reply = (($_REQUEST['mode'] == 'edit')?'Replied':'Created');
+        if($inviteeid=='')
+        $name = getUserName($_REQUEST['assigned_user_id']);
+        else
+        $name = getUserName($inviteeid);
+
+        $current_username = getUserName($current_user->id);
+        $status = (($_REQUEST['activity_mode']=='Task')?($_REQUEST['taskstatus']):($_REQUEST['eventstatus']));
+
+        $list = $mod_strings['LBL_DEAR'].' ' .$name.',';
+        $list .= '<br><br>'.$mod_strings['LBL_ACTIVITY_STRING'].' '.$reply.'. '.$mod_strings['LBL_DETAILS_STRING'].':';
+        $list .= '<br>'.$mod_strings["LBL_SUBJECT"].' '.$_REQUEST['subject'];
+        $list .= '<br>'.$mod_strings["LBL_STATUS"].': '.$status;
+        $list .= '<br>'.$mod_strings["Priority"].': '.$_REQUEST['taskpriority'];
+        $list .= '<br>'.$mod_strings["Related To"].' : '.$_REQUEST['parent_name'];
+	if($_REQUEST['activity_mode']!= 'Events')
+	{
+        	$list .= '<br>'.$mod_strings["LBL_CONTACT"].' '.$_REQUEST['contactlist'];
+	}
+        $list .= '<br>'.$mod_strings["LBL_APP_DESCRIPTION"].': '.$description;
+        $list .= '<br><br>'.$mod_strings["LBL_REGARDS_STRING"].' ,';
+        $list .= '<br>'.$current_username.'.';
+
+        $log->debug("Exiting getActivityDetails method ...");
+        return $list;
+}
+
 ?>

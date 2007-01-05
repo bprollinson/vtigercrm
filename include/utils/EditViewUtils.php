@@ -68,7 +68,7 @@ function getOutputHtml($uitype, $fieldname, $fieldlabel, $maxlength, $col_fields
 		if($value=='')
 		{
 			//modified to fix the issue in trac(http://vtiger.fosslabs.com/cgi-bin/trac.cgi/ticket/1469)
-			if($fieldname != 'birthday' && $generatedtype != 2)// && $fieldname != 'due_date')//due date is today's date by default
+			if($fieldname != 'birthday' && $generatedtype != 2 && getTabid($module_name) !=14)// && $fieldname != 'due_date')//due date is today's date by default
 				$disp_value=getNewDisplayDate();
 
 			//Added to display the Contact - Support End Date as one year future instead of today's date -- 30-11-2005
@@ -1449,7 +1449,7 @@ function getAssociatedProducts($module,$focus,$seid='')
 		}
 
 		$product_Detail[$i]['hdnProductId'.$i] = $hdnProductId;
-		$product_Detail[$i]['productName'.$i]= $productname;
+		$product_Detail[$i]['productName'.$i]= from_html($productname);
 		$product_Detail[$i]['productDescription'.$i]= $productdescription;
 		$product_Detail[$i]['comment'.$i]= $comment;
 
@@ -1789,7 +1789,6 @@ function getBlockInformation($module, $result, $col_fields,$tabid,$block_label,$
 * Return type array 
 */
 
-
 function split_validationdataArray($validationData)
 {
 	global $log;
@@ -1812,11 +1811,11 @@ function split_validationdataArray($validationData)
 		{
 			if($fieldLabel == '')
 			{
-				$fieldLabel = "'".$fldLabel ."'";
+				$fieldLabel = "'".addslashes($fldLabel)."'";
 			}
 			else
 			{
-				$fieldLabel .= ",'".$fldLabel ."'";
+				$fieldLabel .= ",'".addslashes($fldLabel)."'";
 			}
 			if($fldDataType == '')
 			{

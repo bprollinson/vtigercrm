@@ -26,6 +26,7 @@ require_once('include/logging.php');
 //require("modules/Emails/class.phpmailer.php");
 require_once("config.php");
 require_once('include/database/PearDatabase.php');
+require_once('modules/Calendar/CalendarCommon.php');
 global $adb;
 $local_log =& LoggerManager::getLogger('index');
 $focus = new Activity();
@@ -146,11 +147,11 @@ if(isset($_REQUEST['inviteesid']) && $_REQUEST['inviteesid']!='')
 	$selected_users_string =  $_REQUEST['inviteesid'];
 	$invitees_array = explode(';',$selected_users_string);
 	$subject = $_REQUEST['activity_mode'].' : '.$_REQUEST['subject'];
-	$description = getActivityDetails($_REQUEST['description']);
 	foreach($invitees_array as $inviteeid)
 	{
 		if($inviteeid != '')
 		{
+			$description=getActivityDetails($_REQUEST['description'],$inviteeid);
 			$to_email = getUserEmailId('id',$inviteeid);
 			$mail_status  = send_mail('Calendar',$to_email,$current_user->user_name,'',$subject,$description);
 			$record = $focus->id;
@@ -194,31 +195,4 @@ if($_REQUEST['maintab'] == 'Calendar')
 else
 	header("Location: index.php?action=$return_action&module=$return_module$view$hour$day$month$year&record=$return_id$activemode&viewname=$return_viewname$page&parenttab=$parenttab");
 
-/**
- * Function to get the vtiger_activity details for mail body
- * @param   string   $description       - activity description
- * return   string   $list              - HTML in string format
- */
-function getActivityDetails($description)
-{
-	global $log;
-	$log->debug("Entering getActivityDetails(".$description.") method ...");
-	global $adb;
-
-	$reply = (($_REQUEST['mode'] == 'edit')?'Replied':'Created');
-	$name = getUserName($_REQUEST['assigned_user_id']);
-	$status = (($_REQUEST['activity_mode']=='Task')?($_REQUEST['taskstatus']):($_REQUEST['eventstatus']));
-
-	$list = 'Dear '.$name.',';
-	$list .= '<br><br> There is an vtiger_activity('.$_REQUEST['activity_mode'].')'.$reply.'. The details are :';
-	$list .= '<br>Subject : '.$_REQUEST['subject'];
-	$list .= '<br>Status : '.$status;
-	$list .= '<br>Priority : '.$_REQUEST['taskpriority'];
-	$list .= '<br>Related to : '.$_REQUEST['parent_name'];
-	$list .= '<br>Contact : '.$_REQUEST['contact_name'];
-	$list .= '<br><br> Description : '.$description;
-
-	$log->debug("Exiting getActivityDetails method ...");
-	return $list;
-}
 ?>

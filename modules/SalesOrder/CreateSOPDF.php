@@ -11,10 +11,11 @@
 
 
 require('include/fpdf/pdf.php');
+require_once('include/fpdf/pdfconfig.php');
 require_once('modules/SalesOrder/SalesOrder.php');
 require_once('include/database/PearDatabase.php');
 
-global $adb,$app_strings,$products_per_page;
+global $adb,$app_strings;
 
 $sql="select currency_symbol from vtiger_currency_info";
 $result = $adb->query($sql);
@@ -22,7 +23,6 @@ $currency_symbol = $adb->query_result($result,0,'currency_symbol');
 
 // would you like and end page?  1 for yes 0 for no
 $endpage="1";
-$products_per_page="6";
 
 $id = $_REQUEST['record'];
 //retreiving the vtiger_invoice info
@@ -94,7 +94,11 @@ $discount_percent = $focus->column_fields["hdnDiscountPercent"];
 if($discount_amount != "")
 	$price_discount = number_format($discount_amount,2,'.',',');
 else if($discount_percent != "")
-	$price_discount = $discount_percent."%";
+{
+	//This will be displayed near Discount label - used in include/fpdf/templates/body.php
+	$final_price_discount_percent = "(".number_format($discount_percent,2,'.',',')." %)";
+	$price_discount = number_format((($discount_percent*$focus->column_fields["hdnSubTotal"])/100),2,'.',',');
+}
 else
 	$price_discount = "0.00";
 
@@ -212,7 +216,14 @@ for($l=0;$l<$num_pages;$l++)
 	$pdf->AddPage();
 	include("pdf_templates/header.php");
 	include("include/fpdf/templates/body.php");
-	include("pdf_templates/footer.php");
+
+	//if bottom > 145 then we skip the Description and T&C in every page and display only in lastpage
+	//if you want to display the description and T&C in each page then set the display_desc_tc='true' and bottom <= 145 in pdfconfig.php
+	if($display_desc_tc == 'true')
+	if($bottom <= 145)
+	{
+		include("pdf_templates/footer.php");
+	}
 
 	$page_num++;
 

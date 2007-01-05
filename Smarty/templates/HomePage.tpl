@@ -126,12 +126,16 @@ function getHomeActivities(mode,view)
 								</tr>
 								<tr align="left">
 									<td valign=top  colspan=2>
-											<div style="overflow-y:auto;overflow-x:hidden;height:250px;width:99%"> 
+											<div style="overflow-y:auto;overflow-x:hidden;height:200px;width:99%"> 
 											<table border=0 cellspacing=0 cellpadding=5 width=100%>
 												{foreach item=elements from=$tabledetail.Entries}
 													<tr>
 														{if $tabledetail.Title.2 neq 'home_mytopinv' && $tabledetail.Title.2 neq 'home_mytopso' && $tabledetail.Title.2 neq 'home_mytopquote' && $tabledetail.Title.2 neq 'home_metrics' &&  $tabledetail.Title.2 neq 'home_mytoppo' &&  $tabledetail.Title.2 neq 'home_myfaq'  }
-															<td colspan="2"><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.0}</td>
+															<td colspan="2"><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" />{$elements.0} 
+															 	{if $modulename eq 'Leads'}
+																 - {$elements.1}	
+																{/if}
+															</td>
 														{elseif $tabledetail.Title.2 eq 'home_metrics'}
 															<td><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.0}</td>
 															<td align="absmiddle" /> {$elements.1}</td>
@@ -141,18 +145,16 @@ function getHomeActivities(mode,view)
 													</tr>
 												{/foreach}
 											</table>	
-											</div>
-											<table border=0 cellspacing=0 cellpadding=5 width=100%>
-													<tr>
-														<td colspan="2" align="right" valign="bottom">
-															{if $modulename neq 'CustomView' && $modulename neq 'GroupAllocation'}
-																<a href="index.php?module={$modulename}&action=index">{$APP.LBL_MORE}..</a>
-															{else}
-																&nbsp;	
-															{/if}
-														</td>
-													</tr>
-											</table>										
+											</div>									
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2" align="right" valign="bottom">
+									{if $modulename neq 'CustomView' && $modulename neq 'GroupAllocation'}
+									 <a href="index.php?module={$modulename}&action=index&search_field=assigned_user_id&searchtype=BasicSearch&search_text={$CURRENTUSER}&query=true">{$APP.LBL_MORE}..</a>
+									{else}
+										&nbsp;	
+									{/if}
 									</td>
 								</tr>
 							</table>

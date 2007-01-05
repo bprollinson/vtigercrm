@@ -127,7 +127,7 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 	$focus->id = "";
     	$focus->mode = ''; 	
 }
-$userDetails=getOtherUserName($current_user->id,true);
+$userDetails=getOtherUserName($current_user->id);
 //echo '<pre>';print_r($userDetails);echo '</pre>';
 $to_email = getUserEmailId('id',$current_user->id);
 $smarty->assign("CURRENTUSERID",$current_user->id);
@@ -240,6 +240,7 @@ $smarty->assign("ID", $focus->id);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 
 $smarty->display("ActivityEditView.tpl");
 

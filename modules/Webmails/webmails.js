@@ -27,8 +27,23 @@ function load_webmail(mid) {
         $("webmail_subject").innerHTML = "&nbsp;"+webmail[mid]["subject"];
         $("webmail_date").innerHTML = "&nbsp;"+webmail[mid]["date"];
 
-        $("body_area").removeChild($("body_area").firstChild);
-        $("body_area").appendChild(Builder.node('iframe',{src: 'index.php?module=Webmails&action=body&mailid='+mid+'&mailbox='+mailbox, width: '100%', height: '210', frameborder: '0'},'You must enable iframes'));
+	//Fix for webmails body display in IE - dartagnanlaf
+	/*
+        new Ajax.Request(
+                'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                        method: 'post',
+                        postBody: 'module=Webmails&action=body&mailid=' + mid + '&mailbox='+mailbox,
+                        onComplete: function(response) {
+                                document.getElementById("body_area").innerHTML=response.responseText;
+                        }
+                }
+          );
+	*/
+
+	oiframe = $("email_description");
+	oiframe.src = 'index.php?module=Webmails&action=body&mailid='+mid+'&mailbox='+mailbox;
+        //$("body_area").appendChild(Builder.node('iframe',{src: 'index.php?module=Webmails&action=body&mailid='+mid+'&mailbox='+mailbox, width: '100%', height: '210', frameborder: '0'},'You must enable iframes'));
 
         tmp = document.getElementsByClassName("previewWindow");
         for(var i=0;i<tmp.length;i++) {
@@ -38,26 +53,27 @@ function load_webmail(mid) {
         }
 
         $("delete_button").removeChild($("delete_button").firstChild);
-        $("delete_button").appendChild(Builder.node('input',{type: 'button', name: 'Button', value: 'Delete', className: 'classWebBtn', onclick: 'runEmailCommand(\'delete_msg\','+mid+')'}));
+        $("delete_button").appendChild(Builder.node('input',{type: 'button', name: 'Button', value: 'Delete', className: 'crmbutton small delete', onclick: 'runEmailCommand(\'delete_msg\','+mid+')'}));
 
         $("reply_button_all").removeChild($("reply_button_all").firstChild);
-        $("reply_button_all").appendChild(Builder.node('input',{type: 'button', name: 'reply', value: ' Reply To All ', className: 'classWebBtn', onclick: 'OpenCompose('+mid+',\'replyall\')'}));
+        $("reply_button_all").appendChild(Builder.node('input',{type: 'button', name: 'reply', value: ' Reply To All ', className: 'crmbutton small create', onclick: 'OpenCompose('+mid+',\'replyall\')'}));
 
         $("reply_button").removeChild($("reply_button").firstChild);
-        $("reply_button").appendChild(Builder.node('input',{type: 'button', name: 'reply', value: ' Reply To Sender ', className: 'classWebBtn', onclick: 'OpenCompose('+mid+',\'reply\')'}));
+        $("reply_button").appendChild(Builder.node('input',{type: 'button', name: 'reply', value: ' Reply To Sender ', className: 'crmbutton small create', onclick: 'OpenCompose('+mid+',\'reply\')'}));
 
         $("forward_button").removeChild($("forward_button").firstChild);
-        $("forward_button").appendChild(Builder.node('input',{type: 'button', name: 'forward', value: ' Forward ', className: 'classWebBtn', onclick: 'OpenCompose('+mid+',\'forward\')'}));
+        $("forward_button").appendChild(Builder.node('input',{type: 'button', name: 'forward', value: ' Forward ', className: 'crmbutton small create', onclick: 'OpenCompose('+mid+',\'forward\')'}));
 
         $("qualify_button").removeChild($("qualify_button").firstChild);
-        $("qualify_button").appendChild(Builder.node('input',{type: 'button', name: 'Qualify2', value: ' Qualify ', className: 'classWebBtn', onclick: 'showRelationships('+mid+')'}));
+        $("qualify_button").appendChild(Builder.node('input',{type: 'button', name: 'Qualify2', value: ' Qualify ', className: 'crmbutton small save', onclick: 'showRelationships('+mid+')'}));
 
         $("download_attach_button").removeChild($("download_attach_button").firstChild);
-        $("download_attach_button").appendChild(Builder.node('input',{type: 'button', name: 'download', value: ' Download Attachments ', className: 'classWebBtn', onclick: 'displayAttachments('+mid+')'}));
+        $("download_attach_button").appendChild(Builder.node('input',{type: 'button', name: 'download', value: ' Download Attachments ', className: 'crmbutton small save', onclick: 'displayAttachments('+mid+')'}));
 
         $("full_view").removeChild($("full_view").firstChild);
         $("full_view").appendChild(Builder.node('a',{href: 'javascript:;', onclick: 'OpenCompose('+mid+',\'full_view\')'},'Full Email View'));
 
+	node.className = 'mailSelected' 
 }
 function displayAttachments(mid) {
         var url = "index.php?module=Webmails&action=dlAttachments&mailid="+mid+"&mailbox="+mailbox;
@@ -259,6 +275,8 @@ function check_for_new_mail(mbox) {
                                         for(var j=0;j<tels.length;j++) {
 					    try {
                                                 if(tels[j].id.match(/row_/)) {
+							//we are deleting the row and add it - AVOID THIS DELTE - MICKIE
+                                                	$("message_table").childNodes[1].deleteRow(tr,tels[j]);
                                                 	$("message_table").childNodes[1].insertBefore(tr,tels[j]);
                                                         break;
                                         	}
@@ -318,6 +336,10 @@ function mass_delete() {
                 	if(els[i].type === "checkbox" && els[i].name.indexOf("_")) {
                         	if(els[i].checked) {
                                 	var nid = els[i].name.substr((els[i].name.indexOf("_")+1),els[i].name.length);
+
+					//change the selected rows as red when they deleted
+					$("row_"+nid).className = "delete_email";
+
 					if(typeof nid == 'undefined' || nid == "checkbox")
 						nids += '';
 					else
@@ -342,7 +364,8 @@ function move_messages() {
                                         'index.php',
                                         {queue: {position: 'end', scope: 'command'},
                                                 method: 'post',
-                                                postBody: 'module=Webmails&action=ListView&mailbox=INBOX&command=move_msg&ajax=true&mailid='+nid+'&mvbox='+mvmbox,
+                                                postBody: 'module=Webmails&action=WebmailsAjax&file=ListView&mailbox=INBOX&command=move_msg&ajax=true&mailid='+nid+'&mvbox='+mvmbox,
+                                                //postBody: 'module=Webmails&action=ListView&mailbox=INBOX&command=move_msg&ajax=true&mailid='+nid+'&mvbox='+mvmbox,
                                                 onComplete: function(t) {
                                                         //alert(t.responseText);
                                                 }
@@ -421,7 +444,8 @@ function runEmailCommand(com,id) {
 						var unread  = parseInt($(mailbox+"_unread").innerHTML);
 						$(mailbox+"_unread").innerHTML = (unread-1);
 					}
-                                        row.className = "deletedRow";
+					row.className = 'delete_email';
+                                       // row.className = "deletedRow";
 
                                         Try.these (
 						function() {

@@ -29,7 +29,7 @@ function tagvalidate()
 		return false;
 	{rdelim}
 {rdelim}
-function DeleteTag(id)
+function DeleteTag(id,recordid)
 {ldelim}
 	$("vtbusy_info").style.display="inline";
 	Effect.Fade('tag_'+id);
@@ -37,7 +37,7 @@ function DeleteTag(id)
 		'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
                         method: 'post',
-                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&tagid=" +id,
+                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&recordid="+recordid+"&tagid=" +id,
                         onComplete: function(response) {ldelim}
 						getTagCloud();
 						$("vtbusy_info").style.display="none";
@@ -204,9 +204,6 @@ function DeleteTag(id)
 					{else}
 						{include file="DetailViewFields.tpl"}
 					{/if}
-				{else} 
-					<td class="dvtCellLabel" align=right>&nbsp;</td>
-					<td class="dvtCellInfo" align=left >&nbsp;</td>
 				{/if}
 		{/foreach}
 	   </tr>	

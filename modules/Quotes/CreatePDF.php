@@ -11,6 +11,7 @@
 
 
 require_once('include/fpdf/pdf.php');
+require_once('include/fpdf/pdfconfig.php');
 require_once('modules/Quotes/Quotes.php');
 require_once('include/database/PearDatabase.php');
 
@@ -22,8 +23,6 @@ $currency_symbol = $adb->query_result($result,0,'currency_symbol');
 
 // would you like and end page?  1 for yes 0 for no
 $endpage="1";
-global $products_per_page;
-$products_per_page="6";
 
 $focus = new Quotes();
 $focus->retrieve_entity_info($_REQUEST['record'],"Quotes");
@@ -54,8 +53,8 @@ $ship_state = $focus->column_fields["ship_state"];
 $ship_code = $focus->column_fields["ship_code"];
 $ship_country = $focus->column_fields["ship_country"];
 
-$conditions = $focus->column_fields["terms_conditions"];
-$description = $focus->column_fields["description"];
+$conditions = from_html($focus->column_fields["terms_conditions"]);
+$description = from_html($focus->column_fields["description"]);
 $status = $focus->column_fields["quotestage"];
 
 // Company information
@@ -96,7 +95,11 @@ $discount_percent = $focus->column_fields["hdnDiscountPercent"];
 if($discount_amount != "")
 	$price_discount = number_format($discount_amount,2,'.',',');
 else if($discount_percent != "")
-	$price_discount = $discount_percent."%";
+{
+	//This will be displayed near Discount label - used in include/fpdf/templates/body.php
+	$final_price_discount_percent = "(".number_format($discount_percent,2,'.',',')." %)";
+	$price_discount = number_format((($discount_percent*$focus->column_fields["hdnSubTotal"])/100),2,'.',',');
+}
 else
 	$price_discount = "0.00";
 
@@ -214,7 +217,14 @@ for($l=0;$l<$num_pages;$l++)
 	$pdf->AddPage();
 	include("pdf_templates/header.php");
 	include("include/fpdf/templates/body.php");
-	include("pdf_templates/footer.php");
+
+	//if bottom > 145 then we skip the Description and T&C in every page and display only in lastpage
+	//if you want to display the description and T&C in each page then set the display_desc_tc='true' and bottom <= 145 in pdfconfig.php
+	if($display_desc_tc == 'true')
+	if($bottom <= 145)
+	{
+		include("pdf_templates/footer.php");
+	}
 
 	$page_num++;
 

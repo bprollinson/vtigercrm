@@ -44,8 +44,8 @@ class RecurringType
 		);
 		$this->recur_type = $repeat_arr['type'];
 		$this->recur_freq = $repeat_arr['repeat_frequency'];
-		$this->startdate = new DateTime($start_date,true);
-		$this->enddate = new DateTime($end_date,true);
+		$this->startdate = new vt_DateTime($start_date,true);
+		$this->enddate = new vt_DateTime($end_date,true);
 		if($repeat_arr['sun_flag'])
 		{
 			$this->dayofweek_to_rpt[] = 0;
@@ -91,6 +91,8 @@ class RecurringType
 		$startdate = $this->startdate->get_formatted_date();
 		$tempdate = $startdate;
 		$enddate = $this->enddate->get_formatted_date();
+		
+		$recurringDates[]=$startdate;	
 		while($tempdate <= $enddate)
 		{
 			if($this->recur_type == 'Daily')
@@ -112,7 +114,8 @@ class RecurringType
 					'month' => $st_date[1],
 					'year'  => $st_date[0]
 				);
-				$tempdateObj = new DateTime($date_arr,true);
+				$tempdateObj = new vt_DateTime($date_arr,true);
+				
 				if(isset($this->dayofweek_to_rpt) && $this->dayofweek_to_rpt != null)
 				{
 					$weekstartObj = $tempdateObj->getThisweekDaysbyIndex(0);
@@ -120,10 +123,12 @@ class RecurringType
 					{
 						for($i=0;$i<count($this->dayofweek_to_rpt);$i++)
 						{
+							
 							$repeatdateObj = $weekstartObj->getThisweekDaysbyIndex($this->dayofweek_to_rpt[$i]);
 							if($repeatdateObj->get_formatted_date() <= $enddate)
 								$recurringDates[] = $repeatdateObj->get_formatted_date();
 						}
+						
 						if(isset($this->recur_freq))
 							$index = $this->recur_freq * 7;
 						else
@@ -133,10 +138,32 @@ class RecurringType
 							'month' => $st_date[1],
 							'year'  => $st_date[0]
 						);
-						$tempdateObj = new DateTime($date_arr,true);
+						$tempdateObj = new vt_DateTime($date_arr,true);
+						
+						//echo '<pre>';print_r($recurringDates); echo '</pre>';
+						
 					}
+					
 					else
 					{
+						
+						$eventStart = $this->startdate->get_formatted_date();
+						for($i=0;$i<count($this->dayofweek_to_rpt);$i++)
+                                                {
+
+							$repeatDay = $weekstartObj->getThisweekDaysbyIndex($this->dayofweek_to_rpt[$i]);
+							$repeatDate= $repeatDay->get_formatted_date();
+							
+							if($repeatDate >= $eventStart)
+							{
+								
+								if($repeatDate <= $enddate)
+								$recurringDates[] = $repeatDate;
+
+							}
+							
+						}
+											
 						if(isset($this->recur_freq))
 							$index = $this->recur_freq * 7;
 						else
@@ -146,7 +173,7 @@ class RecurringType
 							'month' => $st_date[1],
 							'year'  => $st_date[0]
 						);
-						$tempdateObj = new DateTime($date_arr,true);
+						$tempdateObj = new vt_DateTime($date_arr,true);
 						
 					}
 				}
@@ -162,7 +189,7 @@ class RecurringType
 						'month' => $st_date[1],
 						'year'  => $st_date[0]
 					);
-					$tempdateObj = new DateTime($date_arr,true);
+					$tempdateObj = new vt_DateTime($date_arr,true);
 				}
 				$tempdate = $tempdateObj->get_formatted_date();
 			}
@@ -174,7 +201,7 @@ class RecurringType
 					'month' => $st_date[1],
 					'year'  => $st_date[0]
 				);
-				$startdateObj = new DateTime($date_arr,true);
+				$startdateObj = new vt_DateTime($date_arr,true);
 				if($this->repeat_monthby == 'date')
 				{
 					if($this->rptmonth_datevalue <= $st_date[2])
@@ -206,7 +233,7 @@ class RecurringType
 						        'month' => $st_date[1],
 						 	'year'  => $st_date[0]
 					        );
-						$tempdateObj = new DateTime($date_arr,true);
+						$tempdateObj = new vt_DateTime($date_arr,true);
 						$firstdayofmonthObj = $this->getFistdayofmonth($this->dayofweek_to_rpt[0],$tempdateObj); 
 						if($firstdayofmonthObj->get_formatted_date() <= $tempdate)
 						{
@@ -231,7 +258,7 @@ class RecurringType
 							'month' => $startdateObj->month,
 							'year'  => $startdateObj->year
 						);
-						$tempdateObj = new DateTime($date_arr,true);
+						$tempdateObj = new vt_DateTime($date_arr,true);
 						$lastdayofmonthObj = $this->getLastdayofmonth($this->dayofweek_to_rpt[0],$tempdateObj);
 						if($lastdayofmonthObj->get_formatted_date() <= $tempdate)
 						{
@@ -257,7 +284,7 @@ class RecurringType
 						'month' => $st_date[1]+1,
 						'year'  => $st_date[0]
 					);
-					$tempdateObj = new DateTime($date_arr,true);
+					$tempdateObj = new vt_DateTime($date_arr,true);
 				}
 				$tempdate = $tempdateObj->get_formatted_date();
 				$recurringDates[] = $tempdate;
@@ -280,7 +307,7 @@ class RecurringType
 					'month' => $st_date[1],
 					'year'  => $index
 				);
-				$tempdateObj = new DateTime($date_arr,true);
+				$tempdateObj = new vt_DateTime($date_arr,true);
 				$tempdate = $tempdateObj->get_formatted_date();
 			}
 			else
@@ -293,8 +320,8 @@ class RecurringType
 
 	/** Function to get first day of the month(like first Monday or Friday and etc.)
 	 *  @param $dayofweek   -- day of the week to repeat the event :: Type string
-	 *  @param $dateObj     -- date object  :: Type DateTime Object
-	 *  return $dateObj -- the date object on which the event repeats :: Type DateTime Object
+	 *  @param $dateObj     -- date object  :: Type vt_DateTime Object
+	 *  return $dateObj -- the date object on which the event repeats :: Type vt_DateTime Object
 	 */
 	function getFistdayofmonth($dayofweek,& $dateObj)
 	{
@@ -319,8 +346,8 @@ class RecurringType
 
 	/** Function to get last day of the month(like last Monday or Friday and etc.)
          *  @param $dayofweek   -- day of the week to repeat the event :: Type string
-	 *  @param $dateObj     -- date object  :: Type DateTime Object
-	 *  return $dateObj -- the date object on which the event repeats :: Type DateTime Object
+	 *  @param $dateObj     -- date object  :: Type vt_DateTime Object
+	 *  return $dateObj -- the date object on which the event repeats :: Type vt_DateTime Object
          */
 					    
 	function getLastdayofmonth($dayofweek,& $dateObj)

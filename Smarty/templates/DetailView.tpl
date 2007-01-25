@@ -27,7 +27,7 @@
 <div id="convertleaddiv" style="display:block;position:absolute;left:225px;top:150px;"></div>
 <script>
 {literal}
-
+var gVTModule = '{$smarty.request.module}';
 function callConvertLeadDiv(id)
 {
         new Ajax.Request(
@@ -46,7 +46,7 @@ function callConvertLeadDiv(id)
 
 function tagvalidate()
 {ldelim}
-	if(document.getElementById('txtbox_tagfields').value != '')
+	if(trim(document.getElementById('txtbox_tagfields').value) != '')
 		SaveTag('txtbox_tagfields','{$ID}','{$MODULE}');	
 	else
 	{ldelim}
@@ -54,7 +54,7 @@ function tagvalidate()
 		return false;
 	{rdelim}
 {rdelim}
-function DeleteTag(id)
+function DeleteTag(id,recordid)
 {ldelim}
 	$("vtbusy_info").style.display="inline";
 	Effect.Fade('tag_'+id);
@@ -62,7 +62,7 @@ function DeleteTag(id)
 		'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
                         method: 'post',
-                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&tagid=" +id,
+                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&recordid="+recordid+"&tagid=" +id,
                         onComplete: function(response) {ldelim}
 						getTagCloud();
 						$("vtbusy_info").style.display="none";
@@ -128,7 +128,7 @@ function DeleteTag(id)
 				<table border=0 cellspacing=0 cellpadding=3 width=100% class="small">
 				<tr>
 					<td class="dvtTabCache" style="width:10px" nowrap>&nbsp;</td>
-					{if $MODULE eq 'Notes' || $MODULE eq 'Faq' || $MODULE eq 'Webmails' || ($MODULE eq 'Calendar' && $ACTIVITY_MODE eq 'Task')}
+					{if $IS_REL_LIST eq 'false'}
 					<td class="dvtSelectedCell" align=center nowrap>{$APP[$SINGLE_MOD]} {$APP.LBL_INFORMATION}</td>
 					<td class="dvtTabCache" style="width:100%">&nbsp;</td>
 					{else}
@@ -176,7 +176,7 @@ function DeleteTag(id)
 						{/if}
 						{if $MODULE eq 'Leads' || $MODULE eq 'Contacts'}
 								{if $SENDMAILBUTTON eq 'permitted'}
-								<input title="{$APP.LBL_SENDMAIL_BUTTON_TITLE}" accessKey="{$APP.LBL_SENDMAIL_BUTTON_KEY}" class="crmbutton small edit" onclick="fnvshobj(this,'sendmail_cont');sendmail('{$MODULE}',{$ID});" type="button" name="SendMail" value="{$APP.LBL_SENDMAIL_BUTTON_LABEL}">&nbsp;
+								<input title="{$APP.LBL_SENDMAIL_BUTTON_TITLE}" accessKey="{$APP.LBL_SENDMAIL_BUTTON_KEY}" class="crmbutton small edit" onclick="if(checkEmailid('{$MODULE}','{$EMAIL}','{$YAHOO}')){ldelim}fnvshobj(this,'sendmail_cont');sendmail('{$MODULE}',{$ID}){rdelim}else{ldelim}return false{rdelim}" type="button" name="SendMail" value="{$APP.LBL_SENDMAIL_BUTTON_LABEL}">&nbsp;
 								{/if}
 						{/if}
 						{if $MODULE eq 'Quotes' || $MODULE eq 'PurchaseOrder' || $MODULE eq 'SalesOrder' || $MODULE eq 'Invoice'}
@@ -288,13 +288,12 @@ function DeleteTag(id)
 				{else}
 					<td class="dvtCellLabel" align=right width=25%><input type="hidden" id="hdtxt_IsAdmin" value={$keyadmin}></input>{$label}</td>
 				{/if}  
-{if $EDIT_PERMISSION eq 'yes'}							{include file="DetailViewUI.tpl"}
-{else}										{include file="DetailViewFields.tpl"}
-{/if}
-						   {else} 
-                                          <td class="dvtCellLabel" align=right>&nbsp;</td>
-                                           <td class="dvtCellInfo" align=left >&nbsp;</td>
-							   {/if}
+				{if $EDIT_PERMISSION eq 'yes'}
+					{include file="DetailViewUI.tpl"}
+				{else}
+					{include file="DetailViewFields.tpl"}
+				{/if}
+			   {/if}
                                    {/foreach}
 						      </tr>	
 						   {/foreach}	
@@ -330,7 +329,7 @@ function DeleteTag(id)
 						{/if}
 						{if $MODULE eq 'Leads' || $MODULE eq 'Contacts'}
 								{if $SENDMAILBUTTON eq 'permitted'}
-								<input title="{$APP.LBL_SENDMAIL_BUTTON_TITLE}" accessKey="{$APP.LBL_SENDMAIL_BUTTON_KEY}" class="crmbutton small edit" onclick="fnvshobj(this,'sendmail_cont');sendmail('{$MODULE}',{$ID});" type="button" name="SendMail" value="{$APP.LBL_SENDMAIL_BUTTON_LABEL}">&nbsp;
+								<input title="{$APP.LBL_SENDMAIL_BUTTON_TITLE}" accessKey="{$APP.LBL_SENDMAIL_BUTTON_KEY}" class="crmbutton small edit" onclick="if(checkEmailid('{$MODULE}','{$EMAIL}','{$YAHOO}')){ldelim}fnvshobj(this,'sendmail_cont');sendmail('{$MODULE}',{$ID}){rdelim}else{ldelim}return false{rdelim}" type="button" name="SendMail" value="{$APP.LBL_SENDMAIL_BUTTON_LABEL}">&nbsp;
 								{/if}
 						{/if}
 						{if $MODULE eq 'Quotes' || $MODULE eq 'PurchaseOrder' || $MODULE eq 'SalesOrder' || $MODULE eq 'Invoice'}
@@ -380,7 +379,7 @@ function DeleteTag(id)
 </td></tr>
 {/if}
 </form>
-			{if $SinglePane_View eq 'true'}
+			{if $SinglePane_View eq 'true' && $IS_REL_LIST eq 'true'}
 				{include file= 'RelatedListNew.tpl'}
 			{/if}
 		</table>
@@ -414,10 +413,14 @@ function DeleteTag(id)
       					   <td class="rightMailMergeHeader"><b>{$WORDTEMPLATEOPTIONS}</b></td>
       				</tr>
       				<tr style="height:25px">
-      						<td class="rightMailMergeContent">
-          						<select name="mergefile">{foreach key=templid item=tempflname from=$TOPTIONS}<option value="{$templid}">{$tempflname}</option>{/foreach}</select>
-          						<input class="crmbutton small create" value="{$APP.LBL_MERGE_BUTTON_LABEL}" onclick="this.form.action.value='Merge';" type="submit"></input>
-      					  </td>
+					<td class="rightMailMergeContent">
+						{if $TEMPLATECOUNT neq 0}
+						<select name="mergefile">{foreach key=templid item=tempflname from=$TOPTIONS}<option value="{$templid}">{$tempflname}</option>{/foreach}</select>
+                                                   <input class="crmbutton small create" value="{$APP.LBL_MERGE_BUTTON_LABEL}" onclick="this.form.action.value='Merge';" type="submit"></input> 
+						{else}
+						<a href=index.php?module=Settings&action=upload&tempModule={$MODULE}>{$APP.LBL_CREATE_MERGE_TEMPLATE}</a>
+						{/if}
+					</td>
       				</tr>
   				</table>
 				</form>

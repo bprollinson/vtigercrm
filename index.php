@@ -22,6 +22,7 @@
 global $entityDel;
 global $display;
 global $category;
+
 require_once('include/utils/utils.php');
 
 
@@ -277,10 +278,13 @@ if(isset($action) && isset($module))
 		ereg("^HeadLines",$action) ||
 		ereg("^TodoSave",$action) ||
 		ereg("^RecalculateSharingRules",$action) ||
-		(ereg("^body",$action) &&
-			ereg("^Webmails",$module)) ||
-			(ereg("^DetailView",$action) &&
-			ereg("^Webmails",$module) ))
+		(ereg("^body",$action) && ereg("^Webmails",$module)) ||
+		(ereg("^dlAttachments",$action) && ereg("^Webmails",$module)) ||
+		(ereg("^DetailView",$action) &&	ereg("^Webmails",$module) ) ||
+		ereg("^savewordtemplate",$action) ||
+		ereg("^mailmergedownloadfile",$action))
+	
+		
 	{
 		$skipHeaders=true;
 		//skip headers for all these invocations as they are mostly popups
@@ -295,10 +299,11 @@ if(isset($action) && isset($module))
 			ereg("^".$module."Ajax",$action) ||
 			ereg("^chat",$action) ||
 			ereg("^vtchat",$action) ||
-			ereg("^massdelete", $action))
+			ereg("^massdelete", $action) ||
+			ereg("^mailmergedownloadfile",$action))
 			$skipFooters=true;
 		//skip footers for all these invocations as they are mostly popups
-		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action))
+		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^mailmergedownloadfile",$action))
 		{
 			$viewAttachment = true;
 		}
@@ -437,6 +442,9 @@ if($action == "DetailView")
 		case 'Calendar':
 			require_once("modules/$currentModule/Activity.php");
 			$focus = new Activity();
+			break;
+		case 'Webmails':
+			//No need to create a webmail object here
 			break;
 		default:
 			require_once("modules/$currentModule/$currentModule.php");
@@ -639,7 +647,7 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 		echo "<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>";
 		echo '<style type="text/css">@import url("themes/'.$theme.'/style.css"); </style>';
 		echo "<br><br><br><table border=0 cellspacing=0 cellpadding=5 width=100% class=settingsSelectedUI >";
-		echo "<tr><td class=small align=left>vtiger CRM 5.0.2 | Visit <a href='http://www.vtiger.com'>www.vtiger.com</a> for more information </td>";
+		echo "<tr><td class=small align=left>vtiger CRM 5.0.3-rc2 | Visit <a href='http://www.vtiger.com'>www.vtiger.com</a> for more information </td>";
 		echo "<td class=small align=right> &copy; <a href='javascript:mypopup()'>Copyright Details</a></td></tr></table>";
 			
 	//	echo "<table align='center'><tr><td align='center'>";

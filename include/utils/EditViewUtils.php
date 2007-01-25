@@ -68,7 +68,7 @@ function getOutputHtml($uitype, $fieldname, $fieldlabel, $maxlength, $col_fields
 		if($value=='')
 		{
 			//modified to fix the issue in trac(http://vtiger.fosslabs.com/cgi-bin/trac.cgi/ticket/1469)
-			if($fieldname != 'birthday' && $generatedtype != 2)// && $fieldname != 'due_date')//due date is today's date by default
+			if($fieldname != 'birthday' && $generatedtype != 2 && getTabid($module_name) !=14)// && $fieldname != 'due_date')//due date is today's date by default
 				$disp_value=getNewDisplayDate();
 
 			//Added to display the Contact - Support End Date as one year future instead of today's date -- 30-11-2005
@@ -128,7 +128,7 @@ function getOutputHtml($uitype, $fieldname, $fieldlabel, $maxlength, $col_fields
 	elseif($uitype == 15 || $uitype == 16 || $uitype == 111) //uitype 111 added for non editable picklist - ahmed
 	{
 		$editview_label[]=$mod_strings[$fieldlabel];
-		$pick_query="select * from vtiger_".$fieldname;
+		$pick_query="select * from vtiger_".$fieldname." order by ".$fieldname." ASC";
 		$pickListResult = $adb->query($pick_query);
 		$noofpickrows = $adb->num_rows($pickListResult);
 
@@ -1449,8 +1449,8 @@ function getAssociatedProducts($module,$focus,$seid='')
 		}
 
 		$product_Detail[$i]['hdnProductId'.$i] = $hdnProductId;
-		$product_Detail[$i]['productName'.$i]= $productname;
-		$product_Detail[$i]['productDescription'.$i]= $productdescription;
+		$product_Detail[$i]['productName'.$i]= from_html($productname);
+		$product_Detail[$i]['productDescription'.$i]= from_html($productdescription);
 		$product_Detail[$i]['comment'.$i]= $comment;
 
 		if($module != 'PurchaseOrder' && $focus->object_name != 'Order')
@@ -1496,26 +1496,6 @@ function getAssociatedProducts($module,$focus,$seid='')
 		$product_Detail[$i]['discountTotal'.$i] = $discountTotal;
 		$product_Detail[$i]['totalAfterDiscount'.$i] = $totalAfterDiscount;
 
-		//First we will get all associated taxes as array
-		$tax_details = getTaxDetailsForProduct($hdnProductId,'all');
-		//Now retrieve the tax values from the current query with the name
-		for($tax_count=0;$tax_count<count($tax_details);$tax_count++)
-		{
-			$tax_name = $tax_details[$tax_count]['taxname'];
-			$tax_label = $tax_details[$tax_count]['taxlabel'];
-			$tax_value = '0.00';
-
-			//condition to avoid this function call when create new PO/SO/Quotes/Invoice from Product module
-			if($focus->id != '')
-				$tax_value = getInventoryProductTaxValue($focus->id, $hdnProductId, $tax_name);
-			else//if the above function not called then assign the default associated value of the product
-				$tax_value = $tax_details[$tax_count]['percentage'];
-
-			$product_Detail[$i]['taxes'][$tax_count]['taxname'] = $tax_name;
-			$product_Detail[$i]['taxes'][$tax_count]['taxlabel'] = $tax_label;
-			$product_Detail[$i]['taxes'][$tax_count]['percentage'] = $tax_value;
-		}
-
 		$taxTotal = '0.00';
 		$product_Detail[$i]['taxTotal'.$i] = $taxTotal;
 
@@ -1532,6 +1512,32 @@ function getAssociatedProducts($module,$focus,$seid='')
 			}
 		}
 		$product_Detail[$i]['netPrice'.$i] = $netPrice;
+
+		//First we will get all associated taxes as array
+		$tax_details = getTaxDetailsForProduct($hdnProductId,'all');
+		//Now retrieve the tax values from the current query with the name
+		for($tax_count=0;$tax_count<count($tax_details);$tax_count++)
+		{
+			$tax_name = $tax_details[$tax_count]['taxname'];
+			$tax_label = $tax_details[$tax_count]['taxlabel'];
+			$tax_value = '0.00';
+
+			//condition to avoid this function call when create new PO/SO/Quotes/Invoice from Product module
+			if($focus->id != '')
+			{
+				if($taxtype == 'individual')//if individual then show the entered tax percentage
+					$tax_value = getInventoryProductTaxValue($focus->id, $hdnProductId, $tax_name);
+				else//if group tax then we have to show the default value when change to individual tax
+					$tax_value = $tax_details[$tax_count]['percentage'];
+			}
+			else//if the above function not called then assign the default associated value of the product
+				$tax_value = $tax_details[$tax_count]['percentage'];
+
+			$product_Detail[$i]['taxes'][$tax_count]['taxname'] = $tax_name;
+			$product_Detail[$i]['taxes'][$tax_count]['taxlabel'] = $tax_label;
+			$product_Detail[$i]['taxes'][$tax_count]['percentage'] = $tax_value;
+		}
+
 	}
 
 	//set the taxtype
@@ -1572,29 +1578,36 @@ function getAssociatedProducts($module,$focus,$seid='')
 	$product_Detail[1]['final_details']['discountTotal_final'] = $finalDiscount;
 
 	//To set the Final Tax values
-	if($taxtype == 'group')
-	{
-		$taxtotal = '0.00';
-		//First we should get all available taxes and then retrieve the corresponding tax values
-		$tax_details = getAllTaxes('available');
-		//if taxtype is group then the tax will be same for all products in vtiger_inventoryproductrel table
-		for($tax_count=0;$tax_count<count($tax_details);$tax_count++)
-		{
-			$tax_name = $tax_details[$tax_count]['taxname'];
-			$tax_label = $tax_details[$tax_count]['taxlabel'];
-			$tax_percent = $adb->query_result($result,0,$tax_name);
-			if($tax_percent == '' || $tax_percent == 'NULL')
-				$tax_percent = '0.00';
-			$taxamount = ($subTotal-$finalDiscount)*$tax_percent/100;
-			$taxtotal = $taxtotal + $taxamount;
-			$product_Detail[1]['final_details']['taxes'][$tax_count]['taxname'] = $tax_name;
-			$product_Detail[1]['final_details']['taxes'][$tax_count]['taxlabel'] = $tax_label;
-			$product_Detail[1]['final_details']['taxes'][$tax_count]['percentage'] = $tax_percent;
-			$product_Detail[1]['final_details']['taxes'][$tax_count]['amount'] = $taxamount;
-		}
-		$product_Detail[1]['final_details']['tax_totalamount'] = $taxtotal;
-	}
+	//we will get all taxes. if individual then show the product related taxes only else show all taxes
+	//suppose user want to change individual to group or vice versa in edit time the we have to show all taxes. so that here we will store all the taxes and based on need we will show the corresponding taxes
+	
+	$taxtotal = '0.00';
+	//First we should get all available taxes and then retrieve the corresponding tax values
+	$tax_details = getAllTaxes('available');
 
+	for($tax_count=0;$tax_count<count($tax_details);$tax_count++)
+	{
+		$tax_name = $tax_details[$tax_count]['taxname'];
+		$tax_label = $tax_details[$tax_count]['taxlabel'];
+
+		//if taxtype is individual and want to change to group during edit time then we have to show the all available taxes and their default values 
+		//Also taxtype is group and want to change to individual during edit time then we have to provide the asspciated taxes and their default tax values for individual products
+		if($taxtype == 'group')
+			$tax_percent = $adb->query_result($result,0,$tax_name);
+		else
+			$tax_percent = $tax_details[$tax_count]['percentage'];//$adb->query_result($result,0,$tax_name);
+		
+		if($tax_percent == '' || $tax_percent == 'NULL')
+			$tax_percent = '0.00';
+		$taxamount = ($subTotal-$finalDiscount)*$tax_percent/100;
+		$taxtotal = $taxtotal + $taxamount;
+		$product_Detail[1]['final_details']['taxes'][$tax_count]['taxname'] = $tax_name;
+		$product_Detail[1]['final_details']['taxes'][$tax_count]['taxlabel'] = $tax_label;
+		$product_Detail[1]['final_details']['taxes'][$tax_count]['percentage'] = $tax_percent;
+		$product_Detail[1]['final_details']['taxes'][$tax_count]['amount'] = $taxamount;
+	}
+	$product_Detail[1]['final_details']['tax_totalamount'] = $taxtotal;
+	
 	//To set the Shipping & Handling charge
 	$shCharge = ($focus->column_fields['hdnS_H_Amount'] != '')?$focus->column_fields['hdnS_H_Amount']:'0.00';
 	$shCharge = getConvertedPriceFromDollar($shCharge);
@@ -1789,7 +1802,6 @@ function getBlockInformation($module, $result, $col_fields,$tabid,$block_label,$
 * Return type array 
 */
 
-
 function split_validationdataArray($validationData)
 {
 	global $log;
@@ -1812,11 +1824,11 @@ function split_validationdataArray($validationData)
 		{
 			if($fieldLabel == '')
 			{
-				$fieldLabel = "'".$fldLabel ."'";
+				$fieldLabel = "'".addslashes($fldLabel)."'";
 			}
 			else
 			{
-				$fieldLabel .= ",'".$fldLabel ."'";
+				$fieldLabel .= ",'".addslashes($fldLabel)."'";
 			}
 			if($fldDataType == '')
 			{

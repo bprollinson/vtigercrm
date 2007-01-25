@@ -78,14 +78,14 @@
                                 <select class=small id="qccombo" style="width:120px"  onclick="QCreate(this);">
 					<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
                         {foreach  item=detail from=$QCMODULE}
-                                        <option value="{$detail.1}">{$APP[$detail.0]}</option>
+                                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$APP[$detail.0]}</option>
                         {/foreach}
                                 </select>
                         {else}
                                 <select class=small id="qccombo" style="width:120px"  onchange="QCreate(this);">
 					<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
                         {foreach  item=detail from=$QCMODULE}
-                                        <option value="{$detail.1}">{$APP[$detail.0]}</option>
+                                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$APP[$detail.0]}</option>
                         {/foreach}
                                 </select>
 
@@ -145,6 +145,7 @@
 <div id="qcform" style="position:absolute;width:500px;top:60px;left:450px;z-index:5000;"></div>
 
 <script>
+var gVTModule = '{$smarty.request.module}';
 function fetch_clock()
 {ldelim}
 	new Ajax.Request(

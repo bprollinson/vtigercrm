@@ -29,10 +29,11 @@ class Calendar
 	/*
 	constructor
 	*/
+	var $groupTable = Array('vtiger_activitygrouprelation','activityid');
 	function Calendar($view='',$data=Array())
 	{
 		$this->view = $view;
-		$this->date_time = new DateTime($data,true);
+		$this->date_time = new vt_DateTime($data,true);
 		$this->constructLayout();
 	}
 	/**

@@ -38,9 +38,9 @@
 			{foreach name=emailids key=fieldid item=elements from=$MAILINFO}
 			<tr>
 				{if $smarty.foreach.emailids.iteration eq 1}	
-					<td align="center"><input checked type="checkbox" value="{$fieldid}" name="email"/></td>
-				{else}
-					<td align="center"><input type="checkbox" value="{$fieldid}" name="email"/></td>
+					<td align="center"><input  type="checkbox" value="{$fieldid}" name="email" /></td>
+			{else}
+					<td align="center"><input type="checkbox" value="{$fieldid}" name="email"  /></td>
 				{/if}
 				{if $ONE_RECORD eq 'true'}	
 					<td align="left"><b>{$elements.0} </b><br>{$MAILDATA[$smarty.foreach.emailids.iteration]}</td>
@@ -65,5 +65,4 @@
 	</td>
 </tr>
 </table>
-</div> 
-
+</div>

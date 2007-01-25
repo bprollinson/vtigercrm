@@ -190,7 +190,7 @@ function enableCalstarttime()
 }
 function maincheck_form()
 {
-	formSelectColumnString('inviteesid');
+	formSelectColumnString('inviteesid','selectedusers');
 	starthour = document.EditView.starthr.value;
         startmin  = document.EditView.startmin.value;
         startformat = document.EditView.startfmt.value;
@@ -294,7 +294,7 @@ function maincheck_form()
 }
 function check_form()
 {
-	formSelectColumnString('inviteesid');
+	formSelectColumnString('inviteesid','selectedusers');
         if(trim(document.EditView.subject.value) == "")
         {
                 alert("Missing Event Name");
@@ -497,12 +497,20 @@ function setObjects()
 
 }
 
+function userEventSharing(selectedusrid,selcolid)
+{
+        formSelectColumnString(selectedusrid,selcolid);
+}
+
+
 
 
 function addColumn()
 {
+	setObjects();
         var selectlength=selectedColumnsObj.length
         var availlength=availListObj.length
+		
         var s=0
         for (i=0;i<selectlength;i++)
         {
@@ -512,13 +520,16 @@ function addColumn()
         {
                 if (availListObj.options[s].selected==true)
                 {
+			
                         for (j=0;j<selectlength;j++)
                         {
                                 if (selectedColumnsObj.options[j].value==availListObj.options[s].value)
                                 {
+
                                         var rowFound=true
                                         var existingObj=selectedColumnsObj.options[j]
-                                        breaK;
+					
+                                        break;
                                 }
                         }
                         if (rowFound!=true)
@@ -528,22 +539,24 @@ function addColumn()
                                         if (browser_ie) newColObj.innerText=availListObj.options[s].innerText
                                         else if (browser_nn4 || browser_nn6) newColObj.text=availListObj.options[s].text
                                                 selectedColumnsObj.appendChild(newColObj)
-                                        availListObj.removeChild(availListObj.options[s])
+					availListObj.removeChild(availListObj.options[s])
                                         newColObj.selected=true
                                         rowFound=false
                         }
                         else
                         {
                                 existingObj.selected=true
+				
                         }
                 }
 		else
                         s++
         }
 }
-
 function delColumn()
 {
+	
+	setObjects();
         var selectlength=selectedColumnsObj.length
         var availlength=availListObj.length
         var s=0
@@ -561,7 +574,7 @@ function delColumn()
                                 {
                                         var rowFound=true
                                         var existingObj=availListObj.options[j]
-                                        breaK;
+                                        break;
                                 }
                         }
 
@@ -570,24 +583,85 @@ function delColumn()
                                 var newColObj=document.createElement("OPTION")
                                         newColObj.value=selectedColumnsObj.options[s].value
                                         if (browser_ie) newColObj.innerText=selectedColumnsObj.options[s].innerText
-                                        else if (browser_nn4 || browser_nn6) newColObj.text=selectedColumnsObj.options[s].text
+                                        else if (browser_nn4 || browser_nn6) 
+						newColObj.text=selectedColumnsObj.options[s].text
                                                 availListObj.appendChild(newColObj)
                                         selectedColumnsObj.removeChild(selectedColumnsObj.options[s])
                                         newColObj.selected=true
                                         rowFound=false
                         }
-                        else
+			else
                         {
                                 existingObj.selected=true
                         }
                 }
-		else
+                else
                         s++
-        }
+      
+	}
+
+	
+}
+function addsharedColumn(avail_users,sel_users)
+{
+	availListObj=getObj(avail_users)
+        selectedColumnsObj=getObj(sel_users)
+        var selectlength=selectedColumnsObj.length
+        var availlength=availListObj.length
+
+	for (i=0;i<selectedColumnsObj.length;i++) 
+	{
+		selectedColumnsObj.options[i].selected=false
+	}
+	for (i=0;i<availListObj.length;i++) 
+	{
+		if (availListObj.options[i].selected==true) 
+		{
+			for (j=0;j<selectedColumnsObj.length;j++) 
+			{
+				if (selectedColumnsObj.options[j].value==availListObj.options[i].value) 
+				{
+					var rowFound=true
+						var existingObj=selectedColumnsObj.options[j]
+						break
+				}
+			}
+			if (rowFound!=true) 
+			{
+				var newColObj=document.createElement("OPTION")
+					newColObj.value=availListObj.options[i].value
+					if (browser_ie) newColObj.innerText=availListObj.options[i].innerText
+					else if (browser_nn4 || browser_nn6) newColObj.text=availListObj.options[i].text
+						selectedColumnsObj.appendChild(newColObj)
+							availListObj.options[i].selected=false
+							newColObj.selected=true
+							rowFound=false
+			}
+			else 
+			{
+				existingObj.selected=true
+			}
+		}
+	}
 }
 
-function formSelectColumnString(usr)
+function delsharedColumn(sel_users)
 {
+	selectedColumnsObj=getObj(sel_users)
+        var selectlength=selectedColumnsObj.options.length
+	for(i = 0; i <= selectlength; i++)
+	{
+		if(selectedColumnsObj.options.selectedIndex >= 0)
+		selectedColumnsObj.remove(selectedColumnsObj.options.selectedIndex)	
+	}
+	
+}
+
+
+function formSelectColumnString(usr,col)
+{
+	
+	var selectedColumnsObj=getObj(col)
 	usr_id = document.getElementById(usr);
 	var selectedColStr = "";
         for (i=0;i<selectedColumnsObj.options.length;i++)
@@ -746,11 +820,11 @@ function getcalAction(obj,Lay,id,view,hour,day,month,year,type){
     document.change_owner.month.value = month;
     document.change_owner.year.value = year;
     document.change_owner.subtab.value = type;
-    complete.href="javascript:updateStatus("+id+",'"+heldstatus+"','"+view+"',"+hour+","+day+","+month+","+year+",'"+type+"')";
-    pending.href="javascript:updateStatus("+id+",'"+notheldstatus+"','"+view+"',"+hour+","+day+","+month+","+year+",'"+type+"')";
-    postpone.href="index.php?module=Calendar&action=EditView&record="+id+"&activity_mode="+activity_mode;
-    actdelete.href="javascript:delActivity("+id+",'"+view+"',"+hour+","+day+","+month+","+year+",'"+type+"')";
-    changeowner.href="javascript:dispLayer('act_changeowner');";
+    if(complete) complete.href="javascript:updateStatus("+id+",'"+heldstatus+"','"+view+"',"+hour+","+day+","+month+","+year+",'"+type+"')";
+    if(pending) pending.href="javascript:updateStatus("+id+",'"+notheldstatus+"','"+view+"',"+hour+","+day+","+month+","+year+",'"+type+"')";
+    if(postpone) postpone.href="index.php?module=Calendar&action=EditView&record="+id+"&activity_mode="+activity_mode;
+    if(actdelete) actdelete.href="javascript:delActivity("+id+",'"+view+"',"+hour+","+day+","+month+","+year+",'"+type+"')";
+    if(changeowner) changeowner.href="javascript:dispLayer('act_changeowner');";
 
 }
 
@@ -760,25 +834,53 @@ function dispLayer(lay)
         tagName.style.visibility = 'visible';
         tagName.style.display = 'block';
 }
+//check whether user form selected or group form selected
+function checkgroup()
+{
+	if(document.change_owner.user_lead_owner[1].checked)
+	{
+		  document.change_owner.lead_group_owner.style.display = "block";
+	          document.change_owner.lead_owner.style.display = "none";
+	}
+	else
+	{
+		document.change_owner.lead_group_owner.style.display = "none";
+                document.change_owner.lead_owner.style.display = "block";
+	}
+}
 
 function calendarChangeOwner()
 {
-	var user_id = document.getElementById('activity_owner').options[document.getElementById('activity_owner').options.selectedIndex].value;
 	var idlist = document.change_owner.idlist.value;
         var view   = document.change_owner.view.value;
         var day    = document.change_owner.day.value;
         var month  = document.change_owner.month.value;
         var year   = document.change_owner.year.value;
         var hour   = document.change_owner.hour.value;
-	var subtab = document.change_owner.subtab.value;
+        var subtab = document.change_owner.subtab.value;
+
+	var checked = document.change_owner.user_lead_owner[0].checked;
+	if(checked==true)
+	{
+		var user_id = document.getElementById('lead_owner').options[document.getElementById('lead_owner').options.selectedIndex].value;
+		var url = 'module=Users&action=updateLeadDBStatus&return_module=Calendar&return_action=ActivityAjax&user_id='+user_id+'&idlist='+idlist+'&view='+view+'&hour='+hour+'&day='+day+'&month='+month+'&year='+year+'&type=change_owner';
+	}
+	else
+	{
+		var group_id = document.getElementById('lead_group_owner').options[document.getElementById('lead_group_owner').options.selectedIndex].value;
+		var url = 'module=Users&action=updateLeadDBStatus&return_module=Calendar&return_action=ActivityAjax&group_id='+group_id+'&idlist='+idlist+'&view='+view+'&hour='+hour+'&day='+day+'&month='+month+'&year='+year+'&type=change_owner';
+	}
+		
 	if(subtab == 'event')
 	{
 		var OptionData = $('view_Option').options[$('view_Option').selectedIndex].value;
+		var eventurl = url+'&viewOption='+OptionData+'&subtab=event&ajax=true';
+		
 	 	new Ajax.Request(
                 	'index.php',
                 	{queue: {position: 'end', scope: 'command'},
                         	method: 'post',
-                        	postBody: 'module=Users&action=updateLeadDBStatus&return_module=Calendar&return_action=ActivityAjax&user_id='+user_id+'&idlist='+idlist+'&view='+view+'&hour='+hour+'&day='+day+'&month='+month+'&year='+year+'&type=change_owner&viewOption='+OptionData+'&subtab=event&ajax=true',
+                        	postBody: eventurl,
                         	onComplete: function(response) {
 					if(OptionData == 'listview')
 						 $("listView").innerHTML=response.responseText;
@@ -790,11 +892,13 @@ function calendarChangeOwner()
 	}
 	if(subtab == 'todo')
         {
+		
+		var todourl = url+'&subtab=todo&ajax=true';
                 new Ajax.Request(
                         'index.php',
                         {queue: {position: 'end', scope: 'command'},
                                 method: 'post',
-                                postBody: 'module=Users&action=updateLeadDBStatus&return_module=Calendar&return_action=ActivityAjax&user_id='+user_id+'&idlist='+idlist+'&view='+view+'&hour='+hour+'&day='+day+'&month='+month+'&year='+year+'&type=change_owner&subtab=todo&ajax=true',
+                                postBody: todourl,
                                 onComplete: function(response) {
                                         $("mnuTab2").innerHTML=response.responseText;
                                 }

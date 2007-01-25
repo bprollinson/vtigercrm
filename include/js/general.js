@@ -10,6 +10,8 @@
 
 //Utility Functions
 
+var gValidationCall='';
+
 if (document.all)
 
 	var browser_ie=true
@@ -705,6 +707,17 @@ function numConstComp(fldName,fldLabel,type,constval) {
 }
 
 function formValidate() {
+;
+//Validation for Portal User
+
+if(gVTModule == 'Contacts' && gValidationCall != 'tabchange')
+{
+	if(getObj('portal').checked && trim(getObj('email').value) == '')   {
+		alert("Portal user should provide email Id for portal login");
+		return false;
+	}
+}
+
 	for (var i=0; i<fieldname.length; i++) {
 		if(getObj(fieldname[i]) != null)
 		{
@@ -1148,6 +1161,8 @@ function fnLoadValues(obj1,obj2,SelTab,unSelTab,moduletype,module){
 	
    var oform = document.forms['EditView'];
    oform.action.value='Save';	
+   //global variable to check the validation calling function to avoid validating when tab change
+   gValidationCall = 'tabchange'; 	
    if((moduletype == 'inventory' && validateInventory(module)) ||(moduletype == 'normal') && formValidate())	
    if(formValidate())
    {	
@@ -1170,6 +1185,7 @@ function fnLoadValues(obj1,obj2,SelTab,unSelTab,moduletype,module){
 
 	   tagName2.style.display='none';
    }
+   gValidationCall = ''; 	
 }
 
 function fnCopy(source,design){
@@ -1718,3 +1734,156 @@ function getCalendarPopup(imageid,fieldid,dateformat)
         });
 }
 
+//Added to check duplicate account creation
+
+function AjaxDuplicateValidate(module,fieldname,oform)
+{
+      var fieldvalue = getObj(fieldname).value;
+      var url = "module="+module+"&action="+module+"Ajax&file=Save&"+fieldname+"="+fieldvalue+"&dup_check=true"
+      new Ajax.Request(
+                            'index.php',
+                              {queue: {position: 'end', scope: 'command'},
+                                      method: 'post',
+                                      postBody:url,
+                                      onComplete: function(response) {
+                                              var str = response.responseText
+                                              if(str.indexOf('SUCCESS') > -1)
+                                              {
+                                                      oform.submit();
+                                              }else
+                                              {
+                                                      alert(str);
+                                              }
+                                      }
+                              }
+                              );
+}
+
+/**to get SelectContacts Popup
+check->to check select options enable or disable
+*type->to differentiate from task
+*frmName->form name*/
+
+function selectContact(check,type,frmName)
+{
+        if($("single_accountid"))
+        {
+		var potential_id = '';
+		if($("potential_id"))
+			potential_id = frmName.potential_id.value;
+		account_id = frmName.account_id.value;
+		if(potential_id != '')
+		{
+			record_id = potential_id;
+			module_string = "&parent_module=Potentials";
+		}	
+		else
+		{
+			record_id = account_id;
+			module_string = "&parent_module=Accounts";
+		}
+		if(record_id != '')
+	                window.open("index.php?module=Contacts&action=Popup&html=Popup_picker&popuptype=specific&form=EditView"+module_string+"&relmod_id="+record_id,"test","width=640,height=602,resizable=0,scrollbars=0");
+		else
+			 window.open("index.php?module=Contacts&action=Popup&html=Popup_picker&popuptype=specific&form=EditView","test","width=640,height=602,resizable=0,scrollbars=0");	
+        }
+        else if(($("parentid")) && type != 'task' )
+        {
+                rel_parent_module = frmName.parent_type.value;
+		record_id = frmName.parent_id.value;
+                module = rel_parent_module.split("&");	
+		if(record_id != '' && module[0] == "Leads")
+		{
+			alert("You can't select related contacts from Lead ");
+			formName.selectcnt.disabled="true";
+		}
+		else
+		{
+			if(check == 'true')
+				search_string = "&return_module=Calendar&select=enable&popuptype=detailview&form_submit=false";
+			else
+				search_string="&popuptype=specific";
+			if(record_id != '')
+				window.open("index.php?module=Contacts&action=Popup&html=Popup_picker&popuptype=specific&form=EditView"+search_string+"&relmod_id="+record_id+"&parent_module="+module[0],"test","width=640,height=602,resizable=0,scrollbars=0");
+			else
+				window.open("index.php?module=Contacts&action=Popup&html=Popup_picker&popuptype=specific&form=EditView"+search_string,"test","width=640,height=602,resizable=0,scrollbars=0");
+
+
+		}
+        }
+	else if(($("contact_name")) && type == 'task')
+	{
+		var formName = frmName.name;
+		if(formName == 'EditView')
+		{
+			task_parent_module = frmName.parent_type.value;
+			task_recordid = frmName.parent_id.value;
+			task_module = task_parent_module.split("&");
+			popuptype="&popuptype=specific";
+		}
+		else
+		{
+			task_parent_module = frmName.task_parent_type.value;
+			task_recordid = frmName.task_parent_id.value;
+			task_module = task_parent_module.split("&");
+			popuptype="&popuptype=toDospecific";
+		}
+		if(task_recordid != '' && task_module[0] == "Leads" )
+		{
+			alert("You can't select related contacts from Lead ");
+			frmName.contact_name.value = '';
+ 	                frmName.selectcnt.disabled="true"
+		}
+		else
+		{
+			if(task_recordid != '')
+				window.open("index.php?module=Contacts&action=Popup&html=Popup_picker"+popuptype+"&form=EditView&task_relmod_id="+task_recordid+"&task_parent_module="+task_module[0],"test","width=640,height=602,resizable=0,scrollbars=0");
+			else	
+				window.open("index.php?module=Contacts&action=Popup&html=Popup_picker"+popuptype+"&form=EditView","test","width=640,height=602,resizable=0,scrollbars=0");
+		}
+
+	}
+        else
+        {
+                window.open("index.php?module=Contacts&action=Popup&html=Popup_picker&popuptype=specific&form=EditView","test","width=640,height=602,resizable=0,scrollbars=0");
+        }
+}
+//to get Select Potential Popup
+function selectPotential()
+{
+	var record_id= document.EditView.account_id.value;
+	if(record_id != '')
+		window.open("index.php?module=Potentials&action=Popup&html=Popup_picker&popuptype=specific_potential_account_address&form=EditView&relmod_id="+record_id+"&parent_module=Accounts","test","width=640,height=602,resizable=0,scrollbars=0");
+	else
+		window.open("index.php?module=Potentials&action=Popup&html=Popup_picker&popuptype=specific_potential_account_address&form=EditView","test","width=640,height=602,resizable=0,scrollbars=0");
+}
+//to select Quote Popup
+function selectQuote()
+{
+	var record_id= document.EditView.account_id.value;
+        if(record_id != '')
+		window.open("index.php?module=Quotes&action=Popup&html=Popup_picker&popuptype=specific&form=EditView&relmod_id="+record_id+"&parent_module=Accounts","test","width=640,height=602,resizable=0,scrollbars=0");
+
+	else
+		window.open("index.php?module=Quotes&action=Popup&html=Popup_picker&popuptype=specific&form=EditView","test","width=640,height=602,resizable=0,scrollbars=0");
+}
+//to get select SalesOrder Popup
+function selectSalesOrder()
+{
+	var record_id= document.EditView.account_id.value;
+        if(record_id != '')
+		window.open("index.php?module=SalesOrder&action=Popup&html=Popup_picker&popuptype=specific&form=EditView&relmod_id="+record_id+"&parent_module=Accounts","test","width=640,height=602,resizable=0,scrollbars=0");
+	else
+		window.open("index.php?module=SalesOrder&action=Popup&html=Popup_picker&popuptype=specific&form=EditView","test","width=640,height=602,resizable=0,scrollbars=0");
+}
+
+function checkEmailid(parent_module,emailid,yahooid)
+ {
+       var check = true;
+       if(emailid == '' && yahooid == '')
+       {
+               alert("This "+parent_module+" doesn't have any mail ids");
+               check=false;
+       }
+       return check;
+ }

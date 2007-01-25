@@ -159,7 +159,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 	}
 	elseif($uitype == 19)
 	{
-		$col_fields[$fieldname]= make_clickable(str_replace("&lt;br /&gt;","<br>",nl2br($col_fields[$fieldname])));
+		$col_fields[$fieldname]= make_clickable(str_replace("&lt;br /&gt;","<br>",$col_fields[$fieldname]));
 		$label_fld[] = $mod_strings[$fieldlabel];
 		$label_fld[] = $col_fields[$fieldname];
 	}
@@ -222,7 +222,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 			$label_fld["secid"][] = $user_id;
 			$label_fld["link"][] = "index.php?module=Users&action=DetailView&record=".$user_id;
 			$label_fld["secid"][] = $groupid;
-			$label_fld["link"][] = "index.php?module=Users&action=GroupDetailView&groupId=".$groupid;
+			$label_fld["link"][] = "index.php?module=Settings&action=GroupDetailView&groupId=".$groupid;
 		}
 		//Security Checks
 		if($fieldlabel == 'Assigned To' && $is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[getTabid($module)] == 3 or $defaultOrgSharingPermission[getTabid($module)] == 0))
@@ -338,7 +338,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		}
 		else
 		{
-			$display_val = '';
+			$display_val = 'no';
 		}
 		$label_fld[] = $display_val;
 	}
@@ -931,7 +931,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 	{
 	 	$label_fld[] =$mod_strings[$fieldlabel];
 		if(is_admin($current_user))
-			$label_fld[] = '<a href="index.php?module=Users&action=RoleDetailView&roleid='.$col_fields[$fieldname].'">'.getRoleName($col_fields[$fieldname]).'</a>';
+			$label_fld[] = '<a href="index.php?module=Settings&action=RoleDetailView&roleid='.$col_fields[$fieldname].'">'.getRoleName($col_fields[$fieldname]).'</a>';
 		else
 			$label_fld[] = getRoleName($col_fields[$fieldname]);
 	}elseif($uitype == 85) //Added for Skype by Minnie
@@ -1299,7 +1299,7 @@ function getRelatedLists($module,$focus)
 	
 	$cur_tab_id = getTabid($module);
 
-	$sql1 = "select * from vtiger_relatedlists where tabid=".$cur_tab_id;
+	$sql1 = "select * from vtiger_relatedlists where tabid=".$cur_tab_id." order by sequence";
 	$result = $adb->query($sql1);
 	$num_row = $adb->num_rows($result);
 	for($i=0; $i<$num_row; $i++)
@@ -1326,6 +1326,30 @@ function getRelatedLists($module,$focus)
 	$log->debug("Exiting getRelatedLists method ...");
 	return $focus_list;
 }
+
+/** This function returns whether related lists is present for this particular module or not
+* Param $module - module name
+* Param $activity_mode - mode of activity 
+* Return type true or false
+*/
+
+
+function isPresentRelatedLists($module,$activity_mode='')
+{
+	global $adb;
+	$retval='true';
+	$tab_id=getTabid($module);
+	$query= "select count(*) as count from vtiger_relatedlists where tabid=".$tab_id;
+	$result=$adb->query($query);
+	$count=$adb->query_result($result,0,'count');
+	if($count < 1 || ($module =='Calendar' && $activity_mode=='task'))
+	{
+		$retval='false';	
+	}	
+	return $retval;	
+			
+	
+}	
 
 /** This function returns the detailed block information of a record in a module.
 * Param $module - module name

@@ -20,6 +20,7 @@
 <script type="text/javascript" src="jscalendar/calendar-setup.js"></script>
 <script type="text/javascript" src="modules/{$MODULE}/Activity.js"></script>
 <script type="text/javascript">
+var gVTModule = '{$smarty.request.module}';
 </script>
 
 {*<!-- Contents -->*}
@@ -43,7 +44,11 @@
 					<span class="small">{$UPDATEINFO}	 </span> 
 				{/if}
 				{if $OP_MODE eq 'create_view'}
+					{if $DUPLICATE neq 'true'}
 					<span class="lvtHeaderText">{$APP.LBL_CREATING} {$SINGLE_MOD}</span> <br>
+					{else}
+					<span class="lvtHeaderText">{$APP.LBL_DUPLICATING} "{$NAME}"</span> <br>
+					{/if}
 				{/if}
 			</td></tr>
 		</table>
@@ -136,6 +141,14 @@
 								<td class="cellInfo" align="left"><textarea style="width:100%; height : 60px;" name="description">{$ACTIVITYDATA.description}</textarea></td>
                 					</tr>
 							{/if}
+							<tr>
+			                                        <td class="cellLabel" align="right" valign="top"><b>{$MOD.LBL_APP_LOCATION}</b></td>
+								<td class="cellInfo" align="left"><input name="location" type="text" class="textbox" value="{$ACTIVITYDATA.location}" style="width:50%">
+							</tr>
+								
+
+
+
 							<tr>
 								<td colspan=2 width=80% align="center">
 								<table border=0 cellspacing=0 cellpadding=3 width=80%>
@@ -562,10 +575,8 @@
 								<td><b>{$APP.Contacts}</b></td>
 								<td colspan="2">
 									<input name="contactidlist" id="contactidlist" value="{$CONTACTSID}" type="hidden">
-									<textarea rows="5" name="contactlist" readonly="readonly" class="calTxt">
-									{$CONTACTSNAME}
-									</textarea>&nbsp;
-									<input type="button" onclick="return window.open('index.php?module=Contacts&action=Popup&return_module=Calendar&popuptype=detailview&select=enable&form=EditView&form_submit=false','test','width=640,height=602,resizable=0,scrollbars=0');" class="crmButton small edit" name="selectcnt" value="Select Contacts">
+									<textarea rows="5" name="contactlist" readonly="readonly" class="calTxt" id='parentid'>{$CONTACTSNAME}</textarea>&nbsp;
+									<input type="button" onclick="selectContact('true','general',document.EditView);" class="crmButton small edit" name="selectcnt" value="Select Contacts">
 								</td>
 							</tr>
 						</table>
@@ -794,8 +805,8 @@
 			     <tr>
                                      <td><b>{$LABEL.contact_id}</b></td>
 				     <td colspan="2">
-						<input name="contact_name" readonly type="text" class="calTxt" value="{$ACTIVITYDATA.contact_id}"><input name="contact_id" type="hidden" value="{$secondvalue.contact_id}">&nbsp;
-						<input type="button" onclick="return window.open('index.php?module=Contacts&action=Popup&html=Popup_picker&popuptype=specific&form=EditView','test','width=640,height=602,resizable=0,scrollbars=0');" class="crmButton small edit" name="selectcnt" value="Select Contact">
+						<input name="contact_name" id = "contact_name" readonly type="text" class="calTxt" value="{$ACTIVITYDATA.contact_id}"><input name="contact_id"  type="hidden" value="{$secondvalue.contact_id}">&nbsp;
+						<input type="button" onclick="selectContact('false','task',document.EditView);" class="crmButton small edit" name="selectcnt" value="Select Contact">
 				     </td>
                              </tr>
 			     {/if}

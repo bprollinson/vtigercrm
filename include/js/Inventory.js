@@ -294,12 +294,15 @@ function FindDuplicate()
 	var max_row_count = document.getElementById('proTab').rows.length;
         max_row_count = eval(max_row_count)-2;//As the table has two header rows, we will reduce two from row length
 
+	var duplicate = false, iposition = '', positions = '', duplicate_products = '';
+
 	var product_id = new Array(max_row_count-1);
 	var product_name = new Array(max_row_count-1);
 	product_id[1] = getObj("hdnProductId"+1).value;
 	product_name[1] = getObj("productName"+1).value;
 	for (var i=1;i<=max_row_count;i++)
 	{
+		iposition = ""+i;
 		for(var j=i+1;j<=max_row_count;j++)
 		{
 			if(i == 1)
@@ -308,10 +311,20 @@ function FindDuplicate()
 			}
 			if(product_id[i] == product_id[j] && product_id[i] != '')
 			{
-				alert("You have selected < "+getObj("productName"+j).value+" > more than once in line items  "+i+" & "+j+".\n It is advisable to select the product just once but change the Qty. Thank You");
-				//return false;
+				if(!duplicate) positions = iposition;
+				duplicate = true;
+				if(positions.search(j) == -1) positions = positions+" & "+j;
+
+				if(duplicate_products.search(getObj("productName"+j).value) == -1)
+					duplicate_products = duplicate_products+getObj("productName"+j).value+" \n";
 			}
 		}
+	}
+	if(duplicate)
+	{
+		//alert("You have selected < "+duplicate_products+" > more than once in line items  "+positions+".\n It is advisable to select the product just once but change the Qty. Thank You");
+		if(!confirm("You have selected  the following product(s) more than once. \n"+duplicate_products+"\n Do you want to Continue?"))
+			return false;
 	}
         return true;
 }
@@ -483,7 +496,7 @@ function fnAddProductRow(module,image_path){
 
 	//Product Name with Popup image to select product
 	coltwo.className = "crmTableRow small"
-	coltwo.innerHTML= '<table border="0" cellpadding="1" cellspacing="0" width="100%"><tr><td class="small"><input id="productName'+count+'" name="productName'+count+'" class="small" style="width: 70%;" value="" readonly="readonly" type="text"><input id="hdnProductId'+count+'" name="hdnProductId'+count+'" value="" type="hidden"><img src="'+image_path+'search.gif" style="cursor: pointer;" onclick="productPickList(this,\''+module+'\','+count+')" align="absmiddle"></td></tr><tr><td class="small" id="setComment'+count+'"><textarea id="comment1" name="comment'+count+'" class=small style="width:70%;height:40px"></textarea><br>[<a href="javascript:;" onclick="getObj(\'comment'+count+'\').value=\'\'";>Clear Comment</a>]</td></tr></tbody></table>';	
+	coltwo.innerHTML= '<table border="0" cellpadding="1" cellspacing="0" width="100%"><tr><td class="small"><input id="productName'+count+'" name="productName'+count+'" class="small" style="width: 70%;" value="" readonly="readonly" type="text"><input id="hdnProductId'+count+'" name="hdnProductId'+count+'" value="" type="hidden"><img src="'+image_path+'search.gif" style="cursor: pointer;" onclick="productPickList(this,\''+module+'\','+count+')" align="absmiddle"></td></tr><tr><td class="small" id="setComment'+count+'"><textarea id="comment'+count+'" name="comment'+count+'" class=small style="width:70%;height:40px"></textarea><br>[<a href="javascript:;" onclick="getObj(\'comment'+count+'\').value=\'\'";>Clear Comment</a>]</td></tr></tbody></table>';	
 	
 	//Quantity In Stock - only for SO, Quotes and Invoice
 	if(module != "PurchaseOrder"){
@@ -491,13 +504,13 @@ function fnAddProductRow(module,image_path){
 	colthree.innerHTML='<span id="qtyInStock'+count+'">&nbsp;</span>';
 	}
 	
-	//Quantiry
+	//Quantity
 	colfour.className = "crmTableRow small"
-	colfour.innerHTML='<input id="qty'+count+'" name="qty'+count+'" type="text" class="small " style="width:50px" onfocus="this.className=\'detailedViewTextBoxOn\'" onBlur="FindDuplicate(); settotalnoofrows(); calcTotal(); loadTaxes_Ajax('+count+');" value=""/>';
+	colfour.innerHTML='<input id="qty'+count+'" name="qty'+count+'" type="text" class="small " style="width:50px" onfocus="this.className=\'detailedViewTextBoxOn\'" onBlur="settotalnoofrows(); calcTotal(); loadTaxes_Ajax('+count+');" onChange="setDiscount(this,'+count+')" value=""/>';
 	
 	//List Price with Discount, Total after Discount and Tax labels
 	colfive.className = "crmTableRow small"
-	colfive.innerHTML='<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="right"><input id="listPrice'+count+'" name="listPrice'+count+'" value="0.00" type="text" class="small " style="width:70px" onBlur="calcTotal(); callTaxCalc('+count+');"/>&nbsp;<img src="'+image_path+'pricebook.gif" onclick="priceBookPickList(this,'+count+')"></td></tr><tr><td align="right" style="padding:5px;" nowrap>		(-)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(event,\'discount_div'+count+'\',\'discount\','+count+')" >Discount</a> : </b><div class=\"discountUI\" id=\"discount_div'+count+'"><input type="hidden" id="discount_type'+count+'" name="discount_type'+count+'" value=""><table width="100%" border="0" cellpadding="5" cellspacing="0" class="small"><tr><td id="discount_div_title'+count+'" nowrap align="left" ></td><td align="right"><img src="'+image_path+'close.gif" border="0" onClick="fnHidePopDiv(\'discount_div'+count+'\')" style="cursor:pointer;"></td></tr><tr><td align="left" class="lineOnTop"><input type="radio" name="discount'+count+'" checked onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp; Zero Discount</td><td class="lineOnTop">&nbsp;</td></tr><tr><td align="left"><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp; % of Price </td><td align="right"><input type="text" class="small" size="2" id="discount_percentage'+count+'" name="discount_percentage'+count+'" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp;%</td></tr><tr><td align="left" nowrap><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp; Direct Price Redunction</td><td align="right"><input type="text" id="discount_amount'+count+'" name="discount_amount'+count+'" size="5" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');"></td></tr></table></div></td></tr><tr> <td align="right" style="padding:5px;" nowrap><b>Total After Discount :</b></td></tr><tr id="individual_tax_row'+count+'" class="TaxShow"><td align="right" style="padding:5px;" nowrap>(+)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(event,\'tax_div'+count+'\',\'tax\','+count+')" >Tax </a> : </b><div class="discountUI" id="tax_div'+count+'"></div></td></tr></table> ';
+	colfive.innerHTML='<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="right"><input id="listPrice'+count+'" name="listPrice'+count+'" value="0.00" type="text" class="small " style="width:70px" onBlur="calcTotal(); callTaxCalc('+count+');" onChange="setDiscount(this,'+count+')"/>&nbsp;<img src="'+image_path+'pricebook.gif" onclick="priceBookPickList(this,'+count+')"></td></tr><tr><td align="right" style="padding:5px;" nowrap>		(-)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(event,\'discount_div'+count+'\',\'discount\','+count+')" >Discount</a> : </b><div class=\"discountUI\" id=\"discount_div'+count+'"><input type="hidden" id="discount_type'+count+'" name="discount_type'+count+'" value=""><table width="100%" border="0" cellpadding="5" cellspacing="0" class="small"><tr><td id="discount_div_title'+count+'" nowrap align="left" ></td><td align="right"><img src="'+image_path+'close.gif" border="0" onClick="fnHidePopDiv(\'discount_div'+count+'\')" style="cursor:pointer;"></td></tr><tr><td align="left" class="lineOnTop"><input type="radio" name="discount'+count+'" checked onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp; Zero Discount</td><td class="lineOnTop">&nbsp;</td></tr><tr><td align="left"><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp; % of Price </td><td align="right"><input type="text" class="small" size="2" id="discount_percentage'+count+'" name="discount_percentage'+count+'" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp;%</td></tr><tr><td align="left" nowrap><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');">&nbsp; Direct Price Redunction</td><td align="right"><input type="text" id="discount_amount'+count+'" name="discount_amount'+count+'" size="5" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');"></td></tr></table></div></td></tr><tr> <td align="right" style="padding:5px;" nowrap><b>Total After Discount :</b></td></tr><tr id="individual_tax_row'+count+'" class="TaxShow"><td align="right" style="padding:5px;" nowrap>(+)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(event,\'tax_div'+count+'\',\'tax\','+count+')" >Tax </a> : </b><div class="discountUI" id="tax_div'+count+'"></div></td></tr></table> ';
 
 	//Total and Discount, Total after Discount and Tax details
 	colsix.className = "crmTableRow small"

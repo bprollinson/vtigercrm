@@ -24,7 +24,6 @@
     {ldelim}
         var selected = cause.options[cause.selectedIndex].value;  id="mergeFieldValue"
         var s = allOptions[cause.selectedIndex];
-            
         effect.length = s;
         for (var i = 0; i < s; i++) 
 	{ldelim}
@@ -39,7 +38,7 @@
         var allOpts = new Object(0);
         var options = null;
             
-	    options = new Object(19);
+	    options = new Object(10);
             options[0] = blankOption;
             
                 
@@ -72,7 +71,7 @@
             allOpts[2] = options;
         
             
-            options = new Object(19);
+            options = new Object(12);
             options[0] = blankOption;
             
                 
@@ -90,7 +89,7 @@
             
 	        allOpts[3] = options;
 
-	        options = new Object(19);
+	        options = new Object(14);
                 options[0] = blankOption;
             
                 options[1] = new Option('User: First Name', '$users-first_name$'); 
@@ -104,8 +103,8 @@
 		options[9] = new Option('User: Street', '$users-address_street$'); 
 		options[10] = new Option('User: City', '$users-address_city$'); 
 		options[11] = new Option('User: State', '$users-address_state$'); 
-		options[11] = new Option('User: Country', '$users-address_country$'); 
-		options[11] = new Option('User: PostalCode', '$users-address_postalcode$'); 
+		options[12] = new Option('User: Country', '$users-address_country$'); 
+		options[13] = new Option('User: PostalCode', '$users-address_postalcode$'); 
             
             	allOpts[4] = options;
 	    
@@ -135,15 +134,15 @@
 				<form action="index.php" method="post" name="templatecreate" onsubmit="return check4null(templatecreate);">  
 				<input type="hidden" name="action">
 				<input type="hidden" name="mode" value="{$EMODE}">
-				<input type="hidden" name="module" value="Users">
+				<input type="hidden" name="module" value="Settings">
 				<input type="hidden" name="templateid" value="{$TEMPLATEID}">
 				<input type="hidden" name="parenttab" value="PARENTTAB}">
 				<tr>
-					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ViewTemplate.gif" alt="Users" width="45" height="60" border=0 title="Users"></td>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ViewTemplate.gif" alt="Settings" width="45" height="60" border=0 title="Settings"></td>
 				{if $EMODE eq 'edit'}
-					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_EDIT} &quot;{$TEMPLATENAME}&quot; </b></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Settings&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_EDIT} &quot;{$TEMPLATENAME}&quot; </b></td>
 				{else}
-					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_CREATE_EMAIL_TEMPLATES} </b></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Settings&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_CREATE_EMAIL_TEMPLATES} </b></td>
 				{/if}
 					
 				</tr>

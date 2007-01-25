@@ -246,6 +246,7 @@
 <div id="tempdiv" style="display:block;position:absolute;left:350px;top:200px;"></div>
 <!-- added for validation -->
 <script language="javascript">
+  var gVTModule = '{$smarty.request.module}';
   var fieldname = new Array({$VALIDATION_DATA_FIELDNAME});
   var fieldlabel = new Array({$VALIDATION_DATA_FIELDLABEL});
   var fielddatatype = new Array({$VALIDATION_DATA_FIELDDATATYPE});
@@ -310,7 +311,7 @@ function fetchUserGroups(id)
 function showAuditTrail()
 {
 	var userid =  document.getElementById('userid').value;
-	window.open("index.php?module=Users&action=UsersAjax&file=ShowAuditTrail&userid="+userid,"","width=650,height=800,resizable=0,scrollbars=1,left=100");
+	window.open("index.php?module=Settings&action=SettingsAjax&file=ShowAuditTrail&userid="+userid,"","width=650,height=800,resizable=0,scrollbars=1,left=100");
 }
 
 function deleteUser(userid)

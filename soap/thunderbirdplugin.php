@@ -54,6 +54,9 @@ $server->register(
     'CheckContactViewPerm',array('user_name'=>'xsd:string'),array('return'=>'xsd:string'),$NAMESPACE);
 
 $server->register(
+	'CheckLeadViewPerm',array('user_name'=>'xsd:string'),array('return'=>'xsd:string'),$NAMESPACE);
+
+$server->register(
 	  'AddContact',
     array('user_name'=>'xsd:string',
           'first_name'=>'xsd:string',
@@ -200,13 +203,15 @@ function SearchContactsByEmail($username,$emailaddress)
 
 function track_email($user_name, $contact_ids, $date_sent, $email_subject, $email_body)
 {
+	global $current_user;
 	global $adb;
+	global $log;
 	require_once('modules/Users/Users.php');
 	require_once('modules/Emails/Emails.php');
 
-	$seed_user = new Users();
-	$user_id = $seed_user->retrieve_user_id($user_name);
-
+	$current_user = new Users();
+	$user_id = $current_user->retrieve_user_id($user_name);
+	$current_user = $current_user->retrieveCurrentUserInfoFromFile($user_id);
 	$email = new Emails();
 	//$log->debug($msgdtls['contactid']);
 	$emailbody = str_replace("'", "''", $email_body);
@@ -220,7 +225,6 @@ function track_email($user_name, $contact_ids, $date_sent, $email_subject, $emai
 	$email->column_fields[activitytype] = 'Emails';
 	$email->plugin_save = true;
 	$email->save("Emails");
-
 	$email->set_emails_contact_invitee_relationship($email->id,$contact_ids);
 	$email->set_emails_se_invitee_relationship($email->id,$contact_ids);
 	$email->set_emails_user_invitee_relationship($email->id,$user_id);
@@ -542,6 +546,22 @@ function CheckContactViewPerm($user_name)
 	}
 }
 
+function CheckLeadViewPerm($user_name)
+{
+  global $current_user,$log;
+	require_once('modules/Users/Users.php');
+	$seed_user = new Users();
+	$user_id = $seed_user->retrieve_user_id($user_name);
+	$current_user = $seed_user;
+	$current_user->retrieve_entity_info($user_id,"Users");
+	if(isPermitted("Leads","EditView") == "yes")
+	{
+		return "allowed";
+	}else
+	{
+		return "denied";
+	}
+}
 $server->service($HTTP_RAW_POST_DATA);
 exit();
 ?>

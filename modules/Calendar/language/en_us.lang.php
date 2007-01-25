@@ -25,7 +25,6 @@ $mod_strings = Array(
 'LBL_MODULE_TITLE'=>'Calendar: Home',
 'LBL_MODULE_APPOINTMENT'=>'Calendar: Appointment',
 'LBL_MODULE_APPOINTMENT_DETAIL'=>'Calendar: Appointment Detail',
-'LBL_CONTACT'=>'Contact:',
 'LBL_SAVE'=>'Save',
 'LBL_RESET'=>'Cancel',
 'LBL_LIST_USER_NAME'=>'User Name',
@@ -94,7 +93,6 @@ $mod_strings = Array(
 'LBL_PREV_MON' => 'Previous Month',
 'LBL_NEXT_MON' => 'Next Month',
 
-'LBL_YEAR'=>'Year',
 'LBL_YEAR_BUTTON_KEY'=>'Y',
 'LBL_MON_BUTTON_TITLE'=>'Year [Alt+Y]',
 'LBL_PREV_YEAR'=>'Previous Year',
@@ -181,16 +179,8 @@ $mod_strings = Array(
 'LBL_ADDCALL'=>'Call',
 'LBL_ADDMEETING'=>'Meeting',
 'LBL_ADDTODO'=>'To Do',
-'LBL_INVITE'=>'Invite',
-'LBL_REMINDER'=>'Reminder',
-'LBL_SENDREMINDER'=>'Send Reminder',
 'LBL_BEFOREEVENT'=>'before the event starts',
 'LBL_BEFORETASK'=>'before the task starts',
-'LBL_REPEAT'=>'Repeat',
-'LBL_EVENTTYPE'=>'Event Type',
-'LBL_EVENTNAME'=>'Event Name',
-'LBL_EVENTSTAT'=>'Event starts at',
-'LBL_EVENTEDAT'=>'Event ends on',
 'LBL_HRVIEW'=>'Hour View',
 'LBL_LISTVIEW'=>'List View',
 'LBL_WEEKVIEW'=>'Weekly Calendar View',
@@ -212,8 +202,6 @@ $mod_strings = Array(
 'LBL_EVERYDAY'=>'Every Day',
 'LBL_EVERYWEEK'=>'Every Week',
 'LBL_EVERYMON'=>'Every Month',
-'LBL_REPEATEVENT'=>'Repeat once in every',
-'LBL_DAYS'=>'Day(s)',
 'LBL_WEEKS'=>'Week(s)',
 'LBL_MONTHS'=>'Month(s)',
 'LBL_YEAR'=>'Year',
@@ -229,7 +217,6 @@ $mod_strings = Array(
 'LBL_ADD_BUTTON'=>'Add',
 'LBL_USERS'=>'Users',
 'LBL_RMV_BUTTON'=>'Remove',
-'LBL_RMD_ON'=>'Remind on',
 'LBL_SDRMD'=>'Send Reminder to',
 'LBL_ENABLE_REPEAT'=>'Enable Repeat',
 'LBL_REPEAT_ONCE'=>'Repeat once in every',
@@ -241,12 +228,14 @@ $mod_strings = Array(
 
 
 
-//DON'T CONVERT THESE THEY ARE MAPPINGS
+//DON'T CONVERT THESE THEY ARE MAPPINGS - Starts
 'db_last_name' => 'LBL_LIST_LAST_NAME',
 'db_first_name' => 'LBL_LIST_FIRST_NAME',
 'db_title' => 'LBL_LIST_TITLE',
 'db_email1' => 'LBL_LIST_EMAIL_ADDRESS',
 'db_email2' => 'LBL_LIST_EMAIL_ADDRESS',
+//DON'T CONVERT THESE THEY ARE MAPPINGS  - Ends
+
 'LBL_COMPLETED'=>'Mark Completed',
 'LBL_DEFERRED'=>'Mark Deferred',
 'LBL_HELD'=>'Mark Held',
@@ -254,7 +243,6 @@ $mod_strings = Array(
 'LBL_POSTPONE'=>'Postpone',
 'LBL_CHANGEOWNER'=>'Change Owner',
 'LBL_DEL'=>'Delete',
-//END DON'T CONVERT
 
 //Added for actvity merge with calendar
 'LBL_SEARCH_FORM_TITLE'=>'Activity Search',
@@ -262,8 +250,12 @@ $mod_strings = Array(
 'LBL_NEW_FORM_TITLE'=>'New Activity',
 'LBL_TASK_INFORMATION'=>'Task Information',
 'LBL_EVENT_INFORMATION'=>'Event Information',
+'LBL_CALENDAR_INFORMATION'=>'Calendar Information',
 
 'LBL_NAME'=>'Subject:',
+'LBL_ACTIVITY_STRING'=>'There is an activity',
+'LBL_DETAILS_STRING'=>'The details are',
+'LBL_REGARDS_STRING'=>'Thanks & Regards',
 'LBL_CONTACT_NAME'=>'Contact Name',
 'LBL_OPEN_ACTIVITIES'=>'Open Activities',
 'LBL_ACTIVITY'=>'Activity:',
@@ -362,7 +354,6 @@ $mod_strings = Array(
 'LBL_INVITE'=>'Invite',
 'LBL_REPEAT'=>'Repeat',
 'LBL_REMINDER'=>'Reminder',
-'LBL_ENABLE_REPEAT'=>'Enable Repeat',
 'LBL_SENDREMINDER'=>'Send Reminder',
 'LBL_NOTIFICATION'=>'Notification',
 'LBL_SENDNOTIFICATION'=>'Send Notification',

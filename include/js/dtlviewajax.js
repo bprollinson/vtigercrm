@@ -238,7 +238,7 @@ function dtlViewAjaxSave(fieldLabel,module,uitype,tableName,fieldName,crmId)
 			getObj(dtlView).innerHTML = "<a href=\"index.php?module=Users&action=DetailView&record="+tagValue+"\">"+hdObj.value+"&nbsp;</a>";
 		}else if(isAdmin == "1" && assign_type_G == true)
 		{
-			getObj(dtlView).innerHTML = "<a href=\"index.php?module=Users&action=GroupDetailView&groupId="+tagValue+"\">"+hdObj.value+"&nbsp;</a>";
+			getObj(dtlView).innerHTML = "<a href=\"index.php?module=Settings&action=GroupDetailView&groupId="+tagValue+"\">"+hdObj.value+"&nbsp;</a>";
 		}
 	}else if(uitype == '56')
 	{
@@ -247,7 +247,7 @@ function dtlViewAjaxSave(fieldLabel,module,uitype,tableName,fieldName,crmId)
 			getObj(dtlView).innerHTML = "yes";
 		}else
 		{
-			getObj(dtlView).innerHTML = "";
+			getObj(dtlView).innerHTML = "no";
 		}
 
 	}else if(uitype == 116)
@@ -316,7 +316,7 @@ function dtlViewAjaxSave(fieldLabel,module,uitype,tableName,fieldName,crmId)
   	{
 		/* Wordwrap a long list of multi-select combo box items at the
                  * item separator string */
-                const DETAILVIEW_WORDWRAP_WIDTH = "70"; // must match value in DetailViewUI.tpl.
+                var DETAILVIEW_WORDWRAP_WIDTH = "70"; // must match value in DetailViewUI.tpl.
 
                 var lineLength = 0;
                 for(var i=0; i < r.length; i++) {
@@ -334,25 +334,24 @@ function dtlViewAjaxSave(fieldLabel,module,uitype,tableName,fieldName,crmId)
        		getObj(dtlView).innerHTML = r.join(", ");
 	}else
 	{
-		getObj(dtlView).innerHTML = tagValue;
+		getObj(dtlView).innerHTML = tagValue.replace(/[\n\r]+/g, "<br>&nbsp;");
 	}
 	showHide(dtlView,editArea);  //show,hide
 	itsonview=false;
 }
-
-function SaveTag(txtBox,crmId,module)
+function SaveTag(tagfield,crmId,module)
 {
-	var tagValue = document.getElementById(txtBox).value;
-	document.getElementById(txtBox).value ='';
+	var tagValue = $(tagfield).value;
 	$("vtbusy_info").style.display="inline";
 	new Ajax.Request(
 		'index.php',
                 {queue: {position: 'end', scope: 'command'},
                         method: 'post',
-                        postBody: "file=TagCloud&module=" + module + "&action=" + module + "Ajax&recordid=" + crmId + "&ajxaction=SAVETAG&tagfields=" +tagValue,
+                        postBody: "file=TagCloud&module=" + module + "&action=" + module + "Ajax&recordid=" + crmId + "&ajxaction=SAVETAG&tagfields=" +escape(tagValue),
                         onComplete: function(response) {
 				        getObj('tagfields').innerHTML = response.responseText;
 					$("vtbusy_info").style.display="none";
+					$(tagfield).value = '';
                         }
                 }
         );

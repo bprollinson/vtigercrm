@@ -16,8 +16,8 @@ require_once('include/database/Postgres8.php');
 require_once('include/ComboUtil.php'); //new
 require_once('include/utils/CommonUtils.php'); //new
 	
-$column_array=array('accountid','contact_id','product_id','campaignid');
-$table_col_array=array('vtiger_account.accountname','vtiger_contactdetails.firstname,vtiger_contactdetails.lastname','vtiger_products.productname','vtiger_campaign.campaignname');
+$column_array=array('accountid','contact_id','product_id','campaignid','quoteid','vendorid','potentialid','salesorderid');
+$table_col_array=array('vtiger_account.accountname','vtiger_contactdetails.firstname,vtiger_contactdetails.lastname','vtiger_products.productname','vtiger_campaign.campaignname','vtiger_quotes.subject','vtiger_vendor.vendorname','vtiger_potential.potentialname','vtiger_salesorder.subject');
 
 /**This function is used to get the list view header values in a list view during search
 *Param $focus - module object
@@ -126,65 +126,13 @@ function getSearchListHeaderValues($focus, $module,$sort_qry='',$sorder='',$orde
 
                 if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] ==0 || in_array($fieldname,$field))
 		{
-                        if(isset($focus->sortby_fields) && $focus->sortby_fields !='')
-                        {
-                                //Added on 14-12-2005 to avoid if and else check for every list vtiger_field for arrow image and change order
+			if($fieldname!='parent_id')
+			{
+				$fld_name=$fieldname;
 
-                                foreach($focus->list_fields[$name] as $tab=>$col)
-                                {
-                                        if(in_array($col,$focus->sortby_fields))
-                                        {
-                                                if($relatedlist !='')
-                                                {
-                                                        if($app_strings[$name])
-                                                        {
-                                                                $name = $app_strings[$name];
-                                                        }
-                                                        else
-                                                        {
-                                                                $name = $mod_strings[$name];
-                                                        }
-                                                }
-                                                else
-                                                {
-                                                        if($app_strings[$name])
-                                                        {
-                                                                $lbl_name = $app_strings[$name];
-                                                        }
-                                                        else
-                                                        {
-								 $lbl_name = $mod_strings[$name];
-                                                        }
-                                                        $name = $lbl_name;
-                                                }
-                                        }
-                                        else
-                                        {       if($app_strings[$name])
-                                                {
-                                                        $name = $app_strings[$name];
-                                                }
-                                                elseif($mod_strings[$name])
-                                                {
-                                                        $name = $mod_strings[$name];
-                                                }
-                                        }
-                                }
-                        }
-                        //Added condition to hide the close column in Related Lists
-                        //if($name == 'Close' && $relatedlist != '')
-                        if($name == 'Close')
-                        {
-                                //$list_header .= '';
-                                // $list_header[] = '';
+				//assign the translated string
+				$search_header[$fld_name] = getTranslatedString($name);
 			}
-                        else
-                        {
-				if($fieldname!='parent_id')
-				{
-					$fld_name=$fieldname;
-                                	$search_header[$fld_name]=$name;
-				}
-                        }
                 }
         }
 	$log->debug("Exiting getSearchListHeaderValues method ...");	
@@ -331,12 +279,11 @@ function BasicSearch($module,$search_field,$search_string)
          $log->debug("Entering BasicSearch(".$module.",".$search_field.",".$search_string.") method ...");
 	global $adb;
 	global $column_array,$table_col_array;
-
 	if($search_field =='crmid')
 	{
 		$column_name='crmid';
 		$table_name='vtiger_crmentity';
-		$where="$table_name.$column_name like '%".$search_string."%'";	
+		$where="$table_name.$column_name like '%".$search_string."%'";
 	}else
 	{	
 		//Check added for tickets by accounts/contacts in dashboard
@@ -361,6 +308,7 @@ function BasicSearch($module,$search_field,$search_string)
 				if ($search_field_first	== 'contactid') $search_field_first = 'contact_id';
 				$column_name = $search_field_first;
 			}
+				
 			//Check ends
 			$table_name=$adb->query_result($result,0,'tablename');
 			if($table_name == "vtiger_crmentity" && $column_name == "smownerid")
@@ -451,7 +399,12 @@ function getAdvSearchfields($module)
 		$block = $adb->query_result($result,$i,"block");
 		$fieldtype = explode("~",$fieldtype);
 		$fieldtypeofdata = $fieldtype[0];
-		$fieldlabel = $adb->query_result($result,$i,"fieldlabel");
+		$fieldlabel = $mod_strings[$adb->query_result($result,$i,"fieldlabel")];
+
+		// Added to display customfield label in search options
+		if($fieldlabel == "")
+			$fieldlabel = $adb->query_result($result,$i,"fieldlabel");
+					
 		if($fieldlabel == "Related To")
 		{
 			$fieldlabel = "Related to";

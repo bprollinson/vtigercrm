@@ -630,12 +630,24 @@ setObjects();
 	<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF">
 		<tr>
 			<td>
-				<a href="" id="complete" onClick="fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_HELD']?></a>
-				<a href="" id="pending" onClick="fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_NOTHELD']?></a>
+				<?php
+				if(isPermitted("Calendar","EditView") == "yes")
+				{
+				?>
+				<a href="javascript:;" id="complete" onClick="fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_HELD']?></a>
+				<a href="javascript:;" id="pending" onClick="fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_NOTHELD']?></a>
 				<span style="border-top:1px dashed #CCCCCC;width:99%;display:block;"></span>
-				<a href="" id="postpone" onClick="fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_POSTPONE']?></a>
-				<a href="" id="changeowner" onClick="fnvshobj(this,'act_changeowner');fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_CHANGEOWNER']?></a>
+				<a href="javascript:;" id="postpone" onClick="fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_POSTPONE']?></a>
+				<a href="javascript:;" id="changeowner" onClick="fnvshobj(this,'act_changeowner');fninvsh('eventcalAction')" class="calMnu">- <?php echo $mod_strings['LBL_CHANGEOWNER']?></a>
+				<?php
+				}
+				if(isPermitted("Calendar","Delete") == "yes")	
+				{
+				?>
 				<a href="" id="actdelete" onclick ="fninvsh('eventcalAction');return confirm('Are you sure?');" class="calMnu">- <?php echo $mod_strings['LBL_DEL']?></a>
+				<?php
+				}
+				?>
 			</td>
 		</tr>
 	</table>
@@ -870,9 +882,14 @@ setObjects();
 	<td width="50%"><b><?php echo $app_strings['LBL_TRANSFER_OWNERSHIP']; ?></b></td>
 	        <td width="2%"><b>:</b></td>
         	<td width="48%">
-	        	<select name="activity_owner" id="activity_owner" class="detailedViewTextBox">
+                	<input type = "radio" name = "user_lead_owner"  onclick=checkgroup();  checked><?php echo $app_strings['LBL_USER'];?>&nbsp;
+                        <input type = "radio" name = "user_lead_owner" onclick=checkgroup(); ><?php echo $app_strings['LBL_GROUP'];?><br>
+                        <select name="lead_owner" id="lead_owner" class="detailedViewTextBox" style="display:block">
 				<?php echo getUserslist(); ?>
-		        </select>
+                        </select>
+                        <select name="lead_group_owner" id="lead_group_owner" class="detailedViewTextBox" style="display:none;">
+				<?php echo getGroupslist();?>
+                         </select>
         	</td>
 	</tr>
 	<tr><td colspan="3" style="border-bottom:1px dashed #CCCCCC;">&nbsp;</td></tr>
@@ -892,12 +909,25 @@ setObjects();
         <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FFFFFF">
                 <tr>
                         <td>
+				<?php
+                                if(isPermitted("Calendar","EditView") == "yes")
+                                {
+                                ?>
                                 <a href="" id="taskcomplete" onClick="fninvsh('taskcalAction');" class="calMnu">- <?php echo $mod_strings['LBL_COMPLETED']?></a>
                                 <a href="" id="taskpending" onClick="fninvsh('taskcalAction');" class="calMnu">- <?php echo $mod_strings['LBL_DEFERRED']?></a>
                                 <span style="border-top:1px dashed #CCCCCC;width:99%;display:block;"></span>
                                 <a href="" id="taskpostpone" onClick="fninvsh('taskcalAction');" class="calMnu">- <?php echo $mod_strings['LBL_POSTPONE']?></a>
                                 <a href="" id="taskchangeowner" onClick="fnvshobj(this,'act_changeowner'); fninvsh('taskcalAction');" class="calMnu">- <?php echo $mod_strings['LBL_CHANGEOWNER']?></a>
+                                <?php
+                                }
+                                if(isPermitted("Calendar","Delete") == "yes")
+                                {
+                                ?>
                                 <a href="" id="taskactdelete" onClick ="fninvsh('taskcalAction');return confirm('Are you sure?');" class="calMnu">- <?php echo $mod_strings['LBL_DEL']?></a>
+                                <?php
+                                }
+                                ?>
+
                         </td>
                 </tr>
         </table>

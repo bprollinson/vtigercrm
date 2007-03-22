@@ -867,7 +867,7 @@ function to_html($string, $encode=true){
         global $toHtml;
         if($encode && is_string($string)){//$string = htmlentities($string, ENT_QUOTES);
 		if (is_array($toHtml))
-			$string = str_replace(array_keys($toHtml), array_values($toHtml), $string);
+			$string =strip_tags($string, '<span><br /><div><a><br><b><u><i><table><td><tr><style><p><command><h1><h2><h3><h4><h5><h6><li><ol><ul><th><tbody><font><center><big><hr><format> <strong><html><small>');
         }
 	$log->debug("Exiting to_html method ...");
         return $string;
@@ -1181,6 +1181,12 @@ function getRecordOwnerId($record)
 		elseif($module == 'Campaigns')
 		{
 			$query1="select vtiger_groups.groupid from vtiger_campaigngrouprelation inner join vtiger_groups on vtiger_groups.groupname = vtiger_campaigngrouprelation.groupname where campaignid=".$record;
+		}
+		else
+		{
+			require_once("modules/$module/$module.php");
+			$modObj = new $module();
+			$query1="select vtiger_groups.groupid from vtiger_".$module."grouprelation inner join vtiger_groups on vtiger_groups.groupname = vtiger_".$module."grouprelation.groupname where ".$modObj->groupTable[1]."=".$record;
 		}
 
 		$result1=$adb->query($query1);

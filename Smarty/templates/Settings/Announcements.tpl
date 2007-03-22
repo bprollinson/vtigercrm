@@ -18,11 +18,15 @@ function Announcement()
 {
 	$("an_busy").style.display="inline";
 	var announcement=$("announcement").value;
+
+	//Replace & with ##$## and do vice versa in modules/Settings/SettingsAjax.php. if we pass as it is, request of announcement will be skipped after &
+	announcement = announcement.replace(/&/g,"##$##");//replace('&','##$##');
+
 	new Ajax.Request(
 	'index.php',
         {queue: {position: 'end', scope: 'command'},
        		method: 'post',
-	        postBody: 'module=Users&action=UsersAjax&announcement='+announcement+'&announce_save=yes',
+	        postBody: 'module=Settings&action=SettingsAjax&announcement='+announcement+'&announce_save=yes',
 	        onComplete: function(response) {
 					$("announcement").innerHTML=response.responseText;
 					$("an_busy").style.display="none";

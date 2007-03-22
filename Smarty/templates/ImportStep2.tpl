@@ -11,7 +11,7 @@
 -->*}
 
 
-<script type="text/javascript" src="modules/{$MODULE}/{$SINGLE_MOD}.js"></script>
+<script type="text/javascript" src="modules/{$MODULE}/{$MODULE}.js"></script>
 <script type="text/javascript" src="include/js/general.js"></script>
 <script>
 
@@ -55,7 +55,7 @@ function deleteMapping()
 	//we have emptied the map name from the select list
 	document.getElementById("saved_source").options[options_collection.selectedIndex] = null;
 	document.getElementById("delete_mapping").style.visibility = "hidden";
-	alert("This map has been deleted. You cannot use this map again");
+	alert("{$APP.MAP_DELETED_INFO}");
 {rdelim}
 
 </script>
@@ -87,7 +87,7 @@ function deleteMapping()
 				<br />
 				<table align="center" cellpadding="5" cellspacing="0" width="95%" class="mailClient importLeadUI small">
 				   <tr>
-					<td class="mailClientBg genHeaderSmall" height="50" valign="middle" align="left" >{$MOD.LBL_MODULE_NAME} {$MODULE}</td>
+					<td class="mailClientBg genHeaderSmall" height="50" valign="middle" align="left" >{$MOD.LBL_MODULE_NAME} {$APP.$MODULE}</td>
 				   </tr>
 				   <tr>
 					<td>&nbsp;</td>
@@ -95,13 +95,13 @@ function deleteMapping()
 				   <tr>
 					<td align="left"  style="padding-left:40px;">
 						<span class="genHeaderGray">{$MOD.LBL_STEP_2_3} </span>&nbsp; 
-						<span class="genHeaderSmall">{$MODULE} {$MOD.LBL_LIST_MAPPING} </span>
+						<span class="genHeaderSmall">{$APP.$MODULE} {$MOD.LBL_LIST_MAPPING} </span>
 					</td>
 				   </tr>
 				   <tr>
 					<td align="left" style="padding-left:40px;"> 
-					   {$MOD.LBL_STEP_2_MSG} {$MODULE} {$MOD.LBL_STEP_2_MSG1} 
-					   {$MOD.LBL_STEP_2_TXT} {$MODULE}. 
+					   {$MOD.LBL_STEP_2_MSG} {$APP.$MODULE} {$MOD.LBL_STEP_2_MSG1} 
+					   {$MOD.LBL_STEP_2_TXT} {$APP.$MODULE}. 
 					</td>
 				   </tr>
 				   <tr>

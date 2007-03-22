@@ -8,13 +8,31 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-
 require_once('include/database/PearDatabase.php');
 require_once('user_privileges/default_module_view.php');
 global $adb, $singlepane_view;
 $idlist = $_REQUEST['idlist'];
-$update_mod = $_REQUEST['destination_module'];
+$dest_mod = $_REQUEST['destination_module'];
 $rel_table = 'vtiger_campaigncontrel';
+$record = $_REQUEST['record'];
+
+if($singlepane_view == 'true')
+	$action = "DetailView";
+else
+	$action = "CallRelatedList";
+
+//save the relationship when we select Product from Contact RelatedList
+if($dest_mod == 'Products')
+{
+	$contactid = $_REQUEST['parid'];
+	$productid = $_REQUEST['entityid'];
+	if($contactid != '' && $productid != '')
+		$adb->query("insert into vtiger_seproductsrel values ($contactid,$productid,'Contacts')");
+
+	$record = $contactid;
+}
+
+
 if(isset($_REQUEST['idlist']) && $_REQUEST['idlist'] != '')
 {
 	//split the string and store in an array
@@ -27,19 +45,25 @@ if(isset($_REQUEST['idlist']) && $_REQUEST['idlist'] != '')
 	            $adb->query($sql);
 		}
 	}
-	if($singlepane_view == 'true')
-		header("Location: index.php?action=DetailView&module=Contacts&record=".$_REQUEST["parentid"]);
-	else
- 		header("Location: index.php?action=CallRelatedList&module=Contacts&record=".$_REQUEST["parentid"]);
+	$record = $_REQUEST["parentid"];
 }
 elseif(isset($_REQUEST['entityid']) && $_REQUEST['entityid'] != '')
 {	
-		$sql = "insert into ".$rel_table." values(".$_REQUEST["entityid"].",".$_REQUEST["parid"].")";
-		$adb->query($sql);
-		if($singlepane_view == 'true')
-			header("Location: index.php?action=DetailView&module=Contacts&record=".$_REQUEST["parid"]);
-		else
- 			header("Location: index.php?action=CallRelatedList&module=Contacts&record=".$_REQUEST["parid"]);
+	$sql = "insert into ".$rel_table." values(".$_REQUEST["entityid"].",".$_REQUEST["parid"].")";
+	$adb->query($sql);
+	$record = $_REQUEST["parid"];
 }
+elseif(isset($_REQUEST['pot_id']) && $_REQUEST['pot_id'] != '')
+{	
+	$sql = "insert into vtiger_contpotentialrel values(".$record.",".$_REQUEST["pot_id"].")";
+	$adb->query($sql);
+}
+
+
+$module = 'Contacts';
+if($_REQUEST['return_module'] != '') $module = $_REQUEST['return_module'];
+
+
+header("Location: index.php?action=$action&module=$module&record=".$record);
 
 ?>

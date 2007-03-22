@@ -27,7 +27,8 @@ $hostname = $_SERVER['SERVER_NAME'];
 // TODO: introduce Apache port as parameters to use non-default value 80
 //$web_root = $_SERVER['SERVER_NAME']. ":" .$_SERVER['SERVER_PORT'].$_SERVER['PHP_SELF'];
 //$web_root = $hostname.$_SERVER['PHP_SELF'];
-$web_root = $HTTP_SERVER_VARS["HTTP_HOST"] . $HTTP_SERVER_VARS["REQUEST_URI"];
+//$web_root = $HTTP_SERVER_VARS["HTTP_HOST"] . $HTTP_SERVER_VARS["REQUEST_URI"];
+$web_root = $_ENV["HOSTNAME"] . $HTTP_SERVER_VARS["REQUEST_URI"];
 $web_root = str_replace("/install.php", "", $web_root);
 $web_root = "http://".$web_root;
 
@@ -99,7 +100,7 @@ if (is_file("config.php") && is_file("config.inc.php")) {
 	elseif (isset($dbconfig['db_name']) && $dbconfig['db_name']!='_DBC_NAME_')
 	$db_name = $dbconfig['db_name'];
 	else
-	$db_name = 'vtigercrm502';
+	$db_name = 'vtigercrm503';
 
 	!isset($_REQUEST['db_drop_tables']) ? $db_drop_tables = "0" : $db_drop_tables = $_REQUEST['db_drop_tables'];
 	if (isset($_REQUEST['host_name'])) $host_name = $_REQUEST['host_name'];
@@ -145,7 +146,7 @@ if (is_file("config.php") && is_file("config.inc.php")) {
 	}
 	else {
 		!isset($_REQUEST['db_hostname']) ? $db_hostname = $hostname: $db_hostname = $_REQUEST['db_hostname'];
-		!isset($_REQUEST['db_name']) ? $db_name = "vtigercrm502" : $db_name = $_REQUEST['db_name'];
+		!isset($_REQUEST['db_name']) ? $db_name = "vtigercrm503" : $db_name = $_REQUEST['db_name'];
 		!isset($_REQUEST['db_drop_tables']) ? $db_drop_tables = "0" : $db_drop_tables = $_REQUEST['db_drop_tables'];
 		!isset($_REQUEST['host_name']) ? $host_name= $hostname : $host_name= $_REQUEST['host_name'];
 		!isset($_REQUEST['site_URL']) ? $site_URL = $web_root : $site_URL = $_REQUEST['site_URL'];
@@ -281,11 +282,11 @@ function verify_data(form) {
 
 	// Here we decide whether to submit the form.
 	if (isError == true) {
-		alert("Missing required fields: " + errorMessage);
+		alert("Missing required fields:" + errorMessage);
 		return false;
 	}
 	if (trim(form.admin_email.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.admin_email.value)) {
-		alert("The email id '"+form.admin_email.value+"' in the email field is invalid");
+		alert("The email id \'"+form.admin_email.value+"\' in the email field is invalid");
 		form.admin_email.focus();
 		exit();
 	}

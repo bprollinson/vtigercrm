@@ -40,6 +40,12 @@ $lbl_confirm_new_password = $mod_strings['LBL_LIST_CONFIRM_PASSWORD'];
 $lbl_user_email1 = $mod_strings['LBL_LIST_EMAIL'];
 $err_missing_required_fields = $app_strings['ERR_MISSING_REQUIRED_FIELDS'];
 $err_invalid_email_address = $app_strings['ERR_INVALID_EMAIL_ADDRESS'];
+$lbl_user_image=$mod_strings['User Image'];
+$err_select_valid_image = $app_strings['SELECT_VALID_IMAGE'];
+$the_emailid = $app_strings['THE_EMAILID'];
+$email_field_is = $app_strings['EMAIL_FILED_IS'].$err_invalid_email_address;
+$other_email_field_is = $app_strings['OTHER_EMAIL_FILED_IS'].$err_invalid_email_address;
+$yahoo_email_field_is = $app_strings['YAHOO_EMAIL_FILED_IS'].$err_invalid_email_address;
 
 $the_script  = <<<EOQ
 
@@ -52,6 +58,7 @@ function set_fieldfocus(errorMessage,oMiss_field){
 }
 
 function verify_data(form) {
+
 	var isError = false;
 	var errorMessage = "";
 	if (trim(form.email1.value) == "") {
@@ -82,6 +89,8 @@ function verify_data(form) {
 			oField_miss =form.confirm_password;
 		}
 	}
+
+
 	if (trim(form.user_name.value) == "") {
 		isError = true;
 		errorMessage += "\\n$lbl_user_name";
@@ -92,20 +101,39 @@ function verify_data(form) {
 		set_fieldfocus(errorMessage,oField_miss);
 	}
 	if (trim(form.email1.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.email1.value)) {
-		alert("The email id '"+form.email1.value+"' in the email field is $err_invalid_email_address");
+		alert("$the_emailid"+form.email1.value+"$email_field_is");
 		form.email1.focus();
 		exit();
 	}
 	if (trim(form.email2.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.email2.value)) {
-		alert("The email id '"+form.email2.value+"' in other email field is $err_invalid_email_address");
+		alert("$the_emailid"+form.email1.value+"$other_email_field_is");
 		form.email2.focus();
 		exit();
 	}
 	if (trim(form.yahoo_id.value) != "" && !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,4})+$/.test(form.yahoo_id.value)) {
-		alert("The email id '"+form.yahoo_id.value+"' in yahoo email field is $err_invalid_email_address");
+		alert("$the_emailid"+form.yahoo_id.value+"$yahoo_email_field_is");
 		form.yahoo_id.focus();
 		exit();
 	}
+
+// fix for new user upload image validation
+	if (trim(form.imagename.value) != "")
+
+ {
+	var valimg=form.imagename.value;	
+	    var aUpload=valimg.split(".");
+            if((aUpload[aUpload.length-1]!="jpg") &&  (aUpload[aUpload.length-1]!="gif") &&  (aUpload[aUpload.length-1]!="bmp") &&  (aUpload[aUpload.length-1]!="png"))
+		{
+
+		alert("$err_select_valid_image");
+		form.imagename.focus();                                                                                                    exit();
+
+		}
+	
+ }
+
+
+
 	if(form.mode.value != 'edit')
 	{
 		if(trim(form.user_password.value) != trim(form.confirm_password.value))

@@ -20,6 +20,8 @@ $vtigerpath = str_replace("/index.php?module=uploads&action=add2db", "", $vtiger
 $crmid = $_REQUEST['return_id'];
 $log->debug("DGDEBUG In add2db.php");
 
+	//fix for space in file name.
+	$_FILES['filename']['name'] = preg_replace('/\s+/', '_', $_FILES['filename']['name']);
 	// Arbitrary File Upload Vulnerability fix - Philip
 	$binFile = $_FILES['filename']['name'];
 
@@ -51,9 +53,10 @@ $log->debug("DGDEBUG In add2db.php");
 			$desc = $_REQUEST['txtDescription'];
 			$description = addslashes($desc);
 			$date_var = $adb->formatDate(date('YmdHis'));	
-
-			$query = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime) values('";
-			$query .= $current_id."','".$current_user->id."','".$current_user->id."','".$_REQUEST['return_module'].' Attachment'."','".$description."',".$date_var.")";	
+			$current_date = getdate();
+			$current_date = $adb->formatDate(date('YmdHis'));	
+			$query = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values('";
+			$query .= $current_id."','".$current_user->id."','".$current_user->id."','".$_REQUEST['return_module'].' Attachment'."','".$description."',".$date_var.",".$current_date.")";	
 			$result = $adb->query($query);
 
 			# Added by DG 26 Oct 2005
@@ -97,7 +100,6 @@ $log->debug("DGDEBUG In add2db.php");
 			# DG 19 June 2006
 			# Strip out single quotes from filenames
 			$filename = preg_replace('/\'/', '', $filename);
-
 			$sql = "insert into vtiger_attachments values(";
 			$sql .= $current_id.",'".$filename."','".$description."','".$filetype."','".$upload_filepath."')";
 			$result = $adb->query($sql);
@@ -126,8 +128,7 @@ $log->debug("DGDEBUG In add2db.php");
 				<li><font color='red'>Invalid file OR</font>
 				<li><font color='red'>File has no data</font>
 				</ul></B></font> <br>" ;
-			echo $errormessage;
-			include "upload.php";
+			header("Location: index.php?module=uploads&action=uploadsAjax&msg=true&file=upload&errormessage=".$errormessage);
 		}			
 	} 
 	else 

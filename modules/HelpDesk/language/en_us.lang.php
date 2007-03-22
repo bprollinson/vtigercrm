@@ -36,7 +36,6 @@ $mod_strings = Array(
 'Accounts'=>'Account',
 'Contacts'=>'Contact',
 'Opportunities'=>'Opportunity',
-'LBL_TICKET_INFORMATION'=>'Ticket Information',
 'LBL_CUSTOM_INFORMATION'=>'Custom Information',
 'LBL_DESCRIPTION_INFORMATION'=>'Description Information',
 
@@ -57,7 +56,6 @@ $mod_strings = Array(
 'LBL_PRIORITY'=>'Priority',
 'LBL_CATEGORY'=>'Category',
 
-'LBL_QUESTION'=>'Question',
 'LBL_ANSWER'=>'Answer',
 'LBL_COMMENTS'=>'Comments',
 
@@ -180,6 +178,21 @@ $mod_strings = Array(
 'In Progress'=>'In Progress',
 'Wait For Response'=>'Wait For Response',
 'Closed'=>'Closed',
+
+//added to support i18n in ticket mails
+'Hi' => 'Hi',
+'Dear'=> 'Dear',
+'LBL_PORTAL_BODY_MAILINFO'=> 'The Ticket is',
+'LBL_DETAIL' => 'the details are :',
+'LBL_REGARDS'=> 'Regards',
+'LBL_TEAM'=> 'HelpDesk Team',
+'created' => 'created',
+'replied' => 'replied',
+'reply'=>'There is a reply to',
+'customer_portal' => 'in the "Customer Portal" at VTiger.',
+'link' => 'You can use the following link to view the replies made:',
+'Thanks' => 'Thanks',
+'Support_team' => 'Vtiger Support Team',
 
 );
 

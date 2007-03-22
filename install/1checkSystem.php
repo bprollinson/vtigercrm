@@ -314,8 +314,14 @@ $array = Array(
 		    				<td valign=top ><strong>Logo Directory</strong><br> (test/logo/)</td>
 					        <td valign=top bgcolor="white"><?php echo (is_writable('./test/logo/'))?"<strong><font color=\"#00CC00\">Writeable</font></strong>":"<strong><font color=\"#FF0000\">Not Writeable</strong> <br>You might experience problems with the company logo in the pdf generation. Refer <a href=http://www.vtiger.com/forums/viewtopic.php?t=24&highlight=permission>File vtiger_attachments issue</a> for more details </font>"; ?></td>
 					</tr>
-					
-
+					<tr bgcolor="#fafafa">
+						<td valign=top ><strong>Logs Directory</strong><br> (logs/)</td>
+						<td valign=top bgcolor="white"><?php echo (is_writable('./logs/'))?"<strong><font color=\"#00CC00\">Writeable</font></strong>":"<strong><font color=\"#FF0000\">Not Writeable</strong> <br>System will experience problems while writing to the logs. You are strongly urged to give write permissions to the logs folder please!!!"; ?></td>
+					</tr>
+					<tr bgcolor="#fafafa">
+						<td valign=top ><strong>WebMail attachments Directory</strong><br> (modules/Webmails/tmp/)</td>
+						<td valign=top bgcolor="white"><?php echo (is_writable('./modules/Webmails/tmp/'))?"<strong><font color=\"#00CC00\">Writeable</font></strong>":"<strong><font color=\"#FF0000\">Not Writeable</strong> <br>System will experience problems in saving attachments in received mail. You are strongly urged to give write permissions to ./modules/Webmails/tmp/ folder please!!!"; ?></td>
+					</tr>
        				</table>
 				<br><br>
 	   	   		<!-- Recommended Settings -->
@@ -328,7 +334,7 @@ $array = Array(
 				<tr bgcolor="#ffffff"> <td valign=top ><strong>Max Execution Time 600</strong></tr>
 				<tr bgcolor="#ffffff"> <td valign=top ><strong>output_buffering= On</strong></tr>
 				<tr bgcolor="#ffffff"> <td valign=top ><strong>Change the memory limit = 32M</strong></tr>
-				<tr bgcolor="#ffffff"> <td valign=top ><strong>error_reporting = E_WARNING & ~E_NOTICE</strong></tr>
+				<tr bgcolor="#ffffff"> <td valign=top ><strong>error_reporting = E_ALL & ~E_NOTICE</strong></tr>
 				<tr bgcolor="#ffffff"> <td valign=top ><strong>allow_call_time_reference = On</strong></tr>
 				<tr bgcolor="#ffffff"> <td valign=top ><strong>log_errors = Off</strong></tr>
 				<tr bgcolor="#ffffff"> <td valign=top ><strong>short_open_tag= On</strong></tr>

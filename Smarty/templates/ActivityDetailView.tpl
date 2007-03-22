@@ -11,7 +11,7 @@
  ********************************************************************************/
 
 -->*}
-<script type="text/javascript" src="modules/{$MODULE}/Activity.js"></script>
+<script type="text/javascript" src="modules/{$MODULE}/Calendar.js"></script>
 <script type="text/javascript" src="include/js/reflection.js"></script>
 <script src="include/scriptaculous/prototype.js" type="text/javascript"></script>
 <script src="include/scriptaculous/scriptaculous.js" type="text/javascript"></script>
@@ -27,26 +27,27 @@ function tagvalidate()
 		SaveTag('txtbox_tagfields','{$ID}','{$MODULE}');	
 	else
 	{ldelim}
-		alert("Please enter a tag");
+		alert("{$APP.PLEASE_ENTER_TAG}");
 		return false;
 	{rdelim}
 {rdelim}
-function DeleteTag(id)
+function DeleteTag(id,recordid)
 {ldelim}
-	$("vtbusy_info").style.display="inline";
-	Effect.Fade('tag_'+id);
-	new Ajax.Request(
-		'index.php',
+        $("vtbusy_info").style.display="inline";
+        Effect.Fade('tag_'+id);
+        new Ajax.Request(
+                'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
                         method: 'post',
-                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&tagid=" +id,
+                        postBody: "file=TagCloud&module={$MODULE}&action={$MODULE}Ajax&ajxaction=DELETETAG&recordid="+recordid+"&tagid=" +id,
                         onComplete: function(response) {ldelim}
-						getTagCloud();
-						$("vtbusy_info").style.display="none";
+                                                getTagCloud();
+                                                $("vtbusy_info").style.display="none";
                         {rdelim}
                 {rdelim}
         );
 {rdelim}
+
 </script>
 <table width="100%" cellpadding="2" cellspacing="0" border="0">
 <form action="index.php" method="post" name="DetailView" id="form">
@@ -114,17 +115,19 @@ function DeleteTag(id)
 						     <table border=0 cellspacing=0 cellpadding=5 width=100% >
                						 <tr>
 								{if $LABEL.activitytype neq ''}
+								{assign var=type value=$ACTIVITYDATA.activitytype}
 								<td class="cellLabel" width="20%" align="right"><b>{$MOD.LBL_EVENTTYPE}</b></td>
-								<td class="cellInfo" width="30%"align="left">{$ACTIVITYDATA.activitytype}</td>
+								<td class="cellInfo" width="30%"align="left">{$MOD.$type}</td>
 								{/if}
 								{if $LABEL.visibility neq ''}
+								{assign var=vblty value=$ACTIVITYDATA.visibility}
 								<td class="cellLabel" width="20%" align="right"><b>{$LABEL.visibility}</b></td>
-                                                                <td class="cellInfo" width="30%" align="left" >{$ACTIVITYDATA.visibility}</td>
+                                                                <td class="cellInfo" width="30%" align="left" >{$MOD.$vblty}</td>
 								{/if}
 							 </tr>
 							 <tr>
                         					<td class="cellLabel" align="right"><b>{$MOD.LBL_EVENTNAME}</b></td>
-					                        <td class="cellInfo" colspan=3 align="left" >{$ACTIVITYDATA.subject}</td>
+					                        <td class="cellInfo" colspan=1 align="left" >{$ACTIVITYDATA.subject}</td>
              						 </tr>
 							 {if $LABEL.description neq ''}
 							 <tr>
@@ -132,6 +135,12 @@ function DeleteTag(id)
 								<td class="cellInfo" valign="top" align="left" colspan="3" height="60px">{$ACTIVITYDATA.description}</td>
 							 </tr>
 							{/if}
+							{if $LABEL.location neq ''}
+							<tr>
+								<td class="cellLabel" align="right" valign="top"><b>{$LABEL.location}</b></td>
+								<td class="cellInfo" colspan=3 align="left" >{$ACTIVITYDATA.location}</td>
+							</tr>
+							{/if}	
 							 <tr>
 								{if $LABEL.eventstatus neq ''}
 								<td class="cellLabel" align="right" nowrap valign="top"><b>{$LABEL.eventstatus}</b></td>
@@ -203,7 +212,7 @@ function DeleteTag(id)
                                                                                         <td width="30%" valign="top" align=right><b>{$MOD.LBL_USERS}</b></td>
                                                                                         <td width="70%" align=left valign="top" >
 												{foreach item=username key=userid from=$INVITEDUSERS}
-                                                                                        	        {$username.3}<br>
+                                                                                        	        {$username}<br>
                                                                                                 {/foreach}
 											</td>
                                                                                 </tr>

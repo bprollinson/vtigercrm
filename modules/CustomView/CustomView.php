@@ -22,14 +22,14 @@ require_once('include/utils/utils.php');
 global $adv_filter_options;
 
 $adv_filter_options = array("e"=>"".$mod_strings['equals']."",
-                            "n"=>"".$mod_strings['not_equal_to']."",
-                            "s"=>"".$mod_strings['starts_with']."",
+                            "n"=>"".$mod_strings['not equal to']."",
+                            "s"=>"".$mod_strings['starts with']."",
                             "c"=>"".$mod_strings['contains']."",
-                            "k"=>"".$mod_strings['does_not_contain']."",
-                            "l"=>"".$mod_strings['less_than']."",
-                            "g"=>"".$mod_strings['greater_than']."",
-                            "m"=>"".$mod_strings['less_or_equal']."",
-                            "h"=>"".$mod_strings['greater_or_equal']."",
+                            "k"=>"".$mod_strings['does not contain']."",
+                            "l"=>"".$mod_strings['less than']."",
+                            "g"=>"".$mod_strings['greater than']."",
+                            "m"=>"".$mod_strings['less or equal']."",
+                            "h"=>"".$mod_strings['greater or equal']."",
                             );
 
 class CustomView extends CRMEntity{
@@ -184,27 +184,36 @@ class CustomView extends CRMEntity{
 	{
 		global $adb;
 		$tabid = getTabid($module);
+		if($tabid == 9)
+			$tabid ="9,16";
 		global $current_user;
 	        require('user_privileges/user_privileges_'.$current_user->id.'.php');
+		if($tabid == 4 || $tabid ==7)
+		{
+			$display_type = " vtiger_field.displaytype in (1,2,3)";
+		}else
+		{
+			$display_type = " vtiger_field.displaytype in (1,2)";
+		}
 
 		if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
 		{
 			$sql = "select * from vtiger_field ";
-			$sql.= " where vtiger_field.tabid=".$tabid." and vtiger_field.block in (".$block.") and";
-			$sql.= " vtiger_field.displaytype in (1,2)";
+			$sql.= " where vtiger_field.tabid in (".$tabid.") and vtiger_field.block in (".$block.") and";
+			$sql.= $display_type;
 			$sql.= " order by sequence";
 		}
 		else
 		{
+
 			$profileList = getCurrentUserProfileList();
 			$sql = "select * from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid ";
-			$sql.= " where vtiger_field.tabid=".$tabid." and vtiger_field.block in (".$block.") and";
-			$sql.= " vtiger_field.displaytype in (1,2) and vtiger_profile2field.visible=0";
-			$sql.= " and vtiger_def_org_field.visible=0  and vtiger_profile2field.profileid in ".$profileList." order by sequence";
+			$sql.= " where vtiger_field.tabid in (".$tabid.") and vtiger_field.block in (".$block.") and";
+			$sql.= "$display_type and vtiger_profile2field.visible=0";
+			$sql.= " and vtiger_def_org_field.visible=0  and vtiger_profile2field.profileid in ".$profileList." group by columnname order by sequence";
 		}	
-
-
-
+		if($tabid == '9,16')
+                        $tabid ="9";
 		$result = $adb->query($sql);
 		$noofrows = $adb->num_rows($result);
 		//Added on 14-10-2005 -- added ticket id in list
@@ -279,6 +288,7 @@ class CustomView extends CRMEntity{
 		foreach($this->module_list[$module] as $key=>$value)
 		{
 			$columnlist = $this->getColumnsListbyBlock($module,$value);
+			
 			if(isset($columnlist))
 			{
 				$ret_module_list[$module][$key] = $columnlist;
@@ -476,33 +486,43 @@ class CustomView extends CRMEntity{
 		$nextFY0 = date("Y-m-d",mktime(0, 0, 0, "01", "01",   date("Y")+1));
 		$nextFY1 = date("Y-m-t", mktime(0, 0, 0, "12", date("d"), date("Y")+1));
     
-		if(date("m") <= 4)
+		if(date("m") <= 3)
 		{
 			$cFq = date("Y-m-d",mktime(0, 0, 0, "01","01",date("Y")));
-			$cFq1 = date("Y-m-d",mktime(0, 0, 0, "04","30",date("Y")));
-			$nFq = date("Y-m-d",mktime(0, 0, 0, "05","01",date("Y")));
-			$nFq1 = date("Y-m-d",mktime(0, 0, 0, "08","31",date("Y")));
-			$pFq = date("Y-m-d",mktime(0, 0, 0, "09","01",date("Y")-1));
+			$cFq1 = date("Y-m-d",mktime(0, 0, 0, "03","31",date("Y")));
+			$nFq = date("Y-m-d",mktime(0, 0, 0, "04","01",date("Y")));
+			$nFq1 = date("Y-m-d",mktime(0, 0, 0, "06","30",date("Y")));
+			$pFq = date("Y-m-d",mktime(0, 0, 0, "10","01",date("Y")-1));
 			$pFq1 = date("Y-m-d",mktime(0, 0, 0, "12","31",date("Y")-1));
-		}else if(date("m") > 4 and date("m") <= 8)
-    		{
+		}else if(date("m") > 3 and date("m") <= 6)
+		{
 			$pFq = date("Y-m-d",mktime(0, 0, 0, "01","01",date("Y")));
-		  	$pFq1 = date("Y-m-d",mktime(0, 0, 0, "04","30",date("Y")));
-		  	$cFq = date("Y-m-d",mktime(0, 0, 0, "05","01",date("Y")));
-		  	$cFq1 = date("Y-m-d",mktime(0, 0, 0, "08","31",date("Y")));
-      			$nFq = date("Y-m-d",mktime(0, 0, 0, "09","01",date("Y")));
-		  	$nFq1 = date("Y-m-d",mktime(0, 0, 0, "12","31",date("Y")));
-      
-    		}else
-    		{
-		  	$nFq = date("Y-m-d",mktime(0, 0, 0, "01","01",date("Y")+1));
-		  	$nFq1 = date("Y-m-d",mktime(0, 0, 0, "04","30",date("Y")+1));
-		  	$pFq = date("Y-m-d",mktime(0, 0, 0, "05","01",date("Y")));
-		  	$pFq1 = date("Y-m-d",mktime(0, 0, 0, "08","31",date("Y")));
-      			$cFq = date("Y-m-d",mktime(0, 0, 0, "09","01",date("Y")));
-		  	$cFq1 = date("Y-m-d",mktime(0, 0, 0, "12","31",date("Y")));      
-    		}
-    
+			$pFq1 = date("Y-m-d",mktime(0, 0, 0, "03","31",date("Y")));
+			$cFq = date("Y-m-d",mktime(0, 0, 0, "04","01",date("Y")));
+			$cFq1 = date("Y-m-d",mktime(0, 0, 0, "06","30",date("Y")));
+			$nFq = date("Y-m-d",mktime(0, 0, 0, "07","01",date("Y")));
+			$nFq1 = date("Y-m-d",mktime(0, 0, 0, "09","30",date("Y")));
+
+		}else if(date("m") > 6 and date("m") <= 9)
+		{
+			$nFq = date("Y-m-d",mktime(0, 0, 0, "10","01",date("Y")));
+			$nFq1 = date("Y-m-d",mktime(0, 0, 0, "12","31",date("Y")));
+			$pFq = date("Y-m-d",mktime(0, 0, 0, "04","01",date("Y")));
+			$pFq1 = date("Y-m-d",mktime(0, 0, 0, "06","30",date("Y")));
+			$cFq = date("Y-m-d",mktime(0, 0, 0, "07","01",date("Y")));
+			$cFq1 = date("Y-m-d",mktime(0, 0, 0, "09","30",date("Y")));
+		}
+		else if(date("m") > 9 and date("m") <= 12)
+		{
+			$nFq = date("Y-m-d",mktime(0, 0, 0, "01","01",date("Y")+1));
+			$nFq1 = date("Y-m-d",mktime(0, 0, 0, "03","31",date("Y")+1));
+			$pFq = date("Y-m-d",mktime(0, 0, 0, "07","01",date("Y")));
+			$pFq1 = date("Y-m-d",mktime(0, 0, 0, "09","30",date("Y")));
+			$cFq = date("Y-m-d",mktime(0, 0, 0, "10","01",date("Y")));
+			$cFq1 = date("Y-m-d",mktime(0, 0, 0, "12","31",date("Y")));
+
+		}
+
 		$sjsStr = '<script language="JavaScript" type="text/javaScript">
 			function showDateRange( type )
 			{
@@ -764,7 +784,12 @@ class CustomView extends CRMEntity{
 					//Ends
 					
 					$tablefield[$list[0]] = $list[1];
-					$fieldlabel = trim(str_replace($this->escapemodule," ",$list[3]));
+
+					//Changed as the replace of module name may replace the string if the fieldname has module name in it -- Jeri
+					$fieldinfo = explode('_',$list[3],2);
+					$fieldlabel = $fieldinfo[1];
+					$fieldlabel = str_replace("_"," ",$fieldlabel);
+					
 					$this->list_fields[$fieldlabel] = $tablefield;
 					$this->list_fields_name[$fieldlabel] = $list[2];
 				}
@@ -880,10 +905,17 @@ class CustomView extends CRMEntity{
 	  */
 	function getRealValues($tablename,$fieldname,$comparator,$value,$datatype)
 	{
-		if($fieldname == "smownerid" || $fieldname == "inventorymanager")
-		{
-			$value = $tablename.".".$fieldname.$this->getAdvComparator($comparator,getUserId_Ol($value),$datatype);
-		}else if($fieldname == "parentid")
+	if($fieldname == "smownerid")
+                {
+
+                $temp_value = "( vtiger_users.user_name".$this->getAdvComparator($comparator,$value,$datatype);
+                $temp_value.= " OR  vtiger_groups.groupname".$this->getAdvComparator($comparator,$value,$datatype);
+                $value=$temp_value.")";
+		}elseif( $fieldname == "inventorymanager")
+                {
+
+                 $value = $tablename.".".$fieldname.$this->getAdvComparator($comparator,getUserId_Ol($value),$datatype);
+                }else if($fieldname == "parentid")
 		{
 			$value = $tablename.".".$fieldname.$this->getAdvComparator($comparator,$this->getAccountId($value),$datatype);
 		}else if($fieldname == "accountid")
@@ -1112,6 +1144,9 @@ class CustomView extends CRMEntity{
 			}elseif(trim($value) == "" && $datatype == "V")
 			{
 				$rtvalue = " = ".$adb->quote($value);	
+			}elseif(trim($value) == "" && $datatype == "E")
+			{
+				$rtvalue = " = ".$adb->quote($value);	
 			}else
 			{
 				$rtvalue = " is NULL";
@@ -1126,6 +1161,9 @@ class CustomView extends CRMEntity{
 			{
 				$rtvalue = " <> ".$adb->quote($value);
 			}elseif(trim($value) == "" && $datatype == "V")
+			{
+				$rtvalue = " <> ".$adb->quote($value);	
+			}elseif(trim($value) == "" && $datatype == "E")
 			{
 				$rtvalue = " <> ".$adb->quote($value);	
 			}else
@@ -1410,6 +1448,7 @@ class CustomView extends CRMEntity{
 	{
 		if($viewid != "" && $listquery != "")
 		{
+			
 			$listviewquery = substr($listquery, strpos($listquery,'FROM'),strlen($listquery));
 			if($module == "Calendar" || $module == "Emails")
 			{
@@ -1520,8 +1559,14 @@ class CustomView extends CRMEntity{
 		global $current_language;
 		$current_mod_strings = return_specified_module_language($current_language, $module); 
 		$block_info = Array();
-		$Sql = "select distinct block,vtiger_field.tabid,name,blocklabel from vtiger_field inner join vtiger_blocks on vtiger_blocks.blockid=vtiger_field.block inner join vtiger_tab on vtiger_tab.tabid=vtiger_field.tabid where displaytype != 3 and vtiger_field.block not in(40,6,75,35,30,54,60,66,72) and vtiger_tab.name='$module' order by block";
+		if($module == "Calendar")
+			$module = "Calendar','Events";
+
+		$Sql = "select distinct block,vtiger_field.tabid,name,blocklabel from vtiger_field inner join vtiger_blocks on vtiger_blocks.blockid=vtiger_field.block inner join vtiger_tab on vtiger_tab.tabid=vtiger_field.tabid where displaytype != 3 and vtiger_field.block not in(40,6,75,35,30,54,60,66,72) and vtiger_tab.name in ('".$module."') order by block";
 		$result = $adb->query($Sql);
+		if($module == "Calendar','Events")
+			$module = "Calendar";
+
 		while($block_result = $adb->fetch_array($result))
 		{
 			$block_label = $block_result['blocklabel'];

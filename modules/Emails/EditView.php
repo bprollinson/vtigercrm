@@ -49,7 +49,6 @@ if($_REQUEST['mail_error'] != '')
 	echo parseEmailErrorString($_REQUEST['mail_error']);
 }
 
-
 if(isset($_REQUEST['record']) && $_REQUEST['record'] !='') 
 {
 	$focus->id = $_REQUEST['record'];
@@ -58,7 +57,8 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] !='')
 	if(isset($_REQUEST['forward']) && $_REQUEST['forward'] != '')
 	{
 		$focus->mode = '';
-	}else
+	}
+	else
 	{
 		$query = 'select idlists,from_email,to_email,cc_email,bcc_email from vtiger_emaildetails where emailid ='.$focus->id;
 		$result = $adb->query($query);
@@ -106,12 +106,32 @@ if($_REQUEST["internal_mailer"] == "true") {
 	$smarty->assign('BCC_MAIL',$current_user->email1);
 }
 
+//handled for replying emails
+if($_REQUEST['reply'] == "true")
+{
+		$fromadd = $_REQUEST['record'];	
+		$query = "select from_email,idlists,cc_email,bcc_email from vtiger_emaildetails where emailid =$fromadd";
+		$result = $adb->query($query);
+		$from_mail = $adb->query_result($result,0,'from_email');	
+		$smarty->assign('TO_MAIL',$from_mail.';');
+		$smarty->assign('CC_MAIL',ereg_replace('###',',',$adb->query_result($result,0,'cc_email')));	
+		$smarty->assign('BCC_MAIL',ereg_replace('###',',',$adb->query_result($result,0,'bcc_email')));	
+		$smarty->assign('IDLISTS',ereg_replace('###',',',$adb->query_result($result,0,'idlists')));	
+}
+
+
+//Added to set the cc when click reply all
+if(isset($_REQUEST['msg_cc']) && $_REQUEST['msg_cc'] != '')
+{
+        $smarty->assign("MAIL_MSG_CC", $_REQUEST['msg_cc']);
+}
+
 // Webmails
 if(isset($_REQUEST["mailid"]) && $_REQUEST["mailid"] != "") {
 	$mailid = $_REQUEST["mailid"];
 	$mailbox = $_REQUEST["mailbox"];
 	require_once('include/utils/UserInfoUtil.php');
-	require_once("modules/Webmails/Webmail.php");
+	require_once("modules/Webmails/Webmails.php");
 	require_once("modules/Webmails/MailParse.php");
 	require_once('modules/Webmails/MailBox.php');
 
@@ -121,37 +141,43 @@ if(isset($_REQUEST["mailid"]) && $_REQUEST["mailid"] != "") {
 	$MailBox = new MailBox($mailbox);
 	$mbox = $MailBox->mbox;
 
-	$webmail = new Webmail($mbox,$mailid);
+	$webmail = new Webmails($mbox,$mailid);
 	$webmail->loadMail();
-
+	  $hdr = @imap_headerinfo($mbox, $mailid);
 	$smarty->assign('WEBMAIL',"true");
 	if($_REQUEST["reply"] == "all") {
 		$smarty->assign('TO_MAIL',$webmail->fromaddr);	
-		if(is_array($webmail->cc_list))
+		$smarty->assign('CC_MAIL',$hdr->ccaddress);
+		/*if(is_array($webmail->cc_list))
+		{
 			$smarty->assign('CC_MAIL',implode(",",$webmail->cc_list).",".implode(",",$webmail->to));
+		}
 		else
-			$smarty->assign('CC_MAIL',implode(",",$webmail->to));
+		{
+			//Commenting this to fix #3231
+		//	$smarty->assign('CC_MAIL',implode(",",$webmail->to));
+		}*/
 		if(preg_match("/RE:/i", $webmail->subject))
 			$smarty->assign('SUBJECT',$webmail->subject);
 		else
 			$smarty->assign('SUBJECT',"RE: ".$webmail->subject);
 
-	} elseif($_REQUEST["reply"] == "single") {
+	} elseif($_REQUEST["reply"] == "single"){
 		$smarty->assign('TO_MAIL',$webmail->reply_to[0]);	
-		$smarty->assign('BCC_MAIL',$webmail->to[0]);
+		//$smarty->assign('BCC_MAIL',$webmail->to[0]);
 		if(preg_match("/RE:/i", $webmail->subject))
 			$smarty->assign('SUBJECT',$webmail->subject);
 		else
 			$smarty->assign('SUBJECT',"RE: ".$webmail->subject);
 
-	} elseif($_REQUEST["forward"] == "true") {
-		$smarty->assign('TO_MAIL',$webmail->reply_to[0]);	
-		$smarty->assign('BCC_MAIL',$webmail->to[0]);
+	} elseif($_REQUEST["forward"] == "true" ) {
+		//$smarty->assign('TO_MAIL',$webmail->reply_to[0]);	
+		//$smarty->assign('BCC_MAIL',$webmail->to[0]);
 		if(preg_match("/FW:/i", $webmail->subject))
 			$smarty->assign('SUBJECT',$webmail->subject);
 		else
 			$smarty->assign('SUBJECT',"FW: ".$webmail->subject);
-	}
+	} 
 	$smarty->assign('DESCRIPTION',$webmail->replyBody());
 	$focus->mode='';
 }
@@ -163,7 +189,8 @@ require_once($theme_path.'layout_utils.php');
 
 $disp_view = getView($focus->mode);
 $details = getBlocks($currentModule,$disp_view,$mode,$focus->column_fields);
-$smarty->assign("BLOCKS",$details['Email Information']);
+//changed this below line to view description in all language - bharath
+$smarty->assign("BLOCKS",$details[$mod_strings['LBL_EMAIL_INFORMATION']]); 
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("SINGLE_MOD",$app_strings['Email']);
 
@@ -205,12 +232,6 @@ $smarty->assign("APP", $app_strings);
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 else $smarty->assign("NAME", "");
 
-
-//Added to set the cc when click reply all
-if(isset($_REQUEST['msg_cc']) && $_REQUEST['msg_cc'] != '')
-{
-        $smarty->assign("MAIL_MSG_CC", $_REQUEST['msg_cc']);
-}
 
 if($focus->mode == 'edit')
 {

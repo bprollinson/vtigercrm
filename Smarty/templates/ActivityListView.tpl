@@ -16,7 +16,7 @@
 <script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
 <script language="JavaScript" type="text/javascript" src="include/js/ListView.js"></script>
 <script language="JavaScript" type="text/javascript" src="include/js/search.js"></script>
-<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$SINGLE_MOD}.js"></script>
+<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$MODULE}.js"></script>
 <script language="javascript">
 function checkgroup()
 {ldelim}
@@ -41,7 +41,6 @@ function callSearch(searchtype)
         	getObj(data_td_id).className = 'searchAlph';
     	{rdelim}
    	gPopupAlphaSearchUrl = '';
-
 	search_fld_val= document.basicSearch.search_field[document.basicSearch.search_field.selectedIndex].value;
         search_txt_val=document.basicSearch.search_text.value;
         var urlstring = '';
@@ -79,6 +78,7 @@ function callSearch(searchtype)
                                 $("ListViewContents").innerHTML= result[2];
                                 if(result[1] != '')
                                         alert(result[1]);
+				$('basicsearchcolumns').innerHTML = '';
 			{rdelim}
 	       {rdelim}
         );
@@ -105,6 +105,7 @@ function alphabetic(module,url,dataid)
 				$("ListViewContents").innerHTML= result[2];
 				if(result[1] != '')
 			                alert(result[1]);
+				$('basicsearchcolumns').innerHTML = '';
 			{rdelim}
 		{rdelim}
 	);
@@ -117,7 +118,7 @@ function alphabetic(module,url,dataid)
                                         <table border=0 cellspacing=0 cellpadding=0 width=100%>
                                         <tr>
                                                 <td align=center>
-                                                <img src="images/searching.gif" alt="Searching... please wait"  title="Searching... please wait">
+                                                <img src="{$IMAGE_PATH}searching.gif" alt="{$APP.LBL_SEARCHING}"  title="{$APP.LBL_SEARCHING}">
                                                 </td>
                                         </tr>
                                         </table>
@@ -315,7 +316,7 @@ function alphabetic(module,url,dataid)
        		       </tr>
 			 </table>
                          <div  class="calDIV" style="overflow:auto;">
-			 <table border=0 cellspacing=1 cellpadding=3 width=100% class="calListTable" class="small">
+			 <table border=0 cellspacing=1 cellpadding=3 width=100% class="lvt small" class="small">
 			      <tr>
              			 <td class="lvtCol"><input type="checkbox"  name="selectall" onClick=toggleSelect(this.checked,"selected_id")></td>
 				 {foreach name="listviewforeach" item=header from=$LISTHEADER}
@@ -442,10 +443,10 @@ function alphabetic(module,url,dataid)
 	        <input type = "radio" name = "user_lead_owner"  onclick=checkgroup();  checked>{$APP.LBL_USER}&nbsp;
 					<input type = "radio" name = "user_lead_owner" onclick=checkgroup(); >{$APP.LBL_GROUP}<br>
 					<select name="lead_owner" id="lead_owner" class="detailedViewTextBox">
-					{$CHANGE_OWNER}
+						{$CHANGE_OWNER}
 					</select>
 					<select name="lead_group_owner" id="lead_group_owner" class="detailedViewTextBox" style="display:none;">
-					{$CHANGE_GROUP_OWNER}
+						{$CHANGE_GROUP_OWNER}
 					</select>
 					</form>
 	</td>
@@ -508,6 +509,7 @@ function ajaxChangeStatus(statusname)
                                 $("ListViewContents").innerHTML= result[2];
                                 if(result[1] != '')
                                         alert(result[1]);
+				$('basicsearchcolumns').innerHTML = '';
                         }
                 }
         );

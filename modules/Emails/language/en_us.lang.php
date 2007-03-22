@@ -35,19 +35,19 @@ $mod_strings = Array(
 
 'ERR_DELETE_RECORD'=>"A record number must be specified to delete the vtiger_account.",
 'LBL_DATE_SENT'=>'Date Sent:',
-'LBL_SUBJECT'=>'Subject :',
-'LBL_BODY'=>'Body:',
 'LBL_DATE_AND_TIME'=>'Date & Time Sent:',
 'LBL_DATE'=>'Date Sent:',
 'LBL_TIME'=>'Time Sent:',
 'LBL_SUBJECT'=>'Subject:',
 'LBL_BODY'=>'Body:',
 'LBL_CONTACT_NAME'=>' Contact Name: ',
-'LBL_EMAIL'=>'Email:',  
+'LBL_EMAIL'=>'Email:', 
+'LBL_DETAILVIEW_EMAIL'=>'E-Mail', 
 'LBL_COLON'=>':',
 'LBL_CHK_MAIL'=>'Check Mail',
 'LBL_COMPOSE'=>'Compose',
-'LBL_SETTINGS'=>'Settings',
+//Single change for 5.0.3
+'LBL_SETTINGS'=>'Incoming Mail Server Settings',
 'LBL_EMAIL_FOLDERS'=>'Email Folders',
 'LBL_INBOX'=>'Inbox',
 'LBL_SENT_MAILS'=>'Sent Mails',
@@ -74,7 +74,6 @@ $mod_strings = Array(
 // Contacts-SubPanelViewContactsAndUsers.php
 'LBL_BULK_MAILS'=>'Bulk Mails',
 'LBL_ATTACHMENT'=>'Attachment',
-'LBL_DESCRIPTION'=>'Description',
 'LBL_UPLOAD'=>'Upload',
 'LBL_FILE_NAME'=>'File Name',
 'LBL_SEND'=>'Send',
@@ -148,6 +147,28 @@ $mod_strings = Array(
 'LBL_MAILSELECT_INFO2'=>'Select the Email ID types to which,the email should be sent',
 'LBL_MULTIPLE'=>'Multiple',
 'LBL_COMPOSE_EMAIL'=>'Compose E-Mail',
+'LBL_VTIGER_EMAIL_CLIENT'=>'vtiger Email Client',
+
+//Added for 5.0.3
+'TITLE_VTIGERCRM_MAIL'=>'vtigerCRM Mail',
+'TITLE_COMPOSE_MAIL'=>'Compose Mail',
+
+'MESSAGE_MAIL_COULD_NOT_BE_SEND'=>'Mail could not be sent to the assigned to user.',
+'MESSAGE_PLEASE_CHECK_ASSIGNED_USER_EMAILID'=>'Please check the assigned to user email id...',
+'MESSAGE_PLEASE_CHECK_THE_FROM_MAILID'=>'Please check the from email id',
+'MESSAGE_MAIL_COULD_NOT_BE_SEND_TO_THIS_EMAILID'=>'Mail could not be sent to this email id',
+'PLEASE_CHECK_THIS_EMAILID'=>'Please check this mail id...',
+'LBL_CC_EMAIL_ERROR'=>'Your cc mailid is not proper',
+'LBL_BCC_EMAIL_ERROR'=>'Your bcc mailid is not proper',
+'LBL_NO_RCPTS_EMAIL_ERROR'=>'No recepients specified',
+'LBL_CONF_MAILSERVER_ERROR'=>'Please configure your outgoing mailserver under Settings ---> Outgoing Server link',
+'LBL_VTIGER_EMAIL_CLIENT'=>'vtiger Email Client',
+'LBL_MAILSELECT_INFO3'=>'You don\'t have permission to view email id(s) of the selected Record(s).',
+//Added  for script alerts
+'FEATURE_AVAILABLE_INFO' => 'This feature is currently only available for Microsoft Internet Explorer 5.5+ users\n\nWait f
+or an update!',
+'DOWNLOAD_CONFIRAMATION' => 'Do you want to download the file ?',
+
 );
 
 ?>

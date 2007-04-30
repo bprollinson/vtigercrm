@@ -19,11 +19,11 @@
 {if $MODULE eq 'Contacts'}
 <div id="dynloadarea" style="z-index:100000001;float:left;position:absolute;left:350px;top:150px;"></div>
 {/if}
-<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$SINGLE_MOD}.js"></script>
+<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$MODULE}.js"></script>
 <script language="javascript">
 function checkgroup()
 {ldelim}
-  if(document.change_ownerform_name.user_lead_owner[1].checked)
+  if($("group_checkbox").checked)
   {ldelim}
   document.change_ownerform_name.lead_group_owner.style.display = "block";
   document.change_ownerform_name.lead_owner.style.display = "none";
@@ -79,11 +79,12 @@ function callSearch(searchtype)
                                 result = response.responseText.split('&#&#&#');
                                 $("ListViewContents").innerHTML= result[2];
                                 if(result[1] != '')
-                                        alert(result[1]);
+                                       alert(result[1]);
+				$('basicsearchcolumns').innerHTML = '';
 			{rdelim}
 	       {rdelim}
         );
-
+	return false
 {rdelim}
 function alphabetic(module,url,dataid)
 {ldelim}
@@ -106,6 +107,7 @@ function alphabetic(module,url,dataid)
 				$("ListViewContents").innerHTML= result[2];
 				if(result[1] != '')
 			                alert(result[1]);
+				$('basicsearchcolumns').innerHTML = '';
 			{rdelim}
 		{rdelim}
 	);
@@ -114,27 +116,11 @@ function alphabetic(module,url,dataid)
 </script>
 
 		{include file='Buttons_List.tpl'}
-<!-- Activity createlink layer start  -->
-{if $MODULE eq 'Calendar'}
-<div id="reportLay" style="width: 125px; right: 159px; top: 260px; display: none; z-index:50" onmouseout="fninvsh('reportLay')" onmouseover="fnvshNrm('reportLay')">
-        <table bgcolor="#ffffff" border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                        <td>
-                                <a href="index.php?module={$MODULE}&action=EditView&return_module={$MODULE}&activity_mode=Events&return_action=DetailView&parenttab={$CATEGORY}" class="calMnu">{$NEW_EVENT}</a>
-                                <a href="index.php?module={$MODULE}&action=EditView&return_module={$MODULE}&activity_mode=Task&return_action=DetailView&parenttab={$CATEGORY}" class="calMnu">{$NEW_TASK}</a>
-                        </td>
-                </tr>
-        </table>
-
-</div>
-{/if}
-<!-- Activity createlink layer end  -->
-
                                 <div id="searchingUI" style="display:none;">
                                         <table border=0 cellspacing=0 cellpadding=0 width=100%>
                                         <tr>
                                                 <td align=center>
-                                                <img src="images/searching.gif" alt="Searching... please wait"  title="Searching... please wait">
+                                                <img src="{$IMAGE_PATH}searching.gif" alt="{$APP.LBL_SEARCHING}"  title="{$APP.LBL_SEARCHING}">
                                                 </td>
                                         </tr>
                                         </table>
@@ -148,7 +134,6 @@ function alphabetic(module,url,dataid)
 </table>
 
 {*<!-- Contents -->*}
-<form name="basicSearch" action="index.php" onsubmit="return false;">
 <table border=0 cellspacing=0 cellpadding=0 width=98% align=center>
      <tr>
         <td valign=top><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
@@ -156,6 +141,7 @@ function alphabetic(module,url,dataid)
 	<td class="showPanelBg" valign="top" width=100% style="padding:10px;">
 	 <!-- SIMPLE SEARCH -->
 <div id="searchAcc" style="z-index:1;display:none;position:relative;">
+<form name="basicSearch" method="post" action="index.php" onSubmit="return callSearch('Basic');">
 <table width="80%" cellpadding="5" cellspacing="0"  class="searchUIBasic small" align="center" border=0>
 	<tr>
 		<td class="searchUIName small" nowrap align="left">
@@ -194,9 +180,11 @@ function alphabetic(module,url,dataid)
 		</td>
 	</tr>
 </table>
+</form>
 </div>
 <!-- ADVANCED SEARCH -->
 <div id="advSearch" style="display:none;">
+<form name="advSearch" method="post" action="index.php" onSubmit="totalnoofrows();return callSearch('Advanced');">
 		<table  cellspacing=0 cellpadding=5 width=80% class="searchUIAdv1 small" align="center" border=0>
 			<tr>
 					<td class="searchUIName small" nowrap align="left"><span class="moduleName">{$APP.LBL_SEARCH}</span><br><span class="small"><a href="#" onClick="show('searchAcc');fnhide('advSearch')">{$APP.LBL_GO_TO} {$APP.LNK_BASIC_SEARCH}</a></span></td>
@@ -243,8 +231,8 @@ function alphabetic(module,url,dataid)
 			</td>
 		</tr>
 	</table>
-</div>		
 </form>
+</div>		
 {*<!-- Searching UI -->*}
 	 
 	   <!-- PUBLIC CONTENTS STARTS-->
@@ -277,13 +265,15 @@ function alphabetic(module,url,dataid)
 					<td width="50%"><b>{$APP.LBL_TRANSFER_OWNERSHIP}</b></td>
 					<td width="2%"><b>:</b></td>
 					<td width="48%">
-					<input type = "radio" name = "user_lead_owner"  onclick=checkgroup(); checked>{$APP.LBL_USER}&nbsp;
-					<input type = "radio" name = "user_lead_owner" onclick=checkgroup(); >{$APP.LBL_GROUP}<br>
-					<select name="lead_owner" id="lead_owner" class="detailedViewTextBox">
-					{$CHANGE_OWNER}
-					</select>
-					<select name="lead_group_owner" id="lead_group_owner" class="detailedViewTextBox" style="display:none;">
+					<input type = "radio" id="user_checkbox"  name="user_lead_owner" {if $CHANGE_GROUP_OWNER neq ''} onclick=checkgroup(); {/if} checked>{$APP.LBL_USER}&nbsp;
+					{if $CHANGE_GROUP_OWNER neq ''}
+					<input type = "radio" id="group_checkbox" name="user_lead_owner" onclick=checkgroup(); >{$APP.LBL_GROUP}<br>
+					<select name="lead_group_owner" id="lead_group_owner" class="select" style="display:none;">  
 					{$CHANGE_GROUP_OWNER}
+					</select>
+					{/if}				
+					<select name="lead_owner" id="lead_owner" class="select">
+					{$CHANGE_OWNER}
 					</select>
 					</td>
 				</tr>
@@ -353,20 +343,25 @@ function ajaxChangeStatus(statusname)
 	$("status").style.display="inline";
 	var viewid = document.getElementById('viewname').options[document.getElementById('viewname').options.selectedIndex].value;
 	var idstring = document.getElementById('idlist').value;
+	var tplstart='&';
+	if(gstart!='')
+	{
+		tplstart=tplstart+gstart;
+	}
 	if(statusname == 'status')
 	{
 		fninvsh('changestatus');
 		var url='&leadval='+document.getElementById('lead_status').options[document.getElementById('lead_status').options.selectedIndex].value;
-		var urlstring ="module=Users&action=updateLeadDBStatus&return_module=Leads"+url+"&viewname="+viewid+"&idlist="+idstring;
+		var urlstring ="module=Users&action=updateLeadDBStatus&return_module=Leads"+tplstart+url+"&viewname="+viewid+"&idlist="+idstring;
 	}
 	else if(statusname == 'owner')
 	{
-	   if(document.change_ownerform_name.user_lead_owner[0].checked)
+	   if($("user_checkbox").checked)
 	   {
 		    fninvsh('changeowner');
 		    var url='&user_id='+document.getElementById('lead_owner').options[document.getElementById('lead_owner').options.selectedIndex].value;
 		    {/literal}
-		        var urlstring ="module=Users&action=updateLeadDBStatus&return_module={$MODULE}"+url+"&viewname="+viewid+"&idlist="+idstring;
+		        var urlstring ="module=Users&action=updateLeadDBStatus&return_module={$MODULE}"+tplstart+url+"&viewname="+viewid+"&idlist="+idstring;
 		    {literal}
      }
     else
@@ -374,7 +369,7 @@ function ajaxChangeStatus(statusname)
         fninvsh('changeowner');
 		    var url='&group_id='+document.getElementById('lead_group_owner').options[document.getElementById('lead_group_owner').options.selectedIndex].value;
 	       {/literal}
-		        var urlstring ="module=Users&action=updateLeadDBStatus&return_module={$MODULE}"+url+"&viewname="+viewid+"&idlist="+idstring;
+		        var urlstring ="module=Users&action=updateLeadDBStatus&return_module={$MODULE}"+tplstart+url+"&viewname="+viewid+"&idlist="+idstring;
         {literal}
     }
 	}
@@ -389,6 +384,7 @@ function ajaxChangeStatus(statusname)
                                 $("ListViewContents").innerHTML= result[2];
                                 if(result[1] != '')
                                         alert(result[1]);
+				$('basicsearchcolumns').innerHTML = '';
                         }
                 }
         );

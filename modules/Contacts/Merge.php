@@ -24,6 +24,7 @@ else if (document.layers || (!document.all && document.getElementById))
 }
 else if(document.all)
 {
+	document.write("<br><br>Click <a href='#' onclick='window.history.back();'>here</a> to return to the previous page");
 	document.write("<OBJECT Name='vtigerCRM' codebase='modules/Settings/vtigerCRM.CAB#version=1,5,0,0' id='objMMPage' classid='clsid:0FC436C2-2E62-46EF-A3FB-E68E94705126' width=0 height=0></object>");
 }
 </script>
@@ -161,7 +162,7 @@ $query = "select ".$selectcolumns." from vtiger_contactdetails
 				left join vtiger_accountscf on vtiger_account.accountid = vtiger_accountscf.accountid
 				left join vtiger_account as accountAccounts on accountAccounts.accountid = vtiger_account.parentid
 				left join vtiger_users as usersAccounts on usersAccounts.id = crmentityAccounts.smownerid 
-				where vtiger_crmentity.deleted=0 and (crmentityAccounts.deleted <> 1) and vtiger_contactdetails.contactid in(".$mass_merge.")";
+				where vtiger_crmentity.deleted=0 and (crmentityAccounts.deleted is NULL or crmentityAccounts.deleted <> 1) and vtiger_contactdetails.contactid in(".$mass_merge.")";
 				
 
 $result = $adb->query($query);

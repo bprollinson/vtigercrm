@@ -12,10 +12,7 @@ require_once('Smarty_setup.php');
 require_once('include/database/PearDatabase.php');
 
 
-global $app_strings;
-global $mod_strings;
-
-global $theme;
+global $app_strings,$mod_strings,$current_user,$theme,$adb;
 $image_path = 'themes/'.$theme.'/images/';
 $idlist = $_REQUEST['idlist'];
 $pmodule=$_REQUEST['return_module'];
@@ -26,35 +23,33 @@ if(!strpos($idlist,':'))
 	$single_record = true;
 }
 $smarty = new vtigerCRM_Smarty;
-if ($pmodule=='Accounts')
-{
-	$querystr="select fieldid,fieldlabel,columnname,tablename from vtiger_field where tabid=6 and uitype=13;"; 
-}
-elseif ($pmodule=='Contacts')
-{
-	$querystr="select fieldid,fieldlabel,columnname from vtiger_field where tabid=4 and uitype=13;";
-}
-elseif ($pmodule=='Leads')
-{
-	$querystr="select fieldid,fieldlabel,columnname from vtiger_field where tabid=7 and uitype=13;";
-}
-$result=$adb->query($querystr);
-$numrows = $adb->num_rows($result);
+
+$userid =  $current_user->id;
+
+$querystr = "select fieldid, fieldlabel, columnname from vtiger_field where tabid=".getTabid($pmodule)." and uitype=13";
+
+$res=$adb->query($querystr);
+$numrows = $adb->num_rows($res);
 $returnvalue = Array();
-for ($i=0;$i<$numrows;$i++)
+for($i = 0; $i < $numrows; $i++)
 {
 	$value = Array();
-	$temp=$adb->query_result($result,$i,'columnname');
-	$columnlists [] = $temp;
-	$fieldid=$adb->query_result($result,$i,'fieldid');
-	$value[] =$adb->query_result($result,$i,'fieldlabel');
-	$returnvalue [$fieldid]= $value;
-	
+	$fieldname = $adb->query_result($res,$i,"fieldname");
+	$permit = getFieldVisibilityPermission($pmodule, $userid, $fieldname);
+	if($permit == '0')
+	{
+		$temp=$adb->query_result($res,$i,'columnname');
+		$columnlists [] = $temp;
+		$fieldid=$adb->query_result($res,$i,'fieldid');
+		$fieldlabel =$adb->query_result($res,$i,'fieldlabel');
+		$value[] = getTranslatedString($fieldlabel);
+		$returnvalue [$fieldid]= $value;
+	}
 }
 
-if($single_record)
+if($single_record && count($columnlists) > 0)
 {
-	$count = 1;	
+	$count = 0;	
 	switch($pmodule)
 	{
 		case 'Accounts':
@@ -86,6 +81,7 @@ if($single_record)
 			break;	
 	}	
 }
+$smarty->assign('PERMIT',$permit);
 $smarty->assign('ENTITY_NAME',$entity_name);
 $smarty->assign('ONE_RECORD',$single_record);
 $smarty->assign('MAILDATA',$field_value);
@@ -96,5 +92,8 @@ $smarty->assign("APP", $app_strings);
 $smarty->assign("FROM_MODULE", $pmodule);
 $smarty->assign("IMAGE_PATH",$image_path);
 
-$smarty->display("SelectEmail.tpl");
+if(count($columnlists) > 0)
+	$smarty->display("SelectEmail.tpl");
+else
+	echo "Mail Ids not permitted";	
 ?>

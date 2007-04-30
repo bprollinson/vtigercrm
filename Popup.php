@@ -20,7 +20,6 @@ require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
 require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
-
 global $app_strings;
 global $currentModule;
 global $theme;
@@ -132,6 +131,7 @@ switch($currentModule)
 		}
 		if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] !='')
 			$smarty->assign("RETURN_MODULE",$_REQUEST['return_module']);
+		if (isset($_REQUEST['select'])) $smarty->assign("SELECT",'enable');	
 		$alphabetical = AlphabeticalSearch($currentModule,'Popup','productname','true','basic',$popuptype,"","","");
 		break;
 	case 'Vendors':
@@ -219,12 +219,22 @@ else
 		{		
 			$smarty->assign("RECORDID",$_REQUEST['recordid']);
 			$url_string .='&recordid='.$_REQUEST['recordid'];
+        		$where_relquery = getRelCheckquery($currentModule,$_REQUEST['return_module'],$_REQUEST['recordid']);
 		}
-        $where_relquery = getRelCheckquery($currentModule,$_REQUEST['return_module'],$_REQUEST['recordid']);
-        $query = getListQuery($currentModule,$where_relquery);
+	if($where_relquery == '')
+	{
+		if(isset($_REQUEST['relmod_id']))
+			$where_relquery = getPopupCheckquery($currentModule,$_REQUEST['parent_module'],$_REQUEST['relmod_id']);
+		else
+			$where_relquery = getPopupCheckquery($currentModule,$_REQUEST['task_parent_module'],$_REQUEST['task_relmod_id']);
+	}
+
+		if($currentModule == 'Products')
+        		$where_relquery .=" and discontinued <> 0 ";
+
+	        $query = getListQuery($currentModule,$where_relquery);
 }
 			
-
 if(isset($_REQUEST['query']) && $_REQUEST['query'] == 'true')
 {
 	list($where, $ustring) = split("#@@#",getWhereCondition($currentModule));
@@ -235,7 +245,6 @@ if(isset($where) && $where != '')
 {
         $query .= ' and '.$where;
 }
-
 if (isset($_REQUEST['order_by'])) $order_by = $_REQUEST['order_by'];
 if(isset($_REQUEST['sorder']) && $_REQUEST['sorder'] != '')	$sorder = $_REQUEST['sorder'];
 
@@ -246,7 +255,6 @@ if(isset($order_by) && $order_by != '')
 $list_result = $adb->query($query);
 //Retreiving the no of rows
 $noofrows = $adb->num_rows($list_result);
-
 //Retreiving the start value from request
 if(isset($_REQUEST['start']) && $_REQUEST['start'] != '')
 {

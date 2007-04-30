@@ -22,6 +22,7 @@
 <input type="hidden" name="return_module" value="{$RETURN_MODULE}">
 <input type="hidden" name="record" value="{$CUSTOMVIEWID}">
 <input type="hidden" name="return_action" value="{$RETURN_ACTION}">
+<input type="hidden" id="user_dateformat" name="user_dateformat" value="{$DATEFORMAT}">
 <script language="javascript" type="text/javascript">
 var typeofdata = new Array();
 typeofdata['V'] = ['e','n','s','c','k'];
@@ -29,8 +30,8 @@ typeofdata['N'] = ['e','n','l','g','m','h'];
 typeofdata['T'] = ['e','n','l','g','m','h'];
 typeofdata['I'] = ['e','n','l','g','m','h'];
 typeofdata['C'] = ['e','n'];
-typeofdata['DT'] = ['e','n'];
-typeofdata['D'] = ['e','n'];
+typeofdata['DT'] = ['e','n','l','g','m','h'];
+typeofdata['D'] = ['e','n','l','g','m','h'];
 var fLabels = new Array();
 fLabels['e'] = 'equals';
 fLabels['n'] = 'not equal to';
@@ -82,7 +83,10 @@ function mandatoryCheck()
                                 {rdelim}
                                 if(mandatorycheck == true)
                                 {ldelim}
-                                        return true;
+					if(($("jscal_field_date_start").value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0) || ($("jscal_field_date_end").value.replace(/^\s+/g, '').replace(/\s+$/g, '').length!=0))
+						return stdfilterdateValidate();
+					else
+						return true;
                                 {rdelim}else
                                 {ldelim}
                                         mandatorycheck = false;
@@ -92,7 +96,7 @@ function mandatoryCheck()
         {rdelim}
         if(mandatorycheck == false)
         {ldelim}
-                alert("Must have one Required field to be selected\n"+showvalues);
+                alert("{$APP.MUSTHAVE_ONE_REQUIREDFIELD}"+showvalues);
         {rdelim}
         
         return false;
@@ -146,7 +150,18 @@ function mandatoryCheck()
 			{foreach item=filteroption key=label from=$CHOOSECOLUMN1}
 				<optgroup label="{$label}" class=\"select\" style=\"border:none\">
 					{foreach item=text from=$filteroption}
-		   		         <option {$text.selected} value={$text.value}>{$text.text}</option>
+					 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                     {/foreach}
 			{/foreach}
           	        {$CHOOSECOLUMN1}
@@ -156,7 +171,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN2}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                              	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN2}
@@ -166,7 +192,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN3}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                    	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN3}
@@ -176,7 +213,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN4}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                    	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN4}
@@ -189,7 +237,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN5}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                    	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN5}
@@ -199,7 +258,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN6}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                   	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN6}
@@ -209,7 +279,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN7}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                    	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN7}
@@ -219,7 +300,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN8}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                    	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN8}
@@ -231,7 +323,18 @@ function mandatoryCheck()
                         {foreach item=filteroption key=label from=$CHOOSECOLUMN9}
                                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
                                 {foreach item=text from=$filteroption}
-                                     <option {$text.selected} value={$text.value}>{$text.text}</option>
+                                    	 {assign var=option_values value=$text.text}
+		   		         <option {$text.selected} value={$text.value}>
+			{if $MOD.$option_values neq ''}
+				{$MOD.$option_values}
+
+			{elseif $APP.$option_values neq ''}
+				{$APP.$option_values}
+
+			{else}
+				{$option_values}
+			{/if}
+</option>
                                 {/foreach}
                         {/foreach}
                         {$CHOOSECOLUMN9}
@@ -265,12 +368,19 @@ function mandatoryCheck()
 		  <table class="small" border="0" cellpadding="3" cellspacing="0" width="100%">
 		   <tbody><tr>
 		    <td class="dvtTabCache" style="width: 10px;" nowrap>&nbsp;</td>
+		     {if $STDCOLUMNSCOUNT neq 0}	
 		    <td style="width: 100px;" nowrap class="dvtSelectedCell" id="pi" onclick="fnLoadCvValues('pi','mi','mnuTab','mnuTab2')">
 		     <b>{$MOD.LBL_STEP_3_TITLE}</b>
 		    </td>
 		    <td class="dvtUnSelectedCell" style="width: 100px;" align="center" nowrap id="mi" onclick="fnLoadCvValues('mi','pi','mnuTab2','mnuTab')">
 		     <b>{$MOD.LBL_STEP_4_TITLE}</b>
 		    </td>
+		    {else}
+                    <td class="dvtSelectedCell" style="width: 100px;" align="center" nowrap id="mi">
+                     <b>{$MOD.LBL_STEP_4_TITLE}</b>
+                    </td>
+
+                    {/if}	
 		    <td class="dvtTabCache" nowrap style="width:55%;">&nbsp;</td>
 		   </tr>
 		   </tbody>
@@ -279,7 +389,14 @@ function mandatoryCheck()
 	        </tr>
 		<tr>
 		 <td align="left" valign="top">
-		  <div id="mnuTab">
+		{if $STDCOLUMNSCOUNT eq 0}
+                        {assign var=stddiv value="style=display:none"}
+                        {assign var=advdiv value="style=display:block"}
+                {else}
+                        {assign var=stddiv value="style=display:block"}
+                        {assign var=advdiv value="style=display:none"}
+                {/if}
+		  <div id="mnuTab" {$stddiv}>
 		     <table width="100%" cellspacing="0" cellpadding="5" class="dvtContentSpace">
                       <tr><td><br>
 			<table width="75%" border="0" cellpadding="5" cellspacing="0" align="center">
@@ -296,7 +413,7 @@ function mandatoryCheck()
 			  <tr>
 			     <td align="right" class="dvtCellLabel">{$MOD.Select_Duration} :</td>
 			     <td class="dvtCellInfo">
-			        <select name="stdDateFilter" class="select" onchange='showDateRange(this.options[this.selectedIndex].value )'>
+			        <select name="stdDateFilter" id="stdDateFilter" class="select" onchange='showDateRange(this.options[this.selectedIndex].value )'>
 				{foreach item=duration from=$STDFILTERCRITERIA}
 					<option {$duration.selected} value={$duration.value}>{$duration.text}</option>
 				{/foreach}
@@ -306,22 +423,31 @@ function mandatoryCheck()
 			  <tr>
 			     <td align="right" class="dvtCellLabel">{$MOD.Start_Date} :</td>
 			     <td width="25%" align=left class="dvtCellInfo">
-			     <input name="startdate" id="jscal_field_date_start" type="text" size="10" class="textField" value="{$STARTDATE}">
-			     <img src="{$IMAGE_PATH}calendar.gif" id="jscal_trigger_date_start">
+			     {if $STDFILTERCRITERIA.0.selected eq "selected" || $CUSTOMVIEWID eq ""}
+				{assign var=img_style value="visibility:visible"}
+				{assign var=msg_style value=""}
+			     {else}
+				{assign var=img_style value="visibility:hidden"}
+				{assign var=msg_style value="readonly"}
+			     {/if}	
+			     <input name="startdate" id="jscal_field_date_start" type="text" size="10" class="textField" value="{$STARTDATE}" {$msg_style}>
+			     <img src="{$IMAGE_PATH}calendar.gif" id="jscal_trigger_date_start" style={$img_style}>
+			     <font size=1><em old="(yyyy-mm-dd)">({$DATEFORMAT})</em></font>
 			     <script type="text/javascript">
 			  		Calendar.setup ({ldelim}
-			 		inputField : "jscal_field_date_start", ifFormat : "%Y-%m-%d", showsTime : false, button : "jscal_trigger_date_start", singleClick : true, step : 1
+			 		inputField : "jscal_field_date_start", ifFormat : "{$JS_DATEFORMAT}", showsTime : false, button : "jscal_trigger_date_start", singleClick : true, step : 1
 					{rdelim})
 			     </script></td>
 	            	  </tr>
 			  <tr>
 			     <td align="right" class="dvtCellLabel">{$MOD.End_Date} :</td> 
   			     <td width="25%" align=left class="dvtCellInfo">
-			     <input name="enddate" id="jscal_field_date_end" type="text" size="10" class="textField" value="{$ENDDATE}">
-			     <img src="{$IMAGE_PATH}calendar.gif" id="jscal_trigger_date_end">
+			     <input name="enddate" {$msg_style} id="jscal_field_date_end" type="text" size="10" class="textField" value="{$ENDDATE}">
+			     <img src="{$IMAGE_PATH}calendar.gif" id="jscal_trigger_date_end" style={$img_style}>
+			     <font size=1><em old="(yyyy-mm-dd)">({$DATEFORMAT})</em></font>
 			     <script type="text/javascript">
 					Calendar.setup ({ldelim}
-					inputField : "jscal_field_date_end", ifFormat : "%Y-%m-%d", showsTime : false, button : "jscal_trigger_date_end", singleClick : true, step : 1
+					inputField : "jscal_field_date_end", ifFormat : "{$JS_DATEFORMAT}", showsTime : false, button : "jscal_trigger_date_end", singleClick : true, step : 1
 					{rdelim})
 			     </script></td>
 			  </tr>
@@ -330,7 +456,7 @@ function mandatoryCheck()
 		      <tr><td>&nbsp;</td></tr>
             </table>
    </div>
-   <div id="mnuTab2">
+   <div id="mnuTab2" {$advdiv} >
       <table width="100%" cellspacing="0" cellpadding="5" class="dvtContentSpace">
        <tr><td>&nbsp;</td></tr>
        <tr><td class="dvtCellInfo">{$MOD.LBL_AF_HDR1}<br /><br />
@@ -343,7 +469,7 @@ function mandatoryCheck()
 	  <tr><td colspan="3" class="detailedViewHeader"><b>{$MOD.LBL_RULE}</b></td></tr>
 	  
 	  <tr class="dvtCellLabel">
-          <td><select name="fcol1" id="fcol1" onchange="updatefOptions(this, 'fop1');">
+          <td><nobr><select name="fcol1" id="fcol1" onchange="updatefOptions(this, 'fop1');">
               <option value="">{$MOD.LBL_NONE}</option>
               {foreach item=filteroption key=label from=$BLOCK1}
                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
@@ -357,10 +483,11 @@ function mandatoryCheck()
                 <option {$criteria.selected} value={$criteria.value}>{$criteria.text}</option>
               {/foreach}
               </select>&nbsp; <input name="fval1" id="fval1" type="text" size=30 maxlength=80 value="{$VALUE1}">
-            &nbsp;{$MOD.LBL_AND}</td>
+	      <span id="andfcol1">{$AND_TEXT1}</span></nobr>
+            </td>
         </tr>
 	<tr class="dvtCellInfo">
-          <td><select name="fcol2" id="fcol2" onchange="updatefOptions(this, 'fop2');">
+          <td><nobr><select name="fcol2" id="fcol2" onchange="updatefOptions(this, 'fop2');">
               <option value="">{$MOD.LBL_NONE}</option>
               {foreach item=filteroption key=label from=$BLOCK2}
                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
@@ -374,10 +501,11 @@ function mandatoryCheck()
                 <option {$criteria.selected} value={$criteria.value}>{$criteria.text}</option>
               {/foreach}
               </select>&nbsp; <input name="fval2" id="fval2" type="text" size=30 maxlength=80 value="{$VALUE2}">
-            &nbsp;{$MOD.LBL_AND}</td>
+	      <span id="andfcol2">{$AND_TEXT2}</span></nobr>
+            </td>
         </tr>
 	<tr class="dvtCellLabel">
-          <td><select name="fcol3" id="fcol3" onchange="updatefOptions(this, 'fop3');">
+          <td><nobr><select name="fcol3" id="fcol3" onchange="updatefOptions(this, 'fop3');">
               <option value="">{$MOD.LBL_NONE}</option>
               {foreach item=filteroption key=label from=$BLOCK3}
                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
@@ -391,10 +519,11 @@ function mandatoryCheck()
                 <option {$criteria.selected} value={$criteria.value}>{$criteria.text}</option>
               {/foreach}
               </select>&nbsp; <input name="fval3" id="fval3" type="text" size=30 maxlength=80 value="{$VALUE3}">
-            &nbsp;{$MOD.LBL_AND}</td>
+	      <span id="andfcol3">{$AND_TEXT3}</span></nobr>
+            </td>
         </tr>
 	<tr class="dvtCellInfo">
-          <td><select name="fcol4" id="fcol4" onchange="updatefOptions(this, 'fop4');">
+          <td><nobr><select name="fcol4" id="fcol4" onchange="updatefOptions(this, 'fop4');">
               <option value="">{$MOD.LBL_NONE}</option>
               {foreach item=filteroption key=label from=$BLOCK4}
                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
@@ -403,15 +532,16 @@ function mandatoryCheck()
                 {/foreach}
               {/foreach}
               </select> &nbsp; <select name="fop4" id="fop4">
-              <option value="">None</option>
+              <option value="">{$MOD.LBL_NONE}</option>
               {foreach item=criteria from=$FOPTION4}
                 <option {$criteria.selected} value={$criteria.value}>{$criteria.text}</option>
               {/foreach}
               </select>&nbsp; <input name="fval4" id="fval4" type="text" size=30 maxlength=80 value="{$VALUE4}">
-            &nbsp;{$MOD.LBL_AND}</td>
+	      <span id="andfcol4">{$AND_TEXT4}</span></nobr>
+            </td>
         </tr>
 	<tr class="dvtCellLabel">
-          <td><select name="fcol5" id="fcol5" onchange="updatefOptions(this, 'fop5');">
+          <td><nobr><select name="fcol5" id="fcol5" onchange="updatefOptions(this, 'fop5');">
               <option value="">{$MOD.LBL_NONE}</option>
               {foreach item=filteroption key=label from=$BLOCK5}
                 <optgroup label="{$label}" class=\"select\" style=\"border:none\">
@@ -425,7 +555,8 @@ function mandatoryCheck()
                 <option {$criteria.selected} value={$criteria.value}>{$criteria.text}</option>
               {/foreach}
               </select>&nbsp; <input name="fval5" id="fval5" type="text" size=30 maxlength=80 value="{$VALUE5}">
-            &nbsp;</td>
+	      <span id="andfcol5">{$AND_TEXT5}</span></nobr>
+            </td>
         </tr>
 
 	  {*section name=advancedFilter start=1 loop=6 step=1}
@@ -469,6 +600,8 @@ function mandatoryCheck()
   </td></tr>
   <tr><td colspan="4">&nbsp;</td></tr>
 </table>
+</table>
+</table>
 {$STDFILTER_JAVASCRIPT}
 {$JAVASCRIPT}
 <!-- to show the mandatory fields while creating new customview -->
@@ -507,9 +640,11 @@ function checkDuplicate()
 					selected_cv_icolumnvalue = $(cvselect_array[iloop]).options[$(cvselect_array[iloop]).selectedIndex].value;	
 					if(selected_cv_columnvalue == selected_cv_icolumnvalue)
 					{
-						alert('Columns cannot be duplicated');
-						$(cvselect_array[iloop]).selectedIndex = 0;
-						return false;
+						{/literal}
+                                                alert('{$APP.COLUMNS_CANNOT_BE_DUPLICATED}');
+                                                $(cvselect_array[iloop]).selectedIndex = 0;
+                                                return false;
+                                                {literal}
 					}
 
 				}
@@ -518,5 +653,31 @@ function checkDuplicate()
 		return true;
 }
 checkDuplicate();
+function stdfilterdateValidate()
+{
+	if(!dateValidate("startdate",alert_arr.STDFILTER+" - "+alert_arr.STARTDATE,"OTH"))
+	{
+		getObj("startdate").focus()
+		return false;
+	}
+	else if(!dateValidate("enddate",alert_arr.STDFILTER+" - "+alert_arr.ENDDATE,"OTH"))
+	{
+		getObj("enddate").focus()
+		return false;
+	}
+	else
+	{
+		if (!dateComparison("enddate",alert_arr.STDFILTER+" - "+alert_arr.ENDDATE,"startdate",alert_arr.STDFILTER+" - "+alert_arr.STARTDATE,"GE")) {
+                        getObj("enddate").focus()
+                        return false
+                } else return true;
+	}
+}
+for(var i=1;i<=5;i++)
+{
+	var obj=document.getElementById("fcol"+i);
+	if(obj.selectedIndex != 0)
+		updatefOptions(obj, 'fop'+i);
+}
 {/literal}
 </script>

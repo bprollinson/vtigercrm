@@ -59,9 +59,46 @@ $local_log =& LoggerManager::getLogger('index');
 
 $focus = new Emails();
 
-global $current_user;
-setObjectValuesFromRequest(&$focus);
+global $current_user,$mod_strings,$app_strings;
+setObjectValuesFromRequest($focus);
 //Check if the file is exist or not.
+//$file_name = '';
+$file_name = $_FILES['filename']['name'];//preg_replace('/\s+/', '_', $_FILES['filename']['name']);
+$errorCode =  $_FILES['filename']['error'];
+$errormessage = "";
+if($file_name != '' && $_FILES['filename']['size'] == 0){
+	if($errorCode == 4 || $errorCode == 0)
+	{
+		 if($_FILES['filename']['size'] == 0)
+			 $errormessage = "<B><font color='red'>".$mod_strings['LBL_PLEASE_ATTACH']."</font></B> <br>";
+	}
+	else if($errorCode == 2)
+	{
+		  $errormessage = "<B><font color='red'>".$mod_strings['LBL_EXCEED_MAX'].$upload_maxsize.$mod_strings['LBL_BYTES']." </font></B> <br>";
+	}
+	else if($errorCode == 6)
+	{
+	     $errormessage = "<B>".$mod_strings['LBL_KINDLY_UPLOAD']."</B> <br>" ;
+	}
+	else if($errorCode == 3 )
+	{
+	     if($_FILES['filename']['size'] == 0)
+		     $errormessage = "<b><font color='red'>".$mod_strings['LBL_PLEASE_ATTACH']."</font></b><br>";
+	}
+	else{}
+	if($errormessage != ""){
+		$ret_error = 1;
+		$ret_toadd = $_REQUEST['to_add'];
+		$ret_subject = $_REQUEST['subject'];
+		$ret_ccaddress = $_REQUEST['ccmail'];
+		$ret_bccaddress = $_REQUEST['bccmail'];
+		$ret_description = $_REQUEST['description'];
+		echo $errormessage;
+        	include("EditView.php");	
+		exit();
+	}
+}
+
 if($_FILES["filename"]["size"] == 0 && $_FILES["filename"]["name"] != '')
 {
         $file_upload_error = true;
@@ -165,6 +202,9 @@ $focus->column_fields["date_start"]= date('Y-m-d');
 $focus->save("Emails");
 
 //saving the email details in vtiger_emaildetails vtiger_table
+$qry = 'select email1 from vtiger_users where id = '.$current_user->id;
+$res = $adb->query($qry);
+$user_email = $adb->query_result($res,0,"email1");
 $return_id = $focus->id;
 $email_id = $return_id;
 $query = 'select emailid from vtiger_emaildetails where emailid ='.$email_id;
@@ -176,12 +216,13 @@ if(isset($_REQUEST["saved_toid"]) && $_REQUEST["saved_toid"]!='')
 	
 $all_cc_ids = ereg_replace(",","###",$_REQUEST["ccmail"]);
 $all_bcc_ids = ereg_replace(",","###",$_REQUEST["bccmail"]);
+$userid = $current_user->id;
 if($adb->num_rows($result) > 0)
 {
-	$query = 'update vtiger_emaildetails set to_email="'.$all_to_ids.'",cc_email="'.$all_cc_ids.'",bcc_email="'.$all_bcc_ids.'",idlists="'.$_REQUEST["parent_id"].'",email_flag="SAVED" where emailid = '.$email_id;
+	$query = 'update vtiger_emaildetails set to_email="'.$all_to_ids.'",cc_email="'.$all_cc_ids.'",bcc_email="'.$all_bcc_ids.'",idlists="'.$userid."@-1|".$_REQUEST["parent_id"].'",email_flag="SAVED" where emailid = '.$email_id;
 }else
 {
-	$query = 'insert into vtiger_emaildetails values ('.$email_id.',"","'.$all_to_ids.'","'.$all_cc_ids.'","'.$all_bcc_ids.'","","'.$_REQUEST["parent_id"].'","SAVED")';
+	$query = 'insert into vtiger_emaildetails values ('.$email_id.',"'.$user_email.'","'.$all_to_ids.'","'.$all_cc_ids.'","'.$all_bcc_ids.'","","'.$userid."@-1|".$_REQUEST["parent_id"].'","SAVED")';
 }
 $adb->query($query);
 

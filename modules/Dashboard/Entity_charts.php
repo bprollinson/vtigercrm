@@ -383,9 +383,9 @@ function save_image_map($filename,$image_map)
 function get_graph_by_type($graph_by,$graph_title,$module,$where,$query,$width=900,$height=500)
 {
 	global $user_id,$date_start,$end_date,$type,$mod_strings;
-
+	$time = time();
 	//Giving the Cached image name
-	$cache_file_name=abs(crc32($user_id))."_".$type."_".crc32($date_start.$end_date).".png";
+	$cache_file_name=abs(crc32($user_id))."_".$type."_".crc32($date_start.$end_date).$time.".png";
 	$html_imagename=$graph_by; //Html image name for the graph
 
 	$graph_details=module_Chart($user_id,$date_start,$end_date,$query,$graph_by,$graph_title,$where,$module,$type);
@@ -454,7 +454,7 @@ function get_graph($cache_file_name,$html_imagename,$cnt_val,$name_val,$width,$h
 	}
 
 $sHTML .= "<tr>
-	   <td><a name='1'></a><table width=20%  border=0 cellspacing=0 cellpadding=0 align=left>
+	   <td><a name='1'></a><table width=20%  border=0 cellspacing=12 cellpadding=0 align=left>
 	         <tr>
 	    	   <td rowspan=2 valign=top><span class=\"dash_count\">1</span></td>
 	           <td nowrap><span class=genHeaderSmall>".$graph_title."</span></td>
@@ -523,7 +523,7 @@ $sHTML .= "</td>
 	}
 
 $sHTML .= "<tr>
-	   <td><a name='2'></a><table width=20%  border=0 cellspacing=0 cellpadding=0 align=left>
+	   <td><a name='2'></a><table width=20%  border=0 cellspacing=12 cellpadding=0 align=left>
            	 <tr>
 	           <td rowspan=2 valign=top><span class=\"dash_count\">2</span></td>
 	           <td nowrap><span class=genHeaderSmall>".$graph_title."</span></td>

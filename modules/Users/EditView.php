@@ -62,7 +62,6 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $log->info("User edit view");
 
@@ -95,6 +94,7 @@ if ($_REQUEST['isDuplicate'] != 'true' && isset($_REQUEST['return_id']))
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $focus->mode = $mode;
 $disp_view = getView($focus->mode);
+$smarty->assign("IMAGENAME",$focus->imagename);
 $smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));	
 $smarty->assign("MODULE", 'Settings');
 $smarty->assign("MODE",$focus->mode);
@@ -110,8 +110,9 @@ if(isset($_REQUEST['record']) && $_REQUEST['isDuplicate'] != 'true')
 }
 
 $smarty->assign("HOMEORDER",$focus->getHomeOrder($focus->id));
-
-
+//Added to provide User based Tagcloud
+$smarty->assign("TAGCLOUDVIEW",getTagCloudView($focus->id));
+$smarty->assign("DUPLICATE",$_REQUEST['isDuplicate']);
 
 $smarty->assign('PARENTTAB',$_REQUEST['parenttab']);
 

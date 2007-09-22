@@ -14,14 +14,17 @@ require_once('include/logging.php');
 require_once('include/nusoap/nusoap.php');
 require_once('modules/HelpDesk/HelpDesk.php');
 require_once('modules/Emails/mail.php');
+require_once('modules/HelpDesk/language/en_us.lang.php');
+
 
 $log = &LoggerManager::getLogger('customerportal');
 
-//$serializer = new XML_Serializer();
-$NAMESPACE = 'http://www.vtigercrm.com/vtigercrm';
+error_reporting(0);
+
+$NAMESPACE = 'http://www.vtiger.com/products/crm';
 $server = new soap_server;
 
-$server->configureWSDL('vtigersoap');
+$server->configureWSDL('customerportal');
 
 
 
@@ -165,6 +168,17 @@ $server->wsdl->addComplexType(
              )
 );
 
+//Added to return the file content
+$server->wsdl->addComplexType(
+        'get_filecontent_array',
+        'complexType',
+        'array',
+        '',
+        array(
+		'fileid'=>'xsd:string','type'=>'tns:xsd:string',
+             )
+);
+
 $server->wsdl->addComplexType(
         'add_ticket_attachment_array',
         'complexType',
@@ -274,6 +288,12 @@ $server->register(
 	'get_ticket_attachments',
 	array('id'=>'xsd:string','ticketid'=>'xsd:string'),
 	array('return'=>'tns:get_ticket_attachments_array'),
+	$NAMESPACE);
+
+$server->register(
+	'get_filecontent',
+	array('id'=>'xsd:string','fileid'=>'xsd:string','filename'=>'xsd:string'),
+	array('return'=>'tns:get_filecontent_array'),
 	$NAMESPACE);
 
 $server->register(
@@ -560,7 +580,7 @@ function create_ticket($title,$description,$priority,$severity,$category,$user_n
  */
 function update_ticket_comment($ticketid,$ownerid,$comments)
 {
-	global $adb;
+	global $adb,$mod_strings;
 	$servercreatedtime = $adb->formatDate(date('YmdHis'));
   	if(trim($comments) != '')
   	{
@@ -569,7 +589,31 @@ function update_ticket_comment($ticketid,$ownerid,$comments)
   
  		$updatequery = "update vtiger_crmentity set modifiedtime=".$servercreatedtime." where crmid=".$ticketid;
   		$adb->query($updatequery);
-  	}	
+
+		//To get the username and user email id, user means assigned to user of the ticket
+		$result = $adb->query("select user_name, email1 from vtiger_users inner join vtiger_crmentity on vtiger_users.id=vtiger_crmentity.smownerid where vtiger_crmentity.crmid=$ticketid");
+		$owner = $adb->query_result($result,0,'user_name');
+		$to_email = $adb->query_result($result,0,'email1');
+
+		//To get the contact name
+		$result1 = $adb->query("select lastname, firstname, email from vtiger_contactdetails where contactid=$ownerid");
+		$customername = $adb->query_result($result1,0,'firstname').' '.$adb->query_result($result1,0,'lastname');
+		$from_email = $adb->query_result($result1,0,'email');
+
+		//send mail to the assigned to user when customer add comment
+		$subject = $mod_strings['LBL_RESPONDTO_TICKETID']."##". $ticketid."##". $mod_strings['LBL_CUSTOMER_PORTAL'];
+		$contents = $mod_strings['Dear']." ".$owner.","."<br><br>"
+				.$mod_strings['LBL_CUSTOMER_COMMENTS']."<br><br>
+
+				<b>".nl2br($comments)."</b><br><br>"
+
+				.$mod_strings['LBL_RESPOND']."<br><br>"
+
+				.$mod_strings['LBL_REGARDS']."<br>"
+				.$mod_strings['LBL_SUPPORT_ADMIN'];
+
+		$mailstatus = send_mail('HelpDesk',$to_email,$customername,$from_email,$subject,$contents);
+  	}
 }
 
 /**	function used to close the ticket
@@ -578,13 +622,13 @@ function update_ticket_comment($ticketid,$ownerid,$comments)
  */
 function close_current_ticket($ticketid)
 {
-	global $adb;
-	$sql = "update vtiger_troubletickets set status='Closed' where ticketid=".$ticketid;
+	global $adb,$mod_strings;
+	$sql = "update vtiger_troubletickets set status='".$mod_strings['LBL_STATUS_CLOSED']."' where ticketid=".$ticketid;
 	$result = $adb->query($sql);
 	if($result)
-		return "<br><b>Ticket status is updated as 'Closed'.</b>";
+		return "<br><b>".$mod_strings['LBL_STATUS_UPDATE']." "."'".$mod_strings['LBL_STATUS_CLOSED']."'"."."."</b>";
 	else
-		return "<br><b>Ticket could not be closed.</br>";
+		return "<br><b>".$mod_strings['LBL_COULDNOT_CLOSED']." ".$mod_strings['LBL_STATUS_CLOSED']."."."</br>";
 }
 
 /**	function used to authenticate whether the customer has access or not
@@ -660,7 +704,7 @@ function update_login_details($id,$flag)
  */
 function send_mail_for_password($mailid)
 {
-	global $adb;
+	global $adb,$mod_strings;
 
 	$sql = "select * from vtiger_portalinfo  where user_name='".$mailid."'";
 	$user_name = $adb->query_result($adb->query($sql),0,'user_name');
@@ -671,13 +715,13 @@ function send_mail_for_password($mailid)
 	$initialfrom = $adb->query_result($adb->query($fromquery),0,'user_name');
 	$from = $adb->query_result($adb->query($fromquery),0,'email1');
 
-	$contents = "<br>Following are your Customer Portal login details :";
-	$contents .= "<br><br>User Name : ".$user_name;
-	$contents .= "<br>Password : ".$password;
+	$contents = $mod_strings['LBL_LOGIN_DETAILS'];
+	$contents .= "<br><br>".$mod_strings['LBL_USERNAME']." ".$user_name;
+	$contents .= "<br>".$mod_strings['LBL_PASSWORD']." ".$password;
 
         $mail = new PHPMailer();
 
-        $mail->Subject = "Regarding your Customer Portal login details";
+        $mail->Subject = $mod_strings['LBL_SUBJECT_PORTAL_LOGIN_DETAILS'];
         $mail->Body    = $contents;
         $mail->IsSMTP();
 
@@ -700,25 +744,25 @@ function send_mail_for_password($mailid)
 
         $mail->IsHTML(true);
 
-        $mail->AltBody = "This is the body in plain text for non-HTML mail clients";
+        $mail->AltBody = $mod_strings['LBL_ALTBODY'];
 	if($mailid == '')
 	{
-		return "false@@@<b>Please give your email id</b>";
+		return "false@@@<b>".$mod_strings['LBL_GIVE_MAILID']."</b>";
 	}
 	elseif($user_name == '' && $password == '')
 	{
-		return "false@@@<b>Please check your email id for Customer Portal</b>";
+		return "false@@@<b>".$mod_strings['LBL_CHECK_MAILID']."</b>";
 	}
 	elseif($isactive == 0)
         {
-                return "false@@@<b>Your login is revoked. Please contact your admin.</b>";
+                return "false@@@<b>".$mod_strings['LBL_LOGIN_REVOKED']."</b>";
         }
 	elseif(!$mail->Send())
 	{
-		return "false@@@<b>Mail could not be sent</b>";
+		return "false@@@<b>".$mod_strings['LBL_MAIL_COULDNOT_SENT']."</b>";
 	}
 	else
-		return "true@@@<b>Mail has been sent to your mail id with the customer portal login details</b>";
+		return "true@@@<b>".$mod_strings['LBL_MAIL_SENT']."</b>";
 
 }
 
@@ -781,16 +825,43 @@ function get_ticket_attachments($userid,$ticketid)
 		$filesize = filesize($filepath.$fileid."_".$filename);
 		$filetype = $adb->query_result($res,$i,'type');
 
-		$filecontents = base64_encode(file_get_contents($filepath.$fileid."_".$filename));//fread(fopen($filepath.$filename, "r"), $filesize));
+		//Now we will not pass the file content to CP, when the customer click on the link we will retrieve
+		//$filecontents = base64_encode(file_get_contents($filepath.$fileid."_".$filename));//fread(fopen($filepath.$filename, "r"), $filesize));
 
 		$output[$i]['fileid'] = $fileid;
 		$output[$i]['filename'] = $filename;
 		$output[$i]['filetype'] = $filetype;
 		$output[$i]['filesize'] = $filesize;
-		$output[$i]['filecontents'] = $filecontents;
+		//$output[$i]['filecontents'] = $filecontents;
 	}
 
 	return $output;
+}
+
+/**	function used to get the contents of a file
+ *	@param int $contactid - customer ie., contact id 
+ *	@param int $fileid - id of the file to which we want contents
+ *	@param string $filename - name of the file to which we want contents
+ *	return $filecontents array with single file contents like [fileid] => filecontent
+ */
+function get_filecontent($contactid, $fileid, $filename)
+{
+	global $adb;
+	$query = "select vtiger_attachments.path from vtiger_troubletickets 
+		inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.crmid = vtiger_troubletickets.ticketid 
+		inner join vtiger_attachments on vtiger_attachments.attachmentsid = vtiger_seattachmentsrel.attachmentsid 
+		where 	vtiger_troubletickets.parent_id= $contactid and 
+			vtiger_attachments.attachmentsid= $fileid and 
+			vtiger_attachments.name='$filename'";
+	$res = $adb->query($query);
+
+	if($adb->num_rows($res)>0)
+	{
+		$filenamewithpath = $adb->query_result($res,0,'path').$fileid."_".$filename;
+		$filecontents[$fileid] = base64_encode(file_get_contents($filenamewithpath));
+		$adb->println("Going to return the content of the file ==> $filenamewithpath");
+	}
+	return $filecontents;
 }
 
 /**	function to add attachment for a ticket ie., the passed contents will be write in a file and the details will be stored in database
@@ -811,6 +882,8 @@ function add_ticket_attachment($ticketid, $filename, $filetype, $filesize, $file
 
 	$attachmentid = $adb->getUniqueID("vtiger_crmentity");
 
+	//fix for space in file name
+	$filename = preg_replace('/\s+/', '_', $filename);
 	$new_filename = $attachmentid.'_'.$filename;
 
 	$data = base64_decode($filecontents);

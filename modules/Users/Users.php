@@ -112,7 +112,7 @@ class Users {
 	var $object_name = "User";
 	var $user_preferences;
 	var $defhomeview;
-	var $homeorder_array = array('ALVT','HDB','PLVT','QLTQ','CVLVT','HLT','OLV','GRT','OLTSO','ILTI','MNL','OLTPO','LTFAQ');
+	var $homeorder_array = array('HDB','ALVT','PLVT','QLTQ','CVLVT','HLT','OLV','GRT','OLTSO','ILTI','MNL','OLTPO','LTFAQ');
 
 	var $encodeFields = Array("first_name", "last_name", "description");
 
@@ -486,6 +486,29 @@ class Users {
 		$this->db->query($query, true, "Error setting new password for $usr_name: ");	
 		return true;
 	}
+	 
+	function de_cryption($data)
+	{
+		require_once('include/utils/encryption.php');
+		$de_crypt = new Encryption();
+		if(isset($data))
+		{	
+			$decrypted_password = $de_crypt->decrypt($data);
+		}
+		return $decrypted_password;
+	}	
+	function changepassword($newpassword)
+	{
+		require_once('include/utils/encryption.php');
+		$en_crypt = new Encryption();		
+		if( isset($newpassword)) 
+		{
+			$encrypted_password = $en_crypt->encrypt($newpassword);
+		}
+
+		return $encrypted_password;
+	}
+
 
 	function is_authenticated()
 	{
@@ -915,7 +938,7 @@ class Users {
 		//only images are allowed for these modules
 		if($module == 'Users')
 		{
-			$save_file = validateImageFile(&$file_details);
+			$save_file = validateImageFile($file_details);
 		}
 		if($save_file == 'true')
 		{
@@ -1013,7 +1036,8 @@ class Users {
 			if($_REQUEST[$this->homeorder_array[$i]] != '')
 				$save_array[] = $this->homeorder_array[$i];
 		}
-		$homeorder = implode(',',$save_array);	
+		if(count($save_array))
+			$homeorder = implode(',',$save_array);	
 		$query = "update vtiger_users set homeorder ='$homeorder' where id=$id";
 		$adb->query($query);
                 $log->debug("Exiting from function saveHomeOrder($id)");

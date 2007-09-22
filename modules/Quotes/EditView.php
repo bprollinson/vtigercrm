@@ -116,9 +116,6 @@ $smarty->assign("SINGLE_MOD",'Quote');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
-
-require_once($theme_path.'layout_utils.php');
-
 $log->info("Quote view");
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
@@ -209,6 +206,7 @@ $smarty->assign("MODULE", $module);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 if($focus->mode == 'edit')
 	$smarty->display("Inventory/InventoryEditView.tpl");
 else

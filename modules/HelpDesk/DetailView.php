@@ -42,7 +42,6 @@ global $currentModule, $singlepane_view;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
@@ -85,6 +84,7 @@ if(isPermitted("HelpDesk","Merge",'') == 'yes')
                 $optionString[$tempVal["templateid"]]=$tempVal["filename"];
                 $tempVal = $adb->fetch_array($wordTemplateResult);
         }
+	 $smarty->assign("TEMPLATECOUNT",$tempCount);
 	$smarty->assign("WORDTEMPLATEOPTIONS",$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']);
         $smarty->assign("TOPTIONS",$optionString);
 }
@@ -104,7 +104,9 @@ $smarty->assign("COMMENT_BLOCK",$focus->getCommentInformation($_REQUEST['record'
 
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
-
+$smarty->assign("IS_REL_LIST",isPresentRelatedLists($currentModule));
+$smarty->assign("TODO_PERMISSION",CheckFieldPermission('parent_id','Calendar'));
+$smarty->assign("EVENT_PERMISSION",CheckFieldPermission('parent_id','Events'));
 if($singlepane_view == 'true')
 {
 	$related_array = getRelatedLists($currentModule,$focus);

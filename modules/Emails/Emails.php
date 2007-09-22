@@ -36,12 +36,17 @@ class Emails extends CRMEntity {
 	var $db;
 
 	// Stored vtiger_fields
-  // added to check email save from plugin or not
-  var $plugin_save = false;
+  	// added to check email save from plugin or not
+	var $plugin_save = false;
+
+var $rel_users_table = "vtiger_salesmanactivityrel";
+var $rel_contacts_table = "vtiger_cntactivityrel";
+var $rel_serel_table = "vtiger_seactivityrel";
+
 
 
 	var $tab_name = Array('vtiger_crmentity','vtiger_activity');
-        var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_activity'=>'activityid','vtiger_seactivityrel'=>'activityid','vtiger_cntactivityrel'=>'activityid','vtiger_attachments'=>'attachmentsid');
+        var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_activity'=>'activityid','vtiger_seactivityrel'=>'activityid','vtiger_cntactivityrel'=>'activityid');
 
 	// This is the list of vtiger_fields that are in the lists.
         var $list_fields = Array(
@@ -159,9 +164,16 @@ class Emails extends CRMEntity {
 		$log->debug("Entering into insertIntoAttachment($id,$module) method.");
 		
 		$file_saved = false;
+		
+		//Added to send generated Invoice PDF with mail
+		$pdfAttached = $_REQUEST['pdf_attachment'];
+		//created Invoice pdf is attached with the mail
+			if(isset($_REQUEST['pdf_attachment']) && $_REQUEST['pdf_attachment'] !='')
+			{
+				$file_saved = pdfAttach($this,$module,$pdfAttached,$id);
+			}
 
 		//This is to added to store the existing attachment id of the contact where we should delete this when we give new image
-
 		foreach($_FILES as $fileindex => $files)
 		{
 			if($files['name'] != '' && $files['size'] > 0)
@@ -169,11 +181,84 @@ class Emails extends CRMEntity {
 				$file_saved = $this->uploadAndSaveFile($id,$module,$files);
 			}
 		}
+		if($_REQUEST['att_module'] == 'Webmails')
+		{
+			require_once("modules/Webmails/Webmails.php");
+		        require_once("modules/Webmails/MailParse.php");
+		        require_once('modules/Webmails/MailBox.php');
+		        //$mailInfo = getMailServerInfo($current_user);
+			//$temprow = $adb->fetch_array($mailInfo);
 
+		        $MailBox = new MailBox($_REQUEST["mailbox"]);
+		        $mbox = $MailBox->mbox;
+		        $webmail = new Webmails($mbox,$_REQUEST['mailid']);
+		        $array_tab = Array();
+		        $webmail->loadMail($array_tab);
+			foreach($webmail->att_details as $fileindex => $files)
+			{
+				if($files['name'] != '' && $files['size'] > 0)
+				{
+					//print_r($files);
+					$file_saved = $this->saveForwardAttachments($id,$module,$files);
+				}
+			}
+		}
 		$log->debug("Exiting from insertIntoAttachment($id,$module) method.");
 	}	
 	
-
+	function saveForwardAttachments($id,$module,$file_details)
+	{
+		global $log;
+                $log->debug("Entering into saveForwardAttachments($id,$module,$file_details) method.");
+                global $adb, $current_user;
+		global $upload_badext;
+		require_once('modules/Webmails/MailBox.php');
+                $mailbox=$_REQUEST["mailbox"];
+		$MailBox = new MailBox($mailbox);
+		$mail = $MailBox->mbox;
+		$binFile = preg_replace('/\s+/', '_', $file_details['name']);//replace space with _ in filename
+                $ext_pos = strrpos($binFile, ".");
+                $ext = substr($binFile, $ext_pos + 1);
+                if (in_array($ext, $upload_badext))
+                {
+                    $binFile .= ".txt";
+                }
+		$filename = basename($binFile);
+		$filetype= $file_details['type'];
+		$filesize = $file_details['size'];
+		$filepart = $file_details['part'];
+		$transfer = $file_details['transfer'];
+		$file = imap_fetchbody($mail,$_REQUEST['mailid'],$filepart);
+		if ($transfer == 'BASE64')
+			    $file = imap_base64($file);
+		elseif($transfer == 'QUOTED-PRINTABLE')
+			    $file = imap_qprint($file);
+		$current_id = $adb->getUniqueID("vtiger_crmentity");
+		$date_var = date('YmdHis');
+		//to get the owner id
+		$ownerid = $this->column_fields['assigned_user_id'];
+		if(!isset($ownerid) || $ownerid=='')
+			$ownerid = $current_user->id;
+		$upload_file_path = decideFilePath();
+		file_put_contents ($upload_file_path.$current_id."_".$filename,$file);
+		
+                        $sql1 = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values(".$current_id.",".$current_user->id.",".$ownerid.",'".$module." Attachment','".addslashes($this->column_fields['description'])."',".$adb->formatString("vtiger_crmentity","createdtime",$date_var).",".$adb->formatString("vtiger_crmentity","modifiedtime",$date_var).")";
+                        $adb->query($sql1);
+                        $sql2="insert into vtiger_attachments(attachmentsid, name, description, type, path) values(".$current_id.",'".$filename."','".addslashes($this->column_fields['description'])."','".$filetype."','".$upload_file_path."')";
+                        $result=$adb->query($sql2);
+                        if($_REQUEST['mode'] == 'edit')
+                        {
+                                if($id != '' && $_REQUEST['fileid'] != '')
+                                {
+                                        $delquery = 'delete from vtiger_seattachmentsrel where crmid = '.$id.' and attachmentsid = '.$_REQUEST['fileid'];
+		                        $adb->query($delquery);
+			        }
+			}
+                        $sql3='insert into vtiger_seattachmentsrel values('.$id.','.$current_id.')';
+                        $adb->query($sql3);
+                        return true;
+		$log->debug("exiting from  saveforwardattachment function.");
+	}
 	/** Returns a list of the associated contacts
 	 * Portions created by SugarCRM are Copyright (C) SugarCRM, Inc..
 	 * All Rights Reserved..
@@ -436,46 +521,112 @@ class Emails extends CRMEntity {
 function get_to_emailids($module)
 {
 	global $adb;
-	$query = 'select columnname,fieldid from vtiger_field where fieldid in('.ereg_replace(':',',',$_REQUEST["field_lists"]).')';
-    $result = $adb->query($query);
-	$columns = Array();
-	$idlists = '';
-	$mailids = '';
-	while($row = $adb->fetch_array($result))
-    {
-		$columns[]=$row['columnname'];
-		$fieldid[]=$row['fieldid'];
-	}
-	$columnlists = implode(',',$columns);
-	$crmids = ereg_replace(':',',',$_REQUEST["idlist"]);
-	switch($module)
+	if(isset($_REQUEST["field_lists"]) && $_REQUEST["field_lists"] != "")
 	{
-		case 'Leads':
-			$query = 'select crmid,concat(lastname," ",firstname) as entityname,'.$columnlists.' from vtiger_leaddetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_leaddetails.leadid left join vtiger_leadscf on vtiger_leadscf.leadid = vtiger_leaddetails.leadid where vtiger_crmentity.deleted=0 and vtiger_crmentity.crmid in ('.$crmids.')';
-			break;
-		case 'Contacts':
-			$query = 'select crmid,concat(lastname," ",firstname) as entityname,'.$columnlists.' from vtiger_contactdetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_contactdetails.contactid left join vtiger_contactscf on vtiger_contactscf.contactid = vtiger_contactdetails.contactid where vtiger_crmentity.deleted=0 and vtiger_crmentity.crmid in ('.$crmids.')';
-			break;
-		case 'Accounts':
-			$query = 'select crmid,accountname as entityname,'.$columnlists.' from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid left join vtiger_accountscf on vtiger_accountscf.accountid = vtiger_account.accountid where vtiger_crmentity.deleted=0 and vtiger_crmentity.crmid in ('.$crmids.')';
-			break;
-	}	
-	$result = $adb->query($query);
-	while($row = $adb->fetch_array($result))
-	{
-		$name = $row['entityname'];
-		for($i=0;$i<count($columns);$i++)
+		$query = 'select columnname,fieldid from vtiger_field where fieldid in('.ereg_replace(':',',',$_REQUEST["field_lists"]).')';
+		$result = $adb->query($query);
+		$columns = Array();
+		$idlists = '';
+		$mailids = '';
+		while($row = $adb->fetch_array($result))
+    		{
+			$columns[]=$row['columnname'];
+			$fieldid[]=$row['fieldid'];
+		}
+		$columnlists = implode(',',$columns);
+		$idstring = $_REQUEST["idlist"];
+                $single_record = false;
+		if(!strpos($idstring,':'))
 		{
-			if($row[$columns[$i]] != NULL && $row[$columns[$i]] !='')
+			$single_record = true;
+		}
+		$crmids = ereg_replace(':',',',$idstring);
+		switch($module)
+		{
+			case 'Leads':
+				$query = 'select crmid,concat(lastname," ",firstname) as entityname,'.$columnlists.' from vtiger_leaddetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_leaddetails.leadid left join vtiger_leadscf on vtiger_leadscf.leadid = vtiger_leaddetails.leadid where vtiger_crmentity.deleted=0 and ((ltrim(vtiger_leaddetails.email) != \'\') or (ltrim(vtiger_leaddetails.yahooid) != \'\')) and vtiger_crmentity.crmid in ('.$crmids.')';
+				break;
+			case 'Contacts':
+				//email opt out funtionality works only when we do mass mailing.
+				if(!$single_record)
+				$concat_qry = '(((ltrim(vtiger_contactdetails.email) != \'\')  or (ltrim(vtiger_contactdetails.yahooid) != \'\')) and (vtiger_contactdetails.emailoptout != 1)) and ';
+				else
+				$concat_qry = '((ltrim(vtiger_contactdetails.email) != \'\')  or (ltrim(vtiger_contactdetails.yahooid) != \'\')) and ';
+				$query = 'select crmid,concat(lastname," ",firstname) as entityname,'.$columnlists.' from vtiger_contactdetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_contactdetails.contactid left join vtiger_contactscf on vtiger_contactscf.contactid = vtiger_contactdetails.contactid where vtiger_crmentity.deleted=0 and '.$concat_qry.'  vtiger_crmentity.crmid in ('.$crmids.')';
+				break;
+			case 'Accounts':
+				//added to work out email opt out functionality.
+				if(!$single_record)
+					$concat_qry = '(((ltrim(vtiger_account.email1) != \'\') or (ltrim(vtiger_account.email2) != \'\')) and (vtiger_account.emailoptout != 1)) and ';
+				else
+					$concat_qry = '((ltrim(vtiger_account.email1) != \'\') or (ltrim(vtiger_account.email2) != \'\')) and ';
+					
+				$query = 'select crmid,accountname as entityname,'.$columnlists.' from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid left join vtiger_accountscf on vtiger_accountscf.accountid = vtiger_account.accountid where vtiger_crmentity.deleted=0 and '.$concat_qry.' vtiger_crmentity.crmid in ('.$crmids.')';
+				break;
+		}
+		$result = $adb->query($query);
+		while($row = $adb->fetch_array($result))
+		{
+			$name = $row['entityname'];
+			for($i=0;$i<count($columns);$i++)
 			{
-				$idlists .= $row['crmid'].'@'.$fieldid[$i].'|'; 
-				$mailids .= $name.'<'.$row[$columns[$i]].'>,';	
+				if($row[$columns[$i]] != NULL && $row[$columns[$i]] !='')
+				{
+					$idlists .= $row['crmid'].'@'.$fieldid[$i].'|'; 
+					$mailids .= $name.'<'.$row[$columns[$i]].'>,';	
+				}
 			}
 		}
-	}
 
-	$return_data = Array('idlists'=>$idlists,'mailds'=>$mailids);
+		$return_data = Array('idlists'=>$idlists,'mailds'=>$mailids);
+	}else
+	{
+		$return_data = Array('idlists'=>"",'mailds'=>"");
+	}	
 	return $return_data;
 		
 }
+
+//added for attach the generated pdf with email
+function pdfAttach($obj,$module,$file_name,$id)
+{
+	global $log;
+	$log->debug("Entering into pdfAttach() method.");
+
+	global $adb, $current_user;
+	global $upload_badext;
+	$date_var = date('YmdHis');
+
+	$ownerid = $obj->column_fields['assigned_user_id'];
+	if(!isset($ownerid) || $ownerid=='')
+		$ownerid = $current_user->id;
+
+	$current_id = $adb->getUniqueID("vtiger_crmentity");
+
+	$upload_file_path = decideFilePath();
+
+	//Copy the file from temporary directory into storage directory for upload
+	$status = copy("storage/".$file_name,$upload_file_path.$current_id."_".$file_name);
+	//Check wheather the copy process is completed successfully or not. if failed no need to put entry in attachment table
+	if($status)
+	{
+		$query1 = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values(".$current_id.",".$current_user->id.",".$ownerid.",'".$module." Attachment','".$obj->column_fields['description']."',".$adb->formatString("vtiger_crmentity","createdtime",$date_var).",".$adb->formatString("vtiger_crmentity","modifiedtime",$date_var).")";
+		$adb->query($query1);
+
+		$query2="insert into vtiger_attachments(attachmentsid, name, description, type, path) values(".$current_id.",'".$file_name."','".$obj->column_fields['description']."','pdf','".$upload_file_path."')";
+		$result=$adb->query($query2);
+
+		$query3='insert into vtiger_seattachmentsrel values('.$id.','.$current_id.')';
+		$adb->query($query3);
+
+		return true;
+	}
+	else
+	{
+		$log->debug("pdf not attached");
+		return false;
+	}
+}
+
+
 ?>

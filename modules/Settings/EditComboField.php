@@ -18,11 +18,19 @@ $tableName=$_REQUEST["fieldname"];
 $moduleName=$_REQUEST["fld_module"];
 $uitype=$_REQUEST["uitype"];
 
+if(isset($_REQUEST['parentroleid']) && $_REQUEST['parentroleid']  != '')
+{
+	$roleid = $_REQUEST['parentroleid'];
+}
+else
+{
+	$roleid=$_REQUEST["roleid"];
+}
+
 
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 
@@ -35,7 +43,7 @@ else
 //To get the Editable Picklist Values 
 if($uitype != 111)
 {
-	$query = "select * from vtiger_".$tableName ;
+	$query = "select * from vtiger_$tableName inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid=vtiger_$tableName.picklist_valueid where roleid='$roleid' and  presence=1 order by sortid";
 	$result = $adb->query($query);
 	$fldVal='';
 
@@ -50,7 +58,7 @@ if($uitype != 111)
 }
 else
 {
-	$query = "select * from vtiger_".$tableName." where presence=0"; 
+	$query = "select * from vtiger_".$tableName." inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid=vtiger_$tableName.picklist_valueid where roleid='$roleid' and  presence=1 order by sortid"; 
 	$result = $adb->query($query);
 	$fldVal='';
 
@@ -64,10 +72,21 @@ else
 	}
 }
 
-//To get the Non Editable Picklist Entries
-if($uitype == 111) 
+
+if(isset($_REQUEST['parentroleid']) && $_REQUEST['parentroleid']!= '')
 {
-	$qry = "select * from vtiger_".$tableName." where presence=1"; 
+	echo '<textarea id="picklist" style="display:none;">'.$fldVal.'</textarea>';
+	echo '<script>window.opener.document.getElementById("picklist_values").value = document.getElementById("picklist").innerHTML;</script>';
+
+	echo '<script>window.close();</script>';
+	$roleid = $_REQUEST['parentroleid'];
+	die;
+}
+
+//To get the Non Editable Picklist Entries
+if($uitype == 111 || $uitype == 16) 
+{
+	$qry = "select * from vtiger_".$tableName." inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid=vtiger_$tableName.picklist_valueid where roleid='$roleid' and presence=0 order by sortid"; 
 	$res = $adb->query($qry);
 	$nonedit_fldVal='';
 
@@ -84,15 +103,15 @@ $query = 'select fieldlabel from vtiger_tab inner join vtiger_field on vtiger_ta
 $fieldlabel = $adb->query_result($adb->query($query),0,'fieldlabel'); 
 
 if($nonedit_fldVal == '')
-		$smarty->assign("EDITABLE_MODE","edit");
-	else
-		$smarty->assign("EDITABLE_MODE","nonedit");
+	$smarty->assign("EDITABLE_MODE","edit");
+else
+	$smarty->assign("EDITABLE_MODE","nonedit");
 $smarty->assign("NON_EDITABLE_ENTRIES", $nonedit_fldVal);
 $smarty->assign("ENTRIES",$fldVal);
 $smarty->assign("MODULE",$moduleName);
 $smarty->assign("FIELDNAME",$tableName);
 //First look into app_strings and then mod_strings and if not available then original label will be displayed
-$temp_label = isset($app_strings[$fieldlabel])?$app_strings[$fieldlabel]:(isset($mod_strings[$fieldlabel])?$mod_strings[$fieldlabel]:$fieldlabel);
+$temp_label = getTranslatedString($fieldlabel);
 $smarty->assign("FIELDLABEL",$temp_label);
 $smarty->assign("UITYPE", $uitype);
 $smarty->assign("MOD", return_module_language($current_language,'Settings'));

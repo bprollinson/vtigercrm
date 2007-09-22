@@ -16,7 +16,6 @@ $image_path=$theme_path."images/";
 
 require_once('data/CRMEntity.php');
 require_once('include/database/PearDatabase.php');
-//require_once($theme_path."layout_utils.php");
 // Require the xmlParser class
 //require_once('include/feedParser/xmlParser.php');
 
@@ -69,13 +68,17 @@ class vtigerRSS extends CRMEntity
 
 	function getListViewRSSHtml()
 	{
+		global $default_charset;
 		if(isset($this->rss_object))
 		{
 			$i = 0;
 			foreach($this->rss_object as $key=>$item)
 			{
+				$stringConvert = function_exists(iconv) ? @iconv("UTF-8",$default_charset,$item[title]) : $item[title];
+				$rss_title= addslashes(ltrim(rtrim($stringConvert)));
+				
 				$i = $i + 1;	   
-				$shtml .= "<tr class='prvPrfHoverOff' onmouseover=\"this.className='prvPrfHoverOn'\" onmouseout=\"this.className='prvPrfHoverOff'\"><td><a href=\"javascript:display('".$item[link]."','feedlist_".$i."')\"; id='feedlist_".$i."' class=\"rssNews\">".$item[title]."</a></td><td>".$this->rss_title."</td></tr>";
+				$shtml .= "<tr class='prvPrfHoverOff' onmouseover=\"this.className='prvPrfHoverOn'\" onmouseout=\"this.className='prvPrfHoverOff'\"><td><a href=\"javascript:display('".$item[link]."','feedlist_".$i."')\"; id='feedlist_".$i."' class=\"rssNews\">".$rss_title."</a></td><td>".$this->rss_title."</td></tr>";
 				if($i == 10)
 				{
 					return $shtml;

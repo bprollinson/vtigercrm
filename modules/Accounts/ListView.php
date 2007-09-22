@@ -16,7 +16,6 @@
 require_once('Smarty_setup.php');
 require_once("data/Tracker.php");
 require_once('modules/Accounts/Accounts.php');
-require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
@@ -110,7 +109,12 @@ if(isset($CActionDtls))
 {
 	$other_text['s_cmail'] = $app_strings[LBL_SEND_CUSTOM_MAIL_BUTTON];
 }
-
+// mailer export 
+if(isPermitted('Accounts','Export','') == 'yes')
+{
+  $other_text['mailer_exp'] = $mod_strings[LBL_MAILER_EXPORT];
+}
+// end of mailer export
 if($viewnamedesc['viewname'] == 'All')
 {
 	$smarty->assign("ALL", 'All');
@@ -144,7 +148,10 @@ if($viewid != "0")
 if(isset($where) && $where != '')
 {
 	$query .= ' and '.$where;
+	$_SESSION['export_where'] = $where;
 }
+else
+   unset($_SESSION['export_where']);
 
 $view_script = "<script language='javascript'>
 	function set_selected()
@@ -158,7 +165,19 @@ $view_script = "<script language='javascript'>
 	}
 	set_selected();
 	</script>";
-
+// mailer_export 
+if (isset($other_text['mailer_exp']))
+{
+  $view_script .= "<script language='javascript'>
+	function mailer_export()
+	{
+    document.massdelete.action.value=\"MailerExport\";
+    document.massdelete.step.value=\"ask\";
+    window.locate=\"index.php?module=Accounts&action=MailerExport&from=Accounts&step=ask\";
+	}
+	</script>";
+}
+// end of mailer export 
 if(isset($order_by) && $order_by != '')
 {	
 	if($order_by == 'smownerid')
@@ -177,9 +196,11 @@ if(isset($order_by) && $order_by != '')
                 $query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
         }
 }
+$_SESSION['tablename'] = $tablename;
+$_SESSION['order_by'] = $order_by;
+$_SESSION['sorder'] =$sorder;
 
 //Retreiving the no of rows
-
 $count_result = $adb->query( mkCountQuery( $query));
 $noofrows = $adb->query_result($count_result,0,"count");
 
@@ -203,6 +224,8 @@ $navigation_array = getNavigationValues($start, $noofrows, $list_max_entries_per
 $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
+$_SESSION['nav_start']=$start_rec;
+$_SESSION['nav_end']=$end_rec;
 
 //limiting the query
 if ($start_rec ==0) 
@@ -226,7 +249,6 @@ if(isset($ids))
 }
 if(isPermitted("Accounts","Merge") == 'yes') 
 {
-	$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"crmbutton small create\" onclick=\"return massMerge('Accounts')\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
 	$wordTemplateResult = fetchWordTemplateList("Accounts");
 	$tempCount = $adb->num_rows($wordTemplateResult);
 	$tempVal = $adb->fetch_array($wordTemplateResult);
@@ -235,8 +257,23 @@ if(isPermitted("Accounts","Merge") == 'yes')
 		$optionString .="<option value=\"".$tempVal["templateid"]."\">" .$tempVal["filename"] ."</option>";
 		$tempVal = $adb->fetch_array($wordTemplateResult);
 	}
-	$smarty->assign("WORDTEMPLATEOPTIONS","<td>".$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']."</td><td style=\"padding-left:5px;padding-right:5px\"><select class=\"small\" name=\"mergefile\">".$optionString."</select></td>");
+	if($tempCount > 0)
+	{
+		$smarty->assign("WORDTEMPLATEOPTIONS","<td>".$app_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']."</td><td style=\"padding-left:5px;padding-right:5px\"><select class=\"small\" name=\"mergefile\">".$optionString."</select></td>");
+
+		$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"crmbutton small create\" onclick=\"return massMerge('Accounts')\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
+	}
+	else
+        {
+		global $current_user;
+                require("user_privileges/user_privileges_".$current_user->id.".php");
+                if($is_admin == true)
+                {
+			$smarty->assign("MERGEBUTTON",'<td><a href=index.php?module=Settings&action=upload&tempModule='.$currentModule.'>'. $app_strings["LBL_CREATE_MERGE_TEMPLATE"].'</td>');
+                }
+        }
 }
+
 //mass merge for word templates
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
@@ -268,7 +305,7 @@ $smarty->assign("ALPHABETICAL", $alphabetical);
 $smarty->assign("NAVIGATION", $navigationOutput);
 $smarty->assign("RECORD_COUNTS", $record_string);
 
-$check_button = Button_Check($module);
+$check_button = Button_Check($module); 
 $smarty->assign("CHECK", $check_button);
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')

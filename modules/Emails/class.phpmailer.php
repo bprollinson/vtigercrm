@@ -33,7 +33,7 @@ class PHPMailer
      * Sets the CharSet of the message.
      * @var string
      */
-    var $CharSet           = "iso-8859-1";
+    var $CharSet           = "UTF-8";
 
     /**
      * Sets the Content-type of the message.
@@ -366,13 +366,13 @@ class PHPMailer
         switch($this->Mailer)
         {
              case "sendmail":
-                $result = $this->SendmailSend($header, html_entity_decode($body));
+                $result = $this->SendmailSend($header, html_entity_decode($body,ENT_COMPAT,$this->CharSet));
                 break;
             case "mail":
-                $result = $this->MailSend($header, html_entity_decode($body));
+                $result = $this->MailSend($header, html_entity_decode($body,ENT_COMPAT,$this->CharSet));
                 break;
             case "smtp":
-                $result = $this->SmtpSend($header, html_entity_decode($body));
+                $result = $this->SmtpSend($header, html_entity_decode($body,ENT_COMPAT,$this->CharSet));
                 break;
             default:
             $this->SetError($this->Mailer . $this->Lang("mailer_not_supported"));

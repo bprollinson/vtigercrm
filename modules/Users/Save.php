@@ -34,7 +34,7 @@ if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check'] != '')
         $result = $adb->query($query);
         if($adb->num_rows($result) > 0)
         {
-		echo 'User Name Already Exists!';
+		echo $mod_strings['LBL_USERNAME_EXIST'];
 		die;
 	}else
 	{
@@ -98,11 +98,15 @@ if(! $_REQUEST['changepassword'] == 'true')
 	//Code contributed by mike crowe for rearrange the home page and tab
 	if (!isset($_POST['deleted'])) $_REQUEST["deleted"] = '0';
 	if (!isset($_POST['homeorder']) || $_POST['homeorder'] == "" ) $_REQUEST["homeorder"] = 'ILTI,QLTQ,ALVT,PLVT,CVLVT,HLT,OLV,GRT,OLTSO';
-
-	setObjectValuesFromRequest(&$focus);
+	if(isset($_REQUEST['internal_mailer']) && $_REQUEST['internal_mailer'] == 'on')
+		$focus->column_fields['internal_mailer'] = 1;
+	else
+		$focus->column_fields['internal_mailer'] = 0;
+	setObjectValuesFromRequest($focus);
 	$focus->saveentity("Users");
 	//$focus->imagename = $image_upload_array['imagename'];
 	$focus->saveHomeOrder($focus->id);
+	SaveTagCloudView($focus->id);
 	$return_id = $focus->id;
 
 if (isset($_POST['user_name']) && isset($_POST['new_password'])) {
@@ -157,12 +161,40 @@ if(isset($_POST['parenttab'])) $parenttab = $_POST['parenttab'];
 
 $log->debug("Saved record with id of ".$return_id);
 
+//Asha: Added Check to see if the mode is User Creation and if yes, then sending the email notification to the User with Login details.
+if($_REQUEST['mode'] == 'create') {
+	global $app_strings, $mod_strings;
+	require_once('modules/Emails/mail.php');
+    $user_emailid = $focus->column_fields['email1'];	
+	
+	$subject = $mod_strings['User Login Details'];
+	$email_body = $app_strings['MSG_DEAR']." ". $focus->column_fields['last_name'] .",<br><br>";
+	$email_body .= $app_strings['LBL_PLEASE_CLICK'] . " <a href='" . $site_URL . "' target='_blank'>" 
+								. $app_strings['LBL_HERE'] . "</a> " . $mod_strings['LBL_TO_LOGIN'] . "<br><br>";
+	$email_body .= $mod_strings['LBL_USER_NAME'] . " : " . $focus->column_fields['user_name'] . "<br>";
+	$email_body .= $mod_strings['LBL_PASSWORD'] . " : " . $focus->column_fields['user_password'] . "<br>";
+    $email_body .= $mod_strings['LBL_ROLE_NAME'] . " : " . getRoleName($_POST['user_role']) . "<br>";	
+	
+	$email_body .= "<br>" . $app_strings['MSG_THANKS'] . "<br>" . $current_user->user_name;
+	
+	$mail_status = send_mail('Users',$user_emailid,$HELPDESK_SUPPORT_NAME,$HELPDESK_SUPPORT_EMAIL_ID,$subject,$email_body);
+	
+	if($mail_status != 1) {
+		$mail_status_str = $user_emailid."=".$mail_status."&&&";		
+		$error_str = getMailErrorString($mail_status_str);
+	}
+}
+$location = "Location: index.php?action=$return_action&module=$return_module&record=$return_id";
 
+if($_REQUEST['modechk'] != 'prefview') {
+	$location .= "&parenttab=$parenttab";
+}
 
-if($_REQUEST['modechk'] == 'prefview')
-	header("Location: index.php?action=$return_action&module=$return_module&record=$return_id");
-else
-	header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&parenttab=$parenttab");
+if ($error_str != '') {	
+    $user = $focus->column_fields['user_name'];
+	$location .= "&user=$user&$error_str";
+}
 
+header($location);
 
 ?>

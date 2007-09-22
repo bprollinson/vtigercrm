@@ -64,8 +64,6 @@ $comboFieldNames = Array('accounttype'=>'account_type_dom'
 $comboFieldArray = getComboArray($comboFieldNames);
 
 
-require_once($theme_path.'layout_utils.php');
-
 $log->info("Account detail view");
 
 
@@ -110,6 +108,7 @@ $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("DUPLICATE",$_REQUEST['isDuplicate'] );
  
 if ($focus->mode == 'edit')
 $smarty->display('salesEditView.tpl');

@@ -15,7 +15,6 @@ require_once("data/Tracker.php");
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/ComboUtil.php');
-require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
 require_once('include/database/Postgres8.php');
@@ -98,7 +97,6 @@ if($viewnamedesc['viewname'] == 'All')
 	$smarty->assign("ALL", 'All');
 }
 
-$customview= get_form_header($current_module_strings['LBL_LIST_FORM_TITLE'],$other_text, false);
 $smarty->assign("CUSTOMVIEW_OPTION",$customviewcombo_html);
 $smarty->assign("VIEWID", $viewid);
 $smarty->assign("MOD", $mod_strings);
@@ -133,8 +131,8 @@ if(isset($order_by) && $order_by != '')
 	if($order_by == 'smownerid')
 	{
 		if( $adb->dbType == "pgsql")
- 		    $list_query .= ' GROUP BY vtiger_users.user_name';
-		$list_query .= ' ORDER BY vtiger_users.user_name '.$sorder;
+ 		    $list_query .= ' GROUP BY user_name';
+		$list_query .= ' ORDER BY user_name '.$sorder;
 	}
 	else
 	{

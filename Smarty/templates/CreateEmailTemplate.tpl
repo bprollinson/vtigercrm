@@ -24,7 +24,6 @@
     {ldelim}
         var selected = cause.options[cause.selectedIndex].value;  id="mergeFieldValue"
         var s = allOptions[cause.selectedIndex];
-            
         effect.length = s;
         for (var i = 0; i < s; i++) 
 	{ldelim}
@@ -39,7 +38,7 @@
         var allOpts = new Object(0);
         var options = null;
             
-	    options = new Object(19);
+	    options = new Object(10);
             options[0] = blankOption;
             
                 
@@ -55,7 +54,7 @@
             
 	        allOpts[1] = options;
         
-            options = new Object(11);
+            options = new Object(9);
             options[0] = blankOption;
                 
                 options[1] = new Option('Contact: First Name', '$contacts-firstname$'); 
@@ -64,15 +63,13 @@
                 options[4] = new Option('Contact: Title', '$contacts-title$'); 
                 options[5] = new Option('Contact: Email', '$contacts-email$'); 
                 options[6] = new Option('Contact: Department', '$contacts-department$'); 
-                options[7] = new Option('Contact: Other Email','$contacts-otheremail$'); 
-                options[8] = new Option('Contact: Phone', '$contacts-phone$'); 
-                options[9] = new Option('Contact: Mobile', '$contacts-mobile$'); 
-                options[10] = new Option('Contact: Currency', '$contacts-currency$'); 
+                options[7] = new Option('Contact: Office Phone', '$contacts-phone$'); 
+                options[8] = new Option('Contact: Mobile', '$contacts-mobile$'); 
                             
             allOpts[2] = options;
         
             
-            options = new Object(19);
+            options = new Object(12);
             options[0] = blankOption;
             
                 
@@ -90,7 +87,7 @@
             
 	        allOpts[3] = options;
 
-	        options = new Object(19);
+	        options = new Object(14);
                 options[0] = blankOption;
             
                 options[1] = new Option('User: First Name', '$users-first_name$'); 
@@ -100,12 +97,12 @@
 		options[5] = new Option('User: HomePhone', '$users-phone_home$'); 
 		options[6] = new Option('User: Mobile', '$users-phone_mobile$'); 
 		options[7] = new Option('User: Signature', '$users-signature$'); 
-		options[8] = new Option('User: Email', '$users-email$'); 
+		options[8] = new Option('User: Email', '$users-email1$'); 
 		options[9] = new Option('User: Street', '$users-address_street$'); 
 		options[10] = new Option('User: City', '$users-address_city$'); 
 		options[11] = new Option('User: State', '$users-address_state$'); 
-		options[11] = new Option('User: Country', '$users-address_country$'); 
-		options[11] = new Option('User: PostalCode', '$users-address_postalcode$'); 
+		options[12] = new Option('User: Country', '$users-address_country$'); 
+		options[13] = new Option('User: PostalCode', '$users-address_postalcode$'); 
             
             	allOpts[4] = options;
 	    
@@ -135,15 +132,15 @@
 				<form action="index.php" method="post" name="templatecreate" onsubmit="return check4null(templatecreate);">  
 				<input type="hidden" name="action">
 				<input type="hidden" name="mode" value="{$EMODE}">
-				<input type="hidden" name="module" value="Users">
+				<input type="hidden" name="module" value="Settings">
 				<input type="hidden" name="templateid" value="{$TEMPLATEID}">
 				<input type="hidden" name="parenttab" value="PARENTTAB}">
 				<tr>
-					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ViewTemplate.gif" alt="Users" width="45" height="60" border=0 title="Users"></td>
+					<td width=50 rowspan=2 valign=top><img src="{$IMAGE_PATH}ViewTemplate.gif" alt="{$MOD.LBL_MODULE_NAME}" width="45" height="60" border=0 title="{$MOD.LBL_MODULE_NAME}"></td>
 				{if $EMODE eq 'edit'}
-					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_EDIT} &quot;{$TEMPLATENAME}&quot; </b></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Settings&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_EDIT} &quot;{$TEMPLATENAME}&quot; </b></td>
 				{else}
-					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_CREATE_EMAIL_TEMPLATES} </b></td>
+					<td class=heading2 valign=bottom><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Settings&action=listemailtemplates&parenttab=Settings">{$UMOD.LBL_EMAIL_TEMPLATES}</a> &gt; {$MOD.LBL_CREATE_EMAIL_TEMPLATES} </b></td>
 				{/if}
 					
 				</tr>
@@ -223,35 +220,64 @@
                                 <td width="85%" colspan="2" class="cellText small"><span class="small cellText">
                                   <input name="subject" type="text" value="{$SUBJECT}" class="detailedViewTextBox" tabindex="4">
                                 </span></td>
+                              </tr> 
+
+
+
+
+                             <tr>
+                              
+                                <td width="15%"  class="cellLabel small" valign="center">{$UMOD.LBL_SELECT_FIELD_TYPE}</td>
+                                <td width="85%" colspan="2" class="cellText small">
+
+		<table>
+			<tr>
+				<td>{$UMOD.LBL_STEP}1
+				<td>
+			
+				<td style="border-left:2px dotted #cccccc;">{$UMOD.LBL_STEP}2
+				<td>
+
+				<td style="border-left:2px dotted #cccccc;">{$UMOD.LBL_STEP}3
+				<td>
+			</tr>
+			
+			<tr>
+				<td>
+
+					<select style="font-family: Arial, Helvetica, sans-serif;font-size: 11px;color: #000000;border:1px solid #bababa;padding-left:5px;background-color:#ffffff;" id="entityType" ONCHANGE="modifyMergeFieldSelect(this, document.getElementById('mergeFieldSelect'));" tabindex="6">
+                                        <OPTION VALUE="0" selected>{$APP.LBL_NONE}
+                                        <OPTION VALUE="1">{$UMOD.LBL_ACCOUNT_FIELDS}                           
+                                        <OPTION VALUE="2">{$UMOD.LBL_CONTACT_FIELDS}
+                                        <OPTION VALUE="3" >{$UMOD.LBL_LEAD_FIELDS}
+                                        <OPTION VALUE="4" >{$UMOD.LBL_USER_FIELDS}
+                                        </select>
+				<td>
+			
+				<td style="border-left:2px dotted #cccccc;">
+					<select style="font-family: Arial, Helvetica, sans-serif;font-size: 11p
+x;color: #000000;border:1px solid #bababa;padding-left:5px;background-color:#ffffff;" id="mergeFieldSelect" onchange="document.getElementById('mergeFieldValue').value=this.options[this.selectedIndex].value;" tabindex="7"><option value="0" selected>{$APP.LBL_NONE}</select>	
+				<td>
+
+				<td style="border-left:2px dotted #cccccc;">	
+
+					<input type="text"  id="mergeFieldValue" name="variable" value="variable" style="font-family: Arial, Helvetica, sans-serif;font-size: 11px;color: #000000;border:1px solid #bababa;padding-left:5px;background-color:#ffffdd;" tabindex="8"/>
+				<td>
+			</tr>
+
+		</table>
+			
+
+				</td>
                               </tr>
+
+
+
+
+
                               <tr>
                                 <td valign="top" width=10% class="cellLabel small">{$UMOD.LBL_MESSAGE}</td>
-                                 <td valign="top" width=60% class="cellText small"><p><textarea name="body" style="width:90%;height:200px" class=small tabindex="5">{$BODY}</textarea></p>
-                                    </td>
-                                <td valign="top" width=30% class="cellText small" style="border-left:2px dotted #cccccc;"><table width="100%"  border="0" cellspacing="0" cellpadding="5" >
-                                  <tr>
-                                    <td class="small"><strong>{$UMOD.LBL_MERGE_FIELDS}<br>
-                                    </strong>{$UMOD.LBL_USE_MERGE_FIELDS_TO_EMAIL_CONTENT}</td>
-                                  </tr>
-                                  <tr>
-                                    <td class="small" nowrap><strong>{$UMOD.LBL_STEP} 1. {$UMOD.LBL_SELECT_FIELD_TYPE}</strong></td>
-                                  </tr>
-				<tr><td><select class="detailedViewTextBox" id="entityType" ONCHANGE="modifyMergeFieldSelect(this, document.getElementById('mergeFieldSelect'));" tabindex="6">
-					<OPTION VALUE="0" selected>{$APP.LBL_NONE}                            
-					<OPTION VALUE="1">{$UMOD.LBL_ACCOUNT_FIELDS}                            
-                        	        <OPTION VALUE="2">{$UMOD.LBL_CONTACT_FIELDS}
-                      			<OPTION VALUE="3" >{$UMOD.LBL_LEAD_FIELDS}
-               				<OPTION VALUE="4" >{$UMOD.LBL_USER_FIELDS}
-					</select></td></tr>
-                                  <tr>
-                                    <td class="small"><strong>{$UMOD.LBL_STEP} 2. {$UMOD.LBL_SELECT_FIELD} </strong></td>
-                                  </tr>
-					<tr><td><select class="detailedViewTextBox" id="mergeFieldSelect" onchange="document.getElementById('mergeFieldValue').value=this.options[this.selectedIndex].value;" tabindex="7"><option value="0" selected>{$APP.LBL_NONE}</select></td></tr>
-                                  <tr>
-                                    <td class="small"><strong>{$UMOD.LBL_STEP} 3. {$UMOD.LBL_COPY_PASTE} </strong></td>
-                                  </tr>
-					<tr><td><input type="text"  id="mergeFieldValue" name="variable" value="variable" class="detailedViewTextBoxOn" tabindex="8"/></td></tr>
-                                </table></td>
+                                 <td valign="top" colspan="2" width=60% class="cellText small"><p><textarea name="body" style="width:90%;height:200px" class=small tabindex="5">{$BODY}</textarea></p>
                               </tr>
                           </table></td>
                           
@@ -267,7 +293,7 @@
 					</table>
 				</td>
 				</tr>
-				</table>
+				</table>	
 			
 			
 			
@@ -286,6 +312,19 @@
    </tr>
 </tbody>
 </table>
+
+<script type="text/javascript" src="include/fckeditor/fckeditor.js"></script>
+       <script type="text/javascript" defer="1">
+
+       var oFCKeditor = null;
+
+                      oFCKeditor = new FCKeditor( "body" ) ;
+       
+       oFCKeditor.BasePath   = "include/fckeditor/" ;
+       oFCKeditor.ReplaceTextarea() ;
+
+       </script>
+
 <script>
 
 function check4null(form)
@@ -312,7 +351,7 @@ function check4null(form)
 
         // Here we decide whether to submit the form.
         if (isError == true) {ldelim}
-                alert("Missing required fields: " + errorMessage);
+                alert("{$APP.MISSING_FIELDS}" + errorMessage);
                 return false;
         {rdelim}
  return true;

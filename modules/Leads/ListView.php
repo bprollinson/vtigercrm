@@ -20,7 +20,6 @@
 require_once('Smarty_setup.php');
 require_once("data/Tracker.php");
 require_once('modules/Leads/Leads.php');
-require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
@@ -46,7 +45,6 @@ $comboFieldArray = getComboArray($comboFieldNames);
 $category = getParentTab();
 
 if (!isset($where)) $where = "";
-
 $url_string = ''; // assigning http url string
 
 $focus = new Leads();
@@ -134,7 +132,6 @@ if($viewnamedesc['viewname'] == 'All')
 }
 
 
-$custom= get_form_header($current_module_strings['LBL_LIST_FORM_TITLE'],$other_text, false);
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -163,10 +160,25 @@ if($viewid != "0")
 
 if(isset($where) && $where != '')
 {
-        $query .= ' and '.$where;
+	//$query .= ' and '.$where;
+	//$_SESSION['export_where'] = $where;
+	if(isset($_REQUEST['from_dashboard']) && $_REQUEST['from_dashboard'] == 'true')
+	{
+		$query .= "AND vtiger_leaddetails.leadstatus = '".$mod_strings['Lost Lead']."' AND ".$where;
+	}
+	elseif(isset($_REQUEST['from_homepagedb']) && $_REQUEST['from_homepagedb'] == 'true')
+	{
+		$query .= "AND vtiger_leaddetails.leadstatus not in( '".$mod_strings['Lost Lead']."')AND ".$where;
+	}
+	else
+	{	
+		$query .= " AND ".$where;
+	}
+	$_SESSION['export_where'] = $where;
 }
-
-
+else 
+	unset($_SESSION['export_where']);
+/*
 if(isset($order_by) && $order_by != '')
 {
 	$tablename = getTableNameForField('Leads',$order_by);
@@ -177,6 +189,27 @@ if(isset($order_by) && $order_by != '')
 	
         $query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
 }
+*/
+if(isset($order_by) && $order_by != '')
+{
+	if($order_by == 'smownerid')
+	{
+		$query .= ' ORDER BY user_name '.$sorder;
+	}
+	else
+	{
+		$tablename = getTableNameForField('Leads',$order_by);
+		$tablename = (($tablename != '')?($tablename."."):'');
+		if( $adb->dbType == "pgsql")
+			$query .= ' GROUP BY '.$tablename.$order_by;
+
+
+		$query .= ' ORDER BY '.$tablename.$order_by.' '.$sorder;
+	}
+}
+$_SESSION['tablename'] = $tablename;
+$_SESSION['order_by'] = $order_by;
+$_SESSION['sorder'] =$sorder;
 
 //Retreiving the no of rows
 $count_result = $adb->query( mkCountQuery( $query));
@@ -221,7 +254,6 @@ if(isset($ids))
 }
 if(isPermitted("Leads","Merge") == 'yes') 
 {
-	$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"crmbutton small create\" onclick=\"return massMerge('Leads')\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
 	$wordTemplateResult = fetchWordTemplateList("Leads");
 	$tempCount = $adb->num_rows($wordTemplateResult);
 	$tempVal = $adb->fetch_array($wordTemplateResult);
@@ -230,7 +262,23 @@ if(isPermitted("Leads","Merge") == 'yes')
 		$optionString .="<option value=\"".$tempVal["templateid"]."\">" .$tempVal["filename"] ."</option>";
 		$tempVal = $adb->fetch_array($wordTemplateResult);
 	}
-	$smarty->assign("WORDTEMPLATEOPTIONS","<td>".$mod_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']."</td><td style=\"padding-left:5px;padding-right:5px\"><select class=\"small\" name=\"mergefile\">".$optionString."</select></td>");
+	if($tempCount > 0)
+	{
+		$smarty->assign("WORDTEMPLATEOPTIONS","<td>".$mod_strings['LBL_SELECT_TEMPLATE_TO_MAIL_MERGE']."</td><td style=\"padding-left:5px;padding-right:5px\"><select class=\"small\" name=\"mergefile\">".$optionString."</select></td>");
+
+		$smarty->assign("MERGEBUTTON","<td><input title=\"$app_strings[LBL_MERGE_BUTTON_TITLE]\" accessKey=\"$app_strings[LBL_MERGE_BUTTON_KEY]\" class=\"crmbutton small create\" onclick=\"return massMerge('Leads')\" type=\"submit\" name=\"Merge\" value=\" $app_strings[LBL_MERGE_BUTTON_LABEL]\"></td>");
+	}
+	else
+        {
+		global $current_user;
+                require("user_privileges/user_privileges_".$current_user->id.".php");
+                if($is_admin == true)
+                {
+			$smarty->assign("MERGEBUTTON",'<td><a href=index.php?module=Settings&action=upload&tempModule='.$currentModule.'>'. $app_strings["LBL_CREATE_MERGE_TEMPLATE"].'</td>');
+                }
+        }
+
+
 }
 //mass merge for word templates
 
@@ -239,6 +287,8 @@ if(isPermitted("Leads","Merge") == 'yes')
 $start_rec = $navigation_array['start'];
 $end_rec = $navigation_array['end_val']; 
 //By Raju Ends
+$_SESSION['nav_start']=$start_rec;
+$_SESSION['nav_end']=$end_rec;
 
 //limiting the query
 if ($start_rec ==0) 

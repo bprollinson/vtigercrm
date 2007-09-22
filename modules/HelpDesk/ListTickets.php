@@ -24,7 +24,7 @@ function getMyTickets()
 	$theme_path="themes/".$theme."/";
 	$image_path=$theme_path."images/";
 
-	$search_query="select vtiger_troubletickets.ticketid, parent_id, priority, vtiger_troubletickets.status, category, vtiger_troubletickets.title, vtiger_troubletickets.description, update_log, version_id,
+	$search_query="select vtiger_troubletickets.ticketid, parent_id, priority, vtiger_troubletickets.status, category, vtiger_troubletickets.title, vtiger_crmentity.description, update_log, version_id,
 vtiger_crmentity.createdtime, vtiger_crmentity.modifiedtime, 
 vtiger_contactdetails.firstname, vtiger_contactdetails.lastname, 
 vtiger_account.accountid, vtiger_account.accountname, 
@@ -59,7 +59,7 @@ vtiger_users.user_name from
 		{
 			$value=array();
 			$ticketid = $adb->query_result($tktresult,$i,"ticketid");
-			$value[]= '<a href="index.php?action=DetailView&module=HelpDesk&record='.$adb->query_result($tktresult,$i,"ticketid").'">'.$adb->query_result($tktresult,$i,"title").'</a>';
+			$value[]= '<a href="index.php?action=DetailView&module=HelpDesk&record='.$adb->query_result($tktresult,$i,"ticketid").'">'.substr($adb->query_result($tktresult,$i,"title"),0,20).'...'.'</a>';
 			$value[]=$ticketid;
 
 			$parent_id = $adb->query_result($tktresult,$i,"parent_id");

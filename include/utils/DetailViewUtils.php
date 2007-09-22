@@ -50,11 +50,10 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 	$label_fld = Array();
 	$data_fld = Array();
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
+	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	if($generatedtype == 2)
 		$mod_strings[$fieldlabel] = $fieldlabel;
 
-        if($col_fields[$fieldname]=='--None--')
-                $col_fields[$fieldname]='';
 	if($uitype == 99)
 	{
 		$label_fld[] = $mod_strings[$fieldlabel];
@@ -94,17 +93,48 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		$label_fld[] = $mod_strings[$fieldlabel];
 		$label_fld[] = $col_fields[$fieldname];
 	}
-	elseif($uitype == 15 || $uitype == 16 || $uitype == 115 || $uitype == 111) //uitype 111 added for non editable picklist - ahmed
+	elseif($uitype == 15 || $uitype == 16 || $uitype == 111) //uitype 111 added for non editable picklist - ahmed
 	{
-	     $label_fld[] = $mod_strings[$fieldlabel];
-	     $label_fld[] = $col_fields[$fieldname];
-	     
-		$pick_query="select * from vtiger_".$fieldname;
+		$label_fld[] = $mod_strings[$fieldlabel];
+		$label_fld[] = $col_fields[$fieldname];
+		$roleid=$current_user->roleid;
+		//here we are checking whether the table contains the sortorder column .If  sortorder is present in the main picklist table, then the role2picklist will be applicable for this table... 
+
+		$sql="select * from vtiger_$fieldname";
+		$result = $adb->query($sql);
+		$nameArray = $adb->fetch_array($result);
+		while($row = $adb->fetch_array($result))
+		{
+			$sortid = $row['sortorderid'];
+		}
+		 if ($uitype == 111)
+		  {
+			  $pickListValue = $mod_strings[$pickListValue];
+		    }
+
+		$subrole = getRoleSubordinates($roleid);	
+		if(count($subrole)> 0)
+		{
+			$roleids = implode("','",$subrole);
+			$roleids = $roleids."','".$roleid;
+		}
+		else
+		{
+			$roleids = $roleid;
+		}
+		if($is_admin || $sortid != '')
+		{
+			$pick_query="select $fieldname from vtiger_$fieldname";
+		}else
+		{
+			$pick_query="select distinct $fieldname from vtiger_$fieldname inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid = vtiger_$fieldname.picklist_valueid where roleid in ('$roleids') and picklistid in (select picklistid from vtiger_$fieldname) order by $fieldname asc";
+		}	
 		$pickListResult = $adb->query($pick_query);
 		$noofpickrows = $adb->num_rows($pickListResult);
 
 		//Mikecrowe fix to correctly default for custom pick lists
 		$options = array();
+		$count=0;
 		$found = false;
 		for($j = 0; $j < $noofpickrows; $j++)
 		{
@@ -113,22 +143,74 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 			if($col_fields[$fieldname] == $pickListValue)
 			{
 				$chk_val = "selected";	
+				$count++;
 				$found = true;
 			}
 			else
 			{	
 				$chk_val = '';
 			}
-			$options[] = array($pickListValue=>$chk_val );	
+			$options[] = array(getTranslatedString($pickListValue),$pickListValue,$chk_val );	
+		}
+		if($count == 0 && $col_fields[$fieldname] != '')
+		{
+			$options[] =  array($app_strings['LBL_NOT_ACCESSIBLE'],$col_fields[$fieldname],'selected');
+		}
+
+
+		$label_fld ["options"] = $options;
+	}
+	elseif($uitype == 115)
+	{
+		$label_fld[] = $mod_strings[$fieldlabel];
+		$label_fld[] = $col_fields[$fieldname];
+
+		$pick_query="select * from vtiger_".$fieldname;
+		$pickListResult = $adb->query($pick_query);
+		$noofpickrows = $adb->num_rows($pickListResult);
+		$options = array();
+		$found = false;
+		for($j = 0; $j < $noofpickrows; $j++)
+		{
+			$pickListValue=$adb->query_result($pickListResult,$j,strtolower($fieldname));
+
+			if($col_fields[$fieldname] == $pickListValue)
+			{
+				$chk_val = "selected";
+				$found = true;
+			}
+			else
+			{
+				$chk_val = '';
+			}
+			$options[] = array($pickListValue=>$chk_val );
 		}
 		$label_fld ["options"] = $options;
 	}
 	elseif($uitype == 33) //uitype 33 added for multiselector picklist - Jeri
 	{
-	     $label_fld[] = $mod_strings[$fieldlabel];
-	     $label_fld[] = str_ireplace(' |##| ',', ',$col_fields[$fieldname]);
-	     
-		$pick_query="select * from vtiger_".$fieldname;
+		$roleid=$current_user->roleid;
+		$subrole = getRoleSubordinates($roleid);
+		if(count($subrole)> 0)
+		{
+			$roleids = implode("','",$subrole);
+			$roleids = $roleids."','".$roleid;
+		}
+		else
+		{
+			$roleids = $roleid;
+		}
+		$editview_label[]=$mod_strings[$fieldlabel];
+		if($is_admin)
+		{
+			$pick_query="select $fieldname from vtiger_$fieldname";
+		}else
+		{
+			$pick_query="select distinct $fieldname from vtiger_$fieldname inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid = vtiger_$fieldname.picklist_valueid where roleid in ('$roleids') and picklistid in (select picklistid from vtiger_$fieldname) order by $fieldname asc";
+		}
+		$label_fld[] = $mod_strings[$fieldlabel];
+		$label_fld[] = str_ireplace(' |##| ',', ',$col_fields[$fieldname]);
+
 		$pickListResult = $adb->query($pick_query);
 		$noofpickrows = $adb->num_rows($pickListResult);
 
@@ -138,16 +220,38 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		for($j = 0; $j < $noofpickrows; $j++)
 		{
 			$pickListValue = $adb->query_result($pickListResult,$j,strtolower($fieldname));
-      $chk_val = '';
-      foreach($selected_entries as $selected_entries_value)
-      {
-        if(trim($selected_entries_value) == trim($pickListValue))
-        {
-          $chk_val = 'selected';
-          break;
-        }
-      }
-			$options[] = array($pickListValue=>$chk_val);	
+			$chk_val = '';
+			foreach($selected_entries as $selected_entries_value)
+			{
+				if(trim($selected_entries_value) == trim($pickListValue))
+				{
+					$chk_val = 'selected';
+					break;
+				}
+				else
+				{
+					$chk_val = '';
+				}
+			}
+			$options[] = array($pickListValue,$pickListValue,$chk_val);	
+		}
+		foreach($selected_entries as $selected_entries_value)
+		{
+			$mul_count =0;
+			$options_length = count($options);
+			for($j=0;$j<$options_length;$j++)
+			{
+				if(in_array($selected_entries_value,$options[$j]))
+				{
+					$mul_count++;
+				}
+
+			}
+			if($mul_count == 0 && $options_length > 0)
+			{
+				$options[]=array($app_strings['LBL_NOT_ACCESSIBLE'],trim($selected_entries_value),'selected');
+			}
+			$mul_count=0;
 		}
 		$label_fld ["options"] = $options;
 	}
@@ -159,7 +263,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 	}
 	elseif($uitype == 19)
 	{
-		$col_fields[$fieldname]= make_clickable(str_replace("&lt;br /&gt;","<br>",nl2br($col_fields[$fieldname])));
+		$col_fields[$fieldname]= str_replace("&lt;br /&gt;","<br>",$col_fields[$fieldname]);
 		$label_fld[] = $mod_strings[$fieldlabel];
 		$label_fld[] = $col_fields[$fieldname];
 	}
@@ -187,6 +291,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		$label_fld[] = $mod_strings[$fieldlabel];
 		$user_id = $col_fields[$fieldname];
 		$user_name = getUserName($user_id);
+		$assigned_user_id = $current_user->id;
 		if(is_admin($current_user))
 		{
 			$label_fld[] ='<a href="index.php?module=Users&action=DetailView&record='.$user_id.'">'.$user_name.'</a>';
@@ -195,6 +300,16 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		{
 			$label_fld[] =$user_name;
 		}
+		if($is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[getTabid($module)] == 3 or $defaultOrgSharingPermission[getTabid($module)] == 0))
+		{
+			$users_combo = get_select_options_array(get_user_array(FALSE, "Active", $assigned_user_id,'private'), $assigned_user_id);
+		}
+		else
+		{
+			$users_combo = get_select_options_array(get_user_array(FALSE, "Active", $user_id), $assigned_user_id);
+		}
+		$label_fld ["options"] = $users_combo;
+
 	}
 	elseif($uitype == 53)
 	{
@@ -222,7 +337,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 			$label_fld["secid"][] = $user_id;
 			$label_fld["link"][] = "index.php?module=Users&action=DetailView&record=".$user_id;
 			$label_fld["secid"][] = $groupid;
-			$label_fld["link"][] = "index.php?module=Users&action=GroupDetailView&groupId=".$groupid;
+			$label_fld["link"][] = "index.php?module=Settings&action=GroupDetailView&groupId=".$groupid;
 		}
 		//Security Checks
 		if($fieldlabel == 'Assigned To' && $is_admin==false && $profileGlobalPermission[2] == 1 && ($defaultOrgSharingPermission[getTabid($module)] == 3 or $defaultOrgSharingPermission[getTabid($module)] == 0))
@@ -317,14 +432,58 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
            {
                    $label_fld[] =$mod_strings[$fieldlabel];
            }
-           $value = $col_fields[$fieldname];
+		$value = $col_fields[$fieldname];
+		$roleid=$current_user->roleid;
+		$subrole = getRoleSubordinates($roleid);
+		if(count($subrole)> 0)
+		{
+			$roleids = implode("','",$subrole);
+			$roleids = $roleids."','".$roleid;
+		}
+		else
+		{
+			$roleids = $roleid;
+		}
+		if($is_admin)
+		{
+			$pick_query="select salutationtype from vtiger_salutationtype";
+		}
+		else
+		{
+			$pick_query="select * from vtiger_salutationtype left join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid=vtiger_salutationtype.picklist_valueid where picklistid in (select picklistid from vtiger_picklist where name='salutationtype') and roleid='".$current_user->roleid."' order by sortid";
+		}
+		$pickListResult = $adb->query($pick_query);
+		$noofpickrows = $adb->num_rows($pickListResult);
+		$sal_value = $col_fields["salutationtype"];
+		$salcount =0;
+		for($j = 0; $j < $noofpickrows; $j++)
+		{
+			$pickListValue=$adb->query_result($pickListResult,$j,"salutationtype");
+
+			if($sal_value == $pickListValue)
+			{
+				$chk_val = "selected";
+				$salcount++;
+			}
+			else
+			{
+				$chk_val = '';
+			}
+		}
+		if($salcount == 0 && $sal_value != '')
+		{
+			$notacc =  $app_strings['LBL_NOT_ACCESSIBLE'];
+		}
            $sal_value = $col_fields["salutationtype"];
            if($sal_value == '--None--')
            {
                    $sal_value='';
-           }
-          $label_fld["salut"] = $sal_value;
-          $label_fld[] = $value;
+	   }
+	   if($notacc == '')
+	   	$label_fld["salut"] = $sal_value;
+	   else
+	   	$label_fld["salut"] = $notacc;
+	   $label_fld[] = $value;
 		//$label_fld[] =$sal_value.' '.$value;
         }
 	elseif($uitype == 56)
@@ -338,7 +497,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		}
 		else
 		{
-			$display_val = '';
+			$display_val = $app_strings['no'];
 		}
 		$label_fld[] = $display_val;
 	}
@@ -454,7 +613,11 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 				$label_fld[] =$image_lists;
 			}elseif(count($image_array)==1)
 			{
-				$label_fld[] ='<img src="'.$imagepath_array[0].$image_id_array[0]."_".$image_array[0].'" border="0" width="450" height="300">';
+				list($pro_image_width, $pro_image_height) = getimagesize($imagepath_array[0].$image_id_array[0]."_".$image_array[0]);
+				if($pro_image_width  > 450 ||  $pro_image_height > 300)
+					$label_fld[] ='<img src="'.$imagepath_array[0].$image_id_array[0]."_".$image_array[0].'" border="0" width="450" height="300">';
+				else
+				$label_fld[] ='<img src="'.$imagepath_array[0].$image_id_array[0]."_".$image_array[0].'" border="0" width="'.$pro_image_width.'" height="'.$pro_image_height.'">';
 			}else
 			{
 				$label_fld[] ='';
@@ -471,7 +634,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 			$image_name = $adb->query_result($image_res,0,'name');
 			$imgpath = $image_path.$image_id."_".$image_name;
 			if($image_name != '')
-				$label_fld[] ='<img src="'.$imgpath.'" class="reflect" width="450" height="300" alt="">';
+				$label_fld[] ='<img src="'.$imgpath.'" alt="'.$mod_strings['Contact Image'].'" title= "'.$mod_strings['Contact Image'].'">';
 			else
 				$label_fld[] = '';
 		}
@@ -547,6 +710,23 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 
 				$label_fld[] ='<a href="index.php?module='.$parent_module.'&action=DetailView&record='.$value.'">'.$invoicename.'</a>';
 			}
+			elseif($parent_module == "Quotes")
+			{
+				$label_fld[] = $app_strings['LBL_QUOTES_NAME'];
+				$sql = "select * from  vtiger_quotes where quoteid=".$value;
+				$result = $adb->query($sql);
+				$quotename= $adb->query_result($result,0,"subject");
+
+				$label_fld[] ='<a href="index.php?module='.$parent_module.'&action=DetailView&record='.$value.'">'.$quotename.'</a>';
+			}
+			elseif($parent_module == "HelpDesk")
+			{
+				$label_fld[] = $app_strings['LBL_HELPDESK_NAME'];
+				$sql = "select * from  vtiger_troubletickets where ticketid=".$value;
+				$result = $adb->query($sql);
+				$title= $adb->query_result($result,0,"title");
+				$label_fld[] ='<a href="index.php?module='.$parent_module.'&action=DetailView&record='.$value.'">'.$title.'</a>';
+			}
 		}
 		else
 		{
@@ -566,9 +746,11 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 		$image_path = $adb->query_result($image_res,0,'path');
 		$image_name = $adb->query_result($image_res,0,'name');
 		$imgpath = $image_path.$image_id."_".$image_name;
-		if($image_name != '')
-		$label_fld[] ='<a href="'.$imgpath.'" target="_blank"><img src="'.$imgpath.'" width="450" height="300" alt="'.$col_fields['user_name'].'" title="'.$col_fields['user_name'].'" border="0"></a>';
-		else
+		if($image_name != '') {
+			// Asha: Added the following check for the image to retain its in original size.
+			list($pro_image_width, $pro_image_height) = getimagesize($imgpath);
+				$label_fld[] ='<a href="'.$imgpath.'" target="_blank"><img src="'.$imgpath.'" width="'.$pro_image_width.'" height="'.$pro_image_height.'" alt="'.$col_fields['user_name'].'" title="'.$col_fields['user_name'].'" border="0"></a>';
+		} else
 			$label_fld[] = '';
 	}
 	elseif($uitype == 66)
@@ -931,7 +1113,7 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 	{
 	 	$label_fld[] =$mod_strings[$fieldlabel];
 		if(is_admin($current_user))
-			$label_fld[] = '<a href="index.php?module=Users&action=RoleDetailView&roleid='.$col_fields[$fieldname].'">'.getRoleName($col_fields[$fieldname]).'</a>';
+			$label_fld[] = '<a href="index.php?module=Settings&action=RoleDetailView&roleid='.$col_fields[$fieldname].'">'.getRoleName($col_fields[$fieldname]).'</a>';
 		else
 			$label_fld[] = getRoleName($col_fields[$fieldname]);
 	}elseif($uitype == 85) //Added for Skype by Minnie
@@ -976,8 +1158,9 @@ function getDetailViewOutputHtml($uitype, $fieldname, $fieldlabel, $col_fields,$
 function getDetailAssociatedProducts($module,$focus)
 {
 	global $log;
-	$log->debug("Entering getDetailAssociatedProducts(".$module.",".$focus.") method ...");
+	$log->debug("Entering getDetailAssociatedProducts(".$module.",".get_class($focus).") method ...");
 	global $adb;
+	global $mod_strings;
 	global $theme;
 	global $log;
 	global $app_strings,$current_user;
@@ -1004,7 +1187,7 @@ function getDetailAssociatedProducts($module,$focus)
 	   <tr valign="top">
 	   	<td colspan="'.$colspan.'" class="dvInnerHeader"><b>'.$app_strings['LBL_PRODUCT_DETAILS'].'</b></td>
 		<td class="dvInnerHeader" align="right"><b>'.$app_strings['LBL_TAX_MODE'].' : </b></td>
-		<td class="dvInnerHeader">'.$taxtype.'</td>
+		<td class="dvInnerHeader">'.$app_strings[$taxtype].'</td>
 	   </tr>
 	   <tr valign="top">
 		<td width=40% class="lvtCol"><font color="red">*</font>
@@ -1196,10 +1379,11 @@ function getDetailAssociatedProducts($module,$focus)
 	{
 		$finalDiscount = $focus->column_fields['hdnDiscountAmount'];
 		$finalDiscount = getConvertedPriceFromDollar($finalDiscount);
-		$final_discount_info = $app_strings['LBL_FINAL_DISCOUNT_AMOUNT']." = $finalDiscount";
 	}
-	if($final_discount_info != '')
-		$final_discount_info = 'onclick="alert(\''.$final_discount_info.'\');"';
+
+	//Alert the Final Discount amount even it is zero
+	$final_discount_info = $app_strings['LBL_FINAL_DISCOUNT_AMOUNT']." = $finalDiscount";
+	$final_discount_info = 'onclick="alert(\''.$final_discount_info.'\');"';
 
 	$output .= '<tr>'; 
 	$output .= '<td align="right" class="crmTableRow small lineOnTop">(-)&nbsp;<b><a href="javascript:;" '.$final_discount_info.'>'.$app_strings['LBL_DISCOUNT'].'</a></b></td>';
@@ -1292,14 +1476,14 @@ function getDetailAssociatedProducts($module,$focus)
 function getRelatedLists($module,$focus)
 {
 	global $log;
-	$log->debug("Entering getRelatedLists(".$module.",".$focus.") method ...");
+	$log->debug("Entering getRelatedLists(".$module.",".get_class($focus).") method ...");
 	global $adb;
 	global $current_user;
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	
 	$cur_tab_id = getTabid($module);
 
-	$sql1 = "select * from vtiger_relatedlists where tabid=".$cur_tab_id;
+	$sql1 = "select * from vtiger_relatedlists where tabid=".$cur_tab_id." order by sequence";
 	$result = $adb->query($sql1);
 	$num_row = $adb->num_rows($result);
 	for($i=0; $i<$num_row; $i++)
@@ -1326,6 +1510,30 @@ function getRelatedLists($module,$focus)
 	$log->debug("Exiting getRelatedLists method ...");
 	return $focus_list;
 }
+
+/** This function returns whether related lists is present for this particular module or not
+* Param $module - module name
+* Param $activity_mode - mode of activity 
+* Return type true or false
+*/
+
+
+function isPresentRelatedLists($module,$activity_mode='')
+{
+	global $adb;
+	$retval='true';
+	$tab_id=getTabid($module);
+	$query= "select count(*) as count from vtiger_relatedlists where tabid=".$tab_id;
+	$result=$adb->query($query);
+	$count=$adb->query_result($result,0,'count');
+	if($count < 1 || ($module =='Calendar' && $activity_mode=='task'))
+	{
+		$retval='false';	
+	}	
+	return $retval;	
+			
+	
+}	
 
 /** This function returns the detailed block information of a record in a module.
 * Param $module - module name

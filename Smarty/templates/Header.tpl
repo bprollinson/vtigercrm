@@ -13,7 +13,6 @@
 <html>
 <head>
 	<title>{$CURRENT_USER} - {$APP.$CATEGORY} - {$APP.$MODULE_NAME} - {$APP.LBL_BROWSER_TITLE}</title>
-	<link rel="stylesheet" type="text/css" href="style.css">
 	<link REL="SHORTCUT ICON" HREF="include/images/vtigercrm_icon.ico">	
 	<style type="text/css">@import url("themes/{$THEME}/style.css");</style>
 </head>
@@ -22,6 +21,7 @@
 	<!-- header -->
 	<!-- header-vtiger crm name & RSS -->
 	<script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
+	<script language="JavaScript" type="text/javascript" src="include/js/{php} echo $_SESSION['authenticated_user_language'];{/php}.lang.js?{php} echo $_SESSION['vtiger_version'];{/php}"></script>
 	<script language="JavaScript" type="text/javascript" src="include/js/QuickCreate.js"></script>
 	<script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
 	<script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
@@ -32,7 +32,7 @@
         <script type="text/javascript" src="jscalendar/calendar.js"></script>
         <script type="text/javascript" src="jscalendar/calendar-setup.js"></script>
         <script type="text/javascript" src="jscalendar/lang/calendar-{$APP.LBL_JSCALENDAR_LANG}.js"></script>
-
+	
 	<TABLE border=0 cellspacing=0 cellpadding=0 width=100% class="hdrNameBg">
 	<tr>
 		<td valign=top><img src="{$IMAGEPATH}/vtiger-crm.gif" alt="vtiger CRM" title="vtiger CRM" border=0></td>
@@ -43,7 +43,7 @@
 			<table border=0 cellspacing=0 cellpadding=0>
 			 <tr>
 			 <td style="padding-left:10px;padding-right:10px" class=small nowrap> <a href="index.php?module=Users&action=DetailView&record={$CURRENT_USER_ID}&modechk=prefview">{$APP.LBL_MY_PREFERENCES}</a></td>
-			 <td style="padding-left:10px;padding-right:10px" class=small nowrap><a href="http://www.vtiger.com/index.php?option=com_content&task=view&id=34&Itemid=60" target="_blank">{$APP.LNK_HELP}</a></td>
+			 <td style="padding-left:10px;padding-right:10px" class=small nowrap><a href="http://wiki.vtiger.com/index.php/Main_Page" target="_blank">{$APP.LNK_HELP}</a></td>
 			 <td style="padding-left:10px;padding-right:10px" class=small nowrap><a href="javascript:;" onClick="openwin();">{$APP.LNK_WEARE}</a></td>
 			 <td style="padding-left:10px;padding-right:10px" class=small nowrap> <a href="index.php?module=Users&action=Logout">{$APP.LBL_LOGOUT}</a> ({$CURRENT_USER})</td>
 			 </tr>
@@ -78,14 +78,14 @@
                                 <select class=small id="qccombo" style="width:120px"  onclick="QCreate(this);">
 					<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
                         {foreach  item=detail from=$QCMODULE}
-                                        <option value="{$detail.1}">{$APP[$detail.0]}</option>
+                                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$APP[$detail.0]}</option>
                         {/foreach}
                                 </select>
                         {else}
                                 <select class=small id="qccombo" style="width:120px"  onchange="QCreate(this);">
 					<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
                         {foreach  item=detail from=$QCMODULE}
-                                        <option value="{$detail.1}">{$APP[$detail.0]}</option>
+                                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$APP[$detail.0]}</option>
                         {/foreach}
                                 </select>
 
@@ -103,10 +103,11 @@
 			<td style="height:19px;background-color:#ffffef" >
 				<input type="hidden" name="action" value="UnifiedSearch" style="margin:0px">
 				<input type="hidden" name="module" value="Home" style="margin:0px">
+				<input type="hidden" name="parenttab" value="{$CATEGORY}" style="margin:0px">
 				<input type="text" name="query_string" value="{$QUERY_STRING}" class="searchBox" onFocus="this.value=''" >
 			</td>
 			<td style="background-color:#cccccc">
-				<input type="submit" class="searchBtn" value="{$APP.LBL_FIND_BUTTON}" alt="Find" title="Find">
+				<input type="submit" class="searchBtn" value="{$APP.LBL_FIND_BUTTON}" alt="{$APP.LBL_FIND}" title="{$APP.LBL_FIND}">
 			</td>
 			</form>
 		   </tr>
@@ -141,10 +142,10 @@
 <div id="calculator_cont" style="position:absolute; z-index:10000" ></div>
 	{include file="Clock.tpl"}
 
-
-<div id="qcform" style="position:absolute;width:500px;top:60px;left:450px;z-index:5000;"></div>
+<div id="qcform" style="position:absolute;width:500px;top:80px;left:450px;z-index:5000;"></div>
 
 <script>
+var gVTModule = '{$smarty.request.module}';
 function fetch_clock()
 {ldelim}
 	new Ajax.Request(
@@ -367,8 +368,9 @@ function getFormValidate(divValidate)
 		}
 	if(statusvalue == "Planned")
         {
-                var dateelements=splitDateVal(startdatevalue)
-
+               var dateelements=splitDateVal(startdatevalue)
+	       var hourval=parseInt(timeval.substring(0,timeval.indexOf(":")))
+               var minval=parseInt(timeval.substring(timeval.indexOf(":")+1,timeval.length))
                var dd=dateelements[0]
                var mm=dateelements[1]
                var yyyy=dateelements[2]
@@ -378,17 +380,18 @@ function getFormValidate(divValidate)
                chkdate.setYear(yyyy)
                chkdate.setMonth(mm-1)
                chkdate.setDate(dd)
-		
-       	       chktime = new Date()
 
+       	       chktime = new Date()
+	       chktime.setMinutes(minval)
+               chktime.setHours(hourval)
                chktime.setYear(yyyy)
                chktime.setMonth(mm-1)
                chktime.setDate(dd)
-                if (!compareDates(chkdate,datelabel,currdate,"Current date & time for Activities with status as Planned","GE")) {
+                if (!compareDates(chkdate,datelabel,currdate,alert_arr.DATE_SHOULDNOT_PAST,"GE")) {
                         window.document.QcEditView[datefield].focus()
                         return false
                 }
-                else if(!compareDates(chktime,timelabel,currdate,"Current Time for Activities with status as Planned","GE"))
+                else if(!compareDates(chktime,timelabel,currdate,alert_arr.TIME_SHOULDNOT_PAST,"GE"))
                 {
                         window.document.QcEditView[timefield].focus()
                         return false
@@ -402,7 +405,7 @@ function getFormValidate(divValidate)
 {/literal}
 
 {* Quick Access Functionality *}
-<div id="allMenu" onmouseout="fninvsh('allMenu');" onMouseOver="fnvshNrm('allMenu');" style="width:550px">
+<div id="allMenu" onmouseout="fninvsh('allMenu');" onMouseOver="fnvshNrm('allMenu');" style="width:550px;z-index: 10000001;">
 	<table border=0 cellpadding="5" cellspacing="0" class="allMnuTable" >
 	<tr>
 		<td valign="top">
@@ -462,7 +465,8 @@ function openwin()
 		<td class="trackerList small"> <a href="index.php?module={$trackelements.module_name}&action=DetailView&record={$trackelements.crmid}">{$trackelements.item_summary}</a> </td><td class="trackerList small">&nbsp;</td></tr>
 	{/foreach}
 	</table>
-</div>	
+</div>
+	
 <script>
 	var THandle = document.getElementById("Track_Handle");
 	var TRoot   = document.getElementById("tracker");

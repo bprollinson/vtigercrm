@@ -16,23 +16,33 @@
 		{if $keyid eq '1' || $keyid eq 2 || $keyid eq '11' || $keyid eq '7' || $keyid eq '9' || $keyid eq '55' || $keyid eq '71' || $keyid eq '72'} <!--TextBox-->
                                          		<td width=25% class="dvtCellInfo" align="left">&nbsp;
                                          		      {if $keyid eq '55'}<!--SalutationSymbol-->
-                                         		            {$keysalut}
-                                         		      {*elseif $keyid eq '71' || $keyid eq '72'}  <!--CurrencySymbol-->
-                                         		            {$keycursymb*}
-                                                        	{/if}
+                                                        	{foreach item=arr from=$keyoptions}                                                                                          	{if $arr[0] eq $APP.LBL_NOT_ACCESSIBLE}
+                                                          	      {assign var=keysalut value=$APP.LBL_NOT_ACCESSIBLE}
+                                                        	   {/if}
+                                                        	{/foreach}
+                                                  		      {$keysalut}
+								{*elseif $keyid eq '71' || $keyid eq '72'}  <!--CurrencySymbol-->
+                                                                    {$keycursymb*}
+                                                                {/if}
                                                        {$keyval}
                                                   </td>
                                              {elseif $keyid eq '13'} <!--Email-->
                                                   <td width=25% class="dvtCellInfo" align="left">&nbsp;<a href="mailto:{$keyval}" target="_blank">{$keyval}</a>
                                                   </td>
                                              {elseif $keyid eq '15' || $keyid eq '16' || $keyid eq '111'} <!--ComboBox-->
-               							<td width=25% class="dvtCellInfo" align="left">&nbsp;{$keyval}
-               							</td>
+               					<td width=25% class="dvtCellInfo" align="left">&nbsp;
+							{foreach item=arr from=$keyoptions}
+                                                        {if $arr[0] eq $APP.LBL_NOT_ACCESSIBLE}
+                                                                {assign var=keyval value=$APP.LBL_NOT_ACCESSIBLE}
+                                                        {/if}
+							{/foreach}
+							{$keyval}
+               					</td>
                                              {elseif $keyid eq '17'} <!--WebSite-->
                                                   <td width=25% class="dvtCellInfo" align="left">&nbsp;<a href="http://{$keyval}" target="_blank">{$keyval}</a>
                                                   </td>
                                              {elseif $keyid eq '19' || $keyid eq '20'} <!--TextArea/Description-->
-                                                  <td width=25% class="dvtCellInfo" align="left">&nbsp;{$keyval}                   
+                                                  <td width=100% class="dvtCellInfo" align="left">&nbsp;{$keyval}                   
                                                   </td>
                                              {elseif $keyid eq '21' || $keyid eq '24' || $keyid eq '22'} <!--TextArea/Street-->
                                                   <td width=25% class="dvtCellInfo" align="left">&nbsp;{$keyval}

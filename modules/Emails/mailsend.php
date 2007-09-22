@@ -8,7 +8,6 @@
  * All Rights Reserved.
  ********************************************************************************/
 
-include("modules/Emails/mail.php");
 require_once("include/utils/GetGroupUsers.php");
 require_once("include/utils/UserInfoUtil.php");
 
@@ -71,9 +70,12 @@ if($to_email == '' && $cc == '' && $bcc == '')
 }
 else
 {
-	$mail_status = send_mail('Emails',$to_email,$current_user->user_name,'',$_REQUEST['subject'],$_REQUEST['description'],$cc,$bcc,'all',$focus->id);
+	$query1 = "select email1 from vtiger_users where id =".$current_user->id;
+	$res1 = $adb->query($query1);
+	$val = $adb->query_result($res1,0,"email1");
+//	$mail_status = send_mail('Emails',$to_email,$current_user->user_name,'',$_REQUEST['subject'],$_REQUEST['description'],$cc,$bcc,'all',$focus->id);
 	
-	$query = 'update vtiger_emaildetails set email_flag ="SENT" where emailid='.$focus->id;
+	$query = 'update vtiger_emaildetails set email_flag ="SENT",from_email ='."'$val'".' where emailid='.$focus->id;
 	$adb->query($query);
 	//set the errorheader1 to 1 if the mail has not been sent to the assigned to user
 	if($mail_status != 1)//when mail send fails
@@ -98,23 +100,33 @@ else
 $parentid= $_REQUEST['parent_id'];
 $myids=explode("|",$parentid);
 $all_to_emailids = Array();
+if(isset($_REQUEST['att_module']) && $_REQUEST['att_module'] == 'Webmails')
+{
+	$from_name = $from_arr[0];
+	$from_address = $_REQUEST['from_add'];
+}
+else
+{
+	$from_name = $current_user->user_name;
+	$from_address = '';
+}
 for ($i=0;$i<(count($myids)-1);$i++)
 {
 	$realid=explode("@",$myids[$i]);
 	$nemail=count($realid);
 	$mycrmid=$realid[0];
 	if($realid[1] == -1)
-	{
-		//handle the mail send to vtiger_users
-		$emailadd = $adb->query_result($adb->query("select email1 from vtiger_users where id=$mycrmid"),0,'email1');
-		$pmodule = 'Users';
-		$description = getMergedDescription($focus->column_fields['description'],$mycrmid,$pmodule);
-		$mail_status = send_mail('Emails',$emailadd,$current_user->user_name,'',$focus->column_fields['subject'],$description,'','','all',$focus->id);
-		$all_to_emailids []= $emailadd;
-		$mail_status_str .= $emailadd."=".$mail_status."&&&";
-	}
-	else
-	{
+        {
+                //handle the mail send to vtiger_users
+                $emailadd = $adb->query_result($adb->query("select email1 from vtiger_users where id=$mycrmid"),0,'email1');
+                $pmodule = 'Users';
+                $description = getMergedDescription($focus->column_fields['description'],$mycrmid,$pmodule);
+                $mail_status = send_mail('Emails',$emailadd,$from_name,$from_address,$focus->column_fields['subject'],$description,'','','all',$focus->id);
+                $all_to_emailids []= $emailadd;
+                $mail_status_str .= $emailadd."=".$mail_status."&&&";
+        }
+        else
+        {
 		//Send mail to vtiger_account or lead or contact based on their ids
 		$pmodule=getSalesEntityType($mycrmid);
 		for ($j=1;$j<$nemail;$j++)
@@ -140,6 +152,12 @@ for ($i=0;$i<(count($myids)-1);$i++)
 				$myfocus = new Leads();
 				$myfocus->retrieve_entity_info($mycrmid,"Leads");
 			}
+			elseif ($pmodule=='Vendors')
+                        {
+                                require_once('modules/Vendors/Vendors.php');
+                                $myfocus = new Vendors();
+                                $myfocus->retrieve_entity_info($mycrmid,"Vendors");
+                        }
 			$fldname=$adb->query_result($fresult,0,"columnname");
 			$emailadd=br2nl($myfocus->column_fields[$fldname]);
 
@@ -151,7 +169,7 @@ for ($i=0;$i<(count($myids)-1);$i++)
 				$description = getMergedDescription($focus->column_fields['description'],$mycrmid,$pmodule);
 				if(isPermitted($pmodule,'DetailView',$mycrmid) == 'yes')
 				{
-					$mail_status = send_mail('Emails',$emailadd,$current_user->user_name,'',$focus->column_fields['subject'],$description,'','','all',$focus->id);
+					$mail_status = send_mail('Emails',$emailadd,$from_name,$from_address,$focus->column_fields['subject'],$description,'','','all',$focus->id);
 				}	
 
 				$all_to_emailids []= $emailadd;
@@ -162,8 +180,8 @@ for ($i=0;$i<(count($myids)-1);$i++)
 					$errorheader2 = 1;
 				}
 			}
-		}	
-	}
+		}
+	}	
 
 }
 //Added to redirect the page to Emails/EditView if there is an error in mail sending

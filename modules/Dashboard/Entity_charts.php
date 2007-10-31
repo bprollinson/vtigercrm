@@ -52,8 +52,8 @@ function get_account_name($acc_id)
 // TO get the Values for a particular graph type 
 function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$query,$graph_for,$title,$added_qry="",$module="",$graph_type)
 {
-
-	global $adb,$current_user;
+	 
+	global $adb,$current_user,$mod_strings;
 	global $days,$date_array,$period_type;
 
 	//$where= " and vtiger_crmentity.smownerid=".$user_id." and vtiger_crmentity.createdtime between '".$date_start."' and '".$end_date."'" ;
@@ -65,6 +65,7 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 	
 	$no_of_rows=$adb->num_rows($result);
 	$mod_count_array=array();
+	$search_str_array=array();
 	$mod_name_array=array();
 	$count_by_date[]=array();
 	$mod_tot_cnt_array=array();
@@ -79,9 +80,21 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 	{
 		while($row = $adb->fetch_array($result))
 		{
-			$mod_name= $row[$graph_for];
+			if($graph_for == 'sostatus'||$graph_for == 'leadsource'||$graph_for == 'leadstatus'||$graph_for == 'industry'||$graph_for == 'productcategory'||$graph_for =='postatus'||$graph_for == 'invoicestatus'||$graph_for == 'ticketstatus'||$graph_for == 'priority'||$graph_for == 'category'||$graph_for == 'quotestage'||$graph_for == 'salesstage')
+			{
+                                $mod_name= getTranslatedString($row[$graph_for]);
+                                $search_str = $row[$graph_for];
+                       	}
+                      	else
+                       	{
+                               $mod_name= $row[$graph_for];
+                               $search_str = $row[$graph_for];
+                       	}
 			if($mod_name=="")
-				$mod_name="Un Assigned";
+                        {
+                                $mod_name=$mod_strings["Un Assigned"];
+                                $search_str = " ";
+                        }
 			$crtd_time=$row['createdtime'];
 			$crtd_time_array=explode(" ",$crtd_time);
 			$crtd_date=$crtd_time_array[0];
@@ -95,12 +108,16 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 			{
 				array_push($mod_name_array,$mod_name); // getting all the unique Names into the array
 			}
+			if (in_array($search_str,$search_str_array) == false)
+                       	{
+                               array_push($search_str_array,$search_str);
+                       	}
 
 			//Counting the number of values for a type of graph
-			if($graph_for == "productid")
+			if($graph_for == "productname")
 			{
 				if($row['qtyinstock'] =='')
-					$mod_count_array[$mod_name] = 0;
+					$mod_count_array[$mod_name] = 1;
 				else
 					$mod_count_array[$mod_name]=$row['qtyinstock'];
 
@@ -142,7 +159,9 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 			//For all type of the array 
 			for ($i=0;$i<count($mod_name_array); $i++)
 			{
+				$search_str = $search_str_array[$i];
 				$name=$mod_name_array[$i];
+				$id_name = "";
 				if($name=="")
 					$name="Un Assigned";
 
@@ -194,7 +213,6 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 				}
 
 				$mod_count_val=$mod_count_array[$name];
-
 				$tot_mod_cnt=array_sum($count_by_date[$name]);
 				$mod_cnt_table .= "<td align=center>$tot_mod_cnt</td></tr>";
 
@@ -223,6 +241,7 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 					$query = "SELECT subject FROM vtiger_purchaseorder WHERE purchaseorderid='".$name."'";
 					$result = $adb->query($query);
 					$name_val = $adb->query_result($result,0,"subject");
+					$id_name = $name;
 					if($name_val!="")
 						$name=$name_val;
 				}
@@ -231,6 +250,7 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 					$query = "SELECT subject FROM vtiger_quotes WHERE quoteid='".$name."'";
 					$result = $adb->query($query);
 					$name_val = $adb->query_result($result,0,"subject");
+					$id_name = $name;
 					if($name_val!="")
 						$name=$name_val;
 				}
@@ -239,6 +259,7 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 					$query = "SELECT subject FROM vtiger_invoice WHERE invoiceid='".$name."'";
 					$result = $adb->query($query);
 					$name_val = $adb->query_result($result,0,"subject");
+					$id_name = $name;
 					if($name_val!="")
 						$name=$name_val;
 				}
@@ -248,6 +269,7 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 					$query = "SELECT campaignname FROM vtiger_campaign WHERE campaignid='".$name."'";
 					$result = $adb->query($query);
 					$name_val = $adb->query_result($result,0,"campaignname");
+					$id_name = $name;
 					if($name_val!="")
 						$name=$name_val;
 				}
@@ -281,10 +303,18 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 					if($graph_for == "ticketgroupname" || $graph_for == "groupname") $graph_for = "smownerid";
 
 					if($graph_for == "accountid") $graph_for = "account_id";
+					$cvid = getCvIdOfAll($module);
 					if($module == "Home")
-						$link_val="index.php?module=".$name."&action=ListView&from_homepagedb=true&search_field=assigned_user_id&searchtype=BasicSearch&query=true&type=entchar&search_text=".$current_user->user_name;
+					{
+						$cvid = getCvIdOfAll($name);
+						$link_val="index.php?module=".$name."&action=ListView&from_homepagedb=true&type=dbrd&query=true&owner=".$current_user->user_name."&viewname=".$cvid;
+					}
+					else if($module == "Contacts" || ($module=="Products" && ($graph_for == "quoteid" || $graph_for == "invoiceid" || $graph_for == "purchaseorderid")))
+						$link_val="index.php?module=".$module."&action=ListView&from_dashboard=true&type=dbrd&query=true&".$graph_for."=".$id_name."&viewname=".$cvid;
+					else if($graph_for == 'sostatus'||$graph_for == 'leadsource'||$graph_for == 'leadstatus'||$graph_for == 'industry'||$graph_for == 'productcategory'||$graph_for =='postatus'||$graph_for == 'invoicestatus'||$graph_for == 'ticketstatus'||$graph_for == 'priority'||$graph_for == 'category'||$graph_for == 'quotestage'||$graph_for == 'salesstage')
+						$link_val="index.php?module=".$module."&action=index&from_dashboard=true&search_text=".$search_str."&search_field=".$graph_for."&searchtype=BasicSearch&query=true&type=entchar&viewname=".$cvid;
 					else
-						$link_val="index.php?module=".$module."&action=index&from_dashboard=true&search_text=".$name."&search_field=".$graph_for."&searchtype=BasicSearch&query=true&type=entchar";
+						 $link_val="index.php?module=".$module."&action=index&from_dashboard=true&search_text=".$name."&search_field=".$graph_for."&searchtype=BasicSearch&query=true&type=entchar&viewname=".$cvid;
 
 					if($graph_for == "account_id") $graph_for = "accountid";
 
@@ -316,7 +346,7 @@ function module_Chart($user_id,$date_start="2000-01-01",$end_date="2017-01-01",$
 				if($period_type!="yday")
 					$mod_cnt_table.="<td>$tot</td>";
 			}
-			if($graph_for == "productid")
+			if($graph_for == "productname")
 			{
 				$cnt_total=array_sum($mod_count_array);
 			}
@@ -383,13 +413,12 @@ function save_image_map($filename,$image_map)
 function get_graph_by_type($graph_by,$graph_title,$module,$where,$query,$width=900,$height=500)
 {
 	global $user_id,$date_start,$end_date,$type,$mod_strings;
-
+	$time = time();
 	//Giving the Cached image name
-	$cache_file_name=abs(crc32($user_id))."_".$type."_".crc32($date_start.$end_date).".png";
+	$cache_file_name=abs(crc32($user_id))."_".$type."_".crc32($date_start.$end_date).$time.".png";
 	$html_imagename=$graph_by; //Html image name for the graph
 
 	$graph_details=module_Chart($user_id,$date_start,$end_date,$query,$graph_by,$graph_title,$where,$module,$type);
-	
 	if($graph_details!=0)
 	{
 		$name_val=$graph_details[0];
@@ -403,7 +432,7 @@ function get_graph_by_type($graph_by,$graph_title,$module,$where,$query,$width=9
 		
 		if(isset($_REQUEST['display_view']) && $_REQUEST['display_view'] == 'MATRIX')
 		{
-			$width = 350;
+			$width = 450;
 			$height = 250;
 		}else
 		{
@@ -420,7 +449,6 @@ function get_graph_by_type($graph_by,$graph_title,$module,$where,$query,$width=9
 	}
 	else
 	{
-                 //echo $mod_strings['LBL_NO_DATA'];
 		 sleep(1);
                  echo '<h3>'.$mod_strings['LBL_NO_DATA'].'</h3>';
 	}
@@ -454,7 +482,7 @@ function get_graph($cache_file_name,$html_imagename,$cnt_val,$name_val,$width,$h
 	}
 
 $sHTML .= "<tr>
-	   <td><a name='1'></a><table width=20%  border=0 cellspacing=0 cellpadding=0 align=left>
+	   <td><a name='1'></a><table width=20%  border=0 cellspacing=12 cellpadding=0 align=left>
 	         <tr>
 	    	   <td rowspan=2 valign=top><span class=\"dash_count\">1</span></td>
 	           <td nowrap><span class=genHeaderSmall>".$graph_title."</span></td>
@@ -523,7 +551,7 @@ $sHTML .= "</td>
 	}
 
 $sHTML .= "<tr>
-	   <td><a name='2'></a><table width=20%  border=0 cellspacing=0 cellpadding=0 align=left>
+	   <td><a name='2'></a><table width=20%  border=0 cellspacing=12 cellpadding=0 align=left>
            	 <tr>
 	           <td rowspan=2 valign=top><span class=\"dash_count\">2</span></td>
 	           <td nowrap><span class=genHeaderSmall>".$graph_title."</span></td>

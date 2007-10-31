@@ -23,7 +23,6 @@
 require_once('Smarty_setup.php');
 require_once("data/Tracker.php");
 require_once('modules/Emails/Emails.php');
-require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/utils/utils.php');
 require_once('modules/CustomView/CustomView.php');
@@ -173,6 +172,17 @@ $listview_header = getListViewHeader($focus,"Emails",$url_string,$sorder,$order_
 $smarty->assign("LISTHEADER", $listview_header);
 
 $listview_entries = getListViewEntries($focus,"Emails",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
+//--------------------------added to fix the ticket(4386)------------------------START
+foreach($listview_entries as $key=>$value)
+{
+	$sql="select email_flag from vtiger_emaildetails where emailid=".$key;
+	$result=$adb->query($sql);
+	$email_flag=$adb->query_result($result,0,"email_flag");
+	$emailid[$key] = $email_flag;
+}
+$smarty->assign("EMAILFALG",$emailid);
+//--------------------------added to fix the ticket(4386)------------------------END
+
 $smarty->assign("LISTENTITY", $listview_entries);                                                  
 $smarty->assign("SELECT_SCRIPT", $view_script);
 
@@ -180,6 +190,7 @@ $smarty->assign("USERID", $current_user->id);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("theme", $theme);
 if($_REQUEST['ajax'] != '')
 	$smarty->display("EmailContents.tpl");
 else

@@ -67,7 +67,6 @@ if($focus->is_authenticated())
 	createUserPrivilegesfile($focus->id);
 	
 	//Security related entries end
-	header("Location: index.php?action=index&module=Home");
 	session_unregister('login_password');
 	session_unregister('login_error');
 	session_unregister('login_user_name');
@@ -107,7 +106,7 @@ if($focus->is_authenticated())
 		$authenticated_user_language = $default_language;	
 	}
 
-	$_SESSION['authenticated_user_theme'] = $authenticated_user_theme;
+	$_SESSION['vtiger_authenticated_user_theme'] = $authenticated_user_theme;
 	$_SESSION['authenticated_user_language'] = $authenticated_user_language;
 	
 	$log->debug("authenticated_user_theme is $authenticated_user_theme");
@@ -126,6 +125,11 @@ if($focus->is_authenticated())
 	{
 		unlink($tmp_file_name);
 	}
+	$arr = $_SESSION['lastpage'];
+	if(isset($_SESSION['lastpage']))
+		header("Location: index.php?".$arr[0]);
+	else
+		header("Location: index.php");
 }
 else
 {

@@ -42,7 +42,10 @@ foreach($focus->column_fields as $fieldname => $val)
 {
     	if(isset($_REQUEST[$fieldname]))
 	{
-          $value = $_REQUEST[$fieldname];
+		if(is_array($_REQUEST[$fieldname]))
+			$value = $_REQUEST[$fieldname];
+		else
+			$value = trim($_REQUEST[$fieldname]);	
             $log->info("the value is ".$value);
           $focus->column_fields[$fieldname] = $value;
         }
@@ -78,10 +81,7 @@ if(isset($_REQUEST['return_module']) && $_REQUEST['return_module'] == "Campaigns
 		$adb->query($sql);
 	}
 }
-
-
-header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&parenttab=$parenttab&viewname=$return_viewname");
-
+header("Location: index.php?action=$return_action&module=$return_module&record=$return_id&parenttab=$parenttab&viewname=$return_viewname&start=".$_REQUEST['pagenumber']);
 /** Function to save the Lead custom fields info into database
  *  @param integer $entity_id - leadid
 */

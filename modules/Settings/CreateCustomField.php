@@ -18,8 +18,6 @@ global $mod_strings,$app_strings,$app_list_strings,$theme,$adb;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 
-require_once($theme_path.'layout_utils.php');
-
 $tabid=$_REQUEST['tabid'];
 $fieldid=$_REQUEST['fieldid'];
 if(isset($_REQUEST['uitype']) && $_REQUEST['uitype'] != '')
@@ -142,7 +140,7 @@ $output .= '<div id="orgLay" style="display:block;" class="layerPopup"><script l
 		<table width="100%" border="0" cellpadding="5" cellspacing="0" class="layerHeadingULine">
 			<tr>';
 			if($mode == 'edit')
-				$output .= '<td width="60%" align="left" class="layerPopupHeading">'.$mod_strings['LBL_EDIT_FIELD_TYPE'].' - '.$mod_strings[$customfield_typename].'</td>';
+				$output .= '<td width="60%" align="left" class="layerPopupHeading">'.$mod_strings['LBL_EDIT_FIELD_TYPE'].' - '.$customfield_typename.'</td>';
 			else
 				$output .= '<td width="60%" align="left" class="layerPopupHeading">'.$mod_strings['LBL_ADD_FIELD'].'</td>';
 				
@@ -179,7 +177,6 @@ $output .= '<div id="orgLay" style="display:block;" class="layerPopup"><script l
 								</tr>';
 								break;
 							case 71:
-							case 9:
 							case 7:
 								$output .= '<tr id="lengthdetails">
 									<td class="dataLabel" nowrap="nowrap" align="right"><b>'.$mod_strings['LBL_LENGTH'].'</b></td>
@@ -194,7 +191,7 @@ $output .= '<div id="orgLay" style="display:block;" class="layerPopup"><script l
 							case 15:
 								$output .= '<tr id="picklist">
 									<td class="dataLabel" nowrap="nowrap" align="right" valign="top"><b>'.$mod_strings['LBL_PICK_LIST_VALUES'].'</b></td>
-									<td align="left" valign="top"><textarea name="fldPickList" rows="10" class="txtBox" >'.$fldVal.'</textarea></td>
+									<td align="left" valign="top"><textarea name="fldPickList" rows="10" class="txtBox" '.$readonly.'>'.$fldVal.'</textarea></td>
 									<!--td style="padding-left:10px"><img src="themes/Aqua/images/picklist_hint.gif"/></td-->
 								</tr>';
 								break;

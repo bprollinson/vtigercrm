@@ -17,8 +17,7 @@ require_once('include/utils/UserInfoUtil.php');
 require_once('data/Tracker.php');
 require_once('include/upload_file.php');
 require_once('include/database/PearDatabase.php');
-require_once('include/utils/utils.php');
-require_once('modules/Webmails/Webmail.php');
+require_once('modules/Webmails/Webmails.php');
 require_once('modules/Webmails/MailParse.php');
 
 global $log;
@@ -40,7 +39,7 @@ global $mbox;
 $mbox = getImapMbox($mailbox,$temprow);
 
 
-$email = new Webmail($mbox, $mailid);
+$email = new Webmails($mbox, $mailid);
 $from = $email->from;
 $subject=$email->subject;
 $date=$email->date;
@@ -77,7 +76,6 @@ global $app_strings;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("CATEGORY","My Home Page");
@@ -85,7 +83,6 @@ $smarty->assign("id",$_REQUEST["record"]);
 $smarty->assign("NAME","From: ".$from);
 $smarty->assign("RELATEDLISTS", $block);
 $smarty->assign("SINGLE_MOD","Webmails");
-$smarty->assign("REDIR_MOD","Webmails");
 $smarty->assign("MODULE", "Webmails");
 $smarty->assign("ID",$_REQUEST["record"] );
 $smarty->assign("MOD",$mod_strings);

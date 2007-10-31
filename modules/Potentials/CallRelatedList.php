@@ -39,7 +39,6 @@ global $currentModule;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 
@@ -52,7 +51,10 @@ if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != ' ') {
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
 $related_array = getRelatedLists($currentModule,$focus);
 $smarty->assign("RELATEDLISTS", $related_array);
+$smarty->assign("BASE_ACCOUNT",getAccountName($focus->column_fields[account_id]));
 $category = getParentTab();
+$smarty->assign("TODO_PERMISSION",CheckFieldPermission('parent_id','Calendar'));
+$smarty->assign("EVENT_PERMISSION",CheckFieldPermission('parent_id','Events'));
 $smarty->assign("CATEGORY",$category);
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 $smarty->assign("ID",$focus->id);

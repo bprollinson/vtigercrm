@@ -212,8 +212,6 @@ $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
 
-require_once($theme_path.'layout_utils.php');
-
 $log->info("Order view");
 
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
@@ -307,6 +305,7 @@ if($focus->mode != 'edit')
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 if($focus->mode == 'edit')
 	$smarty->display("Inventory/InventoryEditView.tpl");
 else

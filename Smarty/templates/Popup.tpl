@@ -14,15 +14,17 @@
 
 <link rel="stylesheet" type="text/css" href="{$THEME_PATH}style.css">
 <script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
-<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$SINGLE_MOD}.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/js/{php} echo $_SESSION['authenticated_user_language'];{/php}.lang.js?{php} echo $_SESSION['vtiger_version'];{/php}"></script>
+<script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$MODULE}.js"></script>
 <script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
 <script type="text/javascript">
 function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
-        opener.document.location.href="index.php?module={$RETURN_MODULE}&action=updateRelations&destination_module="+mod+"&entityid="+entity_id+"&parid="+recordid+"&return_action={$RETURN_ACTION}";
+        opener.document.location.href="index.php?module={$RETURN_MODULE}&action=updateRelations&destination_module="+mod+"&entityid="+entity_id+"&parid="+recordid+"&return_module={$RETURN_MODULE}&return_action={$RETURN_ACTION}&parenttab={$CATEGORY}";
 {rdelim}
 
 </script>
-<body class="small" marginwidth=0 marginheight=0 leftmargin=0 topmargin=0 bottommargin=0 rigthmargin=0>
+
+<body class="small" marginwidth=0 marginheight=0 leftmargin=0 topmargin=0 bottommargin=0 rightmargin=0>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mailClient mailClientBg">
 	<tr>
 		<td>
@@ -56,6 +58,7 @@ function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
 								<input name="recordid" id="recordid" type="hidden" value="{$RECORDID}">
 								<input name="return_module" id="return_module" type="hidden" value="{$RETURN_MODULE}">
 								<input name="from_link" id="from_link" type="hidden" value="{$smarty.request.fromlink.value}">
+								<input name="maintab" id="maintab" type="hidden" value="{$MAINTAB}">
 			
 							</td>
 							<td width="20%" class="dvtCellLabel">
@@ -87,8 +90,11 @@ function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
 </body>
 <script>
 var gPopupAlphaSearchUrl = '';
+var gsorder ='';
+var gstart ='';
 function callSearch(searchtype)
 {ldelim}
+    gstart='';
     for(i=1;i<=26;i++)
     {ldelim}
         var data_td_id = 'alpha_'+ eval(i);
@@ -103,7 +109,9 @@ function callSearch(searchtype)
 	urlstring = 'search_field='+search_fld_val+'&searchtype=BasicSearch&search_text='+search_txt_val;
     {rdelim}
 	popuptype = $('popup_type').value;
+	act_tab = $('maintab').value;
 	urlstring += '&popuptype='+popuptype;
+	urlstring += '&maintab='+act_tab;
 	urlstring = urlstring +'&query=true&file=Popup&module={$MODULE}&action={$MODULE}Ajax&ajax=true';
 	urlstring +=gethiddenelements();
 	new Ajax.Request(
@@ -119,6 +127,7 @@ function callSearch(searchtype)
 {rdelim}	
 function alphabetic(module,url,dataid)
 {ldelim}
+    gstart='';
     document.basicSearch.search_text.value = '';	
     for(i=1;i<=26;i++)
     {ldelim}
@@ -142,6 +151,7 @@ function alphabetic(module,url,dataid)
 {rdelim}
 function gethiddenelements()
 {ldelim}
+	gstart='';
 	var urlstring=''	
 	if(getObj('select_enable').value != '')
 		urlstring +='&select=enable';	
@@ -161,6 +171,7 @@ function gethiddenelements()
 																									
 function getListViewEntries_js(module,url)
 {ldelim}
+	gstart="&"+url;
 	popuptype = document.getElementById('popup_type').value;
         var urlstring ="module="+module+"&action="+module+"Ajax&file=Popup&ajax=true&"+url;
     	urlstring +=gethiddenelements();
@@ -172,6 +183,8 @@ function getListViewEntries_js(module,url)
 		urlstring += gPopupAlphaSearchUrl;	
 	else
 		urlstring += '&popuptype='+popuptype;	
+
+	urlstring += (gsorder !='') ? gsorder : '';
 	new Ajax.Request(
                 'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
@@ -186,7 +199,9 @@ function getListViewEntries_js(module,url)
 
 function getListViewSorted_js(module,url)
 {ldelim}
+	gsorder=url;
         var urlstring ="module="+module+"&action="+module+"Ajax&file=Popup&ajax=true"+url;
+	urlstring += (gstart !='') ? gstart : '';
 	new Ajax.Request(
                 'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},

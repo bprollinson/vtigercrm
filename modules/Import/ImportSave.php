@@ -29,6 +29,7 @@ function InsertImportRecords($rows,$rows1,$focus,$ret_field_count,$col_pos_to_fi
 {
 	global $current_user;
 	global $adb;
+	global $mod_strings;
 
 // MWC ** Getting vtiger_users
 $temp = get_user_array(FALSE);
@@ -55,6 +56,10 @@ foreach ($rows1 as $row)
 	$do_save = 1;
 	//MWC
 	$my_userid = $current_user->id;
+
+	//If we want to set default values for some fields for each entity then we have to set here
+	if($module == 'Products')//discontinued is not null. if we unmap active, NULL will be inserted and query will fail
+		$focus->column_fields['discontinued'] = 'on';
 
 	for($field_count = 0; $field_count < $ret_field_count; $field_count++)
 	{
@@ -96,7 +101,30 @@ foreach ($rows1 as $row)
 		}
 
 	}
-
+	if($focus->column_fields['notify_owner'] == '')
+	{
+		$focus->column_fields['notify_owner'] = '0';
+	}	
+	if($focus->column_fields['reference'] == '')
+	{
+		$focus->column_fields['reference'] = '0';
+	}
+	if($focus->column_fields['emailoptout'] == '')
+	{
+		$focus->column_fields['emailoptout'] = '0';
+	}
+	if($focus->column_fields['donotcall'] == '')
+	{
+		$focus->column_fields['donotcall'] = '0';
+	}
+	if($focus->column_fields['discontinued'] == '')
+	{
+		$focus->column_fields['discontinued'] = '0';
+	}
+	if($focus->column_fields['active'] == '')
+	{
+		$focus->column_fields['active'] = '0';
+	}
 	p("setting done");
 	
 	p("do save before req vtiger_fields=".$do_save);
@@ -233,7 +261,7 @@ function b()
 </script>
 
 <?php
-$_SESSION['import_display_message'] = '<br>'.$start.' to '.$end.' of '.$totalnoofrows.' are imported successfully';
+$_SESSION['import_display_message'] = '<br>'.$start.' '.$mod_strings['to'].' '.$end.' '.$mod_strings['of'].' '.$totalnoofrows.' '.$mod_strings['are_imported_succesfully'];
 //return $_SESSION['import_display_message'];
 }
 ?>

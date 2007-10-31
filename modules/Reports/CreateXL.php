@@ -55,7 +55,8 @@ if(isset($arr_val))
 		$dcount = 0;
 		foreach($array_value as $hdr=>$value)
 		{
-			$worksheet->write($key+1, $dcount, $value);
+			//$worksheet->write($key+1, $dcount, iconv("UTF-8", "ISO-8859-1", $value));
+			$worksheet->write($key+1, $dcount, utf8_decode($value));
 			$dcount = $dcount + 1;
 		}
 	}
@@ -74,5 +75,5 @@ header("Content-Length: ".@filesize($fname));
 header('Content-disposition: attachment; filename="Reports.xls"');
 $fh=fopen($fname, "rb");
 fpassthru($fh);
-unlink($fname);
+//unlink($fname);
 ?>

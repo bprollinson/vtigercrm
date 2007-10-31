@@ -51,8 +51,6 @@ global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 
-require_once($theme_path.'layout_utils.php');
-
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
 	$smarty->assign("BLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields));
@@ -111,7 +109,7 @@ if($_REQUEST['record'] != '')
 	//Added to display the Faq comments information
 	$smarty->assign("COMMENT_BLOCK",$focus->getFAQComments($_REQUEST['record']));
 }
-
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 if($focus->mode == 'edit')
 	$smarty->display("salesEditView.tpl");
 else

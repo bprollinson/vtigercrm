@@ -20,7 +20,6 @@
 </style>
 {/literal}
 <script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
-<script language="JAVASCRIPT" type="text/javascript" src="include/js/general.js"></script>
 <script language="JAVASCRIPT" type="text/javascript">
 {literal}
 function UpdateProfile()
@@ -31,7 +30,9 @@ function UpdateProfile()
 	{
 		
 		$('profile_name').focus();
-		alert("Profile Name Cannot be empty");
+		{/literal}
+                alert("{$APP.PROFILENAME_CANNOT_BE_EMPTY}");
+                {literal}
 	}
 	else
 	{
@@ -49,7 +50,9 @@ function UpdateProfile()
 			{
 				$('renameProfile').style.display="none";
 				window.location.reload();
-				alert("Profile Details are updated");
+				{/literal}
+                                alert("{$APP.PROFILE_DETAILS_UPDATED}");
+                                {literal}
 			}
                 }
 		);
@@ -70,7 +73,7 @@ function UpdateProfile()
 			{include file='SetMenu.tpl'}
 			
 				<form  method="post" name="new" id="form">
-			        <input type="hidden" name="module" value="Users">
+			        <input type="hidden" name="module" value="Settings">
 			        <input type="hidden" name="action" value="profilePrivileges">
 			        <input type="hidden" name="parenttab" value="Settings">
 			        <input type="hidden" name="return_action" value="profilePrivileges">
@@ -81,7 +84,7 @@ function UpdateProfile()
 				<table class="settingsSelUITopLine" border="0" cellpadding="5" cellspacing="0" width="100%">
 				<tbody><tr>
 					<td rowspan="2" valign="top" width="50"><img src="{$IMAGE_PATH}ico-profile.gif" alt="{$MOD.LBL_PROFILES}" title="{$MOD.LBL_PROFILES}" border="0" height="48" width="48"></td>
-					<td class="heading2" valign="bottom"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Users&action=ListProfiles&parenttab=Settings">{$CMOD.LBL_PROFILE_PRIVILEGES}</a> &gt; {$CMOD.LBL_VIEWING} &quot;{$PROFILE_NAME}&quot;</b></td>
+					<td class="heading2" valign="bottom"><b><a href="index.php?module=Settings&action=index&parenttab=Settings">{$MOD.LBL_SETTINGS}</a> > <a href="index.php?module=Settings&action=ListProfiles&parenttab=Settings">{$CMOD.LBL_PROFILE_PRIVILEGES}</a> &gt; {$CMOD.LBL_VIEWING} &quot;{$PROFILE_NAME}&quot;</b></td>
 				</tr>
 				<tr>
 					<td class="small" valign="top">{$CMOD.LBL_PROFILE_MESG} &quot;{$PROFILE_NAME}&quot; </td>
@@ -120,16 +123,16 @@ function UpdateProfile()
 
                                                     </tr>
                                                 </tbody></table></td>
-                                              <td align="right" valign="bottom">&nbsp;<input type="button" value="{$APP.LBL_RENAMEPROFILE_BUTTON_LABEL}" class="crmButton small edit" name="rename_profile"  onClick = "fnvshobj(this,'renameProfile');">&nbsp;<input type="submit" value="{$APP.LBL_EDIT_BUTTON_LABEL}" class="crmButton small edit" name="edit" >
+					      <td align="right" valign="bottom">&nbsp;<input type="button" value="{$APP.LBL_RENAMEPROFILE_BUTTON_LABEL}" title="{$APP.LBL_RENAMEPROFILE_BUTTON_LABEL}" class="crmButton small edit" name="rename_profile"  onClick = "show('renameProfile');">&nbsp;<input type="submit" value="{$APP.LBL_EDIT_BUTTON_LABEL}" title="{$APP.LBL_EDIT_BUTTON_LABEL}" class="crmButton small edit" name="edit" >
                               		     </td>
 					    	
                                             </tr></tbody></table>
 					    <!-- RenameProfile Div start -->	 
-					    <div id="renameProfile" style="left: 49px; top: 152px; display: none; visibility: visible;position:absolute;" class="layerPopup">
+					    <div class="layerPopup"  style="left:350px;width:500px;top:300px;display:none;" id="renameProfile">
 						<table class="layerHeadingULine" border="0" cellpadding="3" cellspacing="0" width="100%">
 						<tr style="cursor:move;">
 						<td class="layerPopupHeading" id = "renameUI" align="left" width="60%">{$APP.LBL_RENAME_PROFILE}</td>
-						<td align="right" width="40%"><a href="javascript:fninvsh('renameProfile');"><img src="themes/bluelagoon/images/close.gif" align="middle" border="0"></a></td>
+						<td align="right" width="40%"><a href="javascript:fnhide('renameProfile');"><img src="themes/bluelagoon/images/close.gif" align="middle" border="0"></a></td>
 						</tr>
 						</table>
 					    <table align="center" border="0" cellpadding="5" cellspacing="0" width="95%">
@@ -139,11 +142,11 @@ function UpdateProfile()
 							<table celspacing="0" align="center" bgcolor="white" border="0" cellpadding="5" width="100%">
 								<tr>
 								<td align="right" width="25%" style="padding-right:10px;" nowrap><b>{$APP.LBL_PROFILE_NAME} :</b></td>
-								<td align="left" width="75%" style="padding-right:10px;"><input id = "profile_name" name="profile_name" class="txtBox" value="{$Profile_Name}" type="text"></td>
+								<td align="left" width="75%" style="padding-right:10px;"><input id = "profile_name" name="profile_name" class="txtBox" value="{$PROFILE_NAME}" type="text"></td>
 								</tr>
 								<tr>
                                                                 <td align="right" width="25%" style="padding-right:10px;" nowrap><b>{$APP.LBL_DESCRIPTION} :</b></td>
-                                                                <td align="left" width="75%" style="padding-right:10px;"><textarea name="description" id = "description" class="txtBox">{$Profile_Description} </textarea></td>
+                                                                <td align="left" width="75%" style="padding-right:10px;"><textarea name="description" id = "description" class="txtBox">{$PROFILE_DESCRIPTION} </textarea></td>
                                                                 </tr>
 							</table>
 						</td>
@@ -152,8 +155,8 @@ function UpdateProfile()
 					    <table class="layerPopupTransport" border="0" cellpadding="5" cellspacing="0" width="100%">
 					    <tr>
 						<td align = "center">
-							<input name="save" value="Update" class="crmbutton small save" onclick="UpdateProfile();" type="button">&nbsp;&nbsp;
-							<input name="cancel" value="Cancel" class="crmbutton small save" onclick="fninvsh('renameProfile');" type="button">&nbsp;&nbsp;
+							<input name="save" value="{$APP.LBL_UPDATE}" class="crmbutton small save" onclick="UpdateProfile();" type="button" title="{$APP.LBL_UPDATE}">&nbsp;&nbsp;
+							<input name="cancel" value="{$APP.LBL_CANCEL_BUTTON_LABEL}" class="crmbutton small save" onclick="fnhide('renameProfile');" type="button" title="{$APP.LBL_CANCEL_BUTTON_LABEL}">&nbsp;&nbsp;
 						</td>
 					    </tr>		
 					    </table>		
@@ -164,7 +167,7 @@ function UpdateProfile()
                                             <!-- privilege lists -->
                                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                               <tbody><tr>
-                                                <td style="height: 10px;" align="center"><img src="{$IMAGE_PATH}prvPrfLine.gif" style="width: 100%; height: 1px;"></td>
+                                                <td style="height: 10px;" align="center"></td>
                                               </tr>
                                             </tbody></table>
                                             <table border="0" cellpadding="10" cellspacing="0" width="100%">
@@ -249,7 +252,7 @@ function UpdateProfile()
 					{$STANDARD_PRIV[$tabid][2]}
         			  </div></td>
 			          <td class="small cellText" width="22%">&nbsp;<div align="center">
-				{if $FIELD_PRIVILEGES[$tabid] neq NULL || $modulename eq 'Emails'}
+				{if $FIELD_PRIVILEGES[$tabid] neq NULL}
 				<img src="{$IMAGE_PATH}showDown.gif" alt="{$APP.LBL_EXPAND_COLLAPSE}" title="{$APP.LBL_EXPAND_COLLAPSE}" onclick="fnToggleVIew('{$modulename}_view')" border="0" height="16" width="40">
 				{/if}
 				</div></td>
@@ -328,7 +331,7 @@ function UpdateProfile()
 		<table border="0" cellpadding="2" cellspacing="0">
 		<tbody>
 			<tr>
-				<td><input type="submit" value="{$APP.LBL_EDIT_BUTTON_LABEL}" class="crmButton small edit" name="edit"></td>
+				<td><input type="submit" value="{$APP.LBL_EDIT_BUTTON_LABEL}" title="{$APP.LBL_EDIT_BUTTON_LABEL}" class="crmButton small edit" name="edit"></td>
 				<td>&nbsp;</td>
 			</tr>
 			
@@ -390,9 +393,9 @@ function fnToggleVIew(obj){
 {/literal}
 {literal}
         //for move RenameProfile
-        var theEventHandle = document.getElementById("renameUI");
-        var theEventRoot   = document.getElementById("renameProfile");
-        Drag.init(theEventHandle, theEventRoot);
+        var Handle = document.getElementById("renameUI");
+        var Root   = document.getElementById("renameProfile");
+        Drag.init(Handle,Root);
 {/literal}
 </script>
 

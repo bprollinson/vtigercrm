@@ -22,16 +22,26 @@ for ($i=10;$i<200;$i++) {
 	$i = (($i+$width)+$pad)-1;
 }
 
-
 // company addy
+if($org_phone != '')
+$phone="\nPhone:	".$org_phone;	
+if($org_fax != '')
+  $fax ="\nFax:		".$org_fax;	
 $companyBlockPositions=array( "10","220","60" );
-$companyText=$org_address."\n".$org_city.", ".$org_state." ".$org_code." ".$org_country;
+$companyText=$org_address."\n".$org_city.", ".$org_state." ".$org_code." ".$org_country." ".$phone." ".$fax."\n".$org_website ;
 $pdf->addTextBlock( $org_name, $companyText ,$companyBlockPositions );
 
 
 // billing Address
 $billPositions = array("85","235","60");
-$billText=$bill_street."\n".$bill_city.", ".$bill_state." ".$bill_code."\n".$bill_country;
+if(trim($bill_street)!='')
+	$billText = $bill_street."\n";
+if(trim($bill_city) !='')
+	$billText .= $bill_city.", ";
+if(trim($bill_state)!='' || trim($bill_code)!= '')
+	$billText .= $bill_state." ".$bill_code."\n";
+
+	$billText .=$bill_country;
 $pdf->addTextBlock("Billing Address:",$billText, $billPositions);
 
 // totals

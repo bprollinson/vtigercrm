@@ -33,7 +33,7 @@ class PHPMailer
      * Sets the CharSet of the message.
      * @var string
      */
-    var $CharSet           = "iso-8859-1";
+    var $CharSet           = "UTF-8";
 
     /**
      * Sets the Content-type of the message.
@@ -533,10 +533,19 @@ class PHPMailer
 
         // Retry while there is no connection
         while($index < count($hosts) && $connection == false)
-        {
-            if(strstr($hosts[$index], ":"))
-                list($host, $port) = explode(":", $hosts[$index]);
-            else
+	{
+  	    if(strstr($hosts[$index], ":"))
+	    {
+		#list($host, $port) = explode(":", $hosts[$index]);
+		// Prasad: support for host's like ssl://smtp.gmail.com:465	    
+		$hostA = explode(':', $hosts[$index]);
+		if (is_numeric(end($hostA)))
+		    $port = array_pop($hostA);
+	        else
+		    $port = $this->Port;
+		$host = implode(':', $hostA);
+	    }	
+	    else
             {
                 $host = $hosts[$index];
                 $port = $this->Port;

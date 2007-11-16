@@ -104,8 +104,8 @@ function getKeyMetrics()
 					'MODULE' => $metriclist['module']
 					);
 
-			$value[]='<a href="index.php?action=index&module='.$metriclist['module'].'&viewname='.$metriclist['id'].'">'.$metriclist['name'].'</a>';
-			$value[]='<a href="index.php?action=index&module='.$metriclist['module'].'&viewname='.$metriclist['id'].'">'.$metriclist['count'].'</a>';
+			$value[]='<a href="index.php?action=ListView&module='.$metriclist['module'].'&viewname='.$metriclist['id'].'">'.substr($metriclist['name'],0,20).'...'.'</a>';
+			$value[]='<a href="index.php?action=ListView&module='.$metriclist['module'].'&viewname='.$metriclist['id'].'">'.$metriclist['count'].'</a>';
 			$entries[$metriclist['id']]=$value;
 		}
 
@@ -129,7 +129,7 @@ function getMetricList()
 	global $adb;
 	$ssql = "select vtiger_customview.* from vtiger_customview inner join vtiger_tab on vtiger_tab.name = vtiger_customview.entitytype";
 	$ssql .= " where vtiger_customview.setmetrics = 1 order by vtiger_customview.entitytype";
-	$result = $adb->query($ssql);
+	$result = $adb->pquery($ssql, array());
 	while($cvrow=$adb->fetch_array($result))
 	{
 		$metricslist = Array();

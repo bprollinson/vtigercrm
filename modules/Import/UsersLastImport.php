@@ -69,8 +69,8 @@ class UsersLastImport extends SugarBean
 	 */
 	function mark_deleted_by_user_id($user_id)
         {
-                $query = "UPDATE $this->table_name set deleted=1 where assigned_user_id='$user_id'";
-                $this->db->query($query,true,"Error marking last imported vtiger_accounts deleted: ");
+                $query = "UPDATE $this->table_name set deleted=1 where assigned_user_id=?";
+                $this->db->pquery($query,array($user_id),true,"Error marking last imported vtiger_accounts deleted: ");
         }
 
 	/**	function used to get the list query of the imported records
@@ -88,7 +88,7 @@ class UsersLastImport extends SugarBean
 		if ($this->bean_type == 'Contacts')
 		{
 				$query = "SELECT distinct crmid,
-			vtiger_account.accountname as vtiger_account_name,
+			vtiger_account.accountname as accountname,
 			vtiger_contactdetails.contactid,
 			vtiger_contactdetails.accountid,				
 			vtiger_contactdetails.yahooid,
@@ -112,7 +112,7 @@ class UsersLastImport extends SugarBean
 		} 
 		else if ($this->bean_type == 'Accounts')
 		{
-				$query = "SELECT distinct vtiger_account.*, vtiger_accountbillads.city,
+				$query = "SELECT distinct vtiger_account.*, vtiger_accountbillads.bill_city,
                                 vtiger_users.user_name user_name,
 				crmid, smownerid 
 				FROM vtiger_account
@@ -132,8 +132,8 @@ class UsersLastImport extends SugarBean
 		{
 		
 			$query = "SELECT distinct
-                                vtiger_account.accountid vtiger_account_id,
-                                vtiger_account.accountname vtiger_account_name,
+                                vtiger_account.accountid accountid,
+                                vtiger_account.accountname accountname,
                                 vtiger_users.user_name user_name,
 			vtiger_crmentity.crmid, smownerid,
 			vtiger_potential.*
@@ -162,15 +162,36 @@ class UsersLastImport extends SugarBean
 				left join vtiger_users_last_import on vtiger_users_last_import.bean_id=vtiger_crmentity.crmid			       	
 				left join vtiger_users ON vtiger_crmentity.smownerid=vtiger_users.id
 				WHERE 
-			vtiger_users_last_import.assigned_user_id=
+				vtiger_users_last_import.assigned_user_id=
 					'{$current_user->id}'
 				AND vtiger_users_last_import.bean_type='Leads'
 				AND vtiger_users_last_import.deleted=0
 				AND vtiger_crmentity.deleted=0
 				AND vtiger_users.status='Active'";
 		}
+		else if($this->bean_type == 'Products')
+		{
+			$query = "SELECT vtiger_crmentity.crmid, vtiger_products.*, vtiger_productcf.*
+				FROM vtiger_products
+				INNER JOIN vtiger_crmentity
+					ON vtiger_crmentity.crmid = vtiger_products.productid
+				INNER JOIN vtiger_productcf
+					ON vtiger_products.productid = vtiger_productcf.productid
+				LEFT JOIN vtiger_vendor
+					ON vtiger_vendor.vendorid = vtiger_products.vendor_id
+				LEFT JOIN vtiger_users_last_import 
+					ON vtiger_users_last_import.bean_id=vtiger_crmentity.crmid
+				LEFT JOIN vtiger_users
+					ON vtiger_users.id = vtiger_products.handler
+				WHERE 
+				vtiger_users_last_import.assigned_user_id= '{$current_user->id}'
+				AND vtiger_users_last_import.bean_type='Products'
+				AND vtiger_users_last_import.deleted=0
+				AND vtiger_crmentity.deleted = 0 
+				AND vtiger_users.status='Active'";
 
-		
+		}
+
 		return $query;
 
 	}
@@ -218,19 +239,15 @@ class UsersLastImport extends SugarBean
 	function undo_contacts($user_id)
 	{
 		$count = 0;
-		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id='$user_id' AND bean_type='Contacts' AND deleted=0";
-
+		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id=? AND bean_type='Contacts' AND deleted=0";
 		$this->log->info($query1); 
-
-		$result1 = $this->db->query($query1) or die("Error getting last import for undo: ".mysql_error()); 
+		$result1 = $this->db->pquery($query1, array($user_id)) or die("Error getting last import for undo: ".mysql_error()); 
 
 		while ( $row1 = $this->db->fetchByAssoc($result1))
 		{
-			$query2 = "update vtiger_crmentity set deleted=1 where crmid='{$row1['bean_id']}'";
-
+			$query2 = "update vtiger_crmentity set deleted=1 where crmid=?";
 			$this->log->info($query2); 
-
-			$result2 = $this->db->query($query2) or die("Error undoing last import: ".mysql_error()); 
+			$result2 = $this->db->pquery($query2, array($row1['bean_id'])) or die("Error undoing last import: ".mysql_error()); 
 
 			$count++;
 			
@@ -245,19 +262,15 @@ class UsersLastImport extends SugarBean
 	function undo_leads($user_id)
 	{
 		$count = 0;
-		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id='$user_id' AND bean_type='Leads' AND deleted=0";
-
+		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id=? AND bean_type='Leads' AND deleted=0";
 		$this->log->info($query1); 
-
-		$result1 = $this->db->query($query1) or die("Error getting last import for undo: ".mysql_error()); 
+		$result1 = $this->db->pquery($query1, array($user_id)) or die("Error getting last import for undo: ".mysql_error()); 
 
 		while ( $row1 = $this->db->fetchByAssoc($result1))
 		{
-			$query2 = "update vtiger_crmentity set deleted=1 where crmid='{$row1['bean_id']}'";
-
+			$query2 = "update vtiger_crmentity set deleted=1 where crmid=?";
 			$this->log->info($query2); 
-
-			$result2 = $this->db->query($query2) or die("Error undoing last import: ".mysql_error()); 
+			$result2 = $this->db->pquery($query2, array($row1['bean_id'])) or die("Error undoing last import: ".mysql_error()); 
 
 			$count++;
 			
@@ -273,19 +286,15 @@ class UsersLastImport extends SugarBean
 	{
 		// this should just be a loop foreach module type
 		$count = 0;
-		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id='$user_id' AND bean_type='Accounts' AND deleted=0";
-
+		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id=? AND bean_type='Accounts' AND deleted=0";
 		$this->log->info($query1); 
-
-		$result1 = $this->db->query($query1) or die("Error getting last import for undo: ".mysql_error()); 
+		$result1 = $this->db->pquery($query1, array($user_id)) or die("Error getting last import for undo: ".mysql_error()); 
 
 		while ( $row1 = $this->db->fetchByAssoc($result1))
 		{
-			$query2 = "update vtiger_crmentity set deleted=1 where crmid='{$row1['bean_id']}'";
-
+			$query2 = "update vtiger_crmentity set deleted=1 where crmid=?";
 			$this->log->info($query2); 
-
-			$result2 = $this->db->query($query2) or die("Error undoing last import: ".mysql_error()); 
+			$result2 = $this->db->pquery($query2, array($row1['bean_id'])) or die("Error undoing last import: ".mysql_error()); 
 
 			$count++;
 
@@ -301,19 +310,17 @@ class UsersLastImport extends SugarBean
 	{
 		// this should just be a loop foreach module type
 		$count = 0;
-		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id='$user_id' AND bean_type='Potentials' AND deleted=0";
+		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id=? AND bean_type='Potentials' AND deleted=0";
 
 		$this->log->info($query1); 
 
-		$result1 = $this->db->query($query1) or die("Error getting last import for undo: ".mysql_error()); 
+		$result1 = $this->db->pquery($query1, array($user_id)) or die("Error getting last import for undo: ".mysql_error()); 
 
 		while ( $row1 = $this->db->fetchByAssoc($result1))
 		{
-			$query2 = "update vtiger_crmentity set deleted=1 where crmid='{$row1['bean_id']}'";
-
+			$query2 = "update vtiger_crmentity set deleted=1 where crmid=?";
 			$this->log->info($query2); 
-
-			$result2 = $this->db->query($query2) or die("Error undoing last import: ".mysql_error()); 
+			$result2 = $this->db->pquery($query2, array($row1['bean_id'])) or die("Error undoing last import: ".mysql_error()); 
 
 			$count++;
 
@@ -328,19 +335,15 @@ class UsersLastImport extends SugarBean
 	function undo_products($user_id)
 	{
 		$count = 0;
-		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id='$user_id' AND bean_type='Products' AND deleted=0";
-
+		$query1 = "select bean_id from vtiger_users_last_import where assigned_user_id=? AND bean_type='Products' AND deleted=0";
 		$this->log->info($query1); 
-
-		$result1 = $this->db->query($query1) or die("Error getting last import for undo: ".mysql_error()); 
+		$result1 = $this->db->pquery($query1, array($user_id)) or die("Error getting last import for undo: ".mysql_error()); 
 
 		while ( $row1 = $this->db->fetchByAssoc($result1))
 		{
-			$query2 = "update vtiger_crmentity set deleted=1 where crmid='{$row1['bean_id']}'";
-
+			$query2 = "update vtiger_crmentity set deleted=1 where crmid=?";
 			$this->log->info($query2); 
-
-			$result2 = $this->db->query($query2) or die("Error undoing last import: ".mysql_error()); 
+			$result2 = $this->db->pquery($query2, array($row1['bean_id'])) or die("Error undoing last import: ".mysql_error()); 
 
 			$count++;
 		}

@@ -9,8 +9,9 @@
 *
  ********************************************************************************/
 require_once('include/database/PearDatabase.php');
-
-$fldmodule=$_REQUEST['fld_module'];
+require_once('include/ComboUtil.php');
+global $current_user;
+ $fldmodule=$_REQUEST['fld_module'];
  $fldlabel=$_REQUEST['fldLabel'];
  $fldType= $_REQUEST['fieldType'];
  $parenttab=$_REQUEST['parenttab'];
@@ -27,8 +28,8 @@ if(get_magic_quotes_gpc() == 1)
 //checking if the user is trying to create a custom vtiger_field which already exists  
 if($mode != 'edit')
 {
-	$checkquery="select * from vtiger_field where tabid='".$tabid."'and fieldlabel='".$fldlabel."'";
-	$checkresult=$adb->query($checkquery);
+	$checkquery="select * from vtiger_field where tabid=? and fieldlabel=?";
+	$checkresult=$adb->pquery($checkquery, array($tabid, $fldlabel));
 }
 else
 	$checkresult=0;
@@ -61,7 +62,10 @@ if($adb->num_rows($checkresult) != 0)
 		$fldPickList='';
 	}
 	
-	header("Location:index.php?module=Settings&action=CustomFieldList&fld_module=".$fldmodule."&fldType=".$fldType."&fldlabel=".$fldlabel."&fldlength=".$fldlength."&flddecimal=".$flddecimal."&fldPickList=".$fldPickList."&parenttab=".$parenttab."&duplicate=yes");
+	//header("Location:index.php?module=Settings&action=CustomFieldList&fld_module=".$fldmodule."&fldType=".$fldType."&fldlabel=".$fldlabel."&fldlength=".$fldlength."&flddecimal=".$flddecimal."&fldPickList=".$fldPickList."&parenttab=".$parenttab."&duplicate=yes");
+	//changed to fix the issue #4117
+		header("Location:index.php?module=Settings&action=CustomFieldList&fld_module=".$fldmodule."&fldType=".$fldType."&fldlabel=".$fldlabel."&parenttab=".$parenttab."&duplicate=yes");
+
 
 }
 else
@@ -153,7 +157,7 @@ else
 	{
 		$uitype = 13;
 		$type = "C(50)"; //adodb type
-		$uichekdata='V~O';
+		$uichekdata='E~O';
 	}
 	elseif($fldType == 'Phone')
 	{
@@ -227,53 +231,70 @@ else
         {
 		if($_REQUEST['fieldid'] == '')
 		{
-			$query = "insert into vtiger_field values(".$tabid.",".$custfld_fieldid.",'".$columnName."','".$tableName."',2,".$uitype.",'".$columnName."','".$fldlabel."',0,0,0,100,".$custfld_sequece.",$blockid,1,'".$uichekdata."',1,0,'BAS')";
-			$adb->query($query);
+			$query = "insert into vtiger_field values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			$qparams = array($tabid,$custfld_fieldid,$columnName,$tableName,2,$uitype,$columnName,$fldlabel,0,0,0,100,$custfld_sequece,$blockid,1,$uichekdata,1,0,'BAS');
+			$adb->pquery($query, $qparams);
 			$adb->alterTable($tableName, $columnName." ".$type, "Add_Column");
 		}
 		else
 		{
-			$query = "update vtiger_field set fieldlabel='".$fldlabel."',typeofdata='".$uichekdata."' where fieldid=".$_REQUEST['fieldid'];
-			$adb->query($query);
+			$query = "update vtiger_field set fieldlabel=?, typeofdata=? where fieldid=?";
+			$adb->pquery($query, array($fldlabel, $uichekdata, $_REQUEST['fieldid']));
 		}
 		//Inserting values into vtiger_profile2field vtiger_tables
 		if($_REQUEST['fieldid'] == '')
 		{
 			$sql1 = "select * from vtiger_profile";
-			$sql1_result = $adb->query($sql1);
+			$sql1_result = $adb->pquery($sql1, array());
 			$sql1_num = $adb->num_rows($sql1_result);
 			for($i=0; $i<$sql1_num; $i++)
 			{
 				$profileid = $adb->query_result($sql1_result,$i,"profileid");
-				$sql2 = "insert into vtiger_profile2field values(".$profileid.", ".$tabid.", ".$custfld_fieldid.", 0, 1)";
-				$adb->query($sql2);	 	
+				$sql2 = "insert into vtiger_profile2field values(?,?,?,?,?)";
+				$adb->pquery($sql2, array($profileid, $tabid, $custfld_fieldid, 0, 1));	 	
 			}
 
 			//Inserting values into def_org vtiger_tables
-			$sql_def = "insert into vtiger_def_org_field values(".$tabid.", ".$custfld_fieldid.", 0, 1)";
-			$adb->query($sql_def);
+			$sql_def = "insert into vtiger_def_org_field values(?,?,?,?)";
+			$adb->pquery($sql_def, array($tabid, $custfld_fieldid, 0, 1));
 		}
 
 
 		if($fldType == 'Picklist' || $fldType == 'MultiSelectCombo')
 		{
+			$columnName = mysql_real_escape_string($columnName);
 			// Creating the PickList Table and Populating Values
 			if($_REQUEST['fieldid'] == '')
 			{
 				$qur = "CREATE TABLE vtiger_".$columnName." (
 					".$columnName."id int(19) NOT NULL auto_increment,
 					".$columnName." varchar(200) NOT NULL,
-					sortorderid int(19) NOT NULL default '0',
 					presence int(1) NOT NULL default '1',
+					picklist_valueid int(19) NOT NULL default '0',
 				        PRIMARY KEY  (".$columnName."id)
 				)";
-				$adb->query($qur);
+				$adb->pquery($qur, array());
 			}
 
-			if($_REQUEST['fieldid'] != '' && $mode == 'edit')
+			/*if($_REQUEST['fieldid'] != '' && $mode == 'edit')
 			{
 				$delquery = "DELETE from vtiger_".$columnName;
 				$adb->query($delquery);
+			}*/
+			//Adding a  new picklist value in the picklist table
+			if($mode != 'edit')
+			{
+				$picklistid = $adb->getUniqueID("vtiger_picklist");
+				$sql="insert into vtiger_picklist values(?,?)";
+				$adb->pquery($sql, array($picklistid,$columnName));
+			}
+			$roleid=$current_user->roleid;
+			$qry="select picklistid from vtiger_picklist where  name=?";
+			$picklistid = $adb->query_result($adb->pquery($qry, array($columnName)), 0,'picklistid');
+			if($_REQUEST['fieldid'] != '' && $mode == 'edit')
+			{
+				$sql = "delete from vtiger_role2picklist  where picklistid=?";
+				$adb->pquery($sql, array($picklistid));
 			}
 			$pickArray = Array();
 			$fldPickList =  $_REQUEST['fldPickList'];
@@ -282,11 +303,33 @@ else
 			for($i = 0; $i < $count; $i++)
 			{
 				$pickArray[$i] = trim($pickArray[$i]);
-				$id = $adb->getUniqueID('vtiger_'.$columnName);
 				if($pickArray[$i] != '')
 				{
-					$query = "insert into vtiger_".$columnName." values(".$id.",'".$pickArray[$i]."',".$i.",1)";
-					$adb->query($query);
+					$picklistcount=0;
+					$sql ="select $columnName from vtiger_$columnName";
+					$numrow = $adb->num_rows($adb->pquery($sql, array()));
+					for($x=0;$x < $numrow ; $x++)
+					{
+						$picklistvalues = $adb->query_result($adb->pquery($sql, array()),$x,$columnName);
+						if($pickArray[$i] == $picklistvalues)
+						{
+							$picklistcount++;
+						}
+
+					}
+					if($picklistcount == 0)
+					{
+						$picklist_valueid = getUniquePicklistID();
+						$query = "insert into vtiger_".$columnName." values(?,?,?,?)";				
+						$adb->pquery($query, array($adb->getUniqueID("vtiger_".$columnName),$pickArray[$i],1,$picklist_valueid));
+						$sql="update vtiger_picklistvalues_seq set id = ?";
+						$adb->pquery($sql, array(++$picklist_valueid));
+
+					}
+					$sql = "select picklist_valueid from vtiger_$columnName where $columnName=?";
+					$pick_valueid = $adb->query_result($adb->pquery($sql, array($pickArray[$i])),0,'picklist_valueid');
+					$sql = "insert into vtiger_role2picklist select roleid,$pick_valueid,$picklistid,$i from vtiger_role";
+					$adb->pquery($sql, array());
 				}
 			}
 		}
@@ -294,8 +337,8 @@ else
 		if($fldmodule == 'Leads' && $_REQUEST['fieldid'] == '')
 		{
 
-			$sql_def = "insert into vtiger_convertleadmapping (leadfid) values(".$custfld_fieldid.")";
-			$adb->query($sql_def);
+			$sql_def = "insert into vtiger_convertleadmapping (leadfid) values(?)";
+			$adb->pquery($sql_def, array($custfld_fieldid));
 		}
 	}
 	header("Location:index.php?module=Settings&action=CustomFieldList&fld_module=".$fldmodule."&parenttab=".$parenttab);

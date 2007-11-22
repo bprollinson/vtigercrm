@@ -17,11 +17,29 @@
  * Description:  Executes a step in the installation process.
  ********************************************************************************/
 
+require_once('include/logging.php');
+$log =& LoggerManager::getLogger('PLATFORM');
+
+$info_style_start = '<div class="center"><table border="0" cellpadding="3" width="600"><tr class="h"><td><h1 class="p">';
+$info_style_end = '</h1></td></tr></table></div>';
+require_once('vtigerversion.php');
+if($patch_version !='')
+{
+	$log->info($info_style_start . "Vtiger Version: " . $vtiger_current_version . " Patch " . $patch_version . $info_style_end);
+}
+else
+{
+	$log->info($info_style_start . "Vtiger Version: " . $vtiger_current_version . $info_style_end);
+}
+
 //get php configuration settings.  requires elaborate parsing of phpinfo() output
 ob_start();
 phpinfo(INFO_GENERAL);
 $string = ob_get_contents();
+phpinfo();
+$php_info = ob_get_contents();
 ob_end_clean();
+$log->info($php_info);
 
 $pieces = explode("<h2", $string);
 $settings = array();
@@ -47,7 +65,7 @@ foreach($pieces as $val)
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>vtiger CRM 5 - Configuration Wizard - Welcome</title>
 	<link href="include/install/install.css" rel="stylesheet" type="text/css">
 </head>
@@ -97,10 +115,12 @@ foreach($pieces as $val)
 
 					<tr>
 						<td align=left class="small" style="padding-left:20px">
-		<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This Configuration Wizard will create vtiger CRM 5.0.2 databases and tables and configuration files you need to start. The entire process should take about four minutes. Click the Start button when you are ready. 
+		<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This Configuration Wizard will create the requisite data needed to get working with vtiger CRM. The entire process should take about four minutes. Click the Start button when you are ready. 
 <br><br>
-<p><span style="color:#555555">- vtiger CRM 5.0.2 is tested on mySQL 4.1.X, mySQL 5.0.19, PHP 5.0.19 and Apache 2.0.40.</p> 
-<p align="center"><font color='red'><b>vtiger CRM 5.0.2 will not work on mysql 4.0.x versions</b></font></center><center><font color='blue'><b>vtiger crm can run on a system which has xampp/lampp/wampp already installed in it provided it meets the above mentioned requirements</b></font></center>
+<p><span style="color:#555555">- vtiger CRM 5.0.4 is tested on mySQL 4.1.X, mySQL 5.0.19, PHP 5.0.19, PHP 5.2.1 and Apache 2.0.40.</p> 
+<p align="center"><font color='#0000FF'><b>vtiger CRM 5.0.4 will not work on mysql 4.0.x versions and PHP 4.x versions</b></font></center></p></font></center><center>
+ 
+<font color='blue'><b>vtiger CRM can run on a system which has xampp/lampp/wampp already installed in it provided it meets the above mentioned requirements</b></font></center>
 <p>The installation wizard will guide you with the installation regardless of the setup you may have.</span>
 						
 					  </td>
@@ -112,10 +132,10 @@ foreach($pieces as $val)
 					</tr>
 					<tr>
 						<td align=center>
-						<IFRAME src="http://www.vtiger.com/products/crm/registration.html" width="500" height=250 scrolling='no' frameborder="0">
+						<IFRAME src="http://www.vtiger.com/products/crm/registration.php" width="500" height=250 scrolling='no' frameborder="0">
 						  [Your user agent does not support frames or is currently configured
 						  not to display frames. However, you may visit
-						  <A href="http://www.vtiger.com/products/crm/registration.html">the related document.</A>] 
+						  <A href="http://www.vtiger.com/products/crm/registration.php">the related document.</A>] 
 						 </IFRAME>
 				 		 </td>
 					</tr>

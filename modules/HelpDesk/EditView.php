@@ -39,7 +39,6 @@ if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $disp_view = getView($focus->mode);
 if($disp_view == 'edit_view')
@@ -111,7 +110,7 @@ if($_REQUEST['record'] != '')
 	//Added to display the ticket comments information
 	$smarty->assign("COMMENT_BLOCK",$focus->getCommentInformation($_REQUEST['record']));
 }
-
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 if($focus->mode == 'edit')
 	$smarty->display("salesEditView.tpl");
 else

@@ -16,7 +16,6 @@
 require_once('Smarty_setup.php');
 require_once("data/Tracker.php");
 require_once('modules/Quotes/Quotes.php');
-require_once('themes/'.$theme.'/layout_utils.php');
 require_once('include/logging.php');
 require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
@@ -128,7 +127,7 @@ if(isset($order_by) && $order_by != '')
 {
 	if($order_by == 'smownerid')
         {
-                $query .= ' ORDER BY user_name '.$sorder;
+		$query .= " ORDER BY case when (vtiger_users.user_name not like '') then vtiger_users.user_name else vtiger_groups.groupname end ".$sorder;
         }
         else
         {
@@ -167,7 +166,7 @@ if ($start_rec ==0)
 else
 	$limit_start_rec = $start_rec -1;
 	
-$list_result = $adb->query($query. " limit ".$limit_start_rec.",".$list_max_entries_per_page);
+$list_result = $adb->pquery($query. " limit $limit_start_rec, $list_max_entries_per_page", array());
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 

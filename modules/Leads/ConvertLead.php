@@ -18,7 +18,6 @@ global $mod_strings,$app_strings,$log,$current_user,$theme;
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 if(isset($_REQUEST['record']))
 {
@@ -27,8 +26,8 @@ if(isset($_REQUEST['record']))
 }
 $category = getParentTab();
 //Retreive lead details from database
-$sql = "SELECT firstname, lastname, company, smownerid from vtiger_leaddetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_leaddetails.leadid where vtiger_leaddetails.leadid =".$id;
-$result = $adb->query($sql);
+$sql = "SELECT firstname, lastname, company, smownerid from vtiger_leaddetails inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_leaddetails.leadid where vtiger_leaddetails.leadid =?";
+$result = $adb->pquery($sql, array($id));
 $row = $adb->fetch_array($result);
 
 $firstname = $row["firstname"];
@@ -49,7 +48,7 @@ $log->info("Convert Lead view");
 $date_format = parse_calendardate($app_strings['NTC_DATE_FORMAT']);
 
 $sales_stage_query="select * from vtiger_sales_stage";
-$sales_stage_result = $adb->query($sales_stage_query);
+$sales_stage_result = $adb->pquery($sales_stage_query, array());
 $noofsalesRows = $adb->num_rows($sales_stage_result);
 $sales_stage_fld = '';
 for($j = 0; $j < $noofsalesRows; $j++)
@@ -66,7 +65,7 @@ for($j = 0; $j < $noofsalesRows; $j++)
                 $chk_val = '';
         }
 
-        $sales_stage_fld.= '<OPTION value="'.$sales_stageValue.'" '.$chk_val.'>'.$sales_stageValue.'</OPTION>';
+        $sales_stage_fld.= '<OPTION value="'.$sales_stageValue.'" '.$chk_val.'>'.getTranslatedString($sales_stageValue).'</OPTION>';
 }
 $convertlead = '<form name="ConvertLead" method="POST" action="index.php">
 	<input type="hidden" name="module" value="Leads">

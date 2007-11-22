@@ -45,6 +45,7 @@ if(isset($_REQUEST['record']) && $_REQUEST['record'] != '')
     $focus->name=$focus->column_fields['subject']; 
 }
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
+	$smarty->assign("DUPLICATE_FROM", $focus->id);
 	$PO_associated_prod = getAssociatedProducts("PurchaseOrder",$focus);
 	$focus->id = "";
     	$focus->mode = ''; 	
@@ -111,9 +112,6 @@ $smarty->assign("CATEGORY",$category);
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 
-
-require_once($theme_path.'layout_utils.php');
-
 $log->info("Order view");
 
 if (isset($focus->name)) $smarty->assign("NAME", $focus->name);
@@ -175,17 +173,19 @@ $smarty->assign("ID", $focus->id);
 $smarty->assign("CALENDAR_LANG", $app_strings['LBL_JSCALENDAR_LANG']);
 $smarty->assign("CALENDAR_DATEFORMAT", parse_calendardate($app_strings['NTC_DATE_FORMAT']));
 
-
 //if create PO, get all available product taxes and shipping & Handling taxes
 if($focus->mode != 'edit')
 {
 	$tax_details = getAllTaxes('available');
 	$sh_tax_details = getAllTaxes('available','sh');
-
-	$smarty->assign("GROUP_TAXES",$tax_details);
-	$smarty->assign("SH_TAXES",$sh_tax_details);
 }
-
+else
+{
+	$tax_details = getAllTaxes('available','',$focus->mode,$focus->id);
+        $sh_tax_details = getAllTaxes('available','sh','edit',$focus->id);
+}		
+$smarty->assign("GROUP_TAXES",$tax_details);
+$smarty->assign("SH_TAXES",$sh_tax_details);
 
 
 
@@ -199,6 +199,7 @@ if($focus->mode != 'edit')
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 if($focus->mode == 'edit')
 	$smarty->display('Inventory/InventoryEditView.tpl');
 else

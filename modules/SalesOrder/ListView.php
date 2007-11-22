@@ -20,7 +20,6 @@ require_once('include/DatabaseUtil.php');
 global $app_strings,$mod_strings,$list_max_entries_per_page,$currentModule,$theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
@@ -110,8 +109,6 @@ if(isset($where) && $where != '')
         $list_query .= ' and '.$where;
 }
 
-$smarty->assign("SOLISTHEADER", get_form_header($current_module_strings['LBL_LIST_SO_FORM_TITLE'], $other_text, false ));
-
 if(isset($order_by) && $order_by != '')
 {
 	if($order_by == 'smownerid')
@@ -164,9 +161,9 @@ else
 	$limit_start_rec = $start_rec -1;
 
 if( $adb->dbType == "pgsql")
-     $list_result = $adb->query($list_query. " OFFSET ".$limit_start_rec." LIMIT ".$list_max_entries_per_page);
+     $list_result = $adb->pquery($list_query. " OFFSET $limit_start_rec LIMIT $list_max_entries_per_page", array());
 else
-     $list_result = $adb->query($list_query. " LIMIT ".$limit_start_rec.",".$list_max_entries_per_page);
+     $list_result = $adb->pquery($list_query. " LIMIT $limit_start_rec, $list_max_entries_per_page", array());
 
 
 

@@ -307,12 +307,17 @@ function SearchContactsByEmail($username,$emailaddress)
 
 function AddMessageToContact($username,$contactid,$msgdtls)
 {
+	global $current_user;
 	global $adb;
 	require_once('modules/Users/Users.php');
 	require_once('modules/Emails/Emails.php');
 	
-	$seed_user = new Users();
-	$user_id = $seed_user->retrieve_user_id($username);
+	$current_user = new Users();
+	$user_id = $current_user->retrieve_user_id($username);
+	$query = "select email1 from vtiger_users where id = ?";
+	$result = $adb->pquery($query, array($user_id));
+	$user_emailid = $adb->query_result($result,0,"email1");
+	$current_user = $current_user->retrieveCurrentUserInfoFromFile($user_id);
 	
 	foreach($msgdtls as $msgdtl)
 	{
@@ -320,7 +325,8 @@ function AddMessageToContact($username,$contactid,$msgdtls)
     {    
         $email = new Emails();
         //$log->debug($msgdtls['contactid']);
-        $email_body = str_replace("'", "''", $msgdtl['body']);
+	$email_body = str_replace("'", "''", $msgdtl['body']);
+	$email_body = str_replace('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">'," ", $email_body);
         $email_subject = str_replace("'", "''",$msgdtl['subject']);
         $date_sent = getDisplayDate($msgdtl['datesent']);
         
@@ -331,18 +337,25 @@ function AddMessageToContact($username,$contactid,$msgdtls)
         $email->column_fields[activitytype] = 'Emails'; 
         $email->plugin_save = true; 
         $email->save("Emails");
-        
+	$query = "select fieldid from vtiger_field where fieldname = 'email' and tabid = 4";
+	$result = $adb->pquery($query, array());
+	$field_id = $adb->query_result($result,0,"fieldid");
         $email->set_emails_contact_invitee_relationship($email->id,$contactid);
         $email->set_emails_se_invitee_relationship($email->id,$contactid);
-        $email->set_emails_user_invitee_relationship($email->id,$user_id);
-        $sql = "select email from vtiger_contactdetails inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_contactdetails.contactid where vtiger_crmentity.deleted =0 and vtiger_contactdetails.contactid='".$contactid."'";
-        $result = $adb->query($sql);
+	$email->set_emails_user_invitee_relationship($email->id,$user_id);
+        $sql = "select email from vtiger_contactdetails inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_contactdetails.contactid where vtiger_crmentity.deleted =0 and vtiger_contactdetails.contactid=?";
+        $result = $adb->pquery($sql, array($contactid));
         $camodulerow = $adb->fetch_array($result);
         if(isset($camodulerow))
         {
             $emailid = $camodulerow["email"];
-            $query = 'insert into vtiger_emaildetails values ('.$email->id.',"","'.$emailid.'","","","","'.$contactid."@77|".'","OUTLOOK")';
-            $adb->query($query);
+
+	    //added to save < as $lt; and > as &gt; in the database so as to retrive the emailID
+	    $user_emailid = str_replace('<','&lt;',$user_emailid);
+	    $user_emailid = str_replace('>','&gt;',$user_emailid);
+			$query = 'insert into vtiger_emaildetails values (?,?,?,?,?,?,?,?)';
+            $params = array($email->id, $emailid, $user_emailid, "", "", "", $user_id.'@-1|'.$contactid.'@'.$field_id.'|', "OUTLOOK");
+			$adb->pquery($query, $params);
         }
         return $email->id;
 		}
@@ -353,31 +366,36 @@ function AddMessageToContact($username,$contactid,$msgdtls)
 	}
 }
 
-function LoginToVtiger($userid,$password)
+function LoginToVtiger($userid,$password,$version)
 {
+	global $log;
 	global $adb;
+	$log->DEBUG("Entered into vtigerCRM with userid".$userid." and Version".$version);
+	include('vtigerversion.php');	
+	if($version != $vtiger_current_version)
+	{
+		return "VERSION";
+	}
 	require_once('modules/Users/Users.php');
-	
 	$return_access = "FALSE";
-	
 	$objuser = new Users();
-	
 	if($password != "")
 	{
 		$objuser->column_fields['user_name'] = $userid;
 		$objuser->load_user($password);
 		if($objuser->is_authenticated())
 		{
-			$return_access = "TRUE";
+			$return_access = "TRUES";
 		}else
 		{
-			$return_access = "FALSE";
+			$return_access = "LOGIN";
 		}
 	}else
 	{
 			//$server->setError("Invalid username and/or password");
 			$return_access = "FALSE";
 	}
+$log->DEBUG("The return access to outlook was ".$return_access." from vtigerCRM");
 	$objuser = $objuser;
 	return $return_access;
 }
@@ -391,7 +409,7 @@ function CheckEmailPermission($username)
 	$current_user=$seed_user;
 	$current_user->retrieve_entity_info($user_id, 'Users');
 
-	if(isPermitted("Emails","EditView") == "yes")
+	if(isPermitted("Emails","EditView") == "yes" && (isPermitted("Contacts","index") == 'yes'))
 	{
 		return "allowed";
 	}else
@@ -409,7 +427,7 @@ function CheckContactPermission($username)
 	$current_user=$seed_user;
 	$current_user->retrieve_entity_info($user_id, 'Users');
 
-	if(isPermitted("Contacts","Delete") == "yes")
+	if(isPermitted("Contacts","Delete") == "yes" && isPermitted("Contacts","EditView") == "yes")
 	{
 		return "allowed";
 	}else
@@ -427,7 +445,7 @@ function CheckActivityPermission($username)
 	$current_user=$seed_user;
 	$current_user->retrieve_entity_info($user_id, 'Users');
 
-	if(isPermitted("Calendar","Delete") == "yes")
+	if(isPermitted("Calendar","Delete") == "yes" && isPermitted("Calendar","EditView") == "yes")
 	{
 		return "allowed";
 	}else
@@ -441,7 +459,7 @@ function AddEmailAttachment($emailid,$filedata,$filename,$filesize,$filetype,$us
 	global $adb;
 	require_once('modules/Users/Users.php');
 	require_once('include/utils/utils.php');
-
+	$filename = preg_replace('/\s+/', '_', $filename);//replace space with _ in filename
 	$date_var = date('YmdHis');
 
 	$seed_user = new Users();
@@ -455,21 +473,20 @@ function AddEmailAttachment($emailid,$filedata,$filename,$filesize,$filetype,$us
 	fwrite($handle,base64_decode($filedata),$filesize);
 	fclose($handle);
 
-	$sql1 = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) 
-			values(".$crmid.",".$user_id.",".$user_id.",'Emails Attachment',' ',".$adb->formatString("vtiger_crmentity","createdtime",$date_var).",".$adb->formatString("vtiger_crmentity","modifiedtime",$date_var).")";
+	$sql1 = "insert into vtiger_crmentity (crmid,smcreatorid,smownerid,setype,description,createdtime,modifiedtime) values (?,?,?,?,?,?,?)";
+	$params1 = array($crmid, $user_id, $user_id, 'Emails Attachment', ' ', $adb->formatDate($date_var, true), $adb->formatDate($date_var, true));
+	$entityresult = $adb->pquery($sql1, $params1);	
 
-	$entityresult = $adb->query($sql1);	
 	$filetype="application/octet-stream";
 
 	if($entityresult != false)
 	{
-		$sql2="insert into vtiger_attachments(attachmentsid, name, description, type, path) 
-				values(".$crmid.",'".$filename."',' ','".$filetype."','".$upload_file_path."')";
+		$sql2="insert into vtiger_attachments(attachmentsid, name, description, type, path) values (?,?,?,?,?)";
+		$params2 = array($crmid, $filename, ' ', $filetype, $upload_file_path);
+		$result=$adb->pquery($sql2, $params2);
 
-		$result=$adb->query($sql2);
-
-		$sql3='insert into vtiger_seattachmentsrel values('.$emailid.','.$crmid.')';
-		$adb->query($sql3);
+		$sql3='insert into vtiger_seattachmentsrel values(?,?)';
+		$adb->pquery($sql3, array($emailid, $crmid));
 
 		return $crmid;   
 	}
@@ -577,25 +594,30 @@ function AddContacts($username,$cntdtls)
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-  {
-    $sql1 = "select fieldname,columnname from vtiger_field where tabid=4 and block <> 75 and block <> 6 and block <> 5";
-  }else
-  {
-    $profileList = getCurrentUserProfileList();
-    $sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=4 and vtiger_field.block <> 75 and vtiger_field.block <> 6 and vtiger_field.block <> 5 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
-  }
-  $result1 = $adb->query($sql1);
-  for($i=0;$i < $adb->num_rows($result1);$i++)
-  {
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0) {
+    	$sql1 = "select fieldname,columnname from vtiger_field where tabid=4 and block <> 75 and block <> 6 and block <> 5";
+		$params1 = array();
+  	} else {
+    	$profileList = getCurrentUserProfileList();
+    	$sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=4 and vtiger_field.block <> 75 and vtiger_field.block <> 6 and vtiger_field.block <> 5 and vtiger_field.displaytype in (1,2,4,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+  		$params1 = array();
+		if (count($profileList) > 0) {
+			$sql1 .= " and vtiger_profile2field.profileid in (". generateQuestionMarks($profileList) .")";
+			array_push($params1, $profileList);
+		}
+	}
+  	$result1 = $adb->pquery($sql1, $params1);
+  
+  	for($i=0;$i < $adb->num_rows($result1);$i++)
+  	{
       $permitted_lists[] = $adb->query_result($result1,$i,'fieldname');
-  }
+  	}
 	
 	foreach($cntdtls as $cntrow)
 	{
 		if(isset($cntrow))
 		{
-		  		$contact->column_fields[salutation]=in_array('salutation',$permitted_lists) ? $cntrow["title"] : "";		
+		  		$contact->column_fields[salutationtype]=in_array('salutationtype',$permitted_lists) ? $cntrow["title"] : "";		
      			$contact->column_fields[firstname]=in_array('firstname',$permitted_lists) ? $cntrow["firstname"] : "";
     			
     			if($cntrow["middlename"] != "")
@@ -658,26 +680,31 @@ function UpdateContacts($username,$cntdtls)
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-  {
-    $sql1 = "select fieldname,columnname from vtiger_field where tabid=4 and block <> 75 and block <> 6 and block <> 5";
-  }else
-  {
-    $profileList = getCurrentUserProfileList();
-    $sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=4 and vtiger_field.block <> 75 and vtiger_field.block <> 6 and vtiger_field.block <> 5 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
-  }
-  $result1 = $adb->query($sql1);
-  for($i=0;$i < $adb->num_rows($result1);$i++)
-  {
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0) {
+    	$sql1 = "select fieldname,columnname from vtiger_field where tabid=4 and block <> 75 and block <> 6 and block <> 5";
+  		$params1 = array();
+	} else {
+    	$profileList = getCurrentUserProfileList();
+    	$sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=4 and vtiger_field.block <> 75 and vtiger_field.block <> 6 and vtiger_field.block <> 5 and vtiger_field.displaytype in (1,2,4,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+  		$params1 = array();
+		if (count($profileList) > 0) {
+			$sql1 .= " and vtiger_profile2field.profileid in (". generateQuestionMarks($profileList) .")";
+			array_push($params1, $profileList);
+		}
+	}
+  	$result1 = $adb->pquery($sql1, $params1);
+  
+  	for($i=0;$i < $adb->num_rows($result1);$i++)
+  	{
       $permitted_lists[] = $adb->query_result($result1,$i,'fieldname');
-  }
+  	}
 	
 	foreach($cntdtls as $cntrow)
 	{
 		if(isset($cntrow))
 		{
 			$contact->retrieve_entity_info($cntrow["id"],"Contacts");
-			$contact->column_fields[salutation]=in_array('salutation',$permitted_lists) ? $cntrow["title"] : "";		
+			$contact->column_fields[salutationtype]=in_array('salutationtype',$permitted_lists) ? $cntrow["title"] : "";		
 			$contact->column_fields[firstname]=in_array('firstname',$permitted_lists) ? $cntrow["firstname"] : "";
 			if($cntrow["middlename"] != "")
 			{
@@ -751,11 +778,9 @@ function retrieve_account_id($account_name,$user_id)
 		return null;
 	}
 
-	$query = "select vtiger_account.accountname accountname,vtiger_account.accountid accountid from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid where vtiger_crmentity.deleted=0 and vtiger_account.accountname='" .$account_name."'";
-
-
 	$db = new PearDatabase();
-	$result=  $db->query($query) or die ("Not able to execute insert");
+	$query = "select vtiger_account.accountname accountname,vtiger_account.accountid accountid from vtiger_account inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_account.accountid where vtiger_crmentity.deleted=0 and vtiger_account.accountname=?";
+	$result=  $db->pquery($query, array($account_name)) or die ("Not able to execute insert");
 
 	$rows_count =  $db->getRowCount($result);
 	if($rows_count==0)
@@ -867,19 +892,24 @@ function AddTasks($username,$taskdtls)
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-  {
-    $sql1 = "select fieldname,columnname from vtiger_field where tabid=9";
-  }else
-  {
-    $profileList = getCurrentUserProfileList();
-    $sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=9 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
-  }
-  $result1 = $adb->query($sql1);
-  for($i=0;$i < $adb->num_rows($result1);$i++)
-  {
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0) {
+    	$sql1 = "select fieldname,columnname from vtiger_field where tabid=9";
+		$params1 = array();
+  	} else {
+    	$profileList = getCurrentUserProfileList();
+    	$sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=9 and vtiger_field.displaytype in (1,2,4,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+  		$params1 = array();
+		if (count($profileList) > 0) {
+			$sql1 .= " and vtiger_profile2field.profileid in (". generateQuestionMarks($profileList) .")";
+			array_push($params1, $profileList);
+		}
+	}
+  	$result1 = $adb->pquery($sql1, $params1);
+  
+  	for($i=0;$i < $adb->num_rows($result1);$i++)
+  	{
       $permitted_lists[] = $adb->query_result($result1,$i,'fieldname');
-  }
+  	}
 	
 	$task = new Activity();
 	
@@ -948,19 +978,23 @@ function UpdateTasks($username,$taskdtls)
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-  {
-    $sql1 = "select fieldname,columnname from vtiger_field where tabid=9";
-  }else
-  {
-    $profileList = getCurrentUserProfileList();
-    $sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=9 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
-  }
-  $result1 = $adb->query($sql1);
-  for($i=0;$i < $adb->num_rows($result1);$i++)
-  {
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0) {
+    	$sql1 = "select fieldname,columnname from vtiger_field where tabid=9";
+  		$params1 = array();	
+	} else {
+    	$profileList = getCurrentUserProfileList();
+    	$sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=9 and vtiger_field.displaytype in (1,2,4,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+  		$params1 = array();
+		if (count($profileList) > 0) {
+			$sql1 .= " and vtiger_profile2field.profileid in (". generateQuestionMarks($profileList) .")";
+			array_push($params1, $profileList);
+		}
+	}
+  	$result1 = $adb->pquery($sql1, $params1);
+  	for($i=0;$i < $adb->num_rows($result1);$i++)
+  	{
       $permitted_lists[] = $adb->query_result($result1,$i,'fieldname');
-  }
+  	}
   
 	$task = new Activity();
 	
@@ -1048,42 +1082,49 @@ function GetClndr($username)
 	$result = $adb->query($query);
     
 	while($clndr = $adb->fetch_array($result))
-  	{
-  		if($clndr["date_start"] == "0000-00-00" || $clndr["date_start"] == NULL)
-        	{
-	        	$clndr["date_start"] = "";
+	{
+		if($clndr["date_start"] == "0000-00-00" || $clndr["date_start"] == NULL)
+		{
+			$clndr["date_start"] = "";
 		}
-	        if($clndr["due_date"] == "0000-00-00" || $clndr["due_date"] == NULL)
-        	{
-	        	$clndr["due_date"] = "";
-        	}
-		
+		if($clndr["due_date"] == "0000-00-00" || $clndr["due_date"] == NULL)
+		{
+			$clndr["due_date"] = "";
+		}
+
 		//this seperates the $$clndr["startdate"] into an array - YYYY-MM-DD
 		$expldstartdate = explode("-", $clndr["date_start"]);
-		$expldtimestart = explode(":", $clndr["time_start"]);	
+
+		$expldtimestart = Array(0,0);
+		if(strpos($clndr["time_start"],":"))
+			$expldtimestart = explode(":", $clndr["time_start"]);	
 
 		//this makes a timestamp out of the exploded date this number is in seconds
 		$startdtm = mktime($expldtimestart[0], $expldtimestart[1], 0, $expldstartdate[1], $expldstartdate[2], $expldstartdate[0]);
 
-    $expldduedate = explode("-", $clndr["due_date"]);
-    $expldtimeend = explode(":", $clndr["time_end"]);
-    //this makes a timestamp out of the exploded date this number is in seconds
+		$expldduedate = explode("-", $clndr["due_date"]);
+
+		$expldtimeend = Array(0,0);
+		if(strpos($clndr["time_end"],":"))
+			$expldtimeend = explode(":", $clndr["time_end"]);
+		//this makes a timestamp out of the exploded date this number is in seconds
 		$duedtm = mktime($expldtimeend[0], $expldtimeend[1], 0, $expldduedate[1], $expldduedate[2], $expldduedate[0]);
-		
+
 		$clndr["date_start"] = date("Y-m-d H:i:s", $startdtm);
 		$clndr["due_date"] = date("Y-m-d H:i:s", $duedtm);
 
 		$output_list[] = Array(
-						"id" => $clndr["clndrid"],
-						"subject" => $clndr["subject"],
-						"startdate" => $clndr["date_start"],
-						"duedate" => $clndr["due_date"],
-						"location" => $clndr["location"],
-						"description" => $clndr["description"],
-						"contactname" => $clndr["firstname"]." ".$clndr["lastname"],
-						"category" => "",        
-						);
-  	}
+			"id" => $clndr["clndrid"],
+			"subject" => $clndr["subject"],
+			"startdate" => $clndr["date_start"],
+			"duedate" => $clndr["due_date"],
+			"location" => $clndr["location"],
+			"description" => $clndr["description"],
+			"contactname" => $clndr["firstname"]." ".$clndr["lastname"],
+			"category" => "",        
+		);
+	}
+	//$log->fatal($output_list);
 	$seed_clndr = $seed_clndr;
 	return $output_list;
 }
@@ -1102,19 +1143,24 @@ function AddClndr($username,$clndrdtls)
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-  {
-    $sql1 = "select fieldname,columnname from vtiger_field where tabid=16";
-  }else
-  {
-    $profileList = getCurrentUserProfileList();
-    $sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=16 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
-  }
-  $result1 = $adb->query($sql1);
-  for($i=0;$i < $adb->num_rows($result1);$i++)
-  {
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0) {
+    	$sql1 = "select fieldname,columnname from vtiger_field where tabid=16";
+		$params1 = array();
+  	} else {
+    	$profileList = getCurrentUserProfileList();
+    	$sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=16 and vtiger_field.displaytype in (1,2,4,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+  		$params1 = array();
+		if (count($profileList) > 0) {
+			$sql1 .= " and vtiger_profile2field.profileid in (". generateQuestionMarks($profileList) .")";
+			array_push($params1, $profileList);
+		}
+	}
+  	$result1 = $adb->pquery($sql1, $params1);
+  
+  	for($i=0;$i < $adb->num_rows($result1);$i++)
+  	{
       $permitted_lists[] = $adb->query_result($result1,$i,'fieldname');
-  }
+  	}
   
 	$clndr = new Activity();
 	
@@ -1170,19 +1216,24 @@ function UpdateClndr($username,$clndrdtls)
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 	require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 	
-	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
-  {
-    $sql1 = "select fieldname,columnname from vtiger_field where tabid=16";
-  }else
-  {
-    $profileList = getCurrentUserProfileList();
-    $sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=16 and vtiger_field.displaytype in (1,2,4) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0 and vtiger_profile2field.profileid in ".$profileList;
-  }
-  $result1 = $adb->query($sql1);
-  for($i=0;$i < $adb->num_rows($result1);$i++)
-  {
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0) {
+    	$sql1 = "select fieldname,columnname from vtiger_field where tabid=16";
+		$params1 = array();
+  	} else {
+    	$profileList = getCurrentUserProfileList();
+    	$sql1 = "select fieldname,columnname from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid where vtiger_field.tabid=16 and vtiger_field.displaytype in (1,2,4,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+  		$params1 = array();
+		if (count($profileList) > 0) {
+			$sql1 .= " and vtiger_profile2field.profileid in (". generateQuestionMarks($profileList) .")";
+			array_push($params1, $profileList);
+		}
+	}
+  	$result1 = $adb->pquery($sql1, $params1);
+  
+  	for($i=0;$i < $adb->num_rows($result1);$i++)
+  	{
       $permitted_lists[] = $adb->query_result($result1,$i,'fieldname');
-  }
+  	}
 	
 	$clndr = new Activity();
 	

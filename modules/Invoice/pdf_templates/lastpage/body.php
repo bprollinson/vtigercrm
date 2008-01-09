@@ -19,18 +19,18 @@ $pdf->watermark( "For Your Business", $waterMarkPositions, $waterMarkRotate );
 
 // blowing bubbles
 $Bubble=array("10","80","170","4");
-$pdf->addBubble("", "Because we love you :)", $Bubble);
+$pdf->addBubble("", "", $Bubble);
 
 $Bubble=array("168","131","12");
-$pdf->addBubbleBlock("Neat Look", "For A", $Bubble);
+//$pdf->addBubbleBlock("Neat Look", "For A", $Bubble);
 $Bubble=array("10","131","12");
-$pdf->addBubbleBlock("The Corners", "Line Up", $Bubble);
+//$pdf->addBubbleBlock("The Corners", "Line Up", $Bubble);
 
 
 /* ************* Begin Totals ************************** */
 $totalBlock=array("59","135");
 $names=array("Subtotal","Tax","Adjustment","Total");
-$totals=array($price_subtotal,$price_tax,$price_adjustment,$price_total);
+$totals=array($price_subtotal,$price_salestax,$price_adjustment,$price_total);
 $pdf->addTotalsRec($names,$totals,$totalBlock);
 /* ************* End Totals *************************** */
 

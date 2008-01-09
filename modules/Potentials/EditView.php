@@ -32,6 +32,10 @@ global $mod_strings;
 global $currentModule;
 $focus = new Potentials();
 $smarty = new vtigerCRM_Smarty();
+//added to fix the issue4600
+$searchurl = getBasic_Advance_SearchURL();
+$smarty->assign("SEARCH", $searchurl);
+//4600 ends
 
 if(isset($_REQUEST['record']) && $_REQUEST['record'] != '') 
 {
@@ -80,7 +84,6 @@ $comboFieldNames = Array('leadsource'=>'leadsource_dom'
                       ,'opportunity_type'=>'opportunity_type_dom'
                       ,'sales_stage'=>'sales_stage_dom');
 $comboFieldArray = getComboArray($comboFieldNames);
-require_once($theme_path.'layout_utils.php');
 
 $log->info("Potential detail view");
 $smarty->assign("MOD", $mod_strings);
@@ -129,6 +132,9 @@ $smarty->assign("SINGLE_MOD",'Potential');
  $smarty->assign("VALIDATION_DATA_FIELDNAME",$data['fieldname']);
  $smarty->assign("VALIDATION_DATA_FIELDDATATYPE",$data['datatype']);
  $smarty->assign("VALIDATION_DATA_FIELDLABEL",$data['fieldlabel']);
+
+//fix for potential duplicate header
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);

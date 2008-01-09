@@ -45,8 +45,8 @@ session_start();
 
 // vtiger CRM version number; do not edit!
 
-$vtiger_version = "5.0.2";
-$release_date = "31 October 2006";
+$vtiger_version = "5.0.4-rc";
+$release_date = "09 January 2008";
 
 
 if (isset($_REQUEST['db_hostname']))
@@ -83,6 +83,9 @@ if (isset($_REQUEST['site_URL'])) $site_URL = $_REQUEST['site_URL'];
 if (isset($_REQUEST['admin_email'])) $admin_email = $_REQUEST['admin_email'];
 
 if (isset($_REQUEST['admin_password'])) $admin_password = $_REQUEST['admin_password'];
+if (isset($_REQUEST['standarduser_email'])) $standarduser_email = $_REQUEST['standarduser_email'];
+
+if (isset($_REQUEST['standarduser_password'])) $standarduser_password = $_REQUEST['standarduser_password'];
 
 if (isset($_REQUEST['currency_name'])) $currency_name = $_REQUEST['currency_name'];
 
@@ -109,11 +112,11 @@ if ($db_port == '')
 	{
 		$db_port = "3306";
 	}
-	elseif($db_type = 'pgsql')
+	elseif($db_type == 'pgsql')
 	{
 		$db_port = "5432";
 	}
-	elseif($db_type = 'oci8')
+	elseif($db_type == 'oci8')
 	{
 		$db_port = '1521';
 	}
@@ -127,7 +130,7 @@ $cache_dir = 'cache/';
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<title>vtiger CRM 5 - Configuration Wizard - Config File Creation</title>
 	<link href="include/install/install.css" rel="stylesheet" type="text/css">
 </head>
@@ -216,12 +219,14 @@ $cache_dir = 'cache/';
 						      	$buffer = str_replace( "_MAIL_PASSWORD_", $mail_server_password, $buffer);
 						      	$buffer = str_replace( "_DB_STAT_", "true", $buffer);
 				
-						      	/* replace the application unique key variable */
+						      	/* replace master currency variable */
 				      			$buffer = str_replace( "_MASTER_CURRENCY_", $currency_name, $buffer);
 
 						      	/* replace the application unique key variable */
 					      		$buffer = str_replace( "_VT_APP_UNIQKEY_", md5($root_directory), $buffer);
-	
+							/* replace support email variable */
+							$buffer = str_replace( "_USER_SUPPORT_EMAIL_", $admin_email, $buffer);
+
 					      		fwrite($includeHandle, $buffer);
 					      		}
 
@@ -235,7 +240,7 @@ $cache_dir = 'cache/';
 			<div id="config_info">
 			<p><strong class="big">Successfully created configuration file (config.inc.php) in :</strong><br><br>
 			<font color="green"><b><?php echo $root_directory; ?></b></font><br><br>
-			The installation will take at least 4 minutes. Grab a coffee,sit back and relax...<br>
+			The installation will take at least 4 minutes.<p> Grab a coffee,sit back and relax or browse through our <a href='http://blogs.vtiger.com/index.php' target="_blank">blogs</a><br>
 			</p>
 			</div>
 			<br>		
@@ -260,13 +265,8 @@ $cache_dir = 'cache/';
  	$config .= " * Contributor(s): ______________________________________.\n";
  	$config .= "********************************************************************************/\n\n";
  	$config .= "include('vtigerversion.php');\n\n";
- 	$config .= "// more than 8MB memory needed for graphics\n\n";
- 	$config .= "// memory limit default value = 16M\n\n";
- 	$config .= "ini_set('memory_limit','16M');\n\n";
+ 	$config .= "ini_set('memory_limit','64M');\n\n";
  	$config .= "// show or hide world clock, calculator and FCKEditor\n\n";
- 	$config .= "// world_clock_display default value = true\n";
- 	$config .= "// calculator_display default value = true\n";
- 	$config .= "// fckeditor_display default value = true\n\n";
  	$config .= "\$WORLD_CLOCK_DISPLAY = 'true';\n";
  	$config .= "\$CALCULATOR_DISPLAY = 'true';\n";
  	$config .= "\$FCKEDITOR_DISPLAY = 'true';\n\n";
@@ -414,7 +414,7 @@ $cache_dir = 'cache/';
 	$config .= "// Master currency name\n";
  	$config .= "\$currency_name = '$currency_name';\n";
  	$config .= "// Default charset if the language specific character set is not found.\n";
- 	$config .= "\$default_charset = 'ISO-8859-1';\n";
+ 	$config .= "\$default_charset = 'UTF-8';\n";
  	$config .= "// Default language in case all or part of the user's language pack is not available.\n";
  	$config .= "\$default_language = 'en_us';\n";
  	$config .= "// Translation String Prefix - This will add the language pack name to every translation string in the display.\n";
@@ -452,6 +452,8 @@ $cache_dir = 'cache/';
 				 <input type="hidden" class="dataInput" name="db_populate" value="<?php if (isset($db_populate)) echo "$db_populate"; ?>" />
 				 <input type="hidden" class="dataInput" name="admin_email" value="<?php if (isset($admin_email)) echo "$admin_email"; ?>" />
 				 <input type="hidden" class="dataInput" name="admin_password" value="<?php if (isset($admin_password)) echo "$admin_password"; ?>" />
+				 <input type="hidden" class="dataInput" name="standarduser_email" value="<?php if (isset($standarduser_email)) echo "$standarduser_email"; ?>" />
+                 <input type="hidden" class="dataInput" name="standarduser_password" value="<?php if (isset($standarduser_password)) echo "$standarduser_password"; ?>" />
 				 <input type="hidden" class="dataInput" name="currency_name" value="<?php if (isset($currency_name)) echo "$currency_name"; ?>" />
 				 <input type="hidden" class="dataInput" name="currency_code" value="<?php if (isset($currency_code)) echo "$currency_code"; ?>" />
 				 <input type="hidden" class="dataInput" name="currency_symbol" value="<?php if (isset($currency_symbol)) echo "$currency_symbol"; ?>" />

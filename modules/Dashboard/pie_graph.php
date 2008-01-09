@@ -38,7 +38,7 @@ function pie_chart($referdata,$refer_code,$width,$height,$left,$right,$top,$bott
 	{
 		$name=$datax[$i];
 		$pos = substr_count($name," ");
-		$alts[]=$name."=%d";
+		$alts[]=htmlentities($name)."=%d";
 	}
 
 	if($theme == "blue")
@@ -72,17 +72,38 @@ function pie_chart($referdata,$refer_code,$width,$height,$left,$right,$top,$bott
 			$plotarea,
         	5
 	    	)
-	);   
+	); 
+
+	// To create unique lables we need to keep track of lable name and its count
+	$uniquex = array();
+
 
 	// Generate colours
-	$colors = color_generator(count($datay),'#33CCFF','#3322FF');
+	$colors = color_generator(count($datay),'#33DDFF','#3322FF');
 	$dataset = & Image_Graph::factory('dataset');
 	$fills =& Image_Graph::factory('Image_Graph_Fill_Array');
 	$sum = 0;
 	for($i=0;$i<count($datay); $i++)
 	{
+		if(isset($_REQUEST['display_view']) && $_REQUEST['display_view']== 'MATRIX')
+		{
+			$datax[$i]=trim($datax[$i]);
+			if(strlen($datax[$i]) <= 10)
+				$datax[$i]=$datax[$i];
+			else
+				$datax[$i]= substr($datax[$i],0,10)."..";
+		}
+		// To have unique names even in case of duplicates let us add the id
+		$datalabel = $datax[$i];
+		$datax_appearance = $uniquex[$datax[$i]];
+		if($datax_appearance == null) {
+				$uniquex[$datax[$i]] = 1;			
+		} else {
+			$datalabel = $datax[$i] . ' ['.$datax_appearance.']';
+			$uniquex[$datax[$i]] = $datax_appearance + 1;			
+		}
 		$dataset->addPoint(
-			        $datax[$i],
+			        $datalabel,
 			        $datay[$i],
 			        array(
 			            'url' => $target[$i],
@@ -120,7 +141,7 @@ function pie_chart($referdata,$refer_code,$width,$height,$left,$right,$top,$bott
 			
 	// set legend
 	$legend_box =& $plotarea->addNew('legend');
-	$legend_box->setPadding(array('top'=>20,'bottom'=>0,'left'=>0,'right'=>0));
+	$legend_box->setPadding(array('top'=>4,'bottom'=>-10,'left'=>0,'right'=>0));
 	$legend_box->setFillColor('#F5F5F5');
 	$legend_box->showShadow();
 

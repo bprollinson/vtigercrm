@@ -11,7 +11,6 @@
 -->*}
 <script language="JAVASCRIPT" type="text/javascript" src="include/js/smoothscroll.js"></script>
 <script language="JavaScript" type="text/javascript" src="include/js/menu.js"></script>
-<script src="include/scriptaculous/prototype.js" type="text/javascript"></script>
 <script src="include/scriptaculous/scriptaculous.js" type="text/javascript"></script>
 <script>
 {literal}
@@ -62,9 +61,11 @@ function validate() {
 		//empty check validation
 		for (i=0;i<picklistary.length;i++) {
 			if (picklistary[i]=="") {
-				alert("picklist value cannot be empty")
+				{/literal}
+                                alert("{$APP.PICKLIST_CANNOT_BE_EMPTY}")
 				picklistobj.focus()
 				return false
+				{literal}
 			}
 		}
 
@@ -72,9 +73,11 @@ function validate() {
 		for (i=0;i<picklistary.length;i++) {
 			for (j=i+1;j<picklistary.length;j++) {
 				if (picklistary[i]==picklistary[j]) {
-					alert("duplicate values found")
+					{/literal}
+                                        alert("{$APP.DUPLICATE_VALUES_FOUND}")
 					picklistobj.focus()
 					return false
+					{literal}
 				}
 			}
 		}
@@ -112,20 +115,38 @@ function validate() {
 				
 					<table border=0 cellspacing=0 cellpadding=5 width=100% class="tableHeading">
 					<tr>
-						<td class="big"><strong>1. {$MOD.LBL_SELECT_MODULE}</strong></td>
+						<td class="big"><strong>1. {$MOD.LBL_SELECT_MODULE} & Role </strong></td>
 						<td class="small" align=right>&nbsp;</td>
 					</tr>
 					</table>
 					<table width="100%" border="0" cellpadding="5" cellspacing="0" class="small">
 						<tr class="small">
-                        	<td width="35%" class="small cellLabel"><strong>{$MOD.LBL_SELECT_CRM_MODULE}</strong></td>
-	                        <td width="65%" class="cellText" >
-					<select name="pickmodule" class="detailedViewTextBox" onChange="changeModule(this);">
+                       			 	<td width="15%" class="small cellLabel"><strong>{$MOD.LBL_SELECT_ROLE} </strong></td>
+				    <td width="28%" class="cellText" >
+						<select name="pickrole" id="pickid" class="detailedViewTextBox" onChange="changeModule();">
+						{foreach key=roleid item=role from=$ROLE_LISTS}
+							{if $SEL_ROLEID eq $roleid}
+							<option value="{$roleid}" selected>{$role}</option>
+							{else}
+							<option value="{$roleid}">{$role}</option>
+							{/if}
+						{/foreach}
+						</select>
+				</td>
+
+                        	<td width="25%" class="small cellLabel"><strong>{$MOD.LBL_SELECT_CRM_MODULE} </strong></td>
+	                        <td width="32%" class="cellText" >
+					<select name="pickmodule" id="pickmodule" class="detailedViewTextBox" onChange="changeModule();">
 					{foreach key=tabid item=module from=$MODULE_LISTS}
+						{if $SEL_MODULE eq $module}
+						<option value="{$module}" selected>{$APP.$module}</option>
+						{else}
 						<option value="{$module}">{$APP.$module}</option>
+						{/if}
 					{/foreach}
 					</select>
 				</td>
+
                       </tr>
 					</table>
 					<br>
@@ -168,12 +189,14 @@ function validate() {
 <script>
 function SavePickList(fieldname,module,uitype)
 {
+	var oRolePick = $('pickid');
+	var role=oRolePick.options[oRolePick.selectedIndex].value;
+
 	$("status").style.display = "inline";
 	Effect.Puff($('editdiv'),{duration:2});
-	var body = escape($("picklist_values").value);
-
+	var body = escapeAll($("picklist_values").value);
 	new Ajax.Request(
-        	'index.php?action=SettingsAjax&module=Settings&directmode=ajax&file=UpdateComboValues&table_name='+fieldname+'&fld_module='+module+'&listarea='+body+'&uitype='+uitype,
+        	'index.php?action=SettingsAjax&module=Settings&directmode=ajax&file=UpdateComboValues&table_name='+fieldname+'&fld_module='+module+'&roleid='+role+'&listarea='+body+'&uitype='+uitype,
 	        {queue: {position: 'end', scope: 'command'},
         		method: 'get',
 		        postBody: null,
@@ -185,15 +208,19 @@ function SavePickList(fieldname,module,uitype)
         	}
 	);
 }
-function changeModule(pickmodule)
+function changeModule()
 {
 	$("status").style.display="inline";
-	var module=pickmodule.options[pickmodule.options.selectedIndex].value;
+	var oModulePick = $('pickmodule')
+	var module=oModulePick.options[oModulePick.selectedIndex].value;
+	var oRolePick = $('pickid');
+	var role=oRolePick.options[oRolePick.selectedIndex].value;
+	
 	new Ajax.Request(
                 'index.php',
                 {queue: {position: 'end', scope: 'command'},
                         method: 'post',
-                        postBody: 'action=SettingsAjax&module=Settings&directmode=ajax&file=PickList&fld_module='+module,
+                        postBody: 'action=SettingsAjax&module=Settings&directmode=ajax&file=PickList&fld_module='+module+'&roleid='+role,
                         onComplete: function(response) {
                                         $("status").style.display="none";
                                         $("picklist_datas").innerHTML=response.responseText;
@@ -203,12 +230,15 @@ function changeModule(pickmodule)
 }
 function fetchEditPickList(module,fieldname,uitype)
 {
+	var oRolePick = $('pickid');
+	var role=oRolePick.options[oRolePick.selectedIndex].value;
+
 	$("status").style.display="inline";
 	new Ajax.Request(
                 'index.php',
                 {queue: {position: 'end', scope: 'command'},
                         method: 'post',
-                        postBody: 'action=SettingsAjax&module=Settings&mode=edit&file=EditComboField&fld_module='+module+'&fieldname='+fieldname+'&uitype='+uitype,
+                        postBody: 'action=SettingsAjax&module=Settings&mode=edit&file=EditComboField&fld_module='+module+'&fieldname='+fieldname+'&roleid='+role+'&uitype='+uitype,
 			onComplete: function(response) {
                                         $("status").style.display="none";
                                         $("editdiv").innerHTML=response.responseText;
@@ -221,10 +251,13 @@ function fetchEditPickList(module,fieldname,uitype)
 function picklist_validate(mode,fieldname,module,uitype)
 {
 	
-	//alert(trim($("picklist_values").value));
-	
 	var pick_arr=new Array();
 	pick_arr=trim($("picklist_values").value).split('\n');	
+	var noneditpick_arr=new Array();
+	if($('nonedit_pl')){
+	 	noneditpick_arr = trim($("nonedit_pl").innerHTML).split('<br>');
+	}
+	pick_arr = pick_arr.concat(noneditpick_arr)
 	var len=pick_arr.length;
 	for(i=0;i<len;i++)
 	{
@@ -235,7 +268,13 @@ function picklist_validate(mode,fieldname,module,uitype)
 		{
 			var valnext;
 			valnext=pick_arr[j];
-			if(trim(valone) == trim(valnext))
+			var temp = valnext.toLowerCase();
+			if(temp.match('(script).*(/script)'))
+                        {
+				valnext = temp.replace(/</g,'&lt;');
+		                valnext = valnext.replace(/>/g,'&gt;');
+                        }
+			if(trim(valone).toUpperCase() == trim(valnext).toUpperCase())
 			{
 				alert("Duplicate entries found for the value '"+valone+"'");
 				return false;
@@ -244,7 +283,7 @@ function picklist_validate(mode,fieldname,module,uitype)
 		i = curr_iter		
 
 	}
-	if(mode == 'edit')
+	if(mode != 'nonedit')
 	{
 		if(trim($("picklist_values").value) == '')
 		{

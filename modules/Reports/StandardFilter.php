@@ -8,7 +8,7 @@
  * All Rights Reserved.
 *
  ********************************************************************************/
-
+require_once('modules/CustomView/CustomView.php');
 if(isset($_REQUEST["record"]) == false)
 {
         $oReport = new Reports();
@@ -40,11 +40,14 @@ if(isset($_REQUEST["record"]) == false)
         $BLOCKCRITERIA = $oReport->getSelectedStdFilterCriteria($oReport->stdselectedfilter);
 		$report_std_filter->assign("BLOCKCRITERIA_STD",$BLOCKCRITERIA);
 
-        $startdate = $oReport->startdate;
-		$report_std_filter->assign("STARTDATE_STD",$startdate);	
-
-        $enddate = $oReport->enddate;
-		$report_std_filter->assign("ENDDATE_STD",$enddate);
+	if(isset($oReport->startdate) && isset($oReport->enddate))
+	{
+		$report_std_filter->assign("STARTDATE_STD",getDisplayDate($oReport->startdate));
+                $report_std_filter->assign("ENDDATE_STD",getDisplayDate($oReport->enddate));
+	}else{
+		$report_std_filter->assign("STARTDATE_STD",$oReport->startdate);
+		$report_std_filter->assign("ENDDATE_STD",$oReport->enddate);
+	}	
 }
 
 
@@ -58,11 +61,10 @@ function getPrimaryStdFilterHTML($module,$selected="")
 	global $app_list_strings;
 	global $ogReport;
 	global $current_language;
-
+	$ogReport->oCustomView=new CustomView();
+        $result = $ogReport->oCustomView->getStdCriteriaByModule($module);
         $mod_strings = return_module_language($current_language,$module);
 
-	$result = $ogReport->getStdCriteriaByModule($module);
-	
 	if(isset($result))
 	{
 		foreach($result as $key=>$value)
@@ -102,12 +104,13 @@ function getSecondaryStdFilterHTML($module,$selected="")
 	global $app_list_strings;
 	global $ogReport;
 	global $current_language;
+	$ogReport->oCustomView=new CustomView();
 	if($module != "")
         {
         	$secmodule = explode(":",$module);
         	for($i=0;$i < count($secmodule) ;$i++)
         	{
-			$result = $ogReport->getStdCriteriaByModule($secmodule[$i]);
+			$result = $ogReport->oCustomView->getStdCriteriaByModule($secmodule[$i]);
 			$mod_strings = return_module_language($current_language,$secmodule[$i]);
         		if(isset($result))
         		{

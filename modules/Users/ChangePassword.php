@@ -31,20 +31,11 @@ global $app_strings;
 global $mod_strings;
 
 $mod_strings['ERR_ENTER_OLD_PASSWORD'];
+
+insert_popup_header($theme);
 ?>
+<script type='text/javascript' src="include/js/general.js"></script>
 <script type='text/javascript' language='JavaScript'>
-
-function trim(s) {
-	while (s.substring(0,1) == " ") {
-		s = s.substring(1, s.length);
-	}
-	while (s.substring(s.length-1, s.length) == " ") {
-		s = s.substring(0,s.length-1);
-	}
-
-	return s;
-}
-
 
 function set_password(form) {
 	if (form.is_admin.value == 1 && trim(form.old_password.value) == "") {
@@ -77,14 +68,13 @@ function set_password(form) {
 	}
 }
 </script>
-<?php insert_popup_header($theme); ?>
 
 <form name="ChangePassword">
 <?php echo get_form_header($mod_strings['LBL_CHANGE_PASSWORD'], "", false); ?>
 
 <table width='100%' cellspacing='0' cellpadding='5' border='0' class="small">
 <tr>
-	<td class="detailedViewHeader" colspan="2"><b>Change Password</b></td>
+	<td class="detailedViewHeader" colspan="2"><b><?php echo $mod_strings['LBL_CHANGE_PASSWORD']; ?></b></td>
 </tr>
 <?php if (!is_admin($current_user)) {
 	echo "<tr>";

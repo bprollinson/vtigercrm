@@ -31,6 +31,7 @@ global $mod_strings;
 $total_record_count = 0;
 
 $query_string = trim($_REQUEST['query_string']);
+
 if(isset($query_string) && $query_string != '')//preg_match("/[\w]/", $_REQUEST['query_string'])) 
 {
 
@@ -76,24 +77,37 @@ if(isset($query_string) && $query_string != '')//preg_match("/[\w]/", $_REQUEST[
 			$oCustomView = '';
 
 			$oCustomView = new CustomView($module);
-		
+			//Instead of getting current customview id, use cvid of All so that all entities will be found
+			//$viewid = $oCustomView->getViewId($module);
+			$cv_res = $adb->pquery("select cvid from vtiger_customview where viewname='All' and entitytype=?", array($module));
+			$viewid = $adb->query_result($cv_res,0,'cvid');
+			
+			$listquery = $oCustomView->getModifiedCvListQuery($viewid,$listquery,$module);
+                        if ($module == "Calendar"){
+                                if (!isset($oCustomView->list_fields['Close'])) $oCustomView->list_fields['Close']=array ( 'activity' => 'status' );
+                                if (!isset($oCustomView->list_fields_name['Close'])) $oCustomView->list_fields_name['Close']='status';
+                        }
+
 			if($search_module != '')//This is for Tag search
 			{
 		
 				$where = getTagWhere($search_val,$current_user->id);
 				$search_msg =  $app_strings['LBL_TAG_SEARCH'];
-				$search_msg .=	"<b>".$search_val."</b>";
+				$search_msg .=	"<b>".to_html($search_val)."</b>";
 			}
 			else			//This is for Global search
 			{
 				$where = getUnifiedWhere($listquery,$module,$search_val);
 				$search_msg = $app_strings['LBL_SEARCH_RESULTS_FOR'];
-				$search_msg .=	"<b>".$search_val."</b>";
+				$search_msg .=	"<b>".to_html($search_val)."</b>";
 			}
 
 			if($where != '')
 				$listquery .= ' and ('.$where.')';
-		
+			
+			if($module == "Calendar")
+				$listquery .= ' group by vtiger_activity.activityid having vtiger_activity.activitytype != "Emails"';
+				
 			$list_result = $adb->query($listquery);
 			$noofrows = $adb->num_rows($list_result);
 
@@ -133,7 +147,7 @@ if(isset($query_string) && $query_string != '')//preg_match("/[\w]/", $_REQUEST[
 	//Added to display the Total record count
 ?>
 	<script>
-document.getElementById("global_search_total_count").innerHTML = " <? echo $app_strings['LBL_TOTAL_RECORDS_FOUND'] ?><b><?php echo $total_record_count; ?></b>";
+document.getElementById("global_search_total_count").innerHTML = " <?php echo $app_strings['LBL_TOTAL_RECORDS_FOUND'] ?><b><?php echo $total_record_count; ?></b>";
 	</script>
 <?php
 
@@ -151,9 +165,9 @@ else {
 function getUnifiedWhere($listquery,$module,$search_val)
 {
 	global $adb;
-
-	$query = "SELECT columnname, tablename FROM vtiger_field WHERE tabid = ".getTabid($module);
-	$result = $adb->query($query);
+	$search_val = mysql_real_escape_string($search_val);
+	$query = "SELECT columnname, tablename FROM vtiger_field WHERE tabid = ?";
+	$result = $adb->pquery($query, array(getTabid($module)));
 	$noofrows = $adb->num_rows($result);
 
 	$where = '';
@@ -167,7 +181,7 @@ function getUnifiedWhere($listquery,$module,$search_val)
 		{
 			if($where != '')
 				$where .= " OR ";
-			$where .= $tablename.".".$columnname." LIKE ".$adb->quote("%$search_val%");
+			$where .= $tablename.".".$columnname." LIKE '". formatForSqlLike($search_val) ."'";
 		}
 	}
 
@@ -212,20 +226,22 @@ function getSearchModulesComboList($search_module)
 	global $mod_strings;
 	
 	?>
-		<script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
 		<script>
 		function displayModuleList(selectmodule_view)
 		{
 			<?php
 			foreach($object_array as $module => $object_name)
 			{
-				?>
-				mod = "global_list_"+"<?php echo $module; ?>";
-				if(selectmodule_view.options[selectmodule_view.options.selectedIndex].value == "All")
-					show(mod);
-				else
-					hide(mod);
+				if(isPermitted($module,"index") == "yes")
+				{
+			?>
+				   mod = "global_list_"+"<?php echo $module; ?>";
+				   if(selectmodule_view.options[selectmodule_view.options.selectedIndex].value == "All")
+				   show(mod);
+				   else
+				   hide(mod);
 				<?php
+				}
 			}
 			?>
 			
@@ -239,9 +255,9 @@ function getSearchModulesComboList($search_module)
 		 <table border=0 cellspacing=0 cellpadding=0 width=98% align=center>
 		     <tr>
 		        <td colspan="3" id="global_search_total_count" style="padding-left:30px">&nbsp;</td>
-		<td nowrap align="right"><? echo $app_strings['LBL_SHOW_RESULTS'] ?>&nbsp;
+		<td nowrap align="right"><?php echo $app_strings['LBL_SHOW_RESULTS'] ?>&nbsp;
 		                <select id="global_search_module" name="global_search_module" onChange="displayModuleList(this);">
-			<option value="All"><? echo $app_strings['COMBO_ALL'] ?></option>
+			<option value="All"><?php echo $app_strings['COMBO_ALL'] ?></option>
 						<?php
 						foreach($object_array as $module => $object_name)
 						{
@@ -251,9 +267,13 @@ function getSearchModulesComboList($search_module)
 							if($search_module == '' && $module == 'All')
 								$selected = 'selected';
 							?>
+							<?php if(isPermitted($module,"index") == "yes")
+							{
+							?> 
 							<option value="<?php echo $module; ?>" <?php echo $selected; ?> ><?php echo $app_strings[$module]; ?></option>
 							<?php
-						}
+							}
+						}	
 						?>
 		     		</select>
 		        </td>
@@ -270,7 +290,7 @@ function getSearchModulesComboList($search_module)
  {
 	 global $adb;
 	 $sql = 'select distinct vtiger_field.tabid,name from vtiger_field inner join vtiger_tab on vtiger_tab.tabid=vtiger_field.tabid where vtiger_tab.tabid not in (16,29)';
-	$result = $adb->query($sql);
+	$result = $adb->pquery($sql, array());
 	while($module_result = $adb->fetch_array($result))
 	{
 		$modulename = $module_result['name'];

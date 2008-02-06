@@ -53,6 +53,7 @@ class ImportOpportunity extends Potentials {
 	// This is the list of the functions to run when importing
 	var $special_functions =  array(
 						"add_create_account",
+						"map_campaign_source",
 						//"add_lead_source",
 						//"add_opportunity_type",
 				        	//"add_date_closed"
@@ -136,16 +137,14 @@ class ImportOpportunity extends Potentials {
 		$query = '';
 
 		// if user is defining the vtiger_account id to be associated with this contact..
-		$acc_name = trim(addslashes($acc_name));
+		$acc_name = trim($acc_name);
 
 		//Modified the query to get the available account only ie., which is not deleted
-		$query = "select vtiger_crmentity.deleted, vtiger_account.* from vtiger_account, vtiger_crmentity WHERE accountname='{$acc_name}' and vtiger_crmentity.crmid =vtiger_account.accountid and vtiger_crmentity.deleted=0";
+		$query = "select vtiger_crmentity.deleted, vtiger_account.* from vtiger_account, vtiger_crmentity WHERE accountname=? and vtiger_crmentity.crmid =vtiger_account.accountid and vtiger_crmentity.deleted=0";
+		$this->log->info($query);
+		$result = $adb->pquery($query, array($acc_name));
 
-                $this->log->info($query);
-
-                $result = $adb->query($query);
-
-                $row = $this->db->fetchByAssoc($result, -1, false);
+         $row = $this->db->fetchByAssoc($result, -1, false);
 
 		$adb->println("fetched account");
 		$adb->println($row);
@@ -191,6 +190,37 @@ class ImportOpportunity extends Potentials {
 
         }	
 
+	/**     function used to map with existing Campaign Source if the potential is map with an campaign during import
+         */
+	function map_campaign_source()
+	{
+		global $adb;
+
+		$campaign_name = $this->column_fields['campaignid'];
+		$adb->println("Entering map_campaign_source campaignid=".$campaign_name);
+
+		if ((! isset($campaign_name) || $campaign_name == '') )
+		{
+			$adb->println("Exit map_campaign_source. Campaign Name not set for this entity.");
+			return; 
+		}
+
+		$campaign_name = trim($campaign_name);
+
+		//Query to get the available campaign which is not deleted
+		$query = "select campaignid from vtiger_campaign inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_campaign.campaignid WHERE vtiger_campaign.campaignname=? and vtiger_crmentity.deleted=0";
+
+		$campaignid = $adb->query_result($adb->pquery($query, array($campaign_name)),0,'campaignid');
+
+		if($campaignid == '' || !isset($campaignid))
+			$campaignid = 0;
+
+		$this->column_fields['campaignid'] = $campaignid;
+
+		$adb->println("Exit map_campaign_source. Fetched Campaign for '".$campaign_name."' and the campaignid = $campaignid");
+        }
+
+
 	/*
 	function fix_website()
 	{
@@ -229,10 +259,7 @@ class ImportOpportunity extends Potentials {
 		$this->db = new PearDatabase();
 
 		$this->db->println("IMP ImportOpportunity");
-		$colf = getColumnFields("Potentials");
-		foreach($colf as $key=>$value)
-			$this->importable_fields[$key]=1;
-		
+		$this->initImportableFields("Potentials");		
 		
 		$this->db->println($this->importable_fields);
 	}

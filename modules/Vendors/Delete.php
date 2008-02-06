@@ -26,14 +26,17 @@ $log = LoggerManager::getLogger('product_delete');
 
 $focus = new Vendors();
 
+	//Added to fix 4600
+	$url = getBasic_Advance_SearchURL();
+
 if(!isset($_REQUEST['record']))
 	die($mod_strings['ERR_DELETE_RECORD']);
 
-
+	
 if($_REQUEST['module'] == $_REQUEST['return_module'])
 {
+	delVendorRelRecords($_REQUEST['record']);
 	$focus->mark_deleted($_REQUEST['record']);
-	$smod ="smodule=VENDOR&";
 }
-header("Location: index.php?".$smod."module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&relmodule=".$_REQUEST['module']);
+header("Location: index.php?module=".$_REQUEST['return_module']."&action=".$_REQUEST['return_action']."&record=".$_REQUEST['return_id']."&relmodule=".$_REQUEST['module'].$url);
 ?>

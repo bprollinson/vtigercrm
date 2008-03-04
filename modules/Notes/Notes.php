@@ -29,17 +29,18 @@ require_once('include/upload_file.php');
 
 // Note is used to store customer information.
 class Notes extends CRMEntity {
+	
 	var $log;
 	var $db;
-
+	var $table_name = "vtiger_notes";
 	var $default_note_name_dom = array('Meeting vtiger_notes', 'Reminder');
 
-	var $tab_name = Array('vtiger_crmentity','vtiger_notes','vtiger_attachments');
-	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_notes'=>'notesid','vtiger_senotesrel'=>'notesid','vtiger_attachments'=>'attachmentsid');
+	var $tab_name = Array('vtiger_crmentity','vtiger_notes');
+	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_notes'=>'notesid','vtiger_senotesrel'=>'notesid');
 
 	var $column_fields = Array();
 
-        var $sortby_fields = Array('notes_title','modifiedtime','contact_id','filename');		  
+        var $sortby_fields = Array('title','modifiedtime','contact_id','filename','createdtime','lastname');		  
 
 	// This is used to retrieve related vtiger_fields from form posts.
 	var $additional_column_fields = Array('', '', '', '');
@@ -47,7 +48,7 @@ class Notes extends CRMEntity {
 	// This is the list of vtiger_fields that are in the lists.
 	var $list_fields = Array(
 				'Subject'=>Array('notes'=>'notes_title'),
-				'Contact Name'=>Array('notes'=>'contact_id'),
+				'Contact Name'=>Array('contactdetails'=>'lastname'),
 				'Related to'=>Array('senotesrel'=>'crmid'),
 				'File'=>Array('notes'=>'filename'),
 				'Last Modified'=>Array('crmentity'=>'modifiedtime')
@@ -62,9 +63,8 @@ class Notes extends CRMEntity {
 	var $list_link_field= 'notes_title';
 
 	//Added these variables which are used as default order by and sortorder in ListView
-	var $default_order_by = 'modifiedtime';
+	var $default_order_by = 'title';
 	var $default_sort_order = 'ASC';
-
 	function Notes() {
 		$this->log = LoggerManager::getLogger('notes');
 		$this->log->debug("Entering Notes() method ...");
@@ -75,7 +75,8 @@ class Notes extends CRMEntity {
 
 	function save_module($module)
 	{
-
+		
+		$insertion_mode = $this->mode;
 		//inserting into vtiger_senotesrel
 		if(isset($this->column_fields['parent_id']) && $this->column_fields['parent_id'] != '')
 		{
@@ -109,6 +110,7 @@ class Notes extends CRMEntity {
 		{
 			if($files['name'] != '' && $files['size'] > 0)
 			{
+				$files['original_name'] = $_REQUEST[$fileindex.'_hidden'];
 				$file_saved = $this->uploadAndSaveFile($id,$module,$files);
 			}
 		}
@@ -116,16 +118,45 @@ class Notes extends CRMEntity {
 		$log->debug("Exiting from insertIntoAttachment($id,$module) method.");
 	}
 
+	/**    Function used to get the sort order for Notes listview
+	*      @return string  $sorder - first check the $_REQUEST['sorder'] if request value is empty then check in the $_SESSION['NOTES_SORT_ORDER'] if this session value is empty then default sort order will be returned.
+	*/
+	function getSortOrder()
+	{
+		global $log;
+		$log->debug("Entering getSortOrder() method ...");
+		if(isset($_REQUEST['sorder']))
+			$sorder = $_REQUEST['sorder'];
+		else
+			$sorder = (($_SESSION['NOTES_SORT_ORDER'] != '')?($_SESSION['NOTES_SORT_ORDER']):($this->default_sort_order));
+		$log->debug("Exiting getSortOrder() method ...");
+		return $sorder;
+	}
+
+	/**     Function used to get the order by value for Notes listview
+	*       @return string  $order_by  - first check the $_REQUEST['order_by'] if request value is empty then check in the $_SESSION['NOTES_ORDER_BY'] if this session value is empty then default order by will be returned.
+	*/
+	function getOrderBy()
+	{
+		global $log;
+		$log->debug("Entering getOrderBy() method ...");
+		if (isset($_REQUEST['order_by']))
+			$order_by = $_REQUEST['order_by'];
+		else
+			$order_by = (($_SESSION['NOTES_ORDER_BY'] != '')?($_SESSION['NOTES_ORDER_BY']):($this->default_order_by));
+		$log->debug("Exiting getOrderBy method ...");
+		return $order_by;
+	}
+
 
 	/** Function to export the notes in CSV Format
-	* @param reference variable - order by is passed when the query is executed
 	* @param reference variable - where condition is passed when the query is executed
 	* Returns Export Notes Query.
 	*/
-	function create_export_query(&$order_by, &$where)
+	function create_export_query($where)
 	{
 		global $log;
-		$log->debug("Entering create_export_query(".$order_by.",". $where.") method ...");
+		$log->debug("Entering create_export_query(". $where.") method ...");
 
 		include("include/utils/ExportUtils.php");
 
@@ -144,22 +175,26 @@ class Notes extends CRMEntity {
 				LEFT JOIN vtiger_crmentity vtiger_crmentityRelatedTo
 					ON vtiger_crmentityRelatedTo.crmid = vtiger_senotesrel.crmid
 				
-				LEFT JOIN vtiger_leaddetails vtiger_NoteRelatedToLead
-					ON vtiger_NoteRelatedToLead.leadid = vtiger_senotesrel.crmid
-				LEFT JOIN vtiger_account vtiger_NoteRelatedToAccount
-					ON vtiger_NoteRelatedToAccount.accountid = vtiger_senotesrel.crmid
-				LEFT JOIN vtiger_potential vtiger_NoteRelatedToPotential
-					ON vtiger_NoteRelatedToPotential.potentialid = vtiger_senotesrel.crmid
-				LEFT JOIN vtiger_products vtiger_NoteRelatedToProduct
-					ON vtiger_NoteRelatedToProduct.productid = vtiger_senotesrel.crmid
-				LEFT JOIN vtiger_invoice vtiger_NoteRelatedToInvoice
-					ON vtiger_NoteRelatedToInvoice.invoiceid = vtiger_senotesrel.crmid
-				LEFT JOIN vtiger_purchaseorder vtiger_NoteRelatedToPO
-					ON vtiger_NoteRelatedToPO.purchaseorderid = vtiger_senotesrel.crmid
-				LEFT JOIN vtiger_salesorder vtiger_NoteRelatedToSO
-					ON vtiger_NoteRelatedToSO.salesorderid = vtiger_senotesrel.crmid
-
-				WHERE vtiger_crmentity.deleted=0 
+				LEFT JOIN vtiger_leaddetails
+					ON vtiger_leaddetails.leadid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_account
+					ON vtiger_account.accountid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_potential
+					ON vtiger_potential.potentialid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_products
+					ON vtiger_products.productid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_invoice
+					ON vtiger_invoice.invoiceid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_purchaseorder
+					ON vtiger_purchaseorder.purchaseorderid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_quotes
+					ON vtiger_quotes.quoteid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_salesorder vtiger_salesorder
+					ON vtiger_salesorder.salesorderid = vtiger_senotesrel.crmid
+				LEFT JOIN vtiger_troubletickets
+					ON vtiger_troubletickets.ticketid = vtiger_senotesrel.crmid";
+	
+				$where_auto=" vtiger_crmentity.deleted=0 
 
 				AND ((vtiger_senotesrel.crmid IS NULL
 					AND (vtiger_notes.contact_id = 0
@@ -171,9 +206,15 @@ class Notes extends CRMEntity {
 					OR vtiger_senotesrel.crmid IN (".getReadEntityIds('Invoice').")
 					OR vtiger_senotesrel.crmid IN (".getReadEntityIds('PurchaseOrder').")
 					OR vtiger_senotesrel.crmid IN (".getReadEntityIds('SalesOrder').")
+					OR vtiger_senotesrel.crmid IN (".getReadEntityIds('Quotes').")
+					OR vtiger_senotesrel.crmid IN (".getReadEntityIds('HelpDesk').")
 					OR vtiger_notes.contact_id IN (".getReadEntityIds('Contacts').")) 
 
 					";
+		if($where != "")
+			$query .= "  WHERE ($where) AND ".$where_auto;
+		else
+			$query .= "  WHERE ".$where_auto;
 
 		$log->debug("Exiting create_export_query method ...");
                 return $query;

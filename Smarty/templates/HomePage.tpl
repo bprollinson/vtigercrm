@@ -9,15 +9,7 @@
   *
  ********************************************************************************/
 -->*}
-<script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
 <script language="javascript" type="text/javascript" src="include/scriptaculous/scriptaculous.js"></script>
-<script language="javascript" type="text/javascript" src="include/scriptaculous/effects.js"></script>
-<script language="javascript" type="text/javascript" src="include/scriptaculous/builder.js"></script>
-<script language="javascript" type="text/javascript" src="include/scriptaculous/dragdrop.js"></script>
-<script language="javascript" type="text/javascript" src="include/scriptaculous/controls.js"></script>
-<script language="javascript" type="text/javascript" src="include/scriptaculous/slider.js"></script>
-<script language="javascript" type="text/javascript" src="include/scriptaculous/dom-drag.js"></script>
-<script type="text/javascript" language="JavaScript" src="include/js/general.js"></script>
 <script language="javascript">
 function getHomeActivities(mode,view)
 
@@ -71,14 +63,22 @@ function getHomeActivities(mode,view)
 					<td class="small">
 							<table border=0 cellspacing=0 cellpadding=5>
 								<tr>
-									{if $CHECK.Calendar eq 'yes'}
-									<td style="padding-right:5px;padding-left:5px;"><a href="javascript:;" onClick='fnvshobj(this,"miniCal");getMiniCal();'><img src="{$IMAGE_PATH}btnL3Calendar.gif" alt="{$APP.LBL_CALENDAR_ALT}" title="{$APP.LBL_CALENDAR_TITLE}" border=0></a></a></td>
-									{else}
-									<td style="padding-right:5px;padding-left:5px;"><img src="{$IMAGE_PATH}btnL3Calendar-Faded.gif" border=0></td>
+									{if $CALENDAR_DISPLAY eq 'true'} 
+ 		                                                                              {if $CHECK.Calendar eq 'yes'} 
+ 		                                                                                        <td style="padding-right:5px;padding-left:5px;"><a href="javascript:;" onClick='fnvshobj(this,"miniCal");getMiniCal();'><img src="{$IMAGE_PATH}btnL3Calendar.gif" alt="{$APP.LBL_CALENDAR_ALT}" title="{$APP.LBL_CALENDAR_TITLE}" border=0></a></a></td> 
+ 		                                                                              {else} 
+ 		                                                                                        <td style="padding-right:5px;padding-left:5px;"><img src="{$IMAGE_PATH}btnL3Calendar-Faded.gif" border=0></td> 
+ 		                                                                              {/if} 
 									{/if}
-									<td style="padding-right:5px"><a href="javascript:;"><img src="{$IMAGE_PATH}btnL3Clock.gif" alt="{$APP.LBL_CLOCK_ALT}" title="{$APP.LBL_CLOCK_TITLE}" border=0 onClick="fnvshobj(this,'wclock');"></a></a></td>
-									<td style="padding-right:5px"><a href="#"><img src="{$IMAGE_PATH}btnL3Calc.gif" alt="{$APP.LBL_CALCULATOR_ALT}" title="{$APP.LBL_CALCULATOR_TITLE}" border=0 onClick="fnvshobj(this,'calculator_cont');fetch_calc();"></a></td>
-									<td style="padding-right:5px"><a href="javascript:;" onClick='return window.open("index.php?module=Contacts&action=vtchat","Chat","width=600,height=450,resizable=1,scrollbars=1");'><img src="{$IMAGE_PATH}tbarChat.gif" alt="{$APP.LBL_CHAT_ALT}" title="{$APP.LBL_CHAT_TITLE}" border=0></a></td>	
+									 {if $WORLD_CLOCK_DISPLAY eq 'true'} 
+ 		                                                                                <td style="padding-right:5px"><a href="javascript:;"><img src="{$IMAGE_PATH}btnL3Clock.gif" alt="{$APP.LBL_CLOCK_ALT}" title="{$APP.LBL_CLOCK_TITLE}" border=0 onClick="fnvshobj(this,'wclock');"></a></a></td> 
+ 		                                                         {/if} 
+ 		                                                                        {if $CALCULATOR_DISPLAY eq 'true'} 
+ 		                                                                                <td style="padding-right:5px"><a href="#"><img src="{$IMAGE_PATH}btnL3Calc.gif" alt="{$APP.LBL_CALCULATOR_ALT}" title="{$APP.LBL_CALCULATOR_TITLE}" border=0 onClick="fnvshobj(this,'calculator_cont');fetch_calc();"></a></td> 
+ 		                                                                        {/if} 
+ 		                                                                        {if $CHAT_DISPLAY eq 'true'} 
+ 		                                                                                <td style="padding-right:5px"><a href="javascript:;" onClick='return window.open("index.php?module=Home&action=vtchat","Chat","width=600,height=450,resizable=1,scrollbars=1");'><img src="{$IMAGE_PATH}tbarChat.gif" alt="{$APP.LBL_CHAT_ALT}" title="{$APP.LBL_CHAT_TITLE}" border=0></a></td>     
+ 		                                                                        {/if} 
 									<td style="padding-right:5px"><img src="{$IMAGE_PATH}btnL3Tracker.gif" alt="{$APP.LBL_LAST_VIEWED}" title="{$APP.LBL_LAST_VIEWED}" border=0 onClick="fnvshobj(this,'tracker');"></td>
 								</tr>
 							</table>
@@ -120,18 +120,22 @@ function getHomeActivities(mode,view)
 							{if $tabledetail neq ''}
 								<div class="MatrixLayer" style="float:left;" id="{$tabledetail.Title.2}">
 										<table width="100%" border="0" cellpadding="5" cellspacing="0" class="small">
-								<tr style="cursor:move;height:20px;">
+								<tr class="headerrow">
 									<td align="left" class="homePageMatrixHdr" ><b>{$tabledetail.Title.1}</b></td>
 									<td align="right" class="homePageMatrixHdr" ><img src="{$IMAGE_PATH}uparrow.gif" align="absmiddle" /></td>
 								</tr>
-								<tr align="left">
+								<tr align="left" class="winmarkModulesdef">
 									<td valign=top  colspan=2>
-											<div style="overflow-y:auto;overflow-x:hidden;height:250px;width:99%"> 
+											<div style="overflow-y:auto;overflow-x:hidden;height:200px;width:99%"> 
 											<table border=0 cellspacing=0 cellpadding=5 width=100%>
 												{foreach item=elements from=$tabledetail.Entries}
 													<tr>
 														{if $tabledetail.Title.2 neq 'home_mytopinv' && $tabledetail.Title.2 neq 'home_mytopso' && $tabledetail.Title.2 neq 'home_mytopquote' && $tabledetail.Title.2 neq 'home_metrics' &&  $tabledetail.Title.2 neq 'home_mytoppo' &&  $tabledetail.Title.2 neq 'home_myfaq'  }
-															<td colspan="2"><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.0}</td>
+															<td colspan="2"><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" />{$elements.0} 
+															 	{if $modulename eq 'Leads'}
+																 - {$elements.1}	
+																{/if}
+															</td>
 														{elseif $tabledetail.Title.2 eq 'home_metrics'}
 															<td><img src="{$IMAGE_PATH}bookMark.gif" align="absmiddle" /> {$elements.0}</td>
 															<td align="absmiddle" /> {$elements.1}</td>
@@ -141,31 +145,29 @@ function getHomeActivities(mode,view)
 													</tr>
 												{/foreach}
 											</table>	
-											</div>
-											<table border=0 cellspacing=0 cellpadding=5 width=100%>
-													<tr>
-														<td colspan="2" align="right" valign="bottom">
-															{if $modulename neq 'CustomView' && $modulename neq 'GroupAllocation'}
-																<a href="index.php?module={$modulename}&action=index">{$APP.LBL_MORE}..</a>
-															{else}
-																&nbsp;	
-															{/if}
-														</td>
-													</tr>
-											</table>										
+											</div>									
+									</td>
+								</tr>
+								<tr>
+									<td colspan="2" align="right" valign="bottom">
+									{if $modulename neq 'CustomView' && $modulename neq 'GroupAllocation'}
+									 <a href="index.php?module={$modulename}&action=index&search_field=assigned_user_id&searchtype=BasicSearch&search_text={$CURRENTUSER}&query=true&viewname=all">{$APP.LBL_MORE}..</a>
+									{else}
+										&nbsp;	
+									{/if}
 									</td>
 								</tr>
 							</table>
 								</div>
 							{/if}	
 							{else}
-								<div class="MatrixLayer" style="float:left;width:61%;" id="homepagedb">
+								<div class="MatrixLayer" style="float:left;width:93%;" id="homepagedb">
 									<table width="100%" border="0" cellpadding="8" cellspacing="0" class="small">
-										<tr style="cursor:move;">
+										<tr class="headerrow">
 											<td align="left" class="homePageMatrixHdr"><b>{$APP.LBL_HOMEPAGE_DASHBOARD}</b></td>
 											<td align="right" class="homePageMatrixHdr"><img src="{$IMAGE_PATH}uparrow.gif" align="absmiddle" /></td>
 										</tr>
-										<tr>	
+										<tr align="left" class="winmarkModulesdef">	
 											<td colspan="2">
 											<div style="overflow:hidden;height:255px;width:99%"> 
 												<table border=0 cellspacing=0 cellpadding=5 width=100%>
@@ -194,6 +196,7 @@ function getHomeActivities(mode,view)
                         <div id="pendingActivities">
                                 {include file="pendingActivities.tpl"}
                         </div><br>
+{if $TAG_CLOUD_DISPLAY eq 'true'}
 <table border=0 cellspacing=0 cellpadding=0 width=100% class="tagCloud">
 <tr>
 <td class="tagCloudTopBg"><img src="{$IMAGE_PATH}tagCloudName.gif" border=0></td>
@@ -202,6 +205,7 @@ function getHomeActivities(mode,view)
 <td class="tagCloudDisplay" valign=top> <span id="tagfields">{$ALL_TAG}</span></td>
 </tr>
 </table>
+{/if}
 
 
 
@@ -215,7 +219,7 @@ function getHomeActivities(mode,view)
 {literal}
 <script  language="javascript">
 Sortable.create("MainMatrix",
-{constraint:false,tag:'div',overlap:'horizontal',
+{constraint:false,tag:'div',overlap:'horizontal',handle:'headerrow',
 onUpdate:function(){
 //	alert(Sortable.serialize('MainMatrix')); 
 }

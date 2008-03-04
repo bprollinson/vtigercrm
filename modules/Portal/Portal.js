@@ -42,7 +42,7 @@ function fetchContents(mode)
 }
 function DeleteSite(id)
 {
-	if(confirm("Are you sure you want to delete ?"))
+	if(confirm(alert_arr.SURE_TO_DELETE))
 	{
 		$("status").style.display="inline";
 		new Ajax.Request(
@@ -61,11 +61,11 @@ function DeleteSite(id)
 function SaveSite(id)
 {
 	if ($('portalurl').value.replace(/^\s+/g, '').replace(/\s+$/g, '').length==0) {
-		alert('Site Url cannot be empty')
+		alert(alert_arr.SITEURL_CANNOT_BE_EMPTY)
 		return false;
 	}
 	if ($('portalname').value.replace(/^\s+/g, '').replace(/\s+$/g, '').length==0) {
-		alert('Site Name cannot be empty')
+		alert(alert_arr.SITENAME_CANNOT_BE_EMPTY)
 		return false;
 	}
 	Effect.Puff('orgLay');	
@@ -79,16 +79,41 @@ function SaveSite(id)
                 	method: 'post',
                         postBody:'action=PortalAjax&mode=ajax&file=Save&module=Portal&portalname='+portalname+'&portalurl='+portalurl+'&record='+id,
                         onComplete: function(response) {
-                        		$("status").style.display="none";
-                                        $('portalcont').innerHTML = response.responseText;
+					if(response.responseText.indexOf(":#:FAILURE") > -1)
+					{
+						alert(alert_arr.VALID_DATA)
+					}else
+					{
+						$('portalcont').innerHTML = response.responseText;
+					}
+					$("status").style.display="none";
                         }
                 }
 	);
 }
 function setSite(oUrllist)
 {
-	var url = oUrllist.options[oUrllist.options.selectedIndex].value;
-	document.getElementById('locatesite').src = url;
+	//var url = oUrllist.options[oUrllist.options.selectedIndex].value;
+	var id = oUrllist.options[oUrllist.options.selectedIndex].value;
+	document.getElementById('locatesite').src = mysitesArray[id];
+}
+//added as an enhancement to set default value
+function defaultMysites(oSelectlist)
+{
+	var id = $("urllist").value;
+	$("status").style.display="block";
+	 new Ajax.Request(
+        	'index.php',
+                {queue: {position: 'end', scope: 'command'},
+                	method: 'post',
+                        postBody:'action=PortalAjax&mode=ajax&file=Save&module=Portal&check=true&passing_var='+id,
+                        onComplete: function(response) {
+					//alert(response.responseText);
+					$("status").style.display="none";
+                        }
+                }
+	);
+	
 }
 
 var oRegex = new Object() ;

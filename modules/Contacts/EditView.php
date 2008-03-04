@@ -28,7 +28,7 @@ require_once('include/ComboUtil.php');
 require_once('include/utils/utils.php');
 require_once('include/FormValidationUtil.php');
 
-global $log,$mod_strings,$app_strings,$theme,$currentModule;
+global $log,$mod_strings,$app_strings,$theme,$currentModule,$current_user;
 
 //added for contact image
 $encode_val=$_REQUEST['encode_val'];
@@ -42,7 +42,12 @@ $decode_val=base64_decode($encode_val);
 $focus = new Contacts();
 $smarty = new vtigerCRM_Smarty;
 
-if(isset($_REQUEST['record']) && isset($_REQUEST['record'])) 
+//added to fix the issue4600
+$searchurl = getBasic_Advance_SearchURL();
+$smarty->assign("SEARCH", $searchurl);
+//4600 ends
+
+if(isset($_REQUEST['record']) && $_REQUEST['record'] != '') 
 {
     $focus->id = $_REQUEST['record'];
     $focus->mode = 'edit';
@@ -84,6 +89,9 @@ if(isset($_REQUEST['account_id']) && $_REQUEST['account_id']!='' && $_REQUEST['r
         $focus->column_fields['otherzip']=$acct_focus->column_fields['ship_code'];
         $focus->column_fields['mailingcountry']=$acct_focus->column_fields['bill_country'];
         $focus->column_fields['othercountry']=$acct_focus->column_fields['ship_country'];
+	$focus->column_fields['mailingpobox']=$acct_focus->column_fields['bill_pobox'];
+	$focus->column_fields['otherpobox']=$acct_focus->column_fields['ship_pobox'];
+
         $log->debug("Accountid Id from the request is ".$_REQUEST['account_id']);
 
 }
@@ -101,7 +109,6 @@ else
 	$smarty->assign("BASBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'BAS'));
 	$smarty->assign("ADVBLOCKS",getBlocks($currentModule,$disp_view,$mode,$focus->column_fields,'ADV'));
 }
-
 $smarty->assign("OP_MODE",$disp_view);
 
 //needed when creating a new contact with a default vtiger_account value passed in
@@ -121,13 +128,15 @@ $comboFieldNames = Array('leadsource'=>'lead_source_dom'
                       ,'salutationtype'=>'salutation_dom');
 $comboFieldArray = getComboArray($comboFieldNames);
 
-require_once($theme_path.'layout_utils.php');
-
 $log->info("Contact detail view");
 
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
-$smarty->assign("NAME",$focus->lastname." ".$focus->firstname);
+$contact_name = $focus->lastname;
+if (getFieldVisibilityPermission($currentModule, $current_user->id,'firstname') == '0') {
+	$contact_name .= ' '.$focus->firstname;
+}
+$smarty->assign("NAME",$contact_name);
 if(isset($cust_fld))
 {
         $smarty->assign("CUSTOMFIELD", $cust_fld);
@@ -205,6 +214,7 @@ if($errormessage!="")
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+$smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 
 if($focus->mode == 'edit')
 $smarty->display("salesEditView.tpl");

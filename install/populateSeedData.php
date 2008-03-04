@@ -183,12 +183,14 @@ for($i = 0; $i < $company_name_count; $i++)
 	if ($i > 3)
 	{
 		$freetag = $adb->getUniqueId('vtiger_freetags');
-		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[1]', '$cloudtag[1]')";
-		$res = $adb->query($query);
+		$query = "insert into vtiger_freetags values (?,?,?)";
+		$qparams = array($freetag, $cloudtag[1], $cloudtag[1]);
+		$res = $adb->pquery($query, $qparams);
 
-		$date = $adb->formatDate(date('YmdHis')); 
-		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$account->id.", $date, 'Accounts')";
-		$result = $adb->query($query_tag);
+		$date = $adb->formatDate(date('YmdHis'), true); 
+		$query_tag = "insert into vtiger_freetagged_objects values (?,?,?,?,?)";
+		$tag_params = array($freetag, 1, $account->id, $date, Accounts);
+		$result = $adb->pquery($query_tag, $tag_params);
 	}
 
 
@@ -209,7 +211,7 @@ for($i = 0; $i < $company_name_count; $i++)
 
 //      $key = array_rand($app_list_strings['sales_stage_dom']);
 //      $opp->sales_stage = $app_list_strings['sales_stage_dom'][$key];
-	$comboSalesStageArray = Array ("Closed Won");
+	$comboSalesStageArray = Array ("Closed Won","Needs Analysis","Value Proposition","Qualification","Prospecting","Id. Decision Makers");
 	$key = array_rand($comboSalesStageArray);
 	$opp->column_fields["sales_stage"] = $comboSalesStageArray[$key];
 	
@@ -254,10 +256,6 @@ for($i=0; $i<10; $i++)
 	$contact->column_fields["mailingstate"] = "CA";
 	$contact->column_fields["mailingzip"] = '99999';
 	$contact->column_fields["mailingcountry"] = 'USA';	
-	if ($contact->column_fields["mailingcity"] == "San Mateo") 
-		$contact->column_fields["yahooid"] = "clint_oram";
-	elseif ($contact->column_fields["mailingcity"] == "San Francisco") 
-		$contact->column_fields["yahooid"] = "not_a_real_id";
 
 //      $key = array_rand($app_list_strings['lead_source_dom']);
 //      $contact->lead_source = $app_list_strings['lead_source_dom'][$key];
@@ -286,20 +284,22 @@ for($i=0; $i<10; $i++)
 	if ($i > 8)
 	{
 		$freetag = $adb->getUniqueId('vtiger_freetags');
-		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[2]', '$cloudtag[2]')";
-		$res1 = $adb->query($query);
+		$query = "insert into vtiger_freetags values (?,?,?)";
+		$qparams = array($freetag, $cloudtag[2], $cloudtag[2]);
+		$res1 = $adb->pquery($query, $qparams);
 
-		$date = $adb->formatDate(date('YmdHis')); 
-		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$contact->id.", $date, 'Contacts')";
-		$result1 = $adb->query($query_tag);
+		$date = $adb->formatDate(date('YmdHis'), true); 
+		$query_tag = "insert into vtiger_freetagged_objects values (?,?,?,?,?)";
+		$tag_params = array($freetag, 1, $contact->id, $date, 'Contacts');
+		$result1 = $adb->pquery($query_tag, $tag_params);
 	}
 	// This assumes that there will be one opportunity per company in the seed data.
 	$opportunity_key = array_rand($opportunity_ids);
 	//$query = "insert into opportunities_contacts set id='".create_guid()."', contact_id='$contact->id', contact_role='".$app_list_strings['opportunity_relationship_type_default_key']."', opportunity_id='".$opportunity_ids[$opportunity_key]."'";
 	//$db->query($query, true, "unable to create seed links between opportunities and contacts");
 
-	$query = "insert into vtiger_contpotentialrel ( contactid, potentialid ) values (".$contact->id.",".$opportunity_ids[$opportunity_key].")";
-	$db->query($query);
+	$query = "insert into vtiger_contpotentialrel ( contactid, potentialid ) values (?,?)";
+	$db->pquery($query, array($contact->id, $opportunity_ids[$opportunity_key]));
 
 //	$adb->println("PSD Contact [".$contact->id."] - account[".$account_ids[$account_key]."] - potential[".$opportunity_ids[$opportunity_key]."]");
 
@@ -360,10 +360,6 @@ for($i=0; $i<10; $i++)
 	$lead->column_fields["state"] = "CA";
 	$lead->column_fields["code"] = '99999';
 	$lead->column_fields["country"] = 'USA';	
-	if ($lead->column_fields["city"] == "San Mateo") 
-		$lead->column_fields["yahooid"] = "clint_oram";
-	elseif ($lead->column_fields["city"] == "San Francisco") 
-		$lead->column_fields["yahooid"] = "not_a_real_id";
 
 //      $key = array_rand($app_list_strings['lead_source_dom']);
 //      $lead->lead_source = $app_list_strings['lead_source_dom'][$key];
@@ -468,7 +464,7 @@ for($i=0; $i<10; $i++)
 		$qty_in_stock	=	rand(10000, 99999);
 		$category 	= 	"Software";	
 		$website 	=	"www.vtiger.com";
-		$manufacturer	= 	"vtiger";
+		$manufacturer	= 	"LexPon Inc.";
 		$commission_rate=	rand(1,10);
 		$unit_price	=	$subscription_rate[$i];
 		$product_image_name = $product_image_array[$i];
@@ -477,6 +473,7 @@ for($i=0; $i<10; $i++)
         $product->column_fields["productname"] 	= 	$product_name_array[$i];
         $product->column_fields["productcode"] 	= 	$product_code_array[$i];
         $product->column_fields["manufacturer"]	= 	$manufacturer;
+        $product->column_fields["discontinued"]	= 	1;
 
 	$product->column_fields["productcategory"] = 	$category;
         $product->column_fields["website"] 	=	$website;
@@ -576,7 +573,7 @@ for($i=0;$i<12;$i++)
 $sub_array = array ("Prod_Quote", "Cont_Quote", "SO_Quote", "PO_Quote", "Vendor_Quote");
 $stage_array = array ("Created", "Reviewed", "Delivered", "Accepted" , "Rejected");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
-$validtill_array = array ("2006-09-21", "2006-10-29", "2006-12-11", "2006-10-09", "2006-11-18");
+$validtill_array = array ("2007-09-21", "2007-10-29", "2007-12-11", "2007-03-29", "2007-06-18");
 for($i=0;$i<5;$i++)
 {
 	$quote = new Quotes();
@@ -640,7 +637,7 @@ for($i=0;$i<5;$i++)
 	//Upto this added to set the request values which will be used to save the inventory product details
 
 	//Now call the saveInventoryProductDetails function
-	saveInventoryProductDetails(&$quote, 'Quotes');
+	saveInventoryProductDetails($quote, 'Quotes');
 }
 
 //Populate SalesOrder Data
@@ -648,7 +645,7 @@ for($i=0;$i<5;$i++)
 $subj_array = array ("SO_vtiger", "SO_zoho", "SO_vtiger5usrp", "SO_vt100usrpk", "SO_vendtl");
 $status_array = array ("Created",  "Delivered", "Approved" , "Cancelled" , "Created");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
-$duedate_array = array ("2006-09-21", "2006-10-29", "2006-12-11", "2006-10-09", "2006-11-18");
+$duedate_array = array ("2007-04-21", "2007-05-29", "2007-08-11", "2007-09-09", "2007-02-28");
 
 for($i=0;$i<5;$i++)
 {
@@ -714,7 +711,7 @@ for($i=0;$i<5;$i++)
 	//Upto this added to set the request values which will be used to save the inventory product details
 
 	//Now call the saveInventoryProductDetails function
-	saveInventoryProductDetails(&$so, 'SalesOrder');
+	saveInventoryProductDetails($so, 'SalesOrder');
 
 
 }
@@ -723,10 +720,10 @@ for($i=0;$i<5;$i++)
 //Populate PurchaseOrder Data
 
 $psubj_array = array ("PO_vtiger", "PO_zoho", "PO_vtiger5usrp", "PO_vt100usrpk", "PO_vendtl");
-$pstatus_array = array ("Created",  "Delivered", "Approved" , "Cancelled", "Recieved Shipment");
+$pstatus_array = array ("Created",  "Delivered", "Approved" , "Cancelled", "Received Shipment");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
 $trkno_array = array ("po1425", "po2587", "po7974", "po7979", "po6411"); 
-$duedate_array = array ("2006-09-21", "2006-10-29", "2006-12-11", "2006-10-09", "2006-11-18");
+$duedate_array = array ("2007-04-21", "2007-05-29", "2007-07-11", "2007-04-09", "2006-08-18");
 
 for($i=0;$i<5;$i++)
 {
@@ -790,7 +787,7 @@ for($i=0;$i<5;$i++)
 	//Upto this added to set the request values which will be used to save the inventory product details
 
 	//Now call the saveInventoryProductDetails function
-	saveInventoryProductDetails(&$po, 'PurchaseOrder');
+	saveInventoryProductDetails($po, 'PurchaseOrder');
 
 
 }
@@ -798,6 +795,7 @@ for($i=0;$i<5;$i++)
 //Populate Invoice Data
 
 $isubj_array = array ("vtiger_invoice201", "zoho_inv7841", "vtiger5usrp_invoice71134", "vt100usrpk_inv113", "vendtl_inv214");
+$invoiceno_array = array ("INV2007_1","INV2007_2","INV2007_3","INV2007_4","INV2007_5");
 $istatus_array = array ("Created",  "Sent", "Approved" , "Credit Invoice", "Paid");
 $itotal_array = array ("4842.000", "4842.000", "4842.000", "4842.000", "4842.000");
 
@@ -814,6 +812,7 @@ for($i=0;$i<5;$i++)
         $invoice->column_fields["contactid"] = $contact_ids[$contact_key];
 	$rand = array_rand($num_array);
 	$invoice->column_fields["subject"] = $isubj_array[$i];
+	$invoice->column_fields["invoice_no"] = $invoiceno_array[$i];
 	$invoice->column_fields["invoicestatus"] = $istatus_array[$i];	
 	$invoice->column_fields["hdnGrandTotal"] = $itotal_array[$i];
 
@@ -836,12 +835,14 @@ for($i=0;$i<5;$i++)
 	if ($i > 3)
 	{
 		$freetag = $adb->getUniqueId('vtiger_freetags');
-		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[0]', '$cloudtag[0]')";
-		$res_inv = $adb->query($query);
+		$query = "insert into vtiger_freetags values (?,?,?)";
+		$qparams = array($freetag, $cloudtag[0], $cloudtag[0]);
+		$res_inv = $adb->pquery($query, $qparams);
 
-		$date = $adb->formatDate(date('YmdHis')); 
-		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$invoice->id.", $date, 'Invoice')";
-		$result_inv = $adb->query($query_tag);
+		$date = $adb->formatDate(date('YmdHis'), true); 
+		$query_tag = "insert into vtiger_freetagged_objects values (?,?,?,?,?)";
+		$tag_params = array($freetag, 1, $invoice->id, $date, 'Invoice');
+		$result_inv = $adb->pquery($query_tag, $tag_params);
 	}
 
 	$product_key = array_rand($product_ids); 
@@ -873,7 +874,7 @@ for($i=0;$i<5;$i++)
 	//Upto this added to set the request values which will be used to save the inventory product details
 
 	//Now call the saveInventoryProductDetails function
-	saveInventoryProductDetails(&$invoice, 'Invoice');
+	saveInventoryProductDetails($invoice, 'Invoice');
 
 }
 
@@ -884,15 +885,15 @@ for($i=0;$i<5;$i++)
 
 //Populate Email Data
 
-$esubj_array =  array ("Vtiger 5 Released", "Try vtigercrm!", "Hi There!!!", "Welcome to Open Source", "Help needed in customization of Vtiger");
-$startdate_array =  array ("2006-1-2","2003-3-4","2003-4-5","2001-2-1","2005-8-8");
+$esubj_array =  array ("Vtiger 5.0.3 Released", "Try vtigercrm!", "Hi There!!!", "Welcome to Open Source", "Help needed in customization of Vtiger");
+$startdate_array =  array ("2007-07-27","2007-05-09","2007-04-05","2007-11-01","2007-08-18");
 $filename_array = array ("vtiger5alpha.tar.gz", "zohowriter.zip", "hi.doc", "welcome.pps", "sos.doc");
 
 $to_array = array("a@a.com","b@b.com", "tester@testvtiger.com","xanth@yaz.com","violet@bing.com");
 $cc_array = array("andrewa@a.com","casterb@b.com", "indomine@variancevtiger.com","becker@nosbest.com","electra@violet.com");
 $bcc_array = array("nathan@nathantests.com","jeff@karl1.com", "isotope@uranium.com","bunny@bugs.com","explosive@dud.com");
-$from_array = array("harvest@zss.com","rain@sunshine.com", "gloom@rainyday.com");
-$body_array = array("This is a good product! Have a go at it! ","Nice to have you visit us, very nice of you. Stay for sometime and have a look at our product. I am sure you will like it", "This will take some time to fix. Can you provide me more details please?","What a cool tool! I wish I had found it earlier. Oh it has a lot of my friends name in it too! I too can contribute. But how?","Urgent. I need this done last week! Guys, you are the ones I am depending on. Do something!");
+$from_array = array("harvest@zss.com","rain@sunshine.com", "gloom@rainyday.com","joy@happyday.com","success@goodjob.com");
+$body_array = array("This release has close to 500 fixes in it and has gone through almost 7 rounds of validation. We think it is a stable product that you can directly use in deployment! ","Nice to have you visit us, very nice of you. Stay for sometime and have a look at our product. I am sure you will like it", "This will take some time to fix. Can you provide me more details please?","What a cool tool! I wish I had found it earlier. Oh it has a lot of my friends name in it too! I too can contribute. But how?","Urgent. I need this done last week! Guys, you are the ones I am depending on. Do something!");
 
 for($i=0;$i<5;$i++)
 {
@@ -910,8 +911,9 @@ for($i=0;$i<5;$i++)
 	$email->save("Emails");
 	$email_ids[] = $email->id;
 	
-	$query = "insert into vtiger_emaildetails(emailid,from_email,to_email,cc_email,bcc_email) values (".$email->id.", '".$from_array[$i]."', '".$to_array[$i]."','".$cc_array[$i]."','".$bcc_array[$i] ."')";
-		$res = $adb->query($query);
+	$query = "insert into vtiger_emaildetails(emailid,from_email,to_email,cc_email,bcc_email) values (?,?,?,?,?)";
+	$qparams = array($email->id, $from_array[$i], $to_array[$i], $cc_array[$i], $bcc_array[$i]);
+	$res = $adb->pquery($query, $qparams);
 }
 
 
@@ -951,9 +953,8 @@ for($i=0;$i<7;$i++)
 	$notes_ids[] = $notes ->id;
 	
 	$product_key = array_rand($product_ids);
-        $query = "insert into vtiger_senotesrel (crmid, notesid) values (".$product_ids[$product_key].", ".$notes->id.")";
-	$db->query($query);
-		
+    $query = "insert into vtiger_senotesrel (crmid, notesid) values (?,?)";
+	$db->pquery($query, array($product_ids[$product_key], $notes->id));	
 }
 
 
@@ -963,7 +964,7 @@ for($i=0;$i<7;$i++)
 
 //$severity_array=array("Minor","Major","Critical","");
 $status_array=array("Open","In Progress","Wait For Response","Open","Closed");
-$category_array=array("Big Problem ","Small Problem","Other Problem","Small Problem","Other Problem");
+$category_array=array("Big Problem","Small Problem","Other Problem","Small Problem","Other Problem");
 $ticket_title_array=array("Upload Attachment problem",
 			"Individual Customization -Menu and RSS","Export Output query",
 		"Import Error CSV Leads","How to automatically add a lead from a web form to VTiger");
@@ -993,12 +994,14 @@ for($i=0;$i<5;$i++)
 	if ($i > 3)
 	{
 		$freetag = $adb->getUniqueId('vtiger_freetags');
-		$query = "insert into vtiger_freetags values ($freetag, '$cloudtag[3]', '$cloudtag[3]')";
-		$res_tkt = $adb->query($query);
+		$query = "insert into vtiger_freetags values (?,?,?)";
+		$qparams = array($freetag, $cloudtag[3], $cloudtag[3]);
+		$res_tkt = $adb->pquery($query, $qparams);
 
-		$date = $adb->formatDate(date('YmdHis')); 
-		$query_tag = "insert into vtiger_freetagged_objects values ($freetag, 1,".$helpdesk->id.", $date, 'HelpDesk')";
-		$result_tkt = $adb->query($query_tag);
+		$date = $adb->formatDate(date('YmdHis'), true); 
+		$query_tag = "insert into vtiger_freetagged_objects values (?,?,?,?,?)";
+		$tag_params = array($freetag, 1, $helpdesk->id, $date, 'HelpDesk');
+		$result_tkt = $adb->pquery($query_tag, $tag_params);
 	}
 
 }
@@ -1095,7 +1098,7 @@ for($i=0;$i<6;$i++)
 }
 
 
-$adb->query("update vtiger_crmentity set smcreatorid=".$assigned_user_id);
+$adb->pquery("update vtiger_crmentity set smcreatorid=?", array($assigned_user_id));
 
 $expected_revenue = Array("250000","750000","500000");
 $budget_cost = Array("25000","50000","90000");
@@ -1154,18 +1157,20 @@ $portalurl = array ("http://vtiger.com", "http://blogs.vtiger.com", "http://foru
 for($i=0;$i<5;$i++)
 {
 	$portalid = $adb->getUniqueId('vtiger_portal');
-	$portal_qry = "insert into vtiger_portal values (".$portalid.", '".$portalname[$i]."','".$portalurl[$i]."',0)";
-	$result_qry = $adb->query($portal_qry);
+	$portal_qry = "insert into vtiger_portal values (?,?,?,?,?)";
+	$portal_params = array($portalid, $portalname[$i], $portalurl[$i], 0, 0);
+	$result_qry = $adb->pquery($portal_qry, $portal_params);
 }
 
 //Populate RSS Data
 $rssname = array("vtiger - Forums","vtiger development - Active Tickets");
-$rssurl = array("http://forums.vtiger.com/rss.php?name=forums&file=rss","http://vtiger.fosslabs.com/cgi-bin/trac.cgi/report/1?format=rss&USER=anonymous");
+$rssurl = array("http://forums.vtiger.com/rss.php?name=forums&file=rss","http://trac.vtiger.com/cgi-bin/trac.cgi/report/8?format=rss&USER=anonymous");
 
 for($i=0;$i<2;$i++)
 {
 	$rssid = $adb->getUniqueId('vtiger_rss');
-	$rss_qry = "insert into vtiger_rss values (".$rssid.", '".$rssurl[$i]."','".$rssname[$i]."',0,0)";
-	$result_qry = $adb->query($rss_qry);
+	$rss_qry = "insert into vtiger_rss values (?,?,?,?,?)";
+	$rss_params = array($rssid, $rssurl[$i], $rssname[$i], 0, 0);
+	$result_qry = $adb->pquery($rss_qry, $rss_params);
 }
 ?>

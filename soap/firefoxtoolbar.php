@@ -22,15 +22,11 @@ $accessDenied = "You are not authorized for performing this action";
 $server->configureWSDL('vtigersoap');
 
 $server->register(
-    'get_version',
-      array('user_name'=>'xsd:string','password'=>'xsd:string'),
-    array('return'=>'xsd:string'),
-       $NAMESPACE);
-
-$server->register(
 	'create_lead_from_webform',
-	array('username'=>'xsd:string', 
+	array('username'=>'xsd:string',
+       		'session'=>'xsd:string',	
 		'lastname'=>'xsd:string',
+		'firstname'=>'xsd:string',
 		'email'=>'xsd:string', 
 		'phone'=>'xsd:string', 
 		'company'=>'xsd:string', 
@@ -45,6 +41,7 @@ $server->register(
 $server->register(
 	'create_site_from_webform',
 	array('username'=>'xsd:string', 
+       		'session'=>'xsd:string',	
 		'portalname'=>'xsd:string',
 		'portalurl'=>'xsd:string'), 
 	array('return'=>'xsd:string'),
@@ -55,6 +52,7 @@ $server->register(
 $server->register(
 	'create_rss_from_webform',
 	array('username'=>'xsd:string', 
+       		'session'=>'xsd:string',	
 		'rssurl'=>'xsd:string'),
 	array('return'=>'xsd:string'),
 	$NAMESPACE);
@@ -65,7 +63,7 @@ $server->register(
 	
 $server->register(
    'create_contacts',
-    array('user_name'=>'xsd:string','lastname'=>'xsd:string','phone'=>'xsd:string','mobile'=>'xsd:string','email'=>'xsd:string','street'=>'xsd:string','city'=>'xsd:string','state'=>'xsd:string','country'=>'xsd:string','zipcode'=>'xsd:string'),
+    array('user_name'=>'xsd:string','session'=>'xsd:string','firstname'=>'xsd:string','lastname'=>'xsd:string','phone'=>'xsd:string','mobile'=>'xsd:string','email'=>'xsd:string','street'=>'xsd:string','city'=>'xsd:string','state'=>'xsd:string','country'=>'xsd:string','zipcode'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
@@ -73,21 +71,23 @@ $server->register(
 
 $server->register(
 	'create_account',
-    array('username'=>'xsd:string', 'accountname'=>'xsd:string', 'email'=>'xsd:string', 'phone'=>'xsd:string','$primary_address_street'=>'xsd:string','$primary_address_city'=>'xsd:string','$primary_address_state'=>'xsd:string','$primary_address_postalcode'=>'xsd:string','$primary_address_country'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string','accountname'=>'xsd:string', 'email'=>'xsd:string', 'phone'=>'xsd:string','$primary_address_street'=>'xsd:string','$primary_address_city'=>'xsd:string','$primary_address_state'=>'xsd:string','$primary_address_postalcode'=>'xsd:string','$primary_address_country'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
     
     $server->register(
 	'create_ticket_from_toolbar',
-	array('username'=>'xsd:string', 'title'=>'xsd:string','description'=>'xsd:string','priority'=>'xsd:string','severity'=>'xsd:string','category'=>'xsd:string','user_name'=>'xsd:string','parent_id'=>'xsd:string','product_id'=>'xsd:string'),
+	array('username'=>'xsd:string','session'=>'xsd:string', 'title'=>'xsd:string','description'=>'xsd:string','priority'=>'xsd:string','severity'=>'xsd:string','category'=>'xsd:string','user_name'=>'xsd:string','parent_id'=>'xsd:string','product_id'=>'xsd:string'),
 	array('return'=>'xsd:string'),
 	$NAMESPACE);
  
 
 $server->register(
 	'create_vendor_from_webform',
-	array('username'=>'xsd:string', 'vendorname'=>'xsd:string',
+	array('username'=>'xsd:string',
+		'session'=>'xsd:string',
+       		'vendorname'=>'xsd:string',
 		'email'=>'xsd:string', 
 		'phone'=>'xsd:string', 
 		'website'=>'xsd:string'), 
@@ -97,7 +97,9 @@ $server->register(
 
 $server->register(
 	'create_product_from_webform',
-	array('username'=>'xsd:string', 'productname'=>'xsd:string',
+	array('username'=>'xsd:string', 
+		'session'=>'xsd:string',
+		'productname'=>'xsd:string',
 		'productcode'=>'xsd:string', 
 		'website'=>'xsd:string'), 
 	array('return'=>'xsd:string'),
@@ -106,75 +108,108 @@ $server->register(
 
 $server->register(
 	'create_note_from_webform',
-	array('username'=>'xsd:string', 'title'=>'xsd:string',
+	array('username'=>'xsd:string', 
+		'session'=>'xsd:string',
+		'title'=>'xsd:string',
 		'notecontent'=>'xsd:string'), 
 	array('return'=>'xsd:string'),
 	$NAMESPACE);
 
 $server->register(
     'LogintoVtigerCRM',
-    array('user_name'=>'xsd:string','password'=>'xsd:string'),
-    array('return'=>'xsd:string'),
+    array('user_name'=>'xsd:string','password'=>'xsd:string','version'=>'xsd:string'),
+    array('return'=>'tns:logindetails'),
     $NAMESPACE);
     
 $server->register(
     'CheckLeadPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
 $server->register(
     'CheckContactPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
     
 $server->register(
     'CheckAccountPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
 $server->register(
     'CheckTicketPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
 $server->register(
     'CheckVendorPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
 $server->register(
     'CheckProductPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE); 
 
 $server->register(
     'CheckNotePermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
 $server->register(
     'CheckSitePermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
 $server->register(
     'CheckRssPermission',
-    array('username'=>'xsd:string'),
+    array('username'=>'xsd:string','session'=>'xsd:string'),
     array('return'=>'xsd:string'),
     $NAMESPACE);
 
-
-function CheckLeadPermission($username)
+$server->register(
+	'GetPicklistValues',
+	array('username'=>'xsd:string','session'=>'xsd:string'),
+	array('return'=>'tns:combo_values_array'),
+	$NAMESPACE);
+    
+$server->wsdl->addComplexType(
+        'combo_values_array',
+        'complexType',
+        'array',
+        '',
+        array(
+                'productid' => array('name'=>'productid','type'=>'tns:xsd:string'),
+                'productname' => array('name'=>'productname','type'=>'tns:xsd:string'),
+                'ticketpriorities' => array('name'=>'ticketpriorities','type'=>'tns:xsd:string'),
+                'ticketseverities' => array('name'=>'ticketseverities','type'=>'tns:xsd:string'),
+                'ticketcategories' => array('name'=>'ticketcategories','type'=>'tns:xsd:string'),
+                'moduleslist' => array('name'=>'moduleslist','type'=>'tns:xsd:string'),
+             )
+     );
+$server->wsdl->addComplexType(
+      'logindetails',
+      'complexType',
+      'array',
+      '',
+      array(
+                'return'=>'returnVal','type'=>'tns:xsd:string',
+		'session'=>'sessionId','type'=>'tns:xsd:string',
+	)
+);
+function CheckLeadPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -190,9 +225,11 @@ function CheckLeadPermission($username)
 	}
 }
 
-function CheckContactPermission($username)
+function CheckContactPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -208,9 +245,11 @@ function CheckContactPermission($username)
 	}
 }
 
-function CheckAccountPermission($username)
+function CheckAccountPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -226,9 +265,11 @@ function CheckAccountPermission($username)
 	}
 }
 
-function CheckTicketPermission($username)
+function CheckTicketPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -244,9 +285,11 @@ function CheckTicketPermission($username)
 	}
 }
 
-function CheckVendorPermission($username)
+function CheckVendorPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -262,9 +305,11 @@ function CheckVendorPermission($username)
 	}
 }
 
-function CheckProductPermission($username)
+function CheckProductPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -280,9 +325,11 @@ function CheckProductPermission($username)
 	}
 }
 
-function CheckNotePermission($username)
+function CheckNotePermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -298,9 +345,11 @@ function CheckNotePermission($username)
 	}
 }
 
-function CheckSitePermission($username)
+function CheckSitePermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -316,9 +365,11 @@ function CheckSitePermission($username)
 	}
 }
 
-function CheckRssPermission($username)
+function CheckRssPermission($username,$sessionid)
 {
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -335,11 +386,13 @@ function CheckRssPermission($username)
 }
 
     
-function create_site_from_webform($username,$portalname,$portalurl)
+function create_site_from_webform($username,$sessionid,$portalname,$portalurl)
 {
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -353,7 +406,7 @@ function create_site_from_webform($username,$portalname,$portalurl)
 		$adb->println("Create New Portal from Web Form - Ends");
 
 		if($result != '')
-		  return 'Portal added sucessfully';
+		  return 'URL added successfully';
 		else
 		  return "Portal creation failed. Try again";
 	}
@@ -362,12 +415,16 @@ function create_site_from_webform($username,$portalname,$portalurl)
 		return $accessDenied;
 	}
 }
-function LogintoVtigerCRM($user_name,$password)
+function LogintoVtigerCRM($user_name,$password,$version)
 {
-	global $log;
+	global $log,$adb;
 	require_once('modules/Users/Users.php');
-	
-	$return_access = "FALSE";
+	include('vtigerversion.php');
+	if($version != $vtiger_current_version)
+	{
+		return array("VERSION",'00');
+	}
+	$return_access = array("FALSES",'00');
 	
 	$objuser = new Users();
 	
@@ -377,26 +434,33 @@ function LogintoVtigerCRM($user_name,$password)
 		$objuser->load_user($password);
 		if($objuser->is_authenticated())
 		{
-			$return_access = "TRUE";
+			$userid =  $objuser->retrieve_user_id($user_name);
+			$sessionid = makeRandomPassword();
+			unsetServerSessionId($userid);
+			$sql="insert into vtiger_soapservice values(?,?,?)";
+			$result = $adb->pquery($sql, array($userid,'FireFox' ,$sessionid));
+			$return_access = array("TRUES",$sessionid);
 		}else
 		{
-			$return_access = "FALSE";
+			$return_access = array("FALSES",'00');
 		}
 	}else
 	{
 			//$server->setError("Invalid username and/or password");
-			$return_access = "FALSE";
+			$return_access = array("FALSES",'00');
 	}
 	$objuser = $objuser;
 	return $return_access;
 }
 
-function create_rss_from_webform($username,$url)
+function create_rss_from_webform($username,$sessionid,$url)
 {
 
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -415,7 +479,7 @@ function create_rss_from_webform($username,$url)
 			}
 			else
 			{
-					return 'RSS feed added sucessfully.';
+					return 'RSS feed added successfully.';
 			}
 
 	  }else
@@ -431,11 +495,13 @@ function create_rss_from_webform($username,$url)
 }
 
 
-function create_note_from_webform($username,$subject,$desc)
+function create_note_from_webform($username,$sessionid,$subject,$desc)
 {
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -457,7 +523,7 @@ function create_note_from_webform($username,$subject,$desc)
 		$adb->println("Create New Note from Web Form - Ends");
 
 		if($focus->id != '')
-		return 'Note added sucessfully.';
+		return 'Note added successfully.';
 		else
 		return "Note creation failed. Try again";
 	}
@@ -468,11 +534,13 @@ function create_note_from_webform($username,$subject,$desc)
 
 }
 
-function create_product_from_webform($username,$productname,$code,$website)
+function create_product_from_webform($username,$sessionid,$productname,$code,$website)
 {
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -487,11 +555,14 @@ function create_product_from_webform($username,$productname,$code,$website)
 		$focus->column_fields['productname'] = $productname;
 		$focus->column_fields['productcode'] = $code;
 		$focus->column_fields['website'] = $website;
+		$focus->column_fields['assigned_user_id'] = $user_id;
+		$focus->column_fields['discontinued'] = "1";
+
 		$focus->save("Products");
 		$adb->println("Create New Product from Web Form - Ends");
 
 		if($focus->id != '')
-		  return 'Product added sucessfully.';
+		  return 'Product added successfully.';
 		else
 		  return "Product creation failed. Try again";
 	}
@@ -503,11 +574,13 @@ function create_product_from_webform($username,$productname,$code,$website)
 	
 }
 
-function create_vendor_from_webform($username,$vendorname,$email,$phone,$website)
+function create_vendor_from_webform($username,$sessionid,$vendorname,$email,$phone,$website)
 {
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -530,7 +603,7 @@ function create_vendor_from_webform($username,$vendorname,$email,$phone,$website
 		$adb->println("Create New Vendor from Web Form - Ends");
 
 		if($focus->id != '')
-		return 'Vendor added sucessfully';
+		return 'Vendor added successfully';
 		else
 		return "Vendor creation failed. Try again";
   }		
@@ -542,11 +615,13 @@ function create_vendor_from_webform($username,$vendorname,$email,$phone,$website
 	
 }
 
-function create_ticket_from_toolbar($username,$title,$description,$priority,$severity,$category,$user_name,$parent_id,$product_id)
+function create_ticket_from_toolbar($username,$sessionid,$title,$description,$priority,$severity,$category,$user_name,$parent_id,$product_id)
 {
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -576,7 +651,7 @@ function create_ticket_from_toolbar($username,$title,$description,$priority,$sev
 		$ticket->save("HelpDesk");
 
 		if($ticket->id != '')
-      return "Ticket Created Sucessfully";
+      return "Ticket created successfully";
     else
       return "Error while creating Ticket.Try again";  
 	}
@@ -588,9 +663,12 @@ function create_ticket_from_toolbar($username,$title,$description,$priority,$sev
 
 }
 
-function create_account($username,$accountname,$email,$phone,$primary_address_street,$primary_address_city,$primary_address_state,$primary_address_postalcode,$primary_address_country)
+function create_account($username,$sessionid,$accountname,$email,$phone,$primary_address_street,$primary_address_city,$primary_address_state,$primary_address_postalcode,$primary_address_country)
 {
-	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
+	global $current_user,$log,$adb;
+	$log->DEBUG("Entering with data ".$username.$accountname.$email.$phone."<br>".$primary_address_street.$primary_address_city.$primary_address_state.$primary_address_postalcode.$primary_address_country);
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -599,6 +677,13 @@ function create_account($username,$accountname,$email,$phone,$primary_address_st
 	require_once("modules/Accounts/Accounts.php");
 	if(isPermitted("Accounts","EditView") == "yes")
 	{
+		$query = "SELECT accountname FROM vtiger_account,vtiger_crmentity WHERE accountname =? and vtiger_account.accountid = vtiger_crmentity.crmid and vtiger_crmentity.deleted != 1";
+		$result = $adb->pquery($query, array($accountname));
+	        if($adb->num_rows($result) > 0)
+		{
+			return "Accounts";
+			die;
+		}
 		$account=new Accounts();
 		$account->column_fields['accountname']=$accountname;
 		$account->column_fields['email1']=$email;
@@ -616,7 +701,7 @@ function create_account($username,$accountname,$email,$phone,$primary_address_st
 		$account->column_fields['assigned_user_id']=$user_id;
 		$account->save('Accounts');
 		if($account->id != '')
-      return "Account added Sucessfully";
+      return "Success";
     else
       return "Error while adding Account.Try again";  
 	}
@@ -627,21 +712,14 @@ function create_account($username,$accountname,$email,$phone,$primary_address_st
 
 }
 
-
-
-function get_version($user_name, $password)
-{
-    return "5.0.0";
-}
-
-
-
-function create_lead_from_webform($username,$lastname,$email,$phone,$company,$country,$description)
+function create_lead_from_webform($username,$sessionid,$lastname,$email,$phone,$company,$country,$description,$firstname)
 {
 
 	global $log;
 	global $adb;
 	global $current_user;
+	if(!validateSession($username,$sessionid))
+	return null;
 	require_once("modules/Users/Users.php");
 	$seed_user=new Users();
 	$user_id=$seed_user->retrieve_user_id($username);
@@ -654,6 +732,7 @@ function create_lead_from_webform($username,$lastname,$email,$phone,$company,$co
 	if(isPermitted("Leads","EditView") == "yes")
 	{
 		$focus->column_fields['lastname'] = $lastname;
+		$focus->column_fields['firstname'] = $firstname;
 		$focus->column_fields['email'] = $email;
 		$focus->column_fields['phone'] = $phone;
 		$focus->column_fields['company'] = $company;
@@ -663,7 +742,7 @@ function create_lead_from_webform($username,$lastname,$email,$phone,$company,$co
 		$focus->save("Leads");
 		$adb->println("Create New Lead from Web Form - Ends");
 		if($focus->id != '')
-		  return 'Thank you for your interest. Information has been successfully added as Lead.';
+		  return "Thank you for your interest. Information has been successfully added as Lead.";
 		else
 		  return "Lead creation failed. Try again";
   }
@@ -675,13 +754,15 @@ function create_lead_from_webform($username,$lastname,$email,$phone,$company,$co
 
 }
 
-function create_contacts($user_name,$lastname,$phone,$mobile,$email,$street,$city,$state,$country,$zipcode)
+function create_contacts($user_name,$sessionid,$firstname,$lastname,$phone,$mobile,$email,$street,$city,$state,$country,$zipcode)
 {
-  global $log;
-  $log->debug($user_name);
-  $birthdate = "0000-00-00";
-	
-	return create_contact1($user_name, "", $lastname, $email,"", "","", $mobile, "",$street,$city,$state,$zipcode,$country,$city,$street,$state,$zipcode,$country,$phone,"","","","",$birthdate,"","");
+	global $log;
+	$log->DEBUG("Entering into create_contacts");
+	$birthdate = "";
+	if(!validateSession($user_name,$sessionid))
+	return null;
+
+	return create_contact1($user_name, $firstname, $lastname, $email,"", "","", $mobile, "",$street,$city,$state,$zipcode,$country,$city,$street,$state,$zipcode,$country,$phone,"","","","",$birthdate,"","");
 	
 }
 
@@ -731,7 +812,7 @@ function create_contact1($user_name, $first_name, $last_name, $email_address ,$a
    $contact->column_fields[description]= $description;
    $contact->save("Contacts");
    if($contact->id != '')
-      return 'Contact added Sucessfully';
+      return 'Contact added successfully';
    else
       return "Contact creation failed. Try again";
   }
@@ -740,6 +821,92 @@ function create_contact1($user_name, $first_name, $last_name, $email_address ,$a
 		return $accessDenied;
 	}
 
+}
+function GetPicklistValues($username,$sessionid,$tablename)
+{
+	global $current_user,$log,$adb;
+	if(!validateSession($username,$sessionid))
+	return null;
+
+	require_once("modules/Users/Users.php");
+	$seed_user=new Users();
+	$user_id=$seed_user->retrieve_user_id($username);
+	$current_user=$seed_user;
+	$current_user->retrieve_entity_info($user_id,'Users');
+	require_once("include/utils/UserInfoUtil.php");
+	$roleid = fetchUserRole($user_id);
+	require('user_privileges/user_privileges_'.$current_user->id.'.php');
+	if($is_admin == true || $profileGlobalPermission[1] == 0 || $profileGlobalPermission[2] == 0)
+	{
+		$query = "select " . mysql_real_escape_string($tablename) . " from vtiger_". mysql_real_escape_string($tablename);		
+			$result1 = $adb->query($query);
+		for($i=0;$i<$adb->num_rows($result1);$i++)
+		{
+			$output[$i] = decode_html($adb->query_result($result1,$i,$tablename));
+		}			
+	}
+	else if((isPermitted("HelpDesk","EditView") == "yes") && (CheckFieldPermission($tablename,'HelpDesk') == 'true'))
+	{
+		$query = "select " .mysql_real_escape_string($tablename) . " from vtiger_". mysql_real_escape_string($tablename) ." inner join vtiger_role2picklist on vtiger_role2picklist.picklistvalueid = vtiger_". mysql_real_escape_string($tablename) .".picklist_valueid where roleid=? and picklistid in (select picklistid from vtiger_". mysql_real_escape_string($tablename)." ) order by sortid";	
+		$result1 = $adb->pquery($query, array($roleid));
+		for($i=0;$i<$adb->num_rows($result1);$i++)
+		{
+			$output[$i] = decode_html($adb->query_result($result1,$i,$tablename));
+		}			
+	}
+	else
+	{
+		$output[] = 'Not Accessible';
+	}
+		
+	return $output;
+}
+function unsetServerSessionId($id)
+{
+	global $adb;
+	$adb->println("Inside the function unsetServerSessionId");
+
+	$id = (int) $id;
+
+	$adb->query("delete from vtiger_soapservice where type='FireFox' and id=$id");
+
+	return;
+}
+function validateSession($username, $sessionid)
+{
+	global $adb,$current_user;
+	$adb->println("Inside function validateSession($username, $sessionid)");
+	require_once("modules/Users/Users.php");
+	$seed_user = new Users();
+	$id = $seed_user->retrieve_user_id($username);
+
+	$server_sessionid = getServerSessionId($id);
+
+	$adb->println("Checking Server session id and customer input session id ==> $server_sessionid == $sessionid");
+
+	if($server_sessionid == $sessionid)
+	{
+		$adb->println("Session id match. Authenticated to do the current operation.");
+		return true;
+	}
+	else
+	{
+		$adb->println("Session id does not match. Not authenticated to do the current operation.");
+		return false;
+	}
+}
+function getServerSessionId($id)
+{
+	global $adb;
+	$adb->println("Inside the function getServerSessionId($id)");
+
+	//To avoid SQL injection we are type casting as well as bound the id variable. In each and every function we will call this function
+	$id = (int) $id;
+
+	$query = "select * from vtiger_soapservice where type='FireFox' and id={$id}";
+	$sessionid = $adb->query_result($adb->query($query),0,'sessionid');
+
+	return $sessionid;
 }
 
 $server->service($HTTP_RAW_POST_DATA); 

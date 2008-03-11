@@ -63,7 +63,6 @@ if (isset($_REQUEST['account_id']) && is_null($focus->parent_id)) {
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-require_once($theme_path.'layout_utils.php');
 
 $log->info("Note detail view");
 
@@ -104,6 +103,9 @@ if(isPermitted("Notes","Delete",$_REQUEST['record']) == 'yes')
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+$smarty->assign("IS_REL_LIST",isPresentRelatedLists($currentModule));
+
 $tabid = getTabid("Notes");
  $validationData = getDBValidationData($focus->tab_name,$tabid);
  $data = split_validationdataArray($validationData);

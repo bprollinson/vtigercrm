@@ -42,7 +42,7 @@ function getTopPotentials()
 	$title[]='myTopOpenPotentials.gif';
 	$title[]=$current_module_strings['LBL_TOP_OPPORTUNITIES'];
 	$title[]='home_mypot';
-	$where = "AND vtiger_potential.sales_stage <> 'Closed Won' AND vtiger_potential.sales_stage <> 'Closed Lost' AND vtiger_crmentity.smownerid='".$current_user->id."'";
+	$where = "AND vtiger_potential.sales_stage not in ('Closed Won','Closed Lost','".$current_module_strings['Closed Won']."','".$current_module_strings['Closed Lost']."') AND vtiger_crmentity.smownerid='".$current_user->id."'";
 	$header=array();
 	$header[]=$current_module_strings['LBL_LIST_OPPORTUNITY_NAME'];
 	$header[]=$current_module_strings['LBL_LIST_ACCOUNT_NAME'];
@@ -69,8 +69,10 @@ function getTopPotentials()
 					'closingdate' => getDisplayDate($adb->query_result($list_result,$i,'closingdate')),
 					);
 			$potentialid=$adb->query_result($list_result,$i,'potentialid');                                  
+			$potentialname = $adb->query_result($list_result,$i,'potentialname');
+			$Top_Potential = (strlen($potentialname) > 20) ? (substr($potentialname,0,20).'...') : $potentialname;
 			$value=array();
-			$value[]='<a href="index.php?action=DetailView&module=Potentials&record='.$adb->query_result($list_result,$i,"potentialid").'">'.$adb->query_result($list_result,$i,"potentialname").'</a>';
+			$value[]='<a href="index.php?action=DetailView&module=Potentials&record='.$potentialid.'">'.$Top_Potential.'</a>';
 			$value[]='<a href="index.php?action=DetailView&module=Accounts&record='.$adb->query_result($list_result,$i,'accountid').'">'.$adb->query_result($list_result,$i,"accountname").'</a>';
 			$value[]=convertFromDollar($adb->query_result($list_result,$i,'amount'),$rate);
 			$value[]=getDisplayDate($adb->query_result($list_result,$i,'closingdate'));

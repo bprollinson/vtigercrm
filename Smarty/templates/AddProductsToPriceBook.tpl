@@ -9,7 +9,7 @@
  ********************************************************************************/
 -->
 <script language="javascript">
-
+var parenttab = "{$CATEGORY}";
 function updateAllListPrice()
 {ldelim}
         var unitprice_array = new Array({$UNIT_PRICE_ARRAY});
@@ -34,7 +34,7 @@ function updateAllListPrice()
 {rdelim}
 
 </script>
-<script language="javascript" src="modules/PriceBooks/PriceBook.js"></script>
+<script language="javascript" src="modules/PriceBooks/PriceBooks.js"></script>
 <BR>
 <BR>
 {$PRODUCTLISTHEADER}

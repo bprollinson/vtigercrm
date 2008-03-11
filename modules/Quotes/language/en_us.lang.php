@@ -45,7 +45,6 @@ $mod_strings = Array(
 //END DON'T CONVERT
 
 'LBL_ACCOUNT'=>'Account:',
-'LBL_ACCOUNT_NAME'=>'Account Name:',
 'LBL_PHONE'=>'Phone:',
 'LBL_WEBSITE'=>'Website:',
 'LBL_FAX'=>'Fax:',
@@ -156,7 +155,7 @@ $mod_strings = Array(
 'LBL_ACCOUNT_NAME'=>'Account Name:',
 'LBL_QUOTE_STAGE'=>'Quote Stage:',
 'LBL_MY_TOP_QUOTE'=>'My Top Open Quotes',
-'Quote ID'=>'Quote Id',
+//'Quote ID'=>'Quote Id',
 'Quote'=>'Quote',
 
 //Added for existing Picklist Entries
@@ -172,8 +171,15 @@ $mod_strings = Array(
 'USPS'=>'USPS',
 'DHL'=>'DHL',
 'BlueDart'=>'BlueDart',
-                       
+'Sales Tax'=>'Sales Tax',                       
 
+//Added for Reports (5.0.4)
+'Tax Type'=>'Tax Type',
+'Discount Percent'=>'Discount Percent',
+'Discount Amount'=>'Discount Amount',
+'Terms & Conditions'=>'Terms & Conditions',
+'Adjustment'=>'Adjustment',
+'S&H Amount'=>'S&H Amount',
 
 );
 

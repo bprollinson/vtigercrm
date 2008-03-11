@@ -22,8 +22,14 @@
 global $entityDel;
 global $display;
 global $category;
-require_once('include/utils/utils.php');
 
+if(version_compare(phpversion(), '5.0') < 0) {
+        insert_charset_header();
+        require_once('phpversionfail.php');
+        die();
+}
+
+require_once('include/utils/utils.php');
 
 if (version_compare(phpversion(), '5.0') < 0) {
     eval('
@@ -74,7 +80,7 @@ function insert_charset_header()
  	{
  	        $charset = $app_strings['LBL_CHARSET'];
  	}
- 	header('Content-Type: text/html; charset='. $charset);
+		header('Content-Type: text/html; charset='. $charset);
 }
  	
 insert_charset_header();
@@ -97,7 +103,7 @@ if (is_file('config_override.php'))
 {
 	require_once('config_override.php');
 }
-$default_config_values = Array( "allow_exports"=>"all","upload_maxsize"=>"3000000" );
+$default_config_values = Array( "allow_exports"=>"all","upload_maxsize"=>"3000000", "listview_max_textlength" => "40" );
  	
 set_default_config($default_config_values);
 require_once('include/logging.php');
@@ -127,41 +133,44 @@ if(isset($_REQUEST['action']))
 {
 	$action = $_REQUEST['action'];
 }
-
+if($action == 'Export')
+{
+        include ('include/utils/export.php');
+}
+if($action == 'ExportAjax')
+{
+        include ('include/utils/ExportAjax.php');
+}
 //Code added for 'Path Traversal/File Disclosure' security fix - Philip
 $is_module = false;
+$is_action = false;
 if(isset($_REQUEST['module']))
 {
 	$module = $_REQUEST['module'];	
-
-	if ($dir = @opendir($root_directory."modules")) 
-	{
-		while (($file = readdir($dir)) !== false) 
-		{
-           		if ($file != ".." && $file != "." && $file != "CVS" && $file != "Attic") 
-			{
-			   	if(is_dir($root_directory."modules/".$file)) 
-				{
-					if(!($file[0] == '.')) 
-					{
-						if($file=="$module")
-						{
-							$is_module = true;
-						}					
-					}
-				}
-			}
-		}
+	$dir = @scandir($root_directory."modules");
+	$temp_arr = Array("CVS","Attic");
+	$res_arr = @array_intersect($dir,$temp_arr);
+	if(count($res_arr) == 0  && !ereg("[/.]",$module)) {
+		if(@in_array($module,$dir))
+			$is_module = true;
 	}
+	$in_dir = @scandir($root_directory."modules/".$module);
+	$res_arr = @array_intersect($in_dir,$temp_arr);
+	if(count($res_arr) == 0 && !ereg("[/.]",$module)) {
+		if(@in_array($action.".php",$in_dir))
+			$is_action = true;
+	}	
+	
 	if(!$is_module)
 	{
 		die("Module name is missing. Please check the module name.");
 	}
+	if(!$is_action)
+	{
+		die("Action name is missing. Please check the action name.");
+	}
 }
-if($action == 'Export')
-{
-	include ('include/utils/export.php');
-}
+
 
 //Code added for 'Multiple SQL Injection Vulnerabilities & XSS issue' fixes - Philip
 if(isset($_REQUEST['record']) && !is_numeric($_REQUEST['record']) && $_REQUEST['record']!='')
@@ -178,6 +187,24 @@ if(isset($_SESSION["authenticated_user_id"]) && (isset($_SESSION["app_unique_key
 
 if($use_current_login)
 {
+
+	//Added to prevent fatal error before starting migration(5.0.4. patch ).
+	//NOTE: These lines  should be removed at next release.
+	//Start
+	$arr=$adb->getColumnNames("vtiger_users");
+	if(!in_array("internal_mailer", $arr))
+	{
+		$adb->pquery("alter table vtiger_users add column internal_mailer int(3) NOT NULL default '1'", array());
+		$adb->pquery("alter table vtiger_users add column tagcloud_view int(1) default 1", array());
+	}
+	//End
+
+	//getting the internal_mailer flag
+	if(!isset($_SESSION['internal_mailer']))
+	{
+		$qry_res = $adb->pquery("select internal_mailer from vtiger_users where id=?", array($_SESSION["authenticated_user_id"]));
+		$_SESSION['internal_mailer'] = $adb->query_result($qry_res,0,"internal_mailer");
+	}
 	$log->debug("We have an authenticated user id: ".$_SESSION["authenticated_user_id"]);
 }
 else if(isset($action) && isset($module) && $action=="Authenticate" && $module=="Users")
@@ -186,6 +213,8 @@ else if(isset($action) && isset($module) && $action=="Authenticate" && $module==
 }
 else 
 {
+	if($_REQUEST['action'] != 'Logout' && $_REQUEST['action'] != 'Login')
+		$_SESSION['lastpage'] = $_SERVER['argv'];
 	$log->debug("The current user does not have a session.  Going to the login page");	
 	$action = "Login";
 	$module = "Users";
@@ -211,7 +240,7 @@ if(isset($action) && isset($module))
 		ereg("^ChangePassword", $action) ||
 		ereg("^Authenticate", $action) ||
 		ereg("^Logout", $action) ||
-		ereg("^Export",$action) ||
+		//ereg("^Export",$action) ||
 		ereg("^add2db", $action) ||
 		ereg("^result", $action) ||
 		ereg("^LeadConvertToEntities", $action) ||
@@ -277,16 +306,19 @@ if(isset($action) && isset($module))
 		ereg("^HeadLines",$action) ||
 		ereg("^TodoSave",$action) ||
 		ereg("^RecalculateSharingRules",$action) ||
-		(ereg("^body",$action) &&
-			ereg("^Webmails",$module)) ||
-			(ereg("^DetailView",$action) &&
-			ereg("^Webmails",$module) ))
+		(ereg("^body",$action) && ereg("^Webmails",$module)) ||
+		(ereg("^dlAttachments",$action) && ereg("^Webmails",$module)) ||
+		(ereg("^DetailView",$action) &&	ereg("^Webmails",$module) ) ||
+		ereg("^savewordtemplate",$action) ||
+		ereg("^mailmergedownloadfile",$action) || ereg("^Webmails",$module) && ereg("^get_img",$action) || ereg("^download",$action) )
+	
+		
 	{
 		$skipHeaders=true;
 		//skip headers for all these invocations as they are mostly popups
 		if(ereg("^Popup", $action) ||
 			ereg("^ChangePassword", $action) ||
-			ereg("^Export", $action) ||
+			//ereg("^Export", $action) ||
 			ereg("^downloadfile", $action) ||
 			ereg("^fieldtypes",$action) ||
 			ereg("^lookupemailtemplate",$action) ||
@@ -295,10 +327,13 @@ if(isset($action) && isset($module))
 			ereg("^".$module."Ajax",$action) ||
 			ereg("^chat",$action) ||
 			ereg("^vtchat",$action) ||
-			ereg("^massdelete", $action))
+			ereg("^massdelete", $action) ||
+			ereg("^mailmergedownloadfile",$action) || 	ereg("^get_img",$action) ||
+			ereg("^download",$action) ||
+			ereg("^massdelete", $action ))
 			$skipFooters=true;
 		//skip footers for all these invocations as they are mostly popups
-		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action))
+		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^mailmergedownloadfile",$action)|| ereg("^get_img",$action))
 		{
 			$viewAttachment = true;
 		}
@@ -321,7 +356,11 @@ if(isset($action) && isset($module))
           $skipSecurityCheck=true;
         }
 
-	$currentModuleFile = 'modules/'.$module.'/'.$action.'.php';
+    if($action == 'UnifiedSearch') {
+    	$currentModuleFile = 'modules/Home/'.$action.'.php';
+    } else {
+		$currentModuleFile = 'modules/'.$module.'/'.$action.'.php';
+	}
 	$currentModule = $module;
 	
       	
@@ -359,6 +398,7 @@ if($use_current_login)
 	//$result = $current_user->retrieve($_SESSION['authenticated_user_id']);
 	//getting the current user info from flat file
 	$result = $current_user->retrieveCurrentUserInfoFromFile($_SESSION['authenticated_user_id']);
+
 	if($result == null)
 	{
 		session_destroy();
@@ -382,20 +422,21 @@ if($use_current_login)
 		else
 			$auditrecord = $record;	
 
-		$date_var = $adb->formatDate(date('YmdHis'));
+		$date_var = $adb->formatDate(date('YmdHis'), true);
 		if ($action != 'chat')
 		{	
-			$query = "insert into vtiger_audit_trial values(".$adb->getUniqueID('vtiger_audit_trial').",".$current_user->id.",'".$module."','".$action."','".$auditrecord."',$date_var)";
-			$adb->query($query);
+			$query = "insert into vtiger_audit_trial values(?,?,?,?,?,?)";
+			$qparams = array($adb->getUniqueID('vtiger_audit_trial'), $current_user->id, $module, $action, $auditrecord, $date_var);
+			$adb->pquery($query, $qparams);
 		}	
 	}	
 
 	$log->debug('Current user is: '.$current_user->user_name);
 }
 
-if(isset($_SESSION['authenticated_user_theme']) && $_SESSION['authenticated_user_theme'] != '')
+if(isset($_SESSION['vtiger_authenticated_user_theme']) && $_SESSION['vtiger_authenticated_user_theme'] != '')
 {
-	$theme = $_SESSION['authenticated_user_theme'];
+	$theme = $_SESSION['vtiger_authenticated_user_theme'];
 }
 else 
 {
@@ -438,13 +479,16 @@ if($action == "DetailView")
 			require_once("modules/$currentModule/Activity.php");
 			$focus = new Activity();
 			break;
+		case 'Webmails':
+			//No need to create a webmail object here
+			break;
 		default:
 			require_once("modules/$currentModule/$currentModule.php");
 			$focus = new $currentModule();
 			break;
 		}
 	
-	if(isset($_REQUEST['record']) && $_REQUEST['record']!='' && $_REQUEST["module"] != "Webmails") 
+	if(isset($_REQUEST['record']) && $_REQUEST['record']!='' && $_REQUEST["module"] != "Webmails" && $current_user->id != '')
         {
                 // Only track a viewing if the record was retrieved.
                 $focus->track_view($current_user->id, $currentModule,$_REQUEST['record']);
@@ -457,9 +501,9 @@ if (isset($_SESSION['authenticated_user_id'])) {
         $log->debug("setting cookie ck_login_id_vtiger to ".$_SESSION['authenticated_user_id']);
         setcookie('ck_login_id_vtiger', $_SESSION['authenticated_user_id']);
 }
-if (isset($_SESSION['authenticated_user_theme'])) {
-        $log->debug("setting cookie ck_login_theme_vtiger to ".$_SESSION['authenticated_user_theme']);
-        setcookie('ck_login_theme_vtiger', $_SESSION['authenticated_user_theme']);
+if (isset($_SESSION['vtiger_authenticated_user_theme'])) {
+        $log->debug("setting cookie ck_login_theme_vtiger to ".$_SESSION['vtiger_authenticated_user_theme']);
+        setcookie('ck_login_theme_vtiger', $_SESSION['vtiger_authenticated_user_theme']);
 }
 if (isset($_SESSION['authenticated_user_language'])) {
         $log->debug("setting cookie ck_login_language_vtiger to ".$_SESSION['authenticated_user_language']);
@@ -503,9 +547,9 @@ else {
 
 //fetch the permission set from session and search it for the requisite data
 
-if(isset($_SESSION['authenticated_user_theme']) && $_SESSION['authenticated_user_theme'] != '')
+if(isset($_SESSION['vtiger_authenticated_user_theme']) && $_SESSION['vtiger_authenticated_user_theme'] != '')
 {
-	$theme = $_SESSION['authenticated_user_theme'];
+	$theme = $_SESSION['vtiger_authenticated_user_theme'];
 }
 else 
 {
@@ -550,6 +594,7 @@ else
 
 if($display == "no")
 {
+	echo "<link rel='stylesheet' type='text/css' href='themes/$theme/style.css'>";	
 	echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
 	echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
 
@@ -577,9 +622,9 @@ else
 	}
 
 //added to get the theme . This is a bad fix as we need to know where the problem lies yet
-if(isset($_SESSION['authenticated_user_theme']) && $_SESSION['authenticated_user_theme'] != '')
+if(isset($_SESSION['vtiger_authenticated_user_theme']) && $_SESSION['vtiger_authenticated_user_theme'] != '')
 {
-        $theme = $_SESSION['authenticated_user_theme'];
+        $theme = $_SESSION['vtiger_authenticated_user_theme'];
 }
 else
 {
@@ -637,10 +682,9 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 	{
 		echo $copyrightstatement;
 		echo "<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>";
-		echo '<style type="text/css">@import url("themes/'.$theme.'/style.css"); </style>';
 		echo "<br><br><br><table border=0 cellspacing=0 cellpadding=5 width=100% class=settingsSelectedUI >";
-		echo "<tr><td class=small align=left>vtiger CRM 5.0.2 | Visit <a href='http://www.vtiger.com'>www.vtiger.com</a> for more information </td>";
-		echo "<td class=small align=right> &copy; <a href='javascript:mypopup()'>Copyright Details</a></td></tr></table>";
+		echo "<tr><td class=small align=left><span style='color: rgb(153, 153, 153);'>vtiger CRM 5.0.4</span></td>";
+		echo "<td class=small align=right><span style='color: rgb(153, 153, 153);'>&copy; 2004-2008 <a href='http://www.vtiger.com' target='_blank'>vtiger.com</a> | <a href='javascript:mypopup()'>".$app_strings['LNK_READ_LICENSE']."</a></span></td></tr></table>";
 			
 	//	echo "<table align='center'><tr><td align='center'>";
 		// Under the Sugar Public License referenced above, you are required to leave in all copyright statements
@@ -659,6 +703,7 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 	?>
 		<script>
 			var userDateFormat = "<?php echo $current_user->date_format ?>";
+			var default_charset = "<?php echo $default_charset; ?>";
 		</script>
 <?php
 	}

@@ -44,6 +44,11 @@ if(isset($_REQUEST['amount']))
 	$focus->column_fields['amount'] = $value;
 }
 
+if($_REQUEST['assigntype'] == 'U')  {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+} elseif($_REQUEST['assigntype'] == 'T') {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+}
 $focus->save("Potentials");
 $pot_id = $return_id = $focus->id;
 

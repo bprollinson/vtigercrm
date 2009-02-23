@@ -7,6 +7,180 @@
  * Portions created by vtiger are Copyright (C) vtiger.
  * All Rights Reserved.
  ********************************************************************************/
+
+// MassEdit Feature
+function massedit_togglediv(curTabId,total){
+
+   for(var i=0;i<total;i++){
+	tagName = $('massedit_div'+i);
+	tagName1 = $('tab'+i)
+	tagName.style.display = 'none';
+	tagName1.className = 'dvtUnSelectedCell';
+   }
+
+   tagName = $('massedit_div'+curTabId);
+   tagName.style.display = 'block';
+   tagName1 = $('tab'+curTabId)
+   tagName1.className = 'dvtSelectedCell';
+}
+
+function massedit_initOnChangeHandlers() {
+	var form = document.getElementById('massedit_form');
+	// Setup change handlers for input boxes
+	var inputs = form.getElementsByTagName('input');
+	for(var index = 0; index < inputs.length; ++index) {
+		var massedit_input = inputs[index];
+		// TODO Onchange on readonly and hidden fields are to be handled later.
+		massedit_input.onchange = function() {
+			var checkbox = document.getElementById(this.name + '_mass_edit_check');
+			if(checkbox) checkbox.checked = true;
+		}
+	}
+	// Setup change handlers for select boxes
+	var selects = form.getElementsByTagName('select');
+	for(var index = 0; index < selects.length; ++index) {
+		var massedit_select = selects[index];
+		massedit_select.onchange = function() {
+			var checkbox = document.getElementById(this.name + '_mass_edit_check');
+			if(checkbox) checkbox.checked = true;
+		}
+	}
+}
+
+function mass_edit(obj,divid,module) {
+	var select_options = document.getElementById('allselectedboxes').value;
+	var x = select_options.split(';');
+	var count = x.length;
+	
+	if(count > 1) {
+		idstring=select_options;
+		mass_edit_formload(idstring,module);
+	} else {
+		alert(alert_arr.SELECT);
+		return false;
+	}
+	fnvshobj(obj, divid);
+}
+function mass_edit_formload(idstring,module) {
+	$("status").style.display="inline";
+	new Ajax.Request(
+		'index.php',
+		{queue: {position: 'end', scope: 'command'},
+	    	method: 'post',
+			postBody:"module="+encodeURIComponent(module)+"&action="+encodeURIComponent(module+'Ajax')+"&file=MassEdit&mode=ajax&idstring="+idstring,
+				onComplete: function(response) {
+                	$("status").style.display="none";
+               	    var result = response.responseText;
+                    $("massedit_form_div").innerHTML= result;
+					$("massedit_form")["massedit_recordids"].value = idstring;
+					$("massedit_form")["massedit_module"].value = module;
+					
+					var jscripts = $('massedit_javascript');
+					if(jscripts) { 
+						eval(jscripts.innerHTML); 
+						// Updating global variables
+						fieldname = mass_fieldname;
+						for(var i=0;i<fieldname.length;i++){
+							calendar_jscript = $('massedit_calendar_'+fieldname[i]);			
+							if(calendar_jscript){
+								eval(calendar_jscript.innerHTML);
+							}
+						}
+						fieldlabel = mass_fieldlabel;
+						fielddatatype = mass_fielddatatype;
+						count = mass_count;
+					}
+				}
+		}
+	);
+}
+function mass_edit_fieldchange(selectBox) {
+	var oldSelectedIndex = selectBox.oldSelectedIndex;
+	var selectedIndex = selectBox.selectedIndex;
+
+	if($('massedit_field'+oldSelectedIndex)) $('massedit_field'+oldSelectedIndex).style.display='none';
+	if($('massedit_field'+selectedIndex)) $('massedit_field'+selectedIndex).style.display='block';
+
+	selectBox.oldSelectedIndex = selectedIndex;
+}
+
+function mass_edit_save(){
+	var masseditform = $("massedit_form");
+	var module = masseditform["massedit_module"].value;
+	var viewid = document.getElementById("viewname").options[document.getElementById("viewname").options.selectedIndex].value; 
+	var searchurl = document.getElementById("search_url").value; 
+
+	var urlstring = 
+		"module="+encodeURIComponent(module)+"&action="+encodeURIComponent(module+'Ajax')+
+		"&return_module="+encodeURIComponent(module)+"&return_action=ListView"+
+		"&mode=ajax&file=MassEditSave&viewname=" + viewid ;//+"&"+ searchurl;
+
+	fninvsh("massedit");
+
+	new Ajax.Request(
+		"index.php", 
+		{queue:{position:"end", scope:"command"}, 
+			method:"post", 
+			postBody:urlstring, 
+			onComplete:function (response) {
+				$("status").style.display = "none";
+				var result = response.responseText.split("&#&#&#");
+				$("ListViewContents").innerHTML = result[2];
+				if (result[1] != "") {
+					alert(result[1]);
+				}
+				$("basicsearchcolumns").innerHTML = "";
+			}
+		}
+	); 
+	
+}
+function ajax_mass_edit() {
+	alert();
+	$("status").style.display = "inline";
+
+	var masseditform = $("massedit_form");
+	var module = masseditform["massedit_module"].value;
+
+	var viewid = document.getElementById("viewname").options[document.getElementById("viewname").options.selectedIndex].value; 
+	var idstring = masseditform["massedit_recordids"].value; 
+	var searchurl = document.getElementById("search_url").value; 
+	var tplstart = "&"; 
+	if (gstart != "") { tplstart = tplstart + gstart; }
+
+	var masseditfield = masseditform['massedit_field'].value;
+	var masseditvalue = masseditform['massedit_value_'+masseditfield].value;
+
+	var urlstring = 
+		"module="+encodeURIComponent(module)+"&action="+encodeURIComponent(module+'Ajax')+
+		"&return_module="+encodeURIComponent(module)+
+		"&mode=ajax&file=MassEditSave&viewname=" + viewid + 
+		"&massedit_field=" + encodeURIComponent(masseditfield) +
+		"&massedit_value=" + encodeURIComponent(masseditvalue) +
+	   	"&idlist=" + idstring + searchurl;
+
+	fninvsh("massedit");
+
+	new Ajax.Request(
+		"index.php", 
+		{queue:{position:"end", scope:"command"}, 
+			method:"post", 
+			postBody:urlstring, 
+			onComplete:function (response) {
+				$("status").style.display = "none";
+				var result = response.responseText.split("&#&#&#");
+				$("ListViewContents").innerHTML = result[2];
+				if (result[1] != "") {
+					alert(result[1]);
+				}
+				$("basicsearchcolumns").innerHTML = "";
+			}
+		}
+	); 
+}
+	
+// END
+
 function change(obj,divid)
 {
 	var select_options  =  document.getElementById('allselectedboxes').value;
@@ -86,7 +260,7 @@ function massDelete(module)
                        	        	$("ListViewContents").innerHTML= result[2];
 	                       	        if(result[1] != '')
                                        		alert(result[1]);
-						$('basicsearchcolumns').innerHTML = '';
+									$('basicsearchcolumns').innerHTML = '';
 	                        }
        			 }
 		);
@@ -100,7 +274,7 @@ function massDelete(module)
 function showDefaultCustomView(selectView,module,parenttab)
 {
 	$("status").style.display="inline";
-	var viewName = selectView.options[selectView.options.selectedIndex].value;
+	var viewName = encodeURIComponent(selectView.options[selectView.options.selectedIndex].value);
 	new Ajax.Request(
                	'index.php',
                 {queue: {position: 'end', scope: 'command'},
@@ -192,7 +366,7 @@ function check_object(sel_id)
                         if(trim(select_global[i])!='')
                                 result=select_global[i]+";"+result;
                 }
-                default_togglestate();
+                default_togglestate(sel_id.name);
         }
         else
         {
@@ -207,7 +381,7 @@ function check_object(sel_id)
                                 result=select_global[i]+";"+result;
                 }
           //      getObj("selectall").checked=false
-                default_togglestate();
+                default_togglestate(sel_id.name);
         }
 
         document.getElementById("allselectedboxes").value=result;
@@ -230,5 +404,32 @@ function update_selected_checkbox()
                 if(allsplit.indexOf(selsplit[i]) != "-1")
                         document.getElementById(selsplit[i]).checked='true';
         }
+}
 
+//Function to Set the status as Approve/Deny for Public access by Admin
+function ChangeCustomViewStatus(viewid,now_status,changed_status,module,label)
+{
+	$('status').style.display = 'block';
+	new Ajax.Request(
+       		'index.php',
+               	{queue: {position: 'end', scope: 'command'},
+               		method: 'post',
+                    postBody:'module=CustomView&action=CustomViewAjax&file=ChangeStatus&dmodule='+module+'&record='+viewid+'&status='+changed_status,
+					onComplete: function(response) 
+					{
+			        	var responseVal=response.responseText;
+						if(responseVal.indexOf(':#:FAILURE') > -1) {
+							alert('Failed');
+						} else if(responseVal.indexOf(':#:SUCCESS') > -1) {
+							var values = responseVal.split(':#:');
+							var module_name = values[2];
+							var customview_ele = $('viewname');
+							showDefaultCustomView(customview_ele, module_name);
+						} else {
+							$('ListViewContents').innerHTML = responseVal;
+						}
+						$('status').style.display = 'none';
+					} 
+				}
+	);
 }

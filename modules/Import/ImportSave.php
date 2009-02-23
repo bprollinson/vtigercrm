@@ -30,6 +30,8 @@ function InsertImportRecords($rows,$rows1,$focus,$ret_field_count,$col_pos_to_fi
 	global $current_user;
 	global $adb;
 	global $mod_strings;
+	global $dup_ow_count;
+	global $process_fields;
 
 // MWC ** Getting vtiger_users
 $temp = get_user_array(FALSE);
@@ -38,7 +40,10 @@ foreach ( $temp as $key=>$data)
 p(print_r(my_users,1));
 $adb->println("Users List : ");
 $adb->println($my_users);
-
+$dup_count = 0;
+$count = 0;
+$dup_ow_count = 0;
+$process_fields='false';
 if($start == 0)
 {
 	$_SESSION['totalrows'] = $rows;
@@ -138,25 +143,45 @@ foreach ($rows1 as $row)
 	p("do save before req vtiger_fields=".$do_save);
 
 	$adb->println($focus->required_fields);
-
 	foreach ($focus->required_fields as $field=>$notused) 
 	{ 
 		$fv = trim($focus->column_fields[$field]);
 		if (! isset($fv) || $fv == '') 
 		{
-		       p("fv ".$field." not set");	
-			$do_save = 0; 
-			$skip_required_count++; 
-			break; 
+			// Leads Import does not allow an empty lastname because the link is created on the lastname
+			// Without lastname the Lead could not be opened.
+			// But what if the import file has only company and telefone information?
+			// It would be stupid to skip all the companies which don't have a contact person yet!
+			// So we set lastname ="?????" and the user can later enter a name.
+			// So the lastname is still mandatory but may be empty.
+			if ($field == 'lastname' && $module == 'Leads')
+			{
+				$focus->column_fields[$field] = '?????';
+			}
+			else
+			{
+				p("fv ".$field." not set");	
+				$do_save = 0; 
+				$skip_required_count++; 
+				break;
+			}       	
 		} 
 	}
 
+	//added for duplicate handling
+	if(is_record_exist($module,$focus))
+	{
+		if($do_save != 0)
+		{
+			$do_save = 0;
+			$dup_count++;
+		}
+	}
 	p("do save=".$do_save);
 
 	if ($do_save)
 	{
 		p("saving..");
-
 	
 		if ( ! isset($focus->column_fields["assigned_user_id"]) || $focus->column_fields["assigned_user_id"]=='')
 		{
@@ -166,7 +191,8 @@ foreach ($rows1 as $row)
 		}	
 
 		// now do any special processing for ex., map account with contact and potential
-		$focus->process_special_fields();
+		if($process_fields == 'false')
+			$focus->process_special_fields();
 	
 		$focus->save($module);
 		//$focus->saveentity($module);
@@ -179,7 +205,7 @@ foreach ($rows1 as $row)
 			{
 				$_REQUEST['module']='contactdetails';
 			}
-			$dbquery="select * from vtiger_field where vtiger_tablename=?";
+			$dbquery="select * from vtiger_field where vtiger_tablename=? and vtiger_field.presence in (0,2)";
 			$custresult = $adb->pquery($dbquery, array($_REQUEST['module']));
 			if($adb->num_rows($custresult) != 0)
 			{
@@ -198,11 +224,25 @@ foreach ($rows1 as $row)
 					$columns = 'potentialid';
 					$custTabName = 'potentialscf';
 				}
-
+				else if ( $_REQUEST['module'] == 'Leads')
+				{
+					$columns = 'leadidid';
+					$custTabName = 'leadscf';
+				}
 				else if ( $_REQUEST['module'] == 'Products')
 				{
 					$columns = 'productid';
-					$custTabName = 'productscf';
+					$custTabName = 'productcf';
+				}
+				else if ( $_REQUEST['module'] == 'Helpdesk')
+				{
+					$columns = 'ticketid';
+					$custTabName = 'ticketcf';
+				}
+				else if ( $_REQUEST['module'] == 'Vendors')
+				{
+					$columns = 'vendorid';
+					$custTabName = 'vendorcf';
 				}
 				$noofrows = $adb->num_rows($custresult);
 				$params = array($focus->id);
@@ -243,6 +283,7 @@ if(isset($_REQUEST['module']))
 $end = $start+$recordcount;
 $START = $start + $recordcount;
 $RECORDCOUNT = $recordcount;
+$dup_check_type = $_REQUEST['dup_type'];
 
 if($end >= $totalnoofrows)
 {
@@ -252,7 +293,18 @@ if($end >= $totalnoofrows)
 	$imported_records = $ii - $skip_required_count;
 	if($imported_records == $ii)
 		$skip_required_count = 0;
-	 $message= urlencode("<b>".$mod_strings['LBL_SUCCESS']."</b>"."<br><br>" .$mod_strings['LBL_SUCCESS_1']."  $imported_records" ."<br><br>" .$mod_strings['LBL_SKIPPED_1']."  $skip_required_count " );
+	 if($dup_check_type == "auto")
+	 {
+		 $auto_dup_type = $_REQUEST['auto_type'];
+		 if($auto_dup_type == "ignore")
+			 $dup_info = $mod_strings['Duplicate_Records_Skipped_Info'].$dup_count;
+		 else if($auto_dup_type == "overwrite")
+			 $dup_info = $mod_strings['Duplicate_Records_Overwrite_Info'].$dup_ow_count;
+	 }
+	 else
+		 $dup_info = "";
+
+	 $message= urlencode("<b>".$mod_strings['LBL_SUCCESS']."</b>"."<br><br>" .$mod_strings['LBL_SUCCESS_1']."  $count" ."<br><br>" .$mod_strings['LBL_SKIPPED_1']."  $skip_required_count <br><br>".$dup_info );
 }
 else
 {
@@ -265,7 +317,7 @@ else
 setTimeout("b()",1000);
 function b()
 {
-	document.location.href="index.php?action=<?php echo $action?>&module=<?php echo $module?>&modulename=<?php echo $modulename?>&startval=<?php echo $end?>&recordcount=<?php echo $RECORDCOUNT?>&noofrows=<?php echo $totalnoofrows?>&message=<?php echo $message?>&skipped_record_count=<?php echo $skip_required_count?>&parenttab=<?php echo $_SESSION['import_parenttab']?>";
+	document.location.href="index.php?action=<?php echo $action?>&module=<?php echo $module?>&modulename=<?php echo $modulename?>&startval=<?php echo $end?>&recordcount=<?php echo $RECORDCOUNT?>&noofrows=<?php echo $totalnoofrows?>&message=<?php echo $message?>&skipped_record_count=<?php echo $skip_required_count?>&parenttab=<?php echo $_SESSION['import_parenttab']?>&dup_type=<?php echo $dup_check_type?>";
 }
 </script>
 
@@ -273,5 +325,242 @@ function b()
 $_SESSION['import_display_message'] = '<br>'.$start.' '.$mod_strings['to'].' '.$end.' '.$mod_strings['of'].' '.$totalnoofrows.' '.$mod_strings['are_imported_succesfully'];
 //return $_SESSION['import_display_message'];
 }
+
+function is_record_exist($module,$focus)
+{
+	global $adb;
+	global $dup_ow_count;
+	$dup_check_type = $_REQUEST['dup_type'];
+	$auto_dup_type = "";
+	$sec_parameter = "";
+	if($dup_check_type == 'auto')
+	{
+	       $auto_dup_type = $_REQUEST['auto_type'];
+	}
+	if($auto_dup_type == "ignore")
+	{
+		$sec_parameter = getSecParameterforMerge($module);
+		if($module == "Leads")
+		{
+			$sel_qry = "select count(*) as count from vtiger_leaddetails
+		       		inner join vtiger_crmentity  on vtiger_crmentity.crmid = vtiger_leaddetails.leadid	
+				inner join vtiger_leadsubdetails on vtiger_leaddetails.leadid = vtiger_leadsubdetails.leadsubscriptionid 
+				inner join vtiger_leadaddress on vtiger_leadaddress.leadaddressid = vtiger_leaddetails.leadid 
+					LEFT JOIN vtiger_groups
+						ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+					LEFT JOIN vtiger_users
+						ON vtiger_users.id = vtiger_crmentity.smownerid
+				where vtiger_crmentity.deleted = 0 AND vtiger_leaddetails.converted = 0 $sec_parameter";
+		}
+		else if($module == "Accounts")
+		{
+			$sel_qry = "SELECT count(*) as count FROM vtiger_account
+				INNER JOIN vtiger_crmentity
+					ON vtiger_crmentity.crmid = vtiger_account.accountid
+				INNER JOIN vtiger_accountbillads
+					ON vtiger_account.accountid = vtiger_accountbillads.accountaddressid
+				INNER JOIN vtiger_accountshipads
+					ON vtiger_account.accountid = vtiger_accountshipads.accountaddressid
+				LEFT JOIN vtiger_groups
+					ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+				LEFT JOIN vtiger_users
+					ON vtiger_users.id = vtiger_crmentity.smownerid
+				WHERE vtiger_crmentity.deleted = 0 $sec_parameter";
+		}
+		else if($module == "Contacts")
+		{
+			$sel_qry = "SELECT count(*) as count FROM vtiger_contactdetails
+				INNER JOIN vtiger_crmentity
+					ON vtiger_crmentity.crmid = vtiger_contactdetails.contactid
+				INNER JOIN vtiger_contactaddress
+					ON vtiger_contactaddress.contactaddressid = vtiger_contactdetails.contactid
+				INNER JOIN vtiger_contactsubdetails
+					ON vtiger_contactsubdetails.contactsubscriptionid = vtiger_contactdetails.contactid
+				LEFT JOIN vtiger_customerdetails
+						ON vtiger_customerdetails.customerid=vtiger_contactdetails.contactid 
+					LEFT JOIN vtiger_groups
+						ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+					LEFT JOIN vtiger_users
+						ON vtiger_users.id = vtiger_crmentity.smownerid
+				WHERE vtiger_crmentity.deleted = 0 $sec_parameter";
+		}
+		else if($module == "Products")
+		{
+			$sel_qry = "SELECT count(*) as count FROM vtiger_products
+				INNER JOIN vtiger_crmentity
+					ON vtiger_crmentity.crmid = vtiger_products.productid	
+				WHERE vtiger_crmentity.deleted = 0 ";
+		}
+		else if($module == "Vendors")
+		{
+			$sel_qry = "select count(*) as count from vtiger_vendor
+		       		INNER JOIN vtiger_crmentity
+					ON vtiger_crmentity.crmid = vtiger_vendor.vendorid	 
+				WHERE vtiger_crmentity.deleted = 0";
+		} else {
+			$sel_qry = "select count(*) as count from $focus->table_name
+		       			INNER JOIN vtiger_crmentity
+							ON vtiger_crmentity.crmid = $focus->table_name.$focus->table_index
+						LEFT JOIN vtiger_groups
+							ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+						LEFT JOIN vtiger_users
+							ON vtiger_crmentity.smownerid = vtiger_users.id
+						WHERE vtiger_crmentity.deleted = 0 $sec_parameter";	
+		}
+		$sel_qry .= get_where_clause($module,$focus->column_fields);
+		$result = $adb->query($sel_qry);
+		$cnt = $adb->query_result($result,0,"count");
+		if($cnt > 0)
+			return true;
+		else
+			return false;
+	}
+	else if($auto_dup_type == "overwrite")
+	{
+		return overwrite_duplicate_records($module,$focus);
+	}
+	else
+		return false;
+}
+//function to get the where clause for the duplicate - select query
+function get_where_clause($module,$column_fields) {
+	global $current_user, $dup_ow_count;
+	$where_clause = "";
+	$field_values_array=getFieldValues($module);
+	$field_values=$field_values_array['fieldnames_list'];
+	$tblname_field_arr = explode(",",$field_values);
+	$uitype_arr = $field_values_array['fieldname_uitype'];
+	
+	require_once("modules/$module/$module.php");
+	$focus = new $module;
+	
+	foreach($tblname_field_arr as $val) {
+		list($tbl,$col,$fld) = explode(".",$val);
+		$col_name = $tbl ."." . $col;
+		$field_value=$column_fields[$fld];
+		
+		if($fld == $focus->table_index && $column_fields[$focus->table_index] !=''  && !is_integer($column_fields[$focus->table_index])) {
+			$field_value = getEntityId($module, $column_fields[$focus->table_index]);
+		}
+		
+		if(is_uitype($uitype_arr[$fld],'_users_list_') && $field_value == '') {
+			$field_value = $current_user->id;
+		}
+		$where_clause .= " AND ifnull(". $col_name .",'') = ifnull('".$field_value."','') ";
+	}
+	return $where_clause;	
+}
+//function to overwrite the existing duplicate records with the importing record's values
+function overwrite_duplicate_records($module,$focus)
+{
+	global $adb;
+	global $dup_ow_count;
+	global $process_fields;
+	//$module_id_array = Array("Leads"=>"leadid","Accounts"=>"accountid","Contacts"=>"contactid","Products"=>"productid","HelpDesk"=>"ticketid","Potentials"=>"potentialid","Vendors"=>"vendorid");
+	//$field_values_array=getFieldValues($module);
+	//$field_values=$field_values_array['fieldnames_list'];
+	//$tblname_field_arr = explode(",",$field_values);
+	
+	$where_clause = "";
+	$where = get_where_clause($module,$focus->column_fields);
+	$sec_parameter = getSecParameterforMerge($module);
+	if($module == "Leads")
+	{
+		$sel_qry = "select vtiger_leaddetails.leadid from vtiger_leaddetails
+			inner join vtiger_crmentity  on vtiger_crmentity.crmid = vtiger_leaddetails.leadid
+			inner join vtiger_leadsubdetails on vtiger_leaddetails.leadid = vtiger_leadsubdetails.leadsubscriptionid
+			inner join vtiger_leadaddress on vtiger_leadaddress.leadaddressid = vtiger_leaddetails.leadid
+					LEFT JOIN vtiger_groups
+						ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+					LEFT JOIN vtiger_users
+						ON vtiger_users.id = vtiger_crmentity.smownerid
+			where vtiger_crmentity.deleted = 0 AND vtiger_leaddetails.converted = 0 $where $sec_parameter order by vtiger_leaddetails.leadid ASC";
+	}
+	else if($module == "Accounts")
+	{
+		$sel_qry = "SELECT vtiger_account.accountid FROM vtiger_account
+			INNER JOIN vtiger_crmentity
+			ON vtiger_crmentity.crmid = vtiger_account.accountid
+			INNER JOIN vtiger_accountbillads
+			ON vtiger_account.accountid = vtiger_accountbillads.accountaddressid
+			INNER JOIN vtiger_accountshipads
+			ON vtiger_account.accountid = vtiger_accountshipads.accountaddressid
+				LEFT JOIN vtiger_groups
+					ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+				LEFT JOIN vtiger_users
+					ON vtiger_users.id = vtiger_crmentity.smownerid
+			WHERE vtiger_crmentity.deleted = 0 $where $sec_parameter order by vtiger_account.accountid ASC";
+	}
+	else if($module == "Contacts")
+	{
+		$sel_qry = "SELECT vtiger_contactdetails.contactid FROM vtiger_contactdetails
+			INNER JOIN vtiger_crmentity
+			ON vtiger_crmentity.crmid = vtiger_contactdetails.contactid
+			INNER JOIN vtiger_contactaddress
+			ON vtiger_contactaddress.contactaddressid = vtiger_contactdetails.contactid
+			INNER JOIN vtiger_contactsubdetails
+			ON vtiger_contactsubdetails.contactsubscriptionid = vtiger_contactdetails.contactid
+			LEFT JOIN vtiger_customerdetails
+						ON vtiger_customerdetails.customerid=vtiger_contactdetails.contactid
+					LEFT JOIN vtiger_groups
+						ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+					LEFT JOIN vtiger_users
+						ON vtiger_users.id = vtiger_crmentity.smownerid
+			WHERE vtiger_crmentity.deleted = 0 $where $sec_parameter order by vtiger_contactdetails.contactid ASC";
+	}
+	else if($module == "Products")
+	{
+		$sel_qry = "SELECT vtiger_products.productid FROM vtiger_products
+			INNER JOIN vtiger_crmentity
+			ON vtiger_crmentity.crmid = vtiger_products.productid
+			WHERE vtiger_crmentity.deleted = 0 $where order by vtiger_products.productid ASC";
+	}
+	else if($module == "Vendors")
+	{
+		$sel_qry = "SELECT vtiger_vendor.vendorid FROM vtiger_vendor
+			INNER JOIN vtiger_crmentity
+			ON vtiger_crmentity.crmid = vtiger_vendor.vendorid
+			WHERE vtiger_crmentity.deleted = 0 $where order by vtiger_vendor.vendorid ASC";
+	}
+	else {
+		$sel_qry = "SELECT $focus->table_name.$focus->table_index FROM $focus->table_name
+			INNER JOIN vtiger_crmentity
+			ON vtiger_crmentity.crmid = $focus->table_name.$focus->table_index
+				LEFT JOIN vtiger_groups
+					ON vtiger_groups.groupid = vtiger_crmentity.smownerid
+				LEFT JOIN vtiger_users
+					ON vtiger_crmentity.smownerid = vtiger_users.id
+			WHERE vtiger_crmentity.deleted = 0 $where $sec_parameter order by $focus->table_name.$focus->table_index ASC";
+	}
+	$result = $adb->query($sel_qry);
+	$no_rows = $adb->num_rows($result);
+	// now do any special processing for ex., map account with contact and potential
+	$focus->process_special_fields();
+	$process_fields='true';
+	$moduleObj = new $module();
+	if($no_rows > 0)
+	{
+		for($i=0;$i<$no_rows;$i++)
+		{
+			$id_field = $moduleObj->table_index;
+			$id_value = $adb->query_result($result,$i,$id_field);
+			if($i == 0)
+			{
+				$moduleObj->mode = "edit";
+				$moduleObj->id = $id_value;
+				$moduleObj->column_fields = $focus->column_fields;
+				$moduleObj->save($module);
+			}
+			else{
+				DeleteEntity($module,$module,$moduleObj,$id_value,"");
+			}
+		}
+		$dup_ow_count = $dup_ow_count+$no_rows;
+		return true;
+	}
+	else
+		return false;
+}
+
 ?>
 

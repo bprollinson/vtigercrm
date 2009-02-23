@@ -12,6 +12,9 @@
 
 -->*}
 <script>
+var z={$LISTENTITYACTION};
+var image_pth = '{$IMAGE_PATH}';
+
 function showAllRecords()
 {ldelim}
         modname = document.getElementById("relmod").name;
@@ -45,12 +48,16 @@ function redirectWhenNoRelatedRecordsFound()
 </script>
 <link rel="stylesheet" type="text/css" href="{$THEME_PATH}style.css">
 <script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
+<script language="JavaScript" type="text/javascript" src="include/js/Inventory.js"></script>
+<!-- vtlib customization: Javascript hook -->
+<script language="JavaScript" type="text/javascript" src="include/js/vtlib.js"></script>
+<!-- END -->
 <script language="JavaScript" type="text/javascript" src="include/js/{php} echo $_SESSION['authenticated_user_language'];{/php}.lang.js?{php} echo $_SESSION['vtiger_version'];{/php}"></script>
 <script language="JavaScript" type="text/javascript" src="modules/{$MODULE}/{$MODULE}.js"></script>
 <script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
 <script type="text/javascript">
 function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
-        opener.document.location.href="index.php?module={$RETURN_MODULE}&action=updateRelations&destination_module="+mod+"&entityid="+entity_id+"&parid="+recordid+"&return_module={$RETURN_MODULE}&return_action={$RETURN_ACTION}&parenttab={$CATEGORY}";
+        opener.document.location.href="index.php?module={$RETURN_MODULE}&action=updateRelations&destination_module="+mod+"&entityid="+entity_id+"&parentid="+recordid+"&return_module={$RETURN_MODULE}&return_action={$RETURN_ACTION}&parenttab={$CATEGORY}";
 {rdelim}
 
 </script>
@@ -62,20 +69,26 @@ function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
 			<table width="100%" border="0" cellpadding="0" cellspacing="0">
 				<tr>
 					{if $recid_var_value neq ''}
-                                                <td class="moduleName" width="80%" style="padding-left:10px;">{$APP[$MODULE]}&nbsp;{$APP.RELATED_PARENT}</td>
-                                        {else}
-                                                <td class="moduleName" width="80%" style="padding-left:10px;">{$APP[$MODULE]}</td>
-                                        {/if}
+                            <td class="moduleName" width="80%" style="padding-left:10px;">{$APP[$MODULE]}&nbsp;{$APP.LBL_RELATED_TO}&nbsp;{$APP[$PARENT_MODULE]}</td>
+                    {else}
+                            {if $RECORD_ID}
+	                            <td class="moduleName" width="80%" style="padding-left:10px;"><a href="javascript:;" onclick="window.history.back();">{$APP[$MODULE]}</a> > {$PRODUCT_NAME}</td>
+							{else}
+	                            <td class="moduleName" width="80%" style="padding-left:10px;">{$APP[$MODULE]}</td>
+							{/if}
+                    {/if}
 					<td  width=30% nowrap class="componentName" align=right>{$APP.VTIGER}</td>
 				</tr>
 			</table>
+			<div id="status" style="position:absolute;display:none;right:135px;top:15px;height:27px;white-space:nowrap;"><img src="{'status.gif'|@vtiger_imageurl:$THEME}"></div>
 			<table width="100%" cellpadding="5" cellspacing="0" border="0"  class="homePageMatrixHdr">
 				<tr>
 					<td style="padding:10px;" >
 						<form name="basicSearch" action="index.php" onsubmit="return false;">
 						<table width="100%" cellpadding="5" cellspacing="0">
+						{if !$RECORD_ID}
 						<tr>
-							<td width="20%" class="dvtCellLabel"><img src="{$IMAGE_PATH}basicSearchLens.gif"></td>
+							<td width="20%" class="dvtCellLabel"><img src="{'basicSearchLens.gif'|@vtiger_imageurl:$THEME}"></td>
 							<td width="30%" class="dvtCellLabel"><input type="text" name="search_text" class="txtBox"> </td>
 							<td width="30%" class="dvtCellLabel"><b>{$APP.LBL_IN}</b>&nbsp;
 								<select name ="search_field" class="txtBox">
@@ -96,11 +109,20 @@ function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
 								<input name="maintab" id="maintab" type="hidden" value="{$MAINTAB}">
 								<input type="hidden" id="relmod" name="{$mod_var_name}" value="{$mod_var_value}">
                                                                 <input type="hidden" id="relrecord_id" name="{$recid_var_name}" value="{$recid_var_value}">
+								{* vtlib customization: For uitype 10 popup during paging *}
+								{if $smarty.request.form eq 'vtlibPopupView'}
+									<input name="form"  id="popupform" type="hidden" value="{$smarty.request.form}">
+									<input name="forfield"  id="forfield" type="hidden" value="{$smarty.request.forfield}">
+									<input name="srcmodule"  id="srcmodule" type="hidden" value="{$smarty.request.srcmodule}">
+									<input name="forrecord"  id="forrecord" type="hidden" value="{$smarty.request.forrecord}">
+								{/if}
+								{* END *}
 							</td>
 							<td width="20%" class="dvtCellLabel">
 								<input type="button" name="search" value=" &nbsp;{$APP.LBL_SEARCH_NOW_BUTTON}&nbsp; " onClick="callSearch('Basic');" class="crmbutton small create">
 							</td>
 						</tr>
+						{/if}
 						 <tr>
 							<td colspan="4" align="center">
 								<table width="100%" class="small">
@@ -116,7 +138,7 @@ function add_data_to_relatedlist(entity_id,recordid,mod) {ldelim}
 				</tr>
 				{if $recid_var_value neq ''}
                                 <tr>
-                                        <td align="right"><input id="all_contacts" alt="{$APP.LBL_SELECT_BUTTON_LABEL} {$APP.$MODULE}" title="{$APP.LBL_SELECT_BUTTON_LABEL} {$APP.$MODULE}" accessKey="" class="crmbutton small edit" value="{$APP.SHOW_ALL}&nbsp;{$MODULE}" LANGUAGE=javascript onclick="window.location.href=showAllRecords();" type="button"  name="button"></td>
+                                        <td align="right"><input id="all_contacts" alt="{$APP.LBL_SELECT_BUTTON_LABEL} {$APP.$MODULE}" title="{$APP.LBL_SELECT_BUTTON_LABEL} {$APP.$MODULE}" accessKey="" class="crmbutton small edit" value="{$APP.SHOW_ALL}&nbsp;{$APP.$MODULE}" LANGUAGE=javascript onclick="window.location.href=showAllRecords();" type="button"  name="button"></td>
                                 </tr>
                                 {/if}
 			</table>
@@ -155,12 +177,14 @@ function callSearch(searchtype)
 	urlstring += '&maintab='+act_tab;
 	urlstring = urlstring +'&query=true&file=Popup&module={$MODULE}&action={$MODULE}Ajax&ajax=true&search=true';
 	urlstring +=gethiddenelements();
+	$("status").style.display="inline";
 	new Ajax.Request(
 		'index.php',
 		{ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
 				method: 'post',
 				postBody: urlstring,
 				onComplete: function(response) {ldelim}
+					$("status").style.display="none";
 					$("ListViewContents").innerHTML= response.responseText;
 				{rdelim}
 			{rdelim}
@@ -179,13 +203,15 @@ function alphabetic(module,url,dataid)
     gPopupAlphaSearchUrl = '&'+url;	
     var urlstring ="module="+module+"&action="+module+"Ajax&file=Popup&ajax=true&search=true&"+url;
     urlstring +=gethiddenelements();
+    $("status").style.display="inline";
     new Ajax.Request(
                 'index.php',
                 {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
                                 method: 'post',
                                 postBody: urlstring,
                                 onComplete: function(response) {ldelim}
-                                        $("ListViewContents").innerHTML= response.responseText;
+                                	$("status").style.display="none";
+									$("ListViewContents").innerHTML= response.responseText;
 				{rdelim}
 			{rdelim}
 		);
@@ -209,6 +235,17 @@ function gethiddenelements()
         if(getObj('relrecord_id').value != '')
                 urlstring +='&'+getObj('relrecord_id').name+'='+getObj('relrecord_id').value;
 	
+	// vtlib customization: For uitype 10 popup during paging
+	if(document.getElementById('popupform'))
+		urlstring +='&form='+encodeURIComponent(getObj('popupform').value);
+	if(document.getElementById('forfield'))
+		urlstring +='&forfield='+encodeURIComponent(getObj('forfield').value);
+	if(document.getElementById('srcmodule'))
+		urlstring +='&srcmodule='+encodeURIComponent(getObj('srcmodule').value);
+	if(document.getElementById('forrecord'))
+		urlstring +='&forrecord='+encodeURIComponent(getObj('forrecord').value);
+	// END
+
 	var return_module = document.getElementById('return_module').value;
 	if(return_module != '')
 		urlstring += '&return_module='+return_module;
@@ -259,5 +296,15 @@ function getListViewSorted_js(module,url)
 			{rdelim}
 		);
 {rdelim}
+
+var product_labelarr = {ldelim}
+	CLEAR_COMMENT:'{$APP.LBL_CLEAR_COMMENT}',
+	DISCOUNT:'{$APP.LBL_DISCOUNT}',
+	TOTAL_AFTER_DISCOUNT:'{$APP.LBL_TOTAL_AFTER_DISCOUNT}',
+	TAX:'{$APP.LBL_TAX}',
+	ZERO_DISCOUNT:'{$APP.LBL_ZERO_DISCOUNT}',
+	PERCENT_OF_PRICE:'{$APP.LBL_OF_PRICE}',
+	DIRECT_PRICE_REDUCTION:'{$APP.LBL_DIRECT_PRICE_REDUCTION}'
+{rdelim};
 
 </script>

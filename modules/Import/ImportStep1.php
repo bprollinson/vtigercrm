@@ -24,7 +24,7 @@ require_once('include/utils/CommonUtils.php');
 global $mod_strings;
 global $app_strings;
 global $app_list_strings;
-global $current_user;
+global $current_user,$default_charset;
 
 global $import_mod_strings;
 
@@ -42,7 +42,7 @@ $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("IMP", $import_mod_strings);
 
-$smarty->assign("CATEGORY", $_REQUEST['parenttab']);
+$smarty->assign("CATEGORY", htmlspecialchars($_REQUEST['parenttab'],ENT_QUOTES,$default_charset));
 
 $import_object_array = Array(
 				"Leads"=>"ImportLead",
@@ -57,7 +57,19 @@ $import_object_array = Array(
 if(isset($_REQUEST['module']) && $_REQUEST['module'] != '')
 {
 	$object_name = $import_object_array[$_REQUEST['module']];
+	// vtlib customization: Hook added to enable import for un-mapped modules
+	$module = $_REQUEST['module'];	
+	if($object_name == null) {
+		require_once("modules/$module/$module.php");
+		$object_name = $module;
+		$callInitImport = true;
+	}
+	// END
+
 	$focus = new $object_name();
+	// vtlib customization: Call the import initializer
+	if($callInitImport) $focus->initImport($module);
+	// END
 }
 else
 {
@@ -76,6 +88,7 @@ $smarty->assign("HEADER", $app_strings['LBL_IMPORT']." ". $mod_strings['LBL_MODU
 $smarty->assign("HAS_HEADER_CHECKED"," CHECKED");
 
 $smarty->assign("MODULE", $_REQUEST['module']);
+$smarty->assign("MODULELABEL", getTranslatedString($_REQUEST['module']));
 $smarty->assign("SOURCE", $_REQUEST['source']);
 
 //we have set this as default. upto 4.2.3 we have Outlook, Act, SF formats. but now CUSTOM is enough to import

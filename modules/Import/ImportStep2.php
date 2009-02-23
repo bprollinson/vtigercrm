@@ -49,18 +49,22 @@ global $mod_strings;
 global $mod_list_strings;
 global $app_strings;
 global $app_list_strings;
-global $current_user;
+global $current_user,$default_charset;
 global $import_file_name;
 global $upload_maxsize;
 
 global $import_dir;
 $focus = 0;
-$delimiter = ',';
 $max_lines = 3;
 
-$has_header = 0;
+$delimiter = ',';
+if (isset($_REQUEST['delimiter']))
+{
+	$delimiter = $_REQUEST['delimiter'];
+}
 
-if ( isset($_REQUEST['has_header']))
+$has_header = 0;
+if (isset($_REQUEST['has_header']))
 {
 	$has_header = 1;
 }
@@ -89,6 +93,24 @@ $tmp_file_name = $import_dir. "IMPORT_".$current_user->id;
 
 move_uploaded_file($_FILES['userfile']['tmp_name'], $tmp_file_name);
 
+// Convert ISO-8859 file (as saved by MS Excel) into UTF-8 to preserve umlauts and accents
+if ($_REQUEST["format"] != "UTF-8")
+{
+	$fh = fopen($tmp_file_name,"r");
+	$content = fread($fh, filesize($tmp_file_name));
+	fclose($fh);
+
+	if (function_exists("mb_convert_encoding")) 
+	{
+		$content = mb_convert_encoding($content, 'UTF-8', $_REQUEST["format"]);
+	} else {
+		$content = iconv('UTF-8', $_REQUEST["format"], $content);		
+	}
+
+	$fh = fopen($tmp_file_name,"w");
+	fwrite($fh, $content);
+	fclose($fh);
+}
 
 // Now parse the file and look for errors
 $ret_value = 0;
@@ -146,13 +168,26 @@ $import_object_array = Array(
 				"Potentials"=>"ImportOpportunity",
 				"Products"=>"ImportProduct",
 				"HelpDesk"=>"ImportTicket",
-                                "Vendors"=>"ImportVendors"
+                "Vendors"=>"ImportVendors"
 			    );
 
 if(isset($_REQUEST['module']) && $_REQUEST['module'] != '')
 {
 	$object_name = $import_object_array[$_REQUEST['module']];
+	// vtlib customization: Hook added to enable import for un-mapped modules
+	$module = $_REQUEST['module'];	
+	if($object_name == null) {
+		require_once("modules/$module/$module.php");
+		$object_name = $module;
+		$callInitImport = true;		
+	}
+	// END
 	$focus = new $object_name();
+	// vtlib customization: Call the import initializer
+	if($callInitImport) $focus->initImport($module);
+	//initialized the required fields,used to check for mandatory fields while importing
+	$focus->initRequiredFields($module);
+	// END
 }
 else
 {
@@ -317,19 +352,26 @@ for($field_count = 0; $field_count < $ret_field_count; $field_count++)
 		$focus1=new Vendors();
 	}
 	//end checking
+
+	// vtlib customization: Hook to provide generic import for other modules
+	if($_REQUEST['module']) {
+		$focus1 = new $_REQUEST['module'];
+		$tablename = $focus->table_name;
+	}
+	// END
+	
 	$smarty->assign("FIRSTROW",$firstrow);
 	$smarty->assign("SECONDROW",$secondrow);
 	$smarty->assign("THIRDROW",$thirdrow);
 	$smarty_array[$field_count + 1] = getFieldSelect(	$focus->importable_fields,
 							$field_count,
-							$focus1->required_fields,
+							$focus->required_fields,
 							$suggest,
 							$translated_column_fields,
 							$tablename
 						   );
 
 	$pos = 0;
-
 	foreach ( $rows as $row ) 
 	{
 		
@@ -346,6 +388,7 @@ for($field_count = 0; $field_count < $ret_field_count; $field_count++)
 		$cnt++;
 	}
 }
+@session_unregister('import_delimiter');
 @session_unregister('import_has_header');
 @session_unregister('import_firstrow');
 @session_unregister('import_field_map');
@@ -353,6 +396,7 @@ for($field_count = 0; $field_count < $ret_field_count; $field_count++)
 @session_unregister('import_module_field_count');
 @session_unregister('import_module_object_required_fields');
 @session_unregister('import_module_translated_column_fields');
+$_SESSION['import_delimiter'] = $delimiter;
 $_SESSION['import_has_header'] = $has_header;
 $_SESSION['import_firstrow'] = $firstrow;
 $_SESSION['import_field_map'] = $field_map;
@@ -360,8 +404,6 @@ $_SESSION['import_module_object_column_fields'] = $focus->importable_fields;
 $_SESSION['import_module_field_count'] = $field_count;
 $_SESSION['import_module_object_required_fields'] = $focus1->required_fields;
 $_SESSION['import_module_translated_column_fields'] = $translated_column_fields;
-
-
 //echo '<pre>Default array ==> '; print_r($smarty_array); echo '</pre>';
 
 $smarty->assign("SELECTFIELD",$smarty_array);
@@ -383,8 +425,14 @@ else
 	$smarty->assign("HAS_HEADER", 'off');
 }
 
-$smarty->assign("MODULE", $_REQUEST['module']);
-$smarty->assign('CATEGORY' , $_REQUEST['parenttab']);
+$smarty->assign("AVALABLE_FIELDS", getMergeFields($module,"available_fields"));
+$smarty->assign("FIELDS_TO_MERGE", getMergeFields($module,"fileds_to_merge"));
+if(isPermitted($module,'DuplicatesHandling','') == 'yes')
+	$smarty->assign("DUPLICATESHANDLING", 'DuplicatesHandling');
+
+$smarty->assign("MODULE", htmlspecialchars($_REQUEST['module'],ENT_QUOTES,$default_charset));
+$smarty->assign("MODULELABEL", getTranslatedString($_REQUEST['module']));
+$smarty->assign('CATEGORY' , htmlspecialchars($_REQUEST['parenttab'],ENT_QUOTES,$default_charset));
 @$_SESSION['import_parenttab'] = $_REQUEST['parenttab'];
 $smarty->assign("JAVASCRIPT2", get_readonly_js() );
 
@@ -400,7 +448,6 @@ function validate_import_map()
 	var required_fields = new Array();
 	var required_fields_name = new Array();
 	var seq_string = '';
-
 	<?php 
 		foreach($focus->required_fields as $name => $index)
 		{

@@ -36,6 +36,7 @@ $image_path=$theme_path."images/";
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("THEME", $theme);
 
 $smarty->assign("BLOCKS", getBlocks($currentModule,"detail_view",'',$focus->column_fields));
 
@@ -54,6 +55,17 @@ if(isPermitted("PriceBooks","DeletePriceBook",$_REQUEST['record']) == 'yes')
 $smarty->assign("IMAGE_PATH", $image_path);
 $smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $smarty->assign("ID", $_REQUEST['record']);
+
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
+
 $smarty->assign("NAME", $focus->name);
 
 
@@ -82,6 +94,50 @@ if($singlepane_view == 'true')
 $smarty->assign("IS_REL_LIST",isPresentRelatedLists($currentModule));
 
 $smarty->assign("SinglePane_View", $singlepane_view);
+
+if(isset($_SESSION['pricebooks_listquery'])){
+	$arrayTotlist = array();
+	$aNamesToList = array(); 
+	$forAllCRMIDlist_query=$_SESSION['pricebooks_listquery'];
+	$resultAllCRMIDlist_query=$adb->pquery($forAllCRMIDlist_query,array());
+	while($forAllCRMID = $adb->fetch_array($resultAllCRMIDlist_query))
+	{
+		$arrayTotlist[]=$forAllCRMID['crmid'];
+	}
+	$_SESSION['listEntyKeymod_'.$focus->id] = $module.":".implode(",",$arrayTotlist);
+	if(isset($_SESSION['listEntyKeymod_'.$focus->id]))
+	{
+		$split_temp=explode(":",$_SESSION['listEntyKeymod_'.$focus->id]);
+		if($split_temp[0] == $module)
+		{	
+			$smarty->assign("SESMODULE",$split_temp[0]);
+			$ar_allist=explode(",",$split_temp[1]);
+			
+			for($listi=0;$listi<count($ar_allist);$listi++)
+			{
+				if($ar_allist[$listi]==$_REQUEST[record])
+				{
+					if($listi-1>=0)
+					{
+						$privrecord=$ar_allist[$listi-1];
+						$smarty->assign("privrecord",$privrecord);
+					}else {unset($privrecord);}
+					if($listi+1<count($ar_allist))
+					{
+						$nextrecord=$ar_allist[$listi+1];
+						$smarty->assign("nextrecord",$nextrecord);
+					}else {unset($nextrecord);}
+					break;
+				}
+				
+			}
+		}
+	}
+}
+
+// Record Change Notification
+$focus->markAsViewed($current_user->id);
+// END
 
 $smarty->display("Inventory/InventoryDetailView.tpl");
 ?>

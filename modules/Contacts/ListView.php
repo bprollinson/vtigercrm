@@ -39,6 +39,9 @@ $log = LoggerManager::getLogger('contact_list');
 global $currentModule,$theme;
 
 $focus = new Contacts();
+// Initialize sort by fields
+$focus->initSortbyField('Contacts');
+// END
 $smarty = new vtigerCRM_Smarty;
 $other_text = Array();
 
@@ -111,6 +114,17 @@ $oCustomView = new CustomView("Contacts");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
+//Added to handle approving or denying status-public by the admin in CustomView
+$statusdetails = $oCustomView->isPermittedChangeStatus($viewnamedesc['status']);
+$smarty->assign("CUSTOMVIEW_PERMISSION",$statusdetails);
+
+//To check if a user is able to edit/delete a customview
+$edit_permit = $oCustomView->isPermittedCustomView($viewid,'EditView',$currentModule);
+$delete_permit = $oCustomView->isPermittedCustomView($viewid,'Delete',$currentModule);
+$smarty->assign("CV_EDIT_PERMIT",$edit_permit);
+$smarty->assign("CV_DELETE_PERMIT",$delete_permit);
+
 //<<<<<customview>>>>>
 $smarty->assign("CHANGE_OWNER",getUserslist());
 $smarty->assign("CHANGE_GROUP_OWNER",getGroupslist());
@@ -119,13 +133,35 @@ if($viewid != 0)
 {
 	$CActionDtls = $oCustomView->getCustomActionDetails($viewid);
 }
+elseif($viewid ==0)
+{
+	echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
+	echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
+
+		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
+		<tbody><tr>
+		<td rowspan='2' width='11%'><img src='". vtiger_imageurl('denied.gif', $theme) ."' ></td>
+		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'>
+			<span class='genHeaderSmall'>$app_strings[LBL_PERMISSION]</span></td>
+		</tr>
+		<tr>
+		<td class='small' align='right' nowrap='nowrap'>
+		<a href='javascript:window.history.back();'>$app_strings[LBL_GO_BACK]</a><br>
+		</td>
+		</tr>
+		</tbody></table>
+		</div>";
+	echo "</td></tr></table>";
+	exit;
+}
 if(isPermitted('Contacts','Delete','') == 'yes')
 {
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
 }
 if(isPermitted('Contacts','EditView','') == 'yes')
 {
-        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
+	$other_text['mass_edit'] = $app_strings[LBL_MASS_EDIT];
+	$other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
 }
 if(isPermitted('Emails','EditView','') == 'yes')
 	$other_text['s_mail'] = $app_strings[LBL_SEND_MAIL_BUTTON];
@@ -183,6 +219,7 @@ if(isset($order_by) && $order_by != '')
 
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("BUTTONS",$other_text);
 $category = getParentTab();
@@ -272,7 +309,7 @@ if(isPermitted("Contacts","Merge") == 'yes')
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
 //Retreive the List View Table Header
-if($viewid !='')
+if(!empty($viewid))
 $url_string .="&viewname=".$viewid;
 
 $listview_header = getListViewHeader($focus,"Contacts",$url_string,$sorder,$order_by,"",$oCustomView);
@@ -281,10 +318,12 @@ $smarty->assign("LISTHEADER", $listview_header);
 $listview_header_search=getSearchListHeaderValues($focus,"Contacts",$url_string,$sorder,$order_by,"",$oCustomView);
 $smarty->assign("SEARCHLISTHEADER", $listview_header_search);
 
-
 $listview_entries = getListViewEntries($focus,"Contacts",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
 $smarty->assign("LISTENTITY", $listview_entries);
 $smarty->assign("SELECT_SCRIPT", $view_script);
+
+$smarty->assign("AVALABLE_FIELDS", getMergeFields($currentModule,"available_fields"));
+$smarty->assign("FIELDS_TO_MERGE", getMergeFields($currentModule,"fileds_to_merge"));
 
 //Added to select Multiple records in multiple pages
 $smarty->assign("SELECTEDIDS", $_REQUEST['selobjs']);
@@ -293,7 +332,7 @@ $smarty->assign("CURRENT_PAGE_BOXES", implode(array_keys($listview_entries),";")
 
 $navigationOutput = getTableHeaderNavigation($navigation_array, $url_string,"Contacts","index",$viewid);
 $alphabetical = AlphabeticalSearch($currentModule,'index','lastname','true','basic',"","","","",$viewid);
-$fieldnames = getAdvSearchfields($module);
+$fieldnames = getAdvSearchfields($currentModule);
 $criteria = getcriteria_options();
 $smarty->assign("CRITERIA", $criteria);
 $smarty->assign("FIELDNAMES", $fieldnames);
@@ -303,8 +342,10 @@ $smarty->assign("RECORD_COUNTS", $record_string);
 $smarty->assign("MODULE", $currentModule);
 $smarty->assign("SINGLE_MOD", 'Contact');
 
-$check_button = Button_Check($module);
+$check_button = Button_Check($currentModule);
 $smarty->assign("CHECK", $check_button);
+
+$_SESSION['contacts_listquery'] = $list_query;
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

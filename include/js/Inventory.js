@@ -67,24 +67,26 @@ function settotalnoofrows() {
 function productPickList(currObj,module, row_no) {
 	var trObj=currObj.parentNode.parentNode
 	var rowId=row_no;//parseInt(trObj.id.substr(trObj.id.indexOf("w")+1,trObj.id.length))
+	var currencyid = document.getElementById("inventory_currency").value;
 
 	popuptype = 'inventory_prod';
 	if(module == 'PurchaseOrder')
 		popuptype = 'inventory_prod_po';
-	var record_id = ''
-        if(document.getElementsByName("account_id").length != 0)
-                record_id= document.EditView.account_id.value;
-        if(record_id != '')
-                window.open("index.php?module=Products&action=Popup&html=Popup_picker&form=HelpDeskEditView&popuptype="+popuptype+"&curr_row="+rowId+"&relmod_id="+record_id+"&parent_module=Accounts","productWin","width=640,height=600,resizable=0,scrollbars=0,status=1,top=150,left=200");
-        else
-		window.open("index.php?module=Products&action=Popup&html=Popup_picker&form=HelpDeskEditView&popuptype="+popuptype+"&curr_row="+rowId,"productWin","width=640,height=600,resizable=0,scrollbars=0,status=1,top=150,left=200");
+	var record_id = '';
+    if(document.getElementsByName("account_id").length != 0)
+    	record_id= document.EditView.account_id.value;
+    if(record_id != '')
+    	window.open("index.php?module=Products&action=Popup&html=Popup_picker&select=enable&form=HelpDeskEditView&popuptype="+popuptype+"&curr_row="+rowId+"&relmod_id="+record_id+"&parent_module=Accounts&return_module="+module+"&currencyid="+currencyid,"productWin","width=640,height=600,resizable=0,scrollbars=0,status=1,top=150,left=200");
+    else
+		window.open("index.php?module=Products&action=Popup&html=Popup_picker&select=enable&form=HelpDeskEditView&popuptype="+popuptype+"&curr_row="+rowId+"&return_module="+module+"&currencyid="+currencyid,"productWin","width=640,height=600,resizable=0,scrollbars=0,status=1,top=150,left=200");
 }
 
 function priceBookPickList(currObj, row_no) {
 	var trObj=currObj.parentNode.parentNode
 	var rowId=row_no;//parseInt(trObj.id.substr(trObj.id.indexOf("w")+1,trObj.id.length))
+	var currencyid = document.getElementById("inventory_currency").value;
 	var productId=getObj("hdnProductId"+rowId).value || -1;
-	window.open("index.php?module=PriceBooks&action=Popup&html=Popup_picker&form=EditView&popuptype=inventory_pb&fldname=listPrice"+rowId+"&productid="+productId,"priceBookWin","width=640,height=565,resizable=0,scrollbars=0,top=150,left=200");
+	window.open("index.php?module=PriceBooks&action=Popup&html=Popup_picker&form=EditView&popuptype=inventory_pb&fldname=listPrice"+rowId+"&productid="+productId+"&currencyid="+currencyid,"priceBookWin","width=640,height=565,resizable=0,scrollbars=0,top=150,left=200");
 }
 
 
@@ -102,22 +104,67 @@ function getProdListBody() {
 }
 
 
-function deleteRow(module,i)
+function deleteRow(module,i,image_path)
 {
 	rowCnt--;
 	var tableName = document.getElementById('proTab');
 	var prev = tableName.rows.length;
+
 //	document.getElementById('proTab').deleteRow(i);
 	document.getElementById("row"+i).style.display = 'none';
+
+// Added For product Reordering starts
+	image_path = document.getElementById("hidImagePath").value;
+	iMax = tableName.rows.length;
+	for(iCount=i;iCount>=1;iCount--)
+	{
+		if(document.getElementById("row"+iCount) && document.getElementById("row"+iCount).style.display != 'none')
+		{
+			iPrevRowIndex = iCount;
+			break;
+		}
+	}
+	iPrevCount = iPrevRowIndex;
+	oCurRow = eval(document.getElementById("row"+i));
+	sTemp = oCurRow.cells[0].innerHTML;
+	ibFound = sTemp.indexOf("down_layout.gif");
+	
+	if(i != 2 && ibFound == -1 && iPrevCount != 1)
+	{
+		oPrevRow = eval(document.getElementById("row"+iPrevCount));
+			
+		iPrevCount = eval(iPrevCount);
+		oPrevRow.cells[0].innerHTML = '<img src="themes/images/delete.gif" border="0" onclick="deleteRow(\''+module+'\','+iPrevCount+')"><input id="deleted'+iPrevCount+'" name="deleted'+iPrevCount+'" type="hidden" value="0">&nbsp;<a href="javascript:moveUpDown(\'UP\',\''+module+'\','+iPrevCount+')" title="Move Upward"><img src="themes/images/up_layout.gif" border="0"></a>';
+	}
+	else if(iPrevCount == 1)
+	{
+		iSwapIndex = i;
+		for(iCount=i;iCount<=iMax-2;iCount++)
+		{
+			if(document.getElementById("row"+iCount) && document.getElementById("row"+iCount).style.display != 'none')
+			{
+				iSwapIndex = iCount;
+				break;
+			}
+		}	
+		if(iSwapIndex == i)
+		{
+			oPrevRow = eval(document.getElementById("row"+iPrevCount));
+			iPrevCount = eval(iPrevCount);
+			oPrevRow.cells[0].innerHTML = '<input type="hidden" id="deleted1" name="deleted1" value="0">&nbsp;'; 
+		}
+	}
+// Product reordering addition ends
 	document.getElementById("hdnProductId"+i).value = "";
 	//document.getElementById("productName"+i).value = "";
 	document.getElementById('deleted'+i).value = 1;
+
 	calcTotal()
 }
 /*  End */
 
 
-
+// Function to Calcuate the Inventory total including all products
 function calcTotal() {
 
 	var max_row_count = document.getElementById('proTab').rows.length;
@@ -126,6 +173,13 @@ function calcTotal() {
 	for(var i=1;i<=max_row_count;i++)
 	{
 		rowId = i;
+		calcProductTotal(rowId);
+	}
+	calcGrandTotal();
+}
+
+// Function to Calculate the Total for a particular product in an Inventory
+function calcProductTotal(rowId) {	
 		
 		if(document.getElementById('deleted'+rowId).value == 0)
 		{
@@ -150,10 +204,9 @@ function calcTotal() {
 			getObj("netPrice"+rowId).innerHTML=roundValue(netprice.toString())
 
 		}
-	}
-	calcGrandTotal();
 }
 
+// Function to Calculate the Net and Grand total for all the products together of an Inventory
 function calcGrandTotal() {
 	var netTotal = 0.0, grandTotal = 0.0;
 	var discountTotal_final = 0.0, finalTax = 0.0, sh_amount = 0.0, sh_tax = 0.0, adjustment = 0.0;
@@ -199,10 +252,19 @@ function calcGrandTotal() {
 
 	//Add or substract the adjustment based on selection
 	adj_type = document.getElementById("adjustmentType").value;
-	if(adj_type == '+')
-		grandTotal = eval(netTotal)-eval(discountTotal_final)+eval(finalTax)+eval(sh_amount)+eval(sh_tax)+eval(adjustment)
-	else
-		grandTotal = eval(netTotal)-eval(discountTotal_final)+eval(finalTax)+eval(sh_amount)+eval(sh_tax)-eval(adjustment)
+	
+	grandTotal = eval(netTotal)-eval(discountTotal_final)+eval(finalTax);
+	if (sh_amount != '') {
+		grandTotal = grandTotal + eval(sh_amount)+eval(sh_tax);
+	}
+	if (adjustment != '') {
+		if(adj_type == '+') {		
+			grandTotal = grandTotal + eval(adjustment)
+		}
+		else {
+			grandTotal = grandTotal - eval(adjustment)
+		}
+	}
 
 	document.getElementById("grandTotal").innerHTML = roundValue(grandTotal.toString())
 	document.getElementById("total").value = roundValue(grandTotal.toString())
@@ -234,7 +296,7 @@ function validateInventory(module)
 		return false
 
 	//for products, vendors and pricebook modules we won't validate the product details. here return the control
-	if(module == 'Products' || module == 'Vendors' || module == 'PriceBooks')
+	if(module == 'Products' || module == 'Vendors' || module == 'PriceBooks' || module == 'Services')
 	{
 		return true;
 	}
@@ -338,7 +400,7 @@ function validateInventory(module)
 				return false;
 			}
 		}
-
+	calcTotal(); /* Product Re-Ordering Feature Code Addition */
 
 	return true;    
 }
@@ -523,11 +585,10 @@ function fnAddProductRow(module,image_path){
 
 	var tableName = document.getElementById('proTab');
 	var prev = tableName.rows.length;
-    	var count = eval(prev)-1;//As the table has two headers, we should reduce the count
-    	var row = tableName.insertRow(prev);
-		row.id = "row"+count;
-		row.style.verticalAlign = "top";
-
+	var count = eval(prev)-1;//As the table has two headers, we should reduce the count
+	var row = tableName.insertRow(prev);
+	row.id = "row"+count;
+	row.style.verticalAlign = "top";
 	
 	var colone = row.insertCell(0);
 	var coltwo = row.insertCell(1);
@@ -544,14 +605,43 @@ function fnAddProductRow(module,image_path){
 		var colsix = row.insertCell(5);
 		var colseven = row.insertCell(6);
 	}
+	/* Product Re-Ordering Feature Code Addition Starts */
+	iMax = tableName.rows.length;
+	for(iCount=1;iCount<=iMax-3;iCount++)
+	{
+		if(document.getElementById("row"+iCount) && document.getElementById("row"+iCount).style.display != 'none')
+		{
+			iPrevRowIndex = iCount;
+		}
+	}
+	iPrevCount = eval(iPrevRowIndex);
+	var oPrevRow = tableName.rows[iPrevRowIndex+1]; 
+	var delete_row_count=count;
+	/* Product Re-Ordering Feature Code Addition ends */
+	
+	
 	//Delete link
 	colone.className = "crmTableRow small";
-	colone.innerHTML='<img src="'+image_path+'delete.gif" border="0" onclick="deleteRow(\''+module+'\','+count+')"><input id="deleted'+count+'" name="deleted'+count+'" type="hidden" value="0">';
-
+	colone.id = row.id+"_col1";
+	colone.innerHTML='<img src="themes/images/delete.gif" border="0" onclick="deleteRow(\''+module+'\','+count+',\'themes/images/\')"><input id="deleted'+count+'" name="deleted'+count+'" type="hidden" value="0"><br/><br/>&nbsp;<a href="javascript:moveUpDown(\'UP\',\''+module+'\','+count+')" title="Move Upward"><img src="themes/images/up_layout.gif" border="0"></a>';
+	/* Product Re-Ordering Feature Code Addition Starts */
+	if(iPrevCount != 1)
+	{
+		oPrevRow.cells[0].innerHTML = '<img src="themes/images/delete.gif" border="0" onclick="deleteRow(\''+module+'\','+iPrevCount+')"><input id="deleted'+iPrevCount+'" name="deleted'+iPrevCount+'" type="hidden" value="0"><br/><br/>&nbsp;<a href="javascript:moveUpDown(\'UP\',\''+module+'\','+iPrevCount+')" title="Move Upward"><img src="themes/images/up_layout.gif" border="0"></a>&nbsp;&nbsp;<a href="javascript:moveUpDown(\'DOWN\',\''+module+'\','+iPrevCount+')" title="Move Downward"><img src="themes/images/down_layout.gif" border="0"></a>';
+	}
+	else
+	{
+		oPrevRow.cells[0].innerHTML = '<input id="deleted'+iPrevCount+'" name="deleted'+iPrevCount+'" type="hidden" value="0"><br/><br/><a href="javascript:moveUpDown(\'DOWN\',\''+module+'\','+iPrevCount+')" title="Move Downward"><img src="themes/images/down_layout.gif" border="0"></a>';
+	}
+	/* Product Re-Ordering Feature Code Addition ends */
+	
 	//Product Name with Popup image to select product
 	coltwo.className = "crmTableRow small"
-	coltwo.innerHTML= '<table border="0" cellpadding="1" cellspacing="0" width="100%"><tr><td class="small"><input id="productName'+count+'" name="productName'+count+'" class="small" style="width: 70%;" value="" readonly="readonly" type="text"><input id="hdnProductId'+count+'" name="hdnProductId'+count+'" value="" type="hidden"><img src="'+image_path+'search.gif" style="cursor: pointer;" onclick="productPickList(this,\''+module+'\','+count+')" align="absmiddle"></td></tr><tr><td class="small" id="setComment'+count+'"><textarea id="comment'+count+'" name="comment'+count+'" class=small style="width:70%;height:40px"></textarea><br>[<a href="javascript:;" onclick="getObj(\'comment'+count+'\').value=\'\'";>'+product_labelarr.CLEAR_COMMENT+'</a>]</td></tr></tbody></table>';	
-	
+	coltwo.innerHTML= '<table border="0" cellpadding="1" cellspacing="0" width="100%"><tr><td class="small"><input id="productName'+count+'" name="productName'+count+'" class="small" style="width: 70%;" value="" readonly="readonly" type="text"><input id="hdnProductId'+count+'" name="hdnProductId'+count+'" value="" type="hidden">'+
+						'<img id="searchIcon'+count+'" src="themes/images/search.gif" style="cursor: pointer;" onclick="productPickList(this,\''+module+'\','+count+')" align="absmiddle">'+
+						'</td></tr><tr><td class="small"><input type="hidden" value="" id="subproduct_ids'+count+'" name="subproduct_ids'+count+'" /><span id="subprod_names'+count+'" name="subprod_names'+count+'" style="color:#C0C0C0;font-style:italic;"> </span>'+
+						'</td></tr><tr><td class="small" id="setComment'+count+'"><textarea id="comment'+count+'" name="comment'+count+'" class=small style="width:70%;height:40px"></textarea><img src="themes/images/clear_field.gif" onClick="getObj(\'comment'+count+'\').value=\'\'"; style="cursor:pointer;" /></td></tr></tbody></table>';	
+
 	//Quantity In Stock - only for SO, Quotes and Invoice
 	if(module != "PurchaseOrder"){
 	colthree.className = "crmTableRow small"
@@ -570,7 +660,7 @@ function fnAddProductRow(module,image_path){
 	colfour.innerHTML=temp;
 	//List Price with Discount, Total after Discount and Tax labels
 	colfive.className = "crmTableRow small"
-	colfive.innerHTML='<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="right"><input id="listPrice'+count+'" name="listPrice'+count+'" value="0.00" type="text" class="small " style="width:70px" onBlur="calcTotal();setDiscount(this,'+count+');callTaxCalc('+count+'); calcTotal();"/>&nbsp;<img src="'+image_path+'pricebook.gif" onclick="priceBookPickList(this,'+count+')"></td></tr><tr><td align="right" style="padding:5px;" nowrap>		(-)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(this,\'discount_div'+count+'\',\'discount\','+count+')" >'+product_labelarr.DISCOUNT+'</a> : </b><div class=\"discountUI\" id=\"discount_div'+count+'"><input type="hidden" id="discount_type'+count+'" name="discount_type'+count+'" value=""><table width="100%" border="0" cellpadding="5" cellspacing="0" class="small"><tr><td id="discount_div_title'+count+'" nowrap align="left" ></td><td align="right"><img src="'+image_path+'close.gif" border="0" onClick="fnHidePopDiv(\'discount_div'+count+'\')" style="cursor:pointer;"></td></tr><tr><td align="left" class="lineOnTop"><input type="radio" name="discount'+count+'" checked onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp; '+product_labelarr.ZERO_DISCOUNT+'</td><td class="lineOnTop">&nbsp;</td></tr><tr><td align="left"><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp; % '+product_labelarr.PERCENT_OF_PRICE+' </td><td align="right"><input type="text" class="small" size="2" id="discount_percentage'+count+'" name="discount_percentage'+count+'" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp;%</td></tr><tr><td align="left" nowrap><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp; '+product_labelarr.DIRECT_PRICE_REDUCTION+'</td><td align="right"><input type="text" id="discount_amount'+count+'" name="discount_amount'+count+'" size="5" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();"></td></tr></table></div></td></tr><tr> <td align="right" style="padding:5px;" nowrap><b>'+product_labelarr.TOTAL_AFTER_DISCOUNT+' :</b></td></tr><tr id="individual_tax_row'+count+'" class="TaxShow"><td align="right" style="padding:5px;" nowrap>(+)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(this,\'tax_div'+count+'\',\'tax\','+count+')" >'+product_labelarr.TAX+' </a> : </b><div class="discountUI" id="tax_div'+count+'"></div></td></tr></table> ';
+	colfive.innerHTML='<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="right"><input id="listPrice'+count+'" name="listPrice'+count+'" value="0.00" type="text" class="small " style="width:70px" onBlur="calcTotal();setDiscount(this,'+count+');callTaxCalc('+count+'); calcTotal();"/>&nbsp;<img src="themes/images/pricebook.gif" onclick="priceBookPickList(this,'+count+')"></td></tr><tr><td align="right" style="padding:5px;" nowrap>		(-)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(this,\'discount_div'+count+'\',\'discount\','+count+')" >'+product_labelarr.DISCOUNT+'</a> : </b><div class=\"discountUI\" id=\"discount_div'+count+'"><input type="hidden" id="discount_type'+count+'" name="discount_type'+count+'" value=""><table width="100%" border="0" cellpadding="5" cellspacing="0" class="small"><tr><td id="discount_div_title'+count+'" nowrap align="left" ></td><td align="right"><img src="themes/images/close.gif" border="0" onClick="fnHidePopDiv(\'discount_div'+count+'\')" style="cursor:pointer;"></td></tr><tr><td align="left" class="lineOnTop"><input type="radio" name="discount'+count+'" checked onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp; '+product_labelarr.ZERO_DISCOUNT+'</td><td class="lineOnTop">&nbsp;</td></tr><tr><td align="left"><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp; % '+product_labelarr.PERCENT_OF_PRICE+' </td><td align="right"><input type="text" class="small" size="2" id="discount_percentage'+count+'" name="discount_percentage'+count+'" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp;%</td></tr><tr><td align="left" nowrap><input type="radio" name="discount'+count+'" onclick="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();">&nbsp; '+product_labelarr.DIRECT_PRICE_REDUCTION+'</td><td align="right"><input type="text" id="discount_amount'+count+'" name="discount_amount'+count+'" size="5" value="0" style="visibility:hidden" onBlur="setDiscount(this,'+count+'); callTaxCalc('+count+');calcTotal();"></td></tr></table></div></td></tr><tr> <td align="right" style="padding:5px;" nowrap><b>'+product_labelarr.TOTAL_AFTER_DISCOUNT+' :</b></td></tr><tr id="individual_tax_row'+count+'" class="TaxShow"><td align="right" style="padding:5px;" nowrap>(+)&nbsp;<b><a href="javascript:doNothing();" onClick="displayCoords(this,\'tax_div'+count+'\',\'tax\','+count+')" >'+product_labelarr.TAX+' </a> : </b><div class="discountUI" id="tax_div'+count+'"></div></td></tr></table> ';
 
 	//Total and Discount, Total after Discount and Tax details
 	colsix.className = "crmTableRow small"
@@ -586,6 +676,8 @@ function fnAddProductRow(module,image_path){
 	decideTaxDiv();
 
 	calcTotal();
+
+	return count;
 }
 
 function decideTaxDiv()
@@ -743,6 +835,7 @@ function calcSHTax()
 
 	for(var i=1;i<=sh_tax_count;i++)
 	{
+		if(sh_charge == '') sh_charge = '0';
 		tax_amount = eval(sh_charge)*eval(document.getElementById("sh_tax_percentage"+i).value)/eval(100);
 		//Rounded the decimal part of S&H Tax amount to two digits
 		document.getElementById("sh_tax_amount"+i).value = roundValue(tax_amount.toString());
@@ -804,4 +897,310 @@ function stock_alert(curr_row)
         }
         else
      getObj("stock_alert"+curr_row).innerHTML='<font color="red" size="1">'+alert_arr.INVALID_QTY+'</font>';
+}
+
+// Function to Get the price for all the products of an Inventory based on the Currency choosen by the User
+function updatePrices() {
+	
+	var prev_cur = document.getElementById('prev_selected_currency_id');
+	var inventory_currency = document.getElementById('inventory_currency');
+	if(confirm(alert_arr.MSG_CHANGE_CURRENCY_REVISE_UNIT_PRICE)) {
+		var productsListElem = document.getElementById('proTab');
+		if (productsListElem == null) return;
+		
+		var max_row_count = productsListElem.rows.length;
+		max_row_count = eval(max_row_count)-2;//Because the table has two header rows. so we will reduce two from row length
+	
+	    var products_list = "";
+		for(var i=1;i<=max_row_count;i++)
+		{
+			var productid = document.getElementById("hdnProductId"+i).value;
+			if (i != 1)
+				products_list = products_list + "::";
+			products_list = products_list + productid;
+		}
+		
+		if (prev_cur != null && inventory_currency != null)
+			prev_cur.value = inventory_currency.value;
+			
+		var currency_id = inventory_currency.value;
+		//Retrieve all the prices for all the products in currently selected currency
+		new Ajax.Request(
+			'index.php',
+			{queue: {position: 'end', scope: 'command'},
+				method: 'post',
+				postBody: 'module=Products&action=ProductsAjax&file=InventoryPriceAjax&currencyid='+currency_id+'&productsList='+products_list,
+				onComplete: function(response)
+					{
+						if(trim(response.responseText).indexOf('SUCCESS') == 0) {
+							var res = trim(response.responseText).split("$");
+							updatePriceValues(res[1]);							
+						} else {
+							alert(alert_arr.OPERATION_DENIED);
+						}			
+					}
+			}
+		);
+	} else {
+		if (prev_cur != null && inventory_currency != null)
+			inventory_currency.value = prev_cur.value;
+	}
+}
+
+// Function to Update the price for the products in the Inventory Edit View based on the Currency choosen by the User.
+function updatePriceValues(pricesList) {
+	
+	if (pricesList == null || pricesList == '') return;
+	var prices_list = pricesList.split("::");
+	
+	var productsListElem = document.getElementById('proTab');
+	if (productsListElem == null) return;
+	
+	var max_row_count = productsListElem.rows.length;
+	max_row_count = eval(max_row_count)-2;//Because the table has two header rows. so we will reduce two from row length
+
+    var products_list = "";
+	for(var i=1;i<=max_row_count;i++)
+	{
+		var list_price_elem = document.getElementById("listPrice"+i);
+		var unit_price = prices_list[i-1]; // Price values index starts from 0
+		list_price_elem.value = unit_price;
+		
+		// Set Direct Discout amount to 0
+		var discount_amount = document.getElementById("discount_amount"+i);
+		if(discount_amount != null) discount_amount.value = '0';
+		
+		calcProductTotal(i);
+		setDiscount(list_price_elem,i); 
+		callTaxCalc(i);
+	}
+	resetSHandAdjValues();
+	calcTotal();
+}
+
+// Function to Reset the S&H Charges and Adjustment value with change in Currency
+function resetSHandAdjValues() {
+	var sh_amount = document.getElementById('shipping_handling_charge');
+	if (sh_amount != null) sh_amount.value = '0';
+	
+	var sh_amount_tax = document.getElementById('shipping_handling_tax');
+	if (sh_amount_tax != null) sh_amount_tax.innerHTML = '0';
+	
+	var adjustment = document.getElementById('adjustment');
+	if (adjustment != null) adjustment.value = '0';
+	
+}
+// End
+
+/** Function for Product Re-Ordering Feature Code Addition Starts 
+ * It will be responsible for moving record up/down, 1 step at a time
+ */
+function moveUpDown(sType,oModule,iIndex)
+{
+	var aFieldIds = Array('hidtax_row_no','productName','subproduct_ids','hdnProductId','comment','qty','listPrice','discount_type','discount_percentage','discount_amount','tax1_percentage','hidden_tax1_percentage','popup_tax_row','tax2_percentage','hidden_tax2_percentage','');
+	var aContentIds = Array('qtyInStock','netPrice','subprod_names');
+	var aOnClickHandlerIds = Array('searchIcon');
+	
+	iIndex = eval(iIndex) + 1;
+	var oTable = document.getElementById('proTab');
+	iMax = oTable.rows.length;
+	iSwapIndex = 1;
+	if(sType == 'UP')
+	{ 
+		for(iCount=iIndex-2;iCount>=1;iCount--)
+		{
+			if(document.getElementById("row"+iCount))
+			{
+				if(document.getElementById("row"+iCount).style.display != 'none' && document.getElementById('deleted'+iCount).value == 0)
+				{
+					iSwapIndex = iCount+1;
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		for(iCount=iIndex;iCount<=iMax-2;iCount++)
+		{
+			if(document.getElementById("row"+iCount) && document.getElementById("row"+iCount).style.display != 'none' && document.getElementById('deleted'+iCount).value == 0)
+			{
+				iSwapIndex = iCount;
+				break;
+			}
+		}
+		iSwapIndex += 1;
+	}
+	
+	var oCurTr = oTable.rows[iIndex];
+	var oSwapRow = oTable.rows[iSwapIndex];
+	
+	iMaxCols = oCurTr.cells.length;
+	iIndex -= 1;
+	iSwapIndex -= 1;
+	
+	iCheckIndex = 0;
+	iSwapCheckIndex = 0;
+	for(j=0;j<=2;j++)
+	{
+		if(eval('document.getElementById(\'frmEditView\').discount'+iIndex+'['+j+']'))
+		{
+			sFormElement = eval('document.getElementById(\'frmEditView\').discount'+iIndex+'['+j+']');
+			if(sFormElement.checked)
+			{
+				iCheckIndex = j;
+				break;
+			}
+		}
+	}
+	
+	for(j=0;j<=2;j++)
+	{
+		if(eval('document.getElementById(\'frmEditView\').discount'+iSwapIndex+'['+j+']'))
+		{
+			sFormElement = eval('document.getElementById(\'frmEditView\').discount'+iSwapIndex+'['+j+']');
+			if(sFormElement.checked)
+			{
+				iSwapCheckIndex = j;
+				break;
+			}
+		}
+	}
+	if(eval('document.getElementById(\'frmEditView\').discount'+iIndex+'['+iSwapCheckIndex+']'))
+	{
+		oElement = eval('document.getElementById(\'frmEditView\').discount'+iIndex+'['+iSwapCheckIndex+']');
+		oElement.checked = true;
+	}
+	if(eval('document.getElementById(\'frmEditView\').discount'+iSwapIndex+'['+iCheckIndex+']'))
+	{
+		oSwapElement = eval('document.getElementById(\'frmEditView\').discount'+iSwapIndex+'['+iCheckIndex+']');
+		oSwapElement.checked = true;
+	}
+
+	iMaxElement = aFieldIds.length;
+	for(iCt=0;iCt<iMaxElement;iCt++)
+	{
+		sId = aFieldIds[iCt] + iIndex;
+		sSwapId = aFieldIds[iCt] + iSwapIndex;
+		if(document.getElementById(sId) && document.getElementById(sSwapId))
+		{
+			sTemp = document.getElementById(sId).value;
+			document.getElementById(sId).value = document.getElementById(sSwapId).value;
+			document.getElementById(sSwapId).value = sTemp;
+		}
+		//oCurTr.cells[iCt].innerHTML;
+	}
+	iMaxElement = aContentIds.length;
+	for(iCt=0;iCt<iMaxElement;iCt++)
+	{
+		sId = aContentIds[iCt] + iIndex;
+		sSwapId = aContentIds[iCt] + iSwapIndex;
+		if(document.getElementById(sId) && document.getElementById(sSwapId))
+		{
+			sTemp = document.getElementById(sId).innerHTML;
+			document.getElementById(sId).innerHTML = document.getElementById(sSwapId).innerHTML;
+			document.getElementById(sSwapId).innerHTML = sTemp;
+		}
+	}
+	iMaxElement = aOnClickHandlerIds.length;
+	for(iCt=0;iCt<iMaxElement;iCt++)
+	{
+		sId = aOnClickHandlerIds[iCt] + iIndex;
+		sSwapId = aOnClickHandlerIds[iCt] + iSwapIndex;
+		if(document.getElementById(sId) && document.getElementById(sSwapId))
+		{
+			sTemp = document.getElementById(sId).onclick;
+			document.getElementById(sId).onclick = document.getElementById(sSwapId).onclick;
+			document.getElementById(sSwapId).onclick = sTemp;
+		}
+	}
+	//FindDuplicate(); 
+	settotalnoofrows(); 
+	calcTotal();
+	
+	loadTaxes_Ajax(iIndex);
+	loadTaxes_Ajax(iSwapIndex);
+	callTaxCalc(iIndex);
+	callTaxCalc(iSwapIndex);
+	setDiscount(this,iIndex); 
+	setDiscount(this,iSwapIndex); 
+	sId = 'tax1_percentage' + iIndex;
+	sTaxRowId = 'hidtax_row_no' + iIndex;
+	if(document.getElementById(sTaxRowId))
+	{
+		if(!(iTaxVal = document.getElementById(sTaxRowId).value))
+			iTaxVal = 0;
+		//calcCurrentTax(sId,iIndex,iTaxVal);
+	}
+	
+	sSwapId = 'tax1_percentage' + iSwapIndex;
+	sSwapTaxRowId = 'hidtax_row_no' + iSwapIndex;
+	if(document.getElementById(sSwapTaxRowId))
+	{
+		if(!(iSwapTaxVal = document.getElementById(sSwapTaxRowId).value))
+			iSwapTaxVal = 0;
+		//calcCurrentTax(sSwapId,iSwapIndex,iSwapTaxVal);
+	}
+	calcTotal();
+}
+
+function InventorySelectAll(mod,z,image_pth)
+{
+    if(document.selectall.selected_id != undefined)
+    {
+		var x = document.selectall.selected_id.length;
+		var y=0;
+		idstring = "";
+		namestr = "";
+		var action_str="";
+		if ( x == undefined) {
+			if (document.selectall.selected_id.checked) {
+				idstring = document.selectall.selected_id.value;
+				c = document.selectall.selected_id.value;
+				var tmp = z[c];
+				if(mod!='PurchaseOrder') {
+					set_return_inventory(tmp[0],tmp[1],tmp[2],tmp[3],tmp[4],parseInt(tmp[5]),tmp[6],tmp[7]);
+				} else {
+					set_return_inventory_po(tmp[0],tmp[1],tmp[2],tmp[3],parseInt(tmp[4]),tmp[5],tmp[6]);
+				}
+				y=1;
+			} else {
+				alert(alert_arr.SELECT);
+				return false;
+			}
+		} else {
+			y=0;
+			for(i = 0; i < x ; i++) {
+				if(document.selectall.selected_id[i].checked) {
+					idstring = document.selectall.selected_id[i].value+";"+idstring;
+					c = document.selectall.selected_id[i].value;
+					var tmp = z[c];
+					if(y>0) {
+						row_id = window.opener.fnAddProductRow(mod,image_pth);
+					}				
+					if(y==0) {
+						if(mod!='PurchaseOrder') {
+							set_return_inventory(tmp[0],tmp[1],tmp[2],tmp[3],tmp[4],parseInt(tmp[5]),tmp[6],tmp[7]);
+						} else {
+							set_return_inventory_po(tmp[0],tmp[1],tmp[2],tmp[3],parseInt(tmp[4]),tmp[5],tmp[6]);
+						}					
+					} else {
+						if(mod!='PurchaseOrder') {
+							set_return_inventory(tmp[0],tmp[1],tmp[2],tmp[3],tmp[4],parseInt(row_id),tmp[6],tmp[7]);
+						} else {
+							set_return_inventory_po(tmp[0],tmp[1],tmp[2],tmp[3],parseInt(row_id),tmp[5],tmp[6]);
+						}	
+					}
+					y=y+1;
+				}
+			}
+		}
+		if (y != 0) {
+			document.selectall.idlist.value=idstring;
+			return true;
+		} else {
+			alert(alert_arr.SELECT);
+			return false;
+		}
+    }
 }

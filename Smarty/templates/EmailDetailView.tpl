@@ -15,7 +15,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset={$APP.LBL_CHARSET}">
 <title>{$MOD.TITLE_VTIGERCRM_MAIL}</title>
-<link REL="SHORTCUT ICON" HREF="include/images/vtigercrm_icon.ico">	
+<link REL="SHORTCUT ICON" HREF="themes/images/vtigercrm_icon.ico">	
 <style type="text/css">@import url("themes/{$THEME}/style.css");</style>
 <script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
 <script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
@@ -57,7 +57,9 @@
 	<input type="button" title="{$APP.LBL_EDIT}" alt="{$APP.LBL_EDIT}" name="edit" value=" {$APP.LBL_EDIT} " class="crmbutton small edit" onClick=OpenCompose('{$ID}','edit')>&nbsp;
 
 	<input name="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" value=" {$APP.LBL_CANCEL_BUTTON_LABEL} " title="{$APP.LBL_CANCEL_BUTTON_LABEL}" alt="{$APP.LBL_CANCEL_BUTTON_LABEL}" class="crmbutton small cancel" type="button" onClick="window.close()">
-	&nbsp;</td>
+	&nbsp;
+	<input type="button" title="{$MOD.LBL_PRINT_EMAIL}" name="{$MOD.LBL_PRINT_EMAIL}" value="{$MOD.LBL_PRINT_EMAIL}" class="crmbutton small edit" onClick="OpenCompose('{$ID}', 'print')">&nbsp;
+	</td>
    </tr>
    {elseif $elements.fldname eq 'description'}
    <tr>
@@ -82,7 +84,9 @@
 	<input type="button" title="{$APP.LBL_EDIT}" alt="{$APP.LBL_EDIT}" name="edit" value=" {$APP.LBL_EDIT} " class="crmbutton small edit" onClick=OpenCompose('{$ID}','edit')>&nbsp;
 
 	<input name="{$APP.LBL_CANCEL_BUTTON_TITLE}" accessKey="{$APP.LBL_CANCEL_BUTTON_KEY}" value=" {$APP.LBL_CANCEL_BUTTON_LABEL} " title="{$APP.LBL_CANCEL_BUTTON_LABEL}" alt="{$APP.LBL_CANCEL_BUTTON_LABEL}" class="crmbutton small cancel" type="button" onClick="window.close()">
-	&nbsp;</td>
+	&nbsp;
+	<input type="button" title="{$MOD.LBL_PRINT_EMAIL}" name="{$MOD.LBL_PRINT_EMAIL}" value="{$MOD.LBL_PRINT_EMAIL}" class="crmbutton small edit" onClick="OpenCompose('{$ID}', 'print')"> &nbsp;
+	</td>
    </tr>
 
 

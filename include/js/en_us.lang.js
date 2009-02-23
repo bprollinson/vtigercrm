@@ -15,7 +15,10 @@
                                 DELETE_ACCOUNT:'Deleting this account(s) will remove its related Potentials & Quotes. Are you sure you want to delete the selected ',
                                 DELETE_VENDOR:'Deleting this vendor(s) will remove its related Purchase Orders. Are you sure you want to delete the selected ',
                                 SELECT_MAILID:'Please Select a mailid',
+                                OVERWRITE_EXISTING_ACCOUNT1:'Overwrite the existing address with this selected account(',
                                 OVERWRITE_EXISTING_ACCOUNT2:') address details?',
+				                OVERWRITE_EXISTING_CONTACT1:'Overwrite the existing address with this selected contact(',
+                                OVERWRITE_EXISTING_CONTACT2:') address details?',
                                 MISSING_FIELDS:'Missing required fields:',
                                 NOT_ALLOWED_TO_EDIT:'you are not allowed to edit this field',
                                 NOT_ALLOWED_TO_EDIT_FIELDS:'you are not allowed to edit the field(s)',
@@ -92,7 +95,7 @@
                                 VALID_DISCOUNT_PERCENT:'Enter a valid Discount percentage',
                                 VALID_DISCOUNT_AMOUNT:'Enter a valid Discount Amount',
                                 SELECT_TEMPLATE_TO_MERGE:'Please select a template to merge',
-				SELECTED_MORE_THAN_ONCE:'You have selected the following product(s) more than once.',
+				SELECTED_MORE_THAN_ONCE:'You have selected the following item(s) more than once.',
 				YES:'yes',
                                 NO:'no',
                                 MAIL:'mail',
@@ -155,5 +158,83 @@
 				LBL_DONT_HAVE_EMAIL_PERMISSION : "You don't have permission for Email field so you can't choose the email id",
 				LBL_NO_FEEDS_SELECTED: 'No Feeds Selected',
 				LBL_SELECT_PICKLIST:'Please select atleast one value to delete',
-				LBL_CANT_REMOVE:'You can\'t remove all the values'
-                       };
+				LBL_CANT_REMOVE:'You can\'t remove all the values',
+
+				// Added after 5.0.4 GA
+				
+				/*For global add/delete in picklist*/
+				LBL_GIVE_PICKLIST_VALUE:'Please provide some value for the selected picklist to be replaced',
+				LBL_SELECT_ROLE:'Please select atleast one role for which the new values are to be added',
+				LBL_ADD_PICKLIST_VALUE:'Please provide atleast one new value to be added',
+
+				ALL_FILTER_CREATION_DENIED:'Cannot create CustomView using name "All", try using different ViewName',
+
+                /* For Duplicate merging feature */
+				SAME_GROUPS: 'You have to select the records in the same groups for merging',
+				ATLEAST_TWO: 'Select atleast two records for merging',
+				MAX_THREE: 'You are allowed to select a maximum of three records',
+				//PARENT_RECORD: 'Select a record as parent record',  MergeFields.tpl Line:59
+				MAX_RECORDS: 'You are allowed to select a maximum of four records',
+				CON_MANDATORY: 'Select the mandatory field Last Name',
+				LE_MANDATORY: 'Select the mandatory fields Last Name and Company',
+				ACC_MANDATORY: 'Select the mandatory field Account Name',
+				PRO_MANDATORY: 'Select the mandatory field Product Name',
+				TIC_MANDATORY: 'Select the mandatory field Ticket Title',
+				POTEN_MANDATORY: 'Select the mandatory field Potential Name',
+				VEN_MANDATORY: 'Select the mandatory field Vendor Name',
+				DEL_MANDATORY: 'You are not allowed to delete the mandatory field',
+				
+				/* For Multi-Currency Support */
+				MSG_CHANGE_CURRENCY_REVISE_UNIT_PRICE: 'Unit price of all the Currencies will be revised based on the selected Currency. Are you sure?',
+				
+				Select_one_record_as_parent_record : 'Select one record as parent record',
+				RECURRING_FREQUENCY_NOT_PROVIDED : 'Recurring frequency not provided',
+				RECURRING_FREQNECY_NOT_ENABLED : 'Recurring frequency is provided, but recurring is not enabled',
+				/* Added for Documents module */
+				NO_SPECIAL_CHARS_DOCS:'Special characters like quotes, backslash, + symbol, % and ? are not allowed',
+				FOLDER_NAME_TOO_LONG:'Folder name is too long. Try again!',
+				FOLDERNAME_EMPTY:'The Folder name cannot be empty',
+				DUPLICATE_FOLDER_NAME:'Trying to duplicate an existing folder name. Please try again !',
+				FOLDER_DESCRIPTION_TOO_LONG:'Folder description is too long. Try again!',
+				NOT_PERMITTED:"You are not permitted to execute this operation.",		
+				
+				ALL_FILTER_CREATION_DENIED:'Cannot create CustomView using name "All", try using different ViewName',
+				OPERATION_DENIED:'You are denied to perform this operation',
+				EMAIL_CHECK_MSG: 'Disable portal access to save the email field as blank',
+				IS_PARENT : 'This Product has Sub Products, You are not allowed to choose a Parent for this Product',
+				
+				/*global actions on picklist*/
+				PICKLIST_CANNOT_BE_EMPTY: 'Picklist value cannot be empty',
+				DUPLICATE_VALUES_FOUND: 'Duplicate Values found',
+				LBL_NO_ROLES_SELECTED: 'No roles have been selected, do you wish to continue?',
+				LBL_DUPLICATE_FOUND: 'Duplicate entries found for the value ',
+				LBL_CANNOT_HAVE_EMPTY_VALUE: 'Cannot have empty value. To delete go back and click on delete button',
+				LBL_DUPLICATE_VALUE_EXISTS: 'Duplicate value exists',
+				LBL_WANT_TO_DELETE: "This will delete the selected picklist value(s) for all roles. You sure you want to continue? ",
+				LBL_DELETE_ALL_WARNING: "You have selected all values to delete. Do you want to continue?",
+				LBL_PLEASE_CHANGE_REPLACEMENT: "please change the replacement value; it is also selected for delete",
+				
+				/*layout Editor changes*/
+				BLOCK_NAME_CANNOT_BE_BLANK : 'Block name can not be blank',
+				ARE_YOU_SURE_YOU_WANT_TO_DELETE : 'Are you sure you want to delete ?',
+				PLEASE_MOVE_THE_FIELDS_TO_ANOTHER_BLOCK : 'Please move the fields to another block',
+				ARE_YOU_SURE_YOU_WANT_TO_DELETE_BLOCK : 'Are you sure you want to delete block?',
+				LABEL_CANNOT_NOT_EMPTY : 'Label cannot be Emtpy',
+				LBL_TYPEALERT_1 : 'Sorry, you cannot map the',
+				LBL_WITH : 'with',
+				LBL_TYPEALERT_2 : 'data type. Kindly map the same data types.',
+				LBL_LENGTHALERT : 'Sorry, you can cannot map fields with different character size. Kindly map the data with same or more character size.',
+				LBL_DECIMALALERT : 'Sorry, you can cannot map fields with different decimal places. Kindly map the data with same or more decimal places.',
+				FIELD_IS_MANDATORY : 'Mandatory Field',
+				FIELD_IS_ACTIVE : 'Field is available for use',
+				FIELD_IN_QCREATE : 'Present in Quick Create',
+				FIELD_IS_MASSEDITABLE : 'Available for Mass Edit',	
+					
+				IS_MANDATORY_FIELD : 'is Mandatory Field',
+				CLOSEDATE_CANNOT_BE_EMPTY : 'Closing Date cannot be Empty',
+				AMOUNT_CANNOT_BE_EMPTY : 'Amount cannot be Empty',
+				ARE_YOU_SURE : 'Are You Sure You want to Delete?',
+				LABEL_ALREADY_EXISTS : 'Label already exists. Please specify a different Label',
+				LENGTH_OUT_OF_RANGE : 'Length of the Block should be less than 50 characters',
+				NOT_A_VALID_POTENTIAL_NAME : 'please insert a proper Potential Name'	
+			};

@@ -40,44 +40,19 @@ if($mode == 'edit')
 	$usr_qry = $adb->pquery("select * from vtiger_crmentity where crmid=?", array($focus->id));
 	$old_user_id = $adb->query_result($usr_qry,0,"smownerid");
 }
-$fldvalue = $focus->constructUpdateLog($focus, $mode, $_REQUEST['assigned_group_name'], $_REQUEST['assigntype']);
+$grp_name = getGroupName($_REQUEST['assigned_group_id']);
+$fldvalue = $focus->constructUpdateLog($focus, $mode, $grp_name, $_REQUEST['assigntype']);
 $fldvalue = from_html($fldvalue,($mode == 'edit')?true:false);
 
+if($_REQUEST['assigntype'] == 'U')  {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+} elseif($_REQUEST['assigntype'] == 'T'){
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+}
 $focus->save("HelpDesk");
 
 //After save the record, we should update the log
 $adb->pquery("update vtiger_troubletickets set update_log=? where ticketid=?", array($fldvalue,$focus->id));
-
-//Added to retrieve the existing attachment of the ticket and save it for the new duplicated ticket
-if($_FILES['filename']['name'] == '' && $_REQUEST['mode'] != 'edit' && $_REQUEST['old_id'] != '')
-{
-        $sql = "select vtiger_attachments.* from vtiger_attachments inner join vtiger_seattachmentsrel on vtiger_seattachmentsrel.attachmentsid=vtiger_attachments.attachmentsid where vtiger_seattachmentsrel.crmid= ?";
-        $result = $adb->pquery($sql, array($_REQUEST['old_id']));
-        if($adb->num_rows($result) != 0)
-	{
-                $attachmentid = $adb->query_result($result,0,'attachmentsid');
-		$filename = decode_html($adb->query_result($result,0,'name'));
-		$filetype = $adb->query_result($result,0,'type');
-		$filepath = $adb->query_result($result,0,'path');
-
-		$new_attachmentid = $adb->getUniqueID("vtiger_crmentity");
-		$date_var = date('YmdHis');
-
-		$upload_filepath = decideFilePath();
-
-		//Read the old file contents and write it as a new file with new attachment id
-		$handle = @fopen($upload_filepath.$new_attachmentid."_".$filename,'w');
-		fputs($handle, file_get_contents($filepath.$attachmentid."_".$filename));
-		fclose($handle);	
-
-		$adb->pquery("update vtiger_troubletickets set filename=? where ticketid=?", array($filename, $focus->id));	
-		$adb->pquery("insert into vtiger_crmentity (crmid,setype,createdtime) values(?,?,?)", array($new_attachmentid, 'HelpDesk Attachment', $date_var));
-		$adb->pquery("insert into vtiger_attachments (attachmentsid,name,description,type,path) values(?,?,?,?,?)", array($new_attachmentid, $filename, '', $filetype, $upload_filepath));
-
-		$adb->pquery("insert into vtiger_seattachmentsrel values(?,?)", array($focus->id, $new_attachmentid));
-	}
-}
-
 
 $return_id = $focus->id;
 

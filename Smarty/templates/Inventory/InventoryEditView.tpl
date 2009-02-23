@@ -19,6 +19,7 @@
 <script type="text/javascript" src="jscalendar/lang/calendar-{$CALENDAR_LANG}.js"></script>
 <script type="text/javascript" src="jscalendar/calendar-setup.js"></script>
 <script type="text/javascript" src="include/js/Inventory.js"></script>
+<script type="text/javascript" src="modules/Services/Services.js"></script>
 <script type="text/javascript">
 
 function sensex_info()
@@ -49,7 +50,7 @@ function sensex_info()
 {*<!-- Contents -->*}
 <table border=0 cellspacing=0 cellpadding=0 width=98% align=center>
    <tr>
-	<td valign=top><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+	<td valign=top><img src="{'showPanelTopLeft.gif'|@vtiger_imageurl:$THEME}"></td>
 
 	<td class="showPanelBg" valign=top width=100%>
 		{*<!-- PUBLIC CONTENTS STARTS-->*}
@@ -199,3 +200,14 @@ function sensex_info()
 			document.EditView.del_file_list.value=ProductImages.join('###');
 	{rdelim}
 </script>
+
+<!-- vtlib customization: Help information assocaited with the fields -->
+{if $FIELDHELPINFO}
+<script type='text/javascript'>
+{literal}var fieldhelpinfo = {}; {/literal}
+{foreach item=FIELDHELPVAL key=FIELDHELPKEY from=$FIELDHELPINFO}
+	fieldhelpinfo["{$FIELDHELPKEY}"] = "{$FIELDHELPVAL}";
+{/foreach}
+</script>
+{/if}
+<!-- END -->

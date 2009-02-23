@@ -12,7 +12,7 @@
 /**	Function to get the list of tickets for the currently loggedin user
 **/
  
-function getMyTickets()
+function getMyTickets($maxval,$calCnt)
 {
 	global $log;
 	$log->debug("Entering getMyTickets() method ...");
@@ -22,7 +22,7 @@ function getMyTickets()
 	global $adb;
 	$current_module_strings = return_module_language($current_language, 'HelpDesk');
 	$theme_path="themes/".$theme."/";
-	$image_path=$theme_path."images/";
+	$image_path="themes/images/";
 
 	$search_query="select vtiger_troubletickets.ticketid, parent_id, priority, vtiger_troubletickets.status, category, vtiger_troubletickets.title, vtiger_crmentity.description, update_log, version_id,
 	vtiger_crmentity.createdtime, vtiger_crmentity.modifiedtime, 
@@ -40,7 +40,7 @@ function getMyTickets()
 	$resultcount = $adb->num_rows($adb->pquery($search_query, array($current_user->id)));
 	if($resultcount > 0)
 	{
-		$limit_query = $search_query . " limit 0,5";
+		$limit_query = $search_query . " limit 0,".$maxval;
 		$tktresult = $adb->pquery($limit_query, array($current_user->id));
 		$title=array();
 		$title[]='myTickets.gif';
@@ -49,21 +49,20 @@ function getMyTickets()
 
 		$header=array();
 		$header[]=$current_module_strings['LBL_SUBJECT'];
-		$header[]=$current_module_strings['LBL_TICKET_ID'];
 		$header[]=$current_module_strings['Related To'];
-		$header[]=$current_module_strings['LBL_STATUS'];
-		$header[]=$current_module_strings['LBL_CREATED_DATE'];
-		$header[]=$current_module_strings['LBL_ASSIGNED_TO'];
 
 		$noofrows = $adb->num_rows($tktresult);
 		for ($i=0; $i<$adb->num_rows($tktresult); $i++)
 		{
 			$value=array();
 			$ticketid = $adb->query_result($tktresult,$i,"ticketid");
-			$tickettitle = $adb->query_result($tktresult,$i,"title");
-			$Top_Tickets = (strlen($tickettitle) > 20) ? (substr($tickettitle,0,20).'...') : $tickettitle;
-			$value[]= '<a href="index.php?action=DetailView&module=HelpDesk&record='.$ticketid.'">'.$Top_Tickets.'</a>';
-			$value[]=$ticketid;
+			$viewstatus = $adb->query_result($tktresult,$i,"viewstatus");
+			if($viewstatus == 'Unread')
+				$value[]= '<a style="color:red;" href="index.php?action=DetailView&module=HelpDesk&record='.substr($adb->query_result($tktresult,$i,"ticketid"),0,20).'">'.$adb->query_result($tktresult,$i,"title").'</a>';
+			elseif($viewstatus == 'Marked')
+				$value[]= '<a style="color:yellow;" href="index.php?action=DetailView&module=HelpDesk&record='.substr($adb->query_result($tktresult,$i,"ticketid"),0,20).'">'.$adb->query_result($tktresult,$i,"title").'</a>';
+			else
+				$value[]= '<a href="index.php?action=DetailView&module=HelpDesk&record='.substr($adb->query_result($tktresult,$i,"ticketid"),0,20).'">'.substr($adb->query_result($tktresult,$i,"title"),0,20).'</a>';
 
 			$parent_id = $adb->query_result($tktresult,$i,"parent_id");
 			$parent_name = '';
@@ -73,18 +72,14 @@ function getMyTickets()
 			}
 
 			$value[]=$parent_name;
-			$value[]=$adb->query_result($tktresult,$i,"status");
-			$value[]=getDisplayDate($adb->query_result($tktresult,$i,"createdtime"));
-			$value[]=$adb->query_result($tktresult,$i,"user_name");
 			$entries[$ticketid]=$value;
 		}
-		$values=Array('Title'=>$title,'Header'=>$header,'Entries'=>$entries);
+		$values=Array('ModuleName'=>'HelpDesk','Title'=>$title,'Header'=>$header,'Entries'=>$entries);
 		if ( ($display_empty_home_blocks && $noofrows == 0 ) || ($noofrows>0) )	
 		{
 			$log->debug("Exiting getMyTickets method ...");
 			return $values;
 		}
-		$log->debug("Exiting getMyTickets method ...");
 	}
 	$log->debug("Exiting getMyTickets method ...");
 }

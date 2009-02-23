@@ -44,13 +44,27 @@ if($numOfRows > 0)
 
 	$ogReport = new Reports($reportid);
 	$primarymodule = $ogReport->primodule;
-	$secondarymodule = $ogReport->secmodule;
-	$oReportRun = new ReportRun($reportid);
-	$filterlist = $oReportRun->RunTimeFilter($filtercolumn,$filter,$startdate,$enddate);
-	$sshtml = $oReportRun->GenerateReport("HTML",$filterlist);
-	$totalhtml = $oReportRun->GenerateReport("TOTALHTML",$filterlist);
-	if(isPermitted($primarymodule,'index') == "yes" && (isPermitted($secondarymodule,'index')== "yes"))
+	$restrictedmodules = array();
+	if($ogReport->secmodule!='')
+		$rep_modules = split(":",$ogReport->secmodule);
+	else
+		$rep_modules = array();
+
+	array_push($rep_modules,$primarymodule);
+	$modules_permitted = true;
+	foreach($rep_modules as $mod){
+		if(isPermitted($mod,'index')!= "yes" || vtlib_isModuleActive($mod)==false){
+			$modules_permitted = false;
+			$restrictedmodules[] = $mod;
+		}
+	}
+	
+	if(isPermitted($primarymodule,'index') == "yes" && $modules_permitted == true)
 	{
+		$oReportRun = new ReportRun($reportid);
+		$filterlist = $oReportRun->RunTimeFilter($filtercolumn,$filter,$startdate,$enddate);
+		$sshtml = $oReportRun->GenerateReport("HTML",$filterlist);
+		if(is_array($sshtml))$totalhtml = $oReportRun->GenerateReport("TOTALHTML",$filterlist);
 		$list_report_form = new vtigerCRM_Smarty;
 		$ogReport->getSelectedStandardCriteria($reportid);
 		//commented to omit dashboards for vtiger_reports
@@ -84,16 +98,24 @@ if($numOfRows > 0)
 		$list_report_form->assign("APP", $app_strings);
 		$list_report_form->assign("IMAGE_PATH", $image_path);
 		$list_report_form->assign("REPORTID", $reportid);
-		$list_report_form->assign("REPORTNAME", $ogReport->reportname);
-		$list_report_form->assign("REPORTHTML", $sshtml);
+		$list_report_form->assign("IS_EDITABLE", $ogReport->is_editable);
+		
+		$list_report_form->assign("REPORTNAME", htmlentities($ogReport->reportname));
+		if(is_array($sshtml))$list_report_form->assign("REPORTHTML", $sshtml);
+		else $list_report_form->assign("ERROR_MSG", $sshtml);
 		$list_report_form->assign("REPORTTOTHTML", $totalhtml);
 		$list_report_form->assign("FOLDERID", $folderid);
 		$list_report_form->assign("DATEFORMAT",$current_user->date_format);
 		$list_report_form->assign("JS_DATEFORMAT",parse_calendardate($app_strings['NTC_DATE_FORMAT']));
-
+		$rep_in_fldr = $ogReport->sgetRptsforFldr($folderid);
+		for($i=0;$i<count($rep_in_fldr);$i++){
+			$rep_id = $rep_in_fldr[$i]['reportid'];
+			$rep_name = $rep_in_fldr[$i]['reportname'];
+			$reports_array[$rep_id]=$rep_name;
+		}
 		if($_REQUEST['mode'] != 'ajax')
 		{
-			$list_report_form->assign("REPINFOLDER", getReportsinFolder($folderid));
+			$list_report_form->assign("REPINFOLDER", $reports_array);
 			include('themes/'.$theme.'/header.php');
 			$list_report_form->display('ReportRun.tpl');
 		}
@@ -113,8 +135,8 @@ if($numOfRows > 0)
 
 		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
 		<tbody><tr>
-		<td rowspan='2' width='11%'><img src='themes/$theme/images/denied.gif' ></td>
-		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>".$mod_strings['LBL_NO_PERMISSION']." ".$primarymodule." ".$secondarymodule."</span></td>
+		<td rowspan='2' width='11%'><img src='". vtiger_imageurl('denied.gif', $theme) ."' ></td>
+		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>".$mod_strings['LBL_NO_ACCESS']." : ".implode(",",$restrictedmodules)." </span></td>
 		</tr>
 		<tr>
 		<td class='small' align='right' nowrap='nowrap'>			   	
@@ -133,7 +155,7 @@ else
 
 		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
 		<tbody><tr>
-		<td rowspan='2' width='11%'><img src='themes/$theme/images/denied.gif' ></td>
+		<td rowspan='2' width='11%'><img src='". vtiger_imageurl('denied.gif', $theme) ."' ></td>
 		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>".$mod_strings['LBL_REPORT_DELETED']."</span></td>
 		</tr>
 		<tr>

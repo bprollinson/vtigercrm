@@ -35,14 +35,18 @@ else
 
 if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check'] != '')
 {
-        $query = "SELECT user_name FROM vtiger_users WHERE user_name =?";
-        $result = $adb->pquery($query, array($user_name));
-        if($adb->num_rows($result) > 0)
-        {
+        $user_query = "SELECT user_name FROM vtiger_users WHERE user_name =?";
+        $user_result = $adb->pquery($user_query, array($user_name));
+        $group_query = "SELECT groupname FROM vtiger_groups WHERE groupname =?";
+        $group_result = $adb->pquery($group_query, array($user_name));
+        
+        if($adb->num_rows($user_result) > 0) {
 		echo $mod_strings['LBL_USERNAME_EXIST'];
 		die;
-	}else
-	{
+		} elseif($adb->num_rows($group_result) > 0) {
+			echo $mod_strings['LBL_GROUPNAME_EXIST'];
+			die;
+		} else {
 	        echo 'SUCCESS';
 	        die;
 	}
@@ -110,11 +114,19 @@ if(! $_REQUEST['changepassword'] == 'true')
 	if(isset($_SESSION['internal_mailer']) && $_SESSION['internal_mailer'] != $focus->column_fields['internal_mailer'])
 		$_SESSION['internal_mailer'] = $focus->column_fields['internal_mailer'];
 	setObjectValuesFromRequest($focus);
-
+	
+	// Added for Reminder Popup support
+	$query_prev_interval = $adb->pquery("SELECT reminder_interval from vtiger_users where id=?",array($focus->id));
+	$prev_reminder_interval = $adb->query_result($query_prev_interval,0,'reminder_interval');
+	
 	$focus->saveentity("Users");
 	//$focus->imagename = $image_upload_array['imagename'];
-	$focus->saveHomeOrder($focus->id);
+	$focus->saveHomeStuffOrder($focus->id);
 	SaveTagCloudView($focus->id);
+
+	// Added for Reminder Popup support
+	$focus->resetReminderInterval($prev_reminder_interval);
+
 	$return_id = $focus->id;
 
 if (isset($_POST['user_name']) && isset($_POST['new_password'])) {

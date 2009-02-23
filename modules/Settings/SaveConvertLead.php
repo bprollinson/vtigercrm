@@ -12,9 +12,10 @@
 
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
+require_once('Smarty_setup.php');
 
-	
-	$sql="select fieldid from vtiger_field, vtiger_tab where vtiger_field.tabid=vtiger_tab.tabid and generatedtype=2 and vtiger_tab.name='Leads';";	
+	$smarty=new vtigerCRM_Smarty;
+	$sql="select fieldid from vtiger_field, vtiger_tab where vtiger_field.tabid=vtiger_tab.tabid and generatedtype=2 and vtiger_tab.name='Leads' and vtiger_field.presence in (0,2)";	
 	$result = $adb->pquery($sql, array());
 	$noofrows = $adb->num_rows($result);
 	
@@ -31,15 +32,15 @@ require_once('include/utils/utils.php');
 
 		if($account_id_val=="None")
 		{
-			$account_id_val="";
+			$account_id_val=0;
 		}
 		if($contact_id_val=="None")
 		{
-			$contact_id_val="";
+			$contact_id_val=0;
 		}
 		if($potential_id_val =="None")	
 		{
-			$potential_id_val="";
+			$potential_id_val=0;
 		}
 		$update_sql="update vtiger_convertleadmapping set accountfid=?, contactfid=?, potentialfid=? where leadfid=?";
 		$update_params = array($account_id_val, $contact_id_val, $potential_id_val, $lead_id);

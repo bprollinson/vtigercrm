@@ -36,7 +36,7 @@ require_once('modules/PriceBooks/PriceBooks.php');
 require_once('modules/Vendors/Vendors.php');
 require_once('modules/Faq/Faq.php');
 require_once('modules/HelpDesk/HelpDesk.php');
-require_once('modules/Notes/Notes.php');
+require_once('modules/Documents/Documents.php');
 require_once('modules/Quotes/Quotes.php');
 require_once('modules/SalesOrder/SalesOrder.php');
 require_once('modules/PurchaseOrder/PurchaseOrder.php');
@@ -574,6 +574,7 @@ $sub_array = array ("Prod_Quote", "Cont_Quote", "SO_Quote", "PO_Quote", "Vendor_
 $stage_array = array ("Created", "Reviewed", "Delivered", "Accepted" , "Rejected");
 $carrier_array = array ("FedEx", "UPS", "USPS", "DHL", "BlueDart");
 $validtill_array = array ("2007-09-21", "2007-10-29", "2007-12-11", "2007-03-29", "2007-06-18");
+
 for($i=0;$i<5;$i++)
 {
 	$quote = new Quotes();
@@ -602,7 +603,9 @@ for($i=0;$i<5;$i++)
 	$quote->column_fields["ship_state"] = $account->column_fields["bill_state"];
 	$quote->column_fields["ship_code"] = $account->column_fields["bill_code"];
 	$quote->column_fields["ship_country"] = $account->column_fields["bill_country"];	
-
+	
+	$quote->column_fields["currency_id"] = '1';	
+	$quote->column_fields["conversion_rate"] = '1';
 	
 	$quote->save("Quotes");
 
@@ -676,7 +679,9 @@ for($i=0;$i<5;$i++)
 	$so->column_fields["ship_state"] = $account->column_fields["bill_state"];
 	$so->column_fields["ship_code"] = $account->column_fields["bill_code"];
 	$so->column_fields["ship_country"] = $account->column_fields["bill_country"];	
-
+	
+	$so->column_fields["currency_id"] = '1';	
+	$so->column_fields["conversion_rate"] = '1';
 	
 	$so->save("SalesOrder");
 
@@ -752,7 +757,9 @@ for($i=0;$i<5;$i++)
 	$po->column_fields["ship_state"] = $account->column_fields["bill_state"];
 	$po->column_fields["ship_code"] = $account->column_fields["bill_code"];
 	$po->column_fields["ship_country"] = $account->column_fields["bill_country"];	
-		
+	
+	$po->column_fields["currency_id"] = '1';	
+	$po->column_fields["conversion_rate"] = '1';		
 	
 	$po->save("PurchaseOrder");
 
@@ -795,7 +802,6 @@ for($i=0;$i<5;$i++)
 //Populate Invoice Data
 
 $isubj_array = array ("vtiger_invoice201", "zoho_inv7841", "vtiger5usrp_invoice71134", "vt100usrpk_inv113", "vendtl_inv214");
-$invoiceno_array = array ("INV2007_1","INV2007_2","INV2007_3","INV2007_4","INV2007_5");
 $istatus_array = array ("Created",  "Sent", "Approved" , "Credit Invoice", "Paid");
 $itotal_array = array ("4842.000", "4842.000", "4842.000", "4842.000", "4842.000");
 
@@ -812,7 +818,6 @@ for($i=0;$i<5;$i++)
         $invoice->column_fields["contactid"] = $contact_ids[$contact_key];
 	$rand = array_rand($num_array);
 	$invoice->column_fields["subject"] = $isubj_array[$i];
-	$invoice->column_fields["invoice_no"] = $invoiceno_array[$i];
 	$invoice->column_fields["invoicestatus"] = $istatus_array[$i];	
 	$invoice->column_fields["hdnGrandTotal"] = $itotal_array[$i];
 
@@ -826,8 +831,10 @@ for($i=0;$i<5;$i++)
 	$invoice->column_fields["ship_city"] = $account->column_fields["bill_city"];
 	$invoice->column_fields["ship_state"] = $account->column_fields["bill_state"];
 	$invoice->column_fields["ship_code"] = $account->column_fields["bill_code"];
-	$invoice->column_fields["ship_country"] = $account->column_fields["bill_country"];	
+	$invoice->column_fields["ship_country"] = $account->column_fields["bill_country"];		
 	
+	$invoice->column_fields["currency_id"] = '1';	
+	$invoice->column_fields["conversion_rate"] = '1';	
 	
 	$invoice->save("Invoice");
 
@@ -930,31 +937,10 @@ for($i=0;$i<12;$i++)
 	$rand = array_rand($num_array);
 	$pricebook->column_fields["bookname"]   = $PB_array[$i];
 	$pricebook->column_fields["active"]     = $Active_array[$i];
+	$pricebook->column_fields["currency_id"]     = '1';
 
 	$pricebook->save("PriceBooks");
 	$pricebook_ids[] = $pricebook ->id;
-}
-
-
-//Populate Notes Data
-
-$notes_array = array ("Cont_Notes", "Prod_Notes", "Vendor_Notes", "Invoice_Notes", "Task_Notes", "Event_Notes", "Email_Notes");
-
-for($i=0;$i<7;$i++)
-{
-	$notes = new Notes();
-
-	$rand = array_rand($num_array);
-	$contact_key = array_rand($contact_ids);
-        $notes->column_fields["contact_id"] 	= 	$contact_ids[$contact_key];
-	$notes->column_fields["notes_title"]		=	$notes_array[$i];
-
-	$notes->save("Notes");
-	$notes_ids[] = $notes ->id;
-	
-	$product_key = array_rand($product_ids);
-    $query = "insert into vtiger_senotesrel (crmid, notesid) values (?,?)";
-	$db->pquery($query, array($product_ids[$product_key], $notes->id));	
 }
 
 

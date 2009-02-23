@@ -479,7 +479,7 @@ $adb->query("insert into vtiger_notificationscheduler(schedulednotificationid,sc
 
 
 //creating the new tables vtiger_picklist,vtiger_picklist_seq and vtiger_role2picklist
-$adb->query("CREATE TABLE `vtiger_picklist` (`picklistid` int(19) NOT NULL auto_increment,`name` varchar(200) NOT NULL,PRIMARY KEY (`picklistid`),UNIQUE KEY `picklist_name_idx` (`name`)) ENGINE=InnoDB");
+$adb->query("CREATE TABLE `vtiger_picklist` (`picklistid` int(11) NOT NULL auto_increment,`name` varchar(200) NOT NULL,PRIMARY KEY (`picklistid`),UNIQUE KEY `picklist_name_idx` (`name`)) ENGINE=InnoDB");
 
 $adb->query("CREATE TABLE `vtiger_role2picklist` (
 	`roleid` varchar(255) NOT NULL,
@@ -488,17 +488,15 @@ $adb->query("CREATE TABLE `vtiger_role2picklist` (
 	`sortid` int(11) default NULL,
 	PRIMARY KEY (`roleid`,`picklistvalueid`,`picklistid`),
 	KEY `role2picklist_roleid_picklistid_idx` (`roleid`,`picklistid`,`picklistvalueid`),
-	KEY `fk_2_vtiger_role2picklist` (`picklistid`))");
+	KEY `fk_2_vtiger_role2picklist` (`picklistid`)) type='InnoDB'");
 
-$adb->query("alter table vtiger_role2picklist add CONSTRAINT `fk_2_vtiger_role2picklist` FOREIGN KEY (`picklistid`) REFERENCES `vtiger_picklist` (`picklistid`) ON DELETE CASCADE");
+//$adb->query("alter table vtiger_role2picklist add CONSTRAINT `fk_1_vtiger_role2picklist` FOREIGN KEY (`roleid`) REFERENCES `vtiger_role` (`roleid`) ON DELETE CASCADE");
 
-$adb->query("alter table vtiger_role2picklist add CONSTRAINT `fk_1_vtiger_role2picklist` FOREIGN KEY (`roleid`) REFERENCES `vtiger_role` (`roleid`) ON DELETE CASCADE");
-
-$adb->query("alter table vtiger_role2picklist type='InnoDB'");
+$adb->query("alter table vtiger_role2picklist add CONSTRAINT `fk_3_vtiger_role2picklist` FOREIGN KEY (`picklistid`) REFERENCES `vtiger_picklist` (`picklistid`) ON DELETE CASCADE");
 
 
-$adb->query("CREATE TABLE `vtiger_picklistvalues_seq` (`id` int(11) NOT NULL)");
-$adb->query("insert into vtiger_picklistvalues_seq values(1)");
+//$adb->query("CREATE TABLE `vtiger_picklistvalues_seq` (`id` int(11) NOT NULL)");
+//$adb->query("insert into vtiger_picklistvalues_seq values(1)");
 //Alter picklist tables
 $picklist_arr = array('leadsource','accounttype','industry','leadstatus','rating','opportunity_type','salutationtype','sales_stage','ticketstatus','ticketpriorities','ticketseverities','ticketcategories','eventstatus','taskstatus','taskpriority','manufacturer','productcategory','faqcategories','usageunit','glacct','quotestage','carrier','faqstatus','invoicestatus','postatus','sostatus','campaigntype','campaignstatus','expectedresponse');
 

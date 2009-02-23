@@ -9,7 +9,7 @@
   *
  ********************************************************************************/
 -->*}
-<table class="small" bgcolor="#ffffff" border="0" cellpadding="5" cellspacing="0" width="100%">
+<table class="small" bgcolor="#ffffff" border="0" cellpadding="5" cellspacing="0" height="600" valign="top" width="100%">
 	<tbody><tr>
 	<td colspan="2">
 	<span class="genHeaderGray"> {$MOD.LBL_REPORT_TYPE} </span><br>
@@ -19,7 +19,7 @@
 	</tr>
 	<tr>
 	<td style="padding-right: 5px;" rowspan="2" align="right" width="25%">
-	<img src="{$IMAGE_PATH}tabular.gif" align="absmiddle">
+	<img src="{'tabular.gif'|@vtiger_imageurl:$THEME}" align="absmiddle">
 	</td>
 	<td style="padding-left: 5px;" align="left" height="50" valign="bottom" width="75%">
 	{if $REPORT_TYPE eq 'tabular'}
@@ -35,7 +35,7 @@
 	<tr><td colspan="2">&nbsp;</td></tr>
 	<tr>
 	<td style="padding-right: 5px;" rowspan="2" align="right" width="25%">
-	<img src="{$IMAGE_PATH}summarize.gif" align="absmiddle">
+	<img src="{'summarize.gif'|@vtiger_imageurl:$THEME}" align="absmiddle">
 	</td>
 	<td style="padding-left: 5px;" align="left" height="50" valign="bottom" width="75%">
 	{if $REPORT_TYPE eq 'summary'}

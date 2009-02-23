@@ -18,7 +18,6 @@ global $mod_strings;
 global $app_strings;
 global $theme;
 $theme_path="themes/".$theme."/";
-$image_path=$theme_path."images/";
 
 $delete_currency_id = $_REQUEST['id'];
 $sql = "select * from vtiger_currency_info where id=?";
@@ -35,7 +34,7 @@ $output ='<div id="CurrencyDeleteLay"  class="layerPopup">
 <table width="100%" border="0" cellpadding="3" cellspacing="0" class="layerHeadingULine">
 <tr>
 	<td class="layerPopupHeading"  align="left" width="60%">'.$mod_strings["LBL_DELETE_CURRENCY"].'</td>
-	<td align="right" width="40%"><img src="'.$image_path.'close.gif" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer;" onClick="document.getElementById(\'CurrencyDeleteLay\').style.display=\'none\'";></td>
+	<td align="right" width="40%"><img src="'. vtiger_imageurl('close.gif', $theme).'" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer;" onClick="document.getElementById(\'CurrencyDeleteLay\').style.display=\'none\'";></td>
 </tr>
 <table>
 <table border=0 cellspacing=0 cellpadding=5 width=95% align=center> 
@@ -50,10 +49,10 @@ $output ='<div id="CurrencyDeleteLay"  class="layerPopup">
 					<td class="cellLabel small"><b>'.$mod_strings['LBL_TRANSCURR'].'</b></td>
 					<td class="cellText small">';
 						   
-				$output.='<select class="select" name="transfer_currency_id" id="transfer_currency_id">';
+				$output.='<select class="select small" name="transfer_currency_id" id="transfer_currency_id">';
 						 
 						 global $adb;	
-						 $sql = "select * from vtiger_currency_info where currency_status = ?";
+						 $sql = "select * from vtiger_currency_info where currency_status = ? and deleted=0";
 						 $result = $adb->pquery($sql, array('Active'));
 						 $temprow = $adb->fetch_array($result);
 						 do

@@ -57,6 +57,16 @@ $image_path=$theme_path."images/";
 $log->info("Import Undo");
 $last_import = new UsersLastImport();
 $ret_value = $last_import->undo($current_user->id);
+
+// vtlib customization: Invoke undo import function of the module.
+$module = $_REQUEST['module'];
+require_once("modules/$module/$module.php");
+$undo_focus = new $module();
+if(method_exists($undo_focus, 'undo_import')) {
+	$ret_value += $undo_focus->undo_import($module, $current_user->id);
+}
+// END
+
 ?>
 
 <br>
@@ -69,7 +79,14 @@ $ret_value = $last_import->undo($current_user->id);
 		<tr><td>&nbsp;</td></tr>
 		<tr>
 				<td align="left"  style="padding-left:40px;">
+				<?php 	$req_module = $_REQUEST['module'];   
+					if($req_module == 'Contacts' || $req_module == 'Accounts' || $req_module == 'Leads' || $req_module == 'Products' || $req_module == 'HelpDesk' || $req_module == 'Potentials' || $req_module == 'Vendors')
+                                	{ ?>
+					<span class="genHeaderGray"><?php echo $mod_strings['LBL_STEP_4_4']; ?></span>&nbsp;
+				<?php   }
+                                	else { ?>
 					<span class="genHeaderGray"><?php echo $mod_strings['LBL_STEP_3_3']; ?></span>&nbsp;
+				<?php   } ?>
 					<span class="genHeaderSmall"><?php echo $mod_strings['LBL_MAPPING_RESULTS']; ?></span>
 				</td>
 		</tr>

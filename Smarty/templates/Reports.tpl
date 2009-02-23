@@ -73,7 +73,7 @@
 	<table border=0 cellspacing=0 cellpadding=5 width=100% class=layerHeadingULine>
 	<tr>
 		<td class="genHeaderSmall" nowrap align="left" width="30%" id="editfolder_info">{$MOD.LBL_ADD_NEW_GROUP}</td>
-		<td align="right"><a href="javascript:;" onClick="closeEditReport();"><img src="{$IMAGE_PATH}close.gif" align="absmiddle" border="0"></a></td>
+		<td align="right"><a href="javascript:;" onClick="closeEditReport();"><img src="{'close.gif'|@vtiger_imageurl:$THEME}" align="absmiddle" border="0"></a></td>
 	</tr>
 	</table>
 	<table border=0 cellspacing=0 cellpadding=5 width=95% align=center> 
@@ -145,8 +145,11 @@ function DeleteFolder(id)
         	                method: 'post',
                 	        postBody: 'action=ReportsAjax&mode=ajax&file=DeleteReportFolder&module=Reports&record='+id,
                         	onComplete: function(response) {
-					var item = response.responseText;
-				        getObj('customizedrep').innerHTML = item;
+							var item = response.responseText;
+							if(item[0]=='<')
+						        getObj('customizedrep').innerHTML = item;
+						    else
+						    	alert(item);
                         	}
                 	}
         	);
@@ -314,7 +317,7 @@ function massDeleteReport()
                                 postBody: 'action=ReportsAjax&mode=ajax&file=Delete&module=Reports&idlist='+idstring,
                                 onComplete: function(response) {
                                         var item = response.responseText;
-                                        getObj('customizedrep').innerHTML = item;
+                                        	getObj('customizedrep').innerHTML = item;
                                 }
                         }
                 );

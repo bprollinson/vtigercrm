@@ -13,14 +13,25 @@
 <html>
 <head>
 	<title>{$CURRENT_USER} - {$APP.$CATEGORY} - {$APP.$MODULE_NAME} - {$APP.LBL_BROWSER_TITLE}</title>
-	<link REL="SHORTCUT ICON" HREF="include/images/vtigercrm_icon.ico">	
+	<link REL="SHORTCUT ICON" HREF="themes/images/vtigercrm_icon.ico">	
 	<style type="text/css">@import url("themes/{$THEME}/style.css");</style>
+	<!-- ActivityReminder customization for callback -->
+	{literal}
+	<style type="text/css">div.fixedLay1 { position:fixed; }</style>
+	<!--[if lte IE 6]>
+	<style type="text/css">div.fixedLay { position:absolute; }</style>
+	<![endif]-->
+	{/literal}
+	<!-- End -->
 </head>
 	<body leftmargin=0 topmargin=0 marginheight=0 marginwidth=0 class=small>
 	<a name="top"></a>
 	<!-- header -->
 	<!-- header-vtiger crm name & RSS -->
 	<script language="JavaScript" type="text/javascript" src="include/js/general.js"></script>
+	<!-- vtlib customization: Javascript hook -->	
+	<script language="JavaScript" type="text/javascript" src="include/js/vtlib.js"></script>
+	<!-- END -->
 	<script language="JavaScript" type="text/javascript" src="include/js/{php} echo $_SESSION['authenticated_user_language'];{/php}.lang.js?{php} echo $_SESSION['vtiger_version'];{/php}"></script>
 	<script language="JavaScript" type="text/javascript" src="include/js/QuickCreate.js"></script>
 	<script language="javascript" type="text/javascript" src="include/scriptaculous/prototype.js"></script>
@@ -28,11 +39,35 @@
 	<script language="JavaScript" type="text/javascript" src="include/calculator/calc.js"></script>
 	<script language="JavaScript" type="text/javascript" src="modules/Calendar/script.js"></script>
 	<script language="javascript" type="text/javascript" src="include/scriptaculous/dom-drag.js"></script>
+	<script language="JavaScript" type="text/javascript" src="include/js/notificationPopup.js"></script>
 	<link rel="stylesheet" type="text/css" media="all" href="jscalendar/calendar-win2k-cold-1.css">
         <script type="text/javascript" src="jscalendar/calendar.js"></script>
         <script type="text/javascript" src="jscalendar/calendar-setup.js"></script>
         <script type="text/javascript" src="jscalendar/lang/calendar-{$APP.LBL_JSCALENDAR_LANG}.js"></script>
-	
+        
+    <!-- asterisk Integration -->
+    {if $USE_ASTERISK eq 'true'}
+    	<script type="text/javascript" src="include/js/asterisk.js"></script>
+    {/if}
+    <!-- END -->
+
+	{* vtlib customization: Inclusion of custom javascript and css as registered *}
+	{if $HEADERSCRIPTS}
+		<!-- Custom Header Script -->
+		{foreach item=HEADERSCRIPT from=$HEADERSCRIPTS}
+			<script type="text/javascript" src="{$HEADERSCRIPT->linkurl}"></script>
+		{/foreach}
+		<!-- END -->
+	{/if}
+	{if $HEADERCSS}
+		<!-- Custom Header CSS -->
+		{foreach item=HDRCSS from=$HEADERCSS}
+			<link rel="stylesheet" type="text/css" href="{$HDRCSS->linkurl}"></script>
+		{/foreach}
+		<!-- END -->
+	{/if}
+	{* END *}
+
 	<TABLE border=0 cellspacing=0 cellpadding=0 width=100% class="hdrNameBg">
 	<tr>
 		<td valign=top><img src="{$IMAGEPATH}/vtiger-crm.gif" alt="vtiger CRM" title="vtiger CRM" border=0></td>
@@ -46,6 +81,46 @@
 		<td class=small nowrap>
 			<table border=0 cellspacing=0 cellpadding=0>
 			 <tr>
+			
+			{* vtlib customization: Header links on the top panel *}
+			{if $HEADERLINKS}
+			<td style="padding-left:10px;padding-right:5px" class=small nowrap>
+				<a href="javascript:;" onmouseover="fnvshobj(this,'vtlib_headerLinksLay');" onclick="fnvshobj(this,'vtlib_headerLinksLay');">{$APP.LBL_MORE}</a> <img src="{'arrow_down.gif'|@vtiger_imageurl:$THEME}" border=0>
+				<div style="display: none; left: 193px; top: 106px;width:155px; position:absolute;" id="vtlib_headerLinksLay" 
+					onmouseout="fninvsh('vtlib_headerLinksLay')" onmouseover="fnvshNrm('vtlib_headerLinksLay')">
+					<table bgcolor="#ffffff" border="0" cellpadding="0" cellspacing="0" width="100%">
+					<tr><td style="border-bottom: 1px solid rgb(204, 204, 204); padding: 5px;"><b>{$APP.LBL_MORE}</b></td></tr>
+					<tr>
+						<td>
+							{foreach item=HEADERLINK from=$HEADERLINKS}
+								{assign var="headerlink_href" value=$HEADERLINK->linkurl}
+								{assign var="headerlink_label" value=$HEADERLINK->linklabel}
+								{if $headerlink_label eq ''}
+									{assign var="headerlink_label" value=$headerlink_href}
+								{else}
+									{* Pickup the translated label provided by the module *}
+									{assign var="headerlink_label" value=$headerlink_label|@getTranslatedString:$HEADERLINK->module()}
+								{/if}
+								<a href="{$headerlink_href}" class="drop_down">{$headerlink_label}</a>
+							{/foreach}
+						</td>
+					</tr>
+					</table>
+				</div>
+			</td>
+			{/if}
+			{* END *}
+			
+			<!-- gmailbookmarklet customization -->
+			 <td style="padding-left:10px;padding-right:10px" class=small nowrap>
+				{$GMAIL_BOOKMARKLET}
+			 </td>
+			 <!-- END -->
+			 {if $ADMIN_LINK neq ''} {* Show links only for admin *}
+			 <td style="padding-left:10px;padding-right:10px" class=small nowrap> <a href="javascript:void(0);" onclick="vtiger_news(this)">{$APP.LBL_VTIGER_NEWS}</a></td>
+			 <td style="padding-left:10px;padding-right:10px" class=small nowrap> <a href="javascript:void(0);" onclick="vtiger_feedback();">{$APP.LBL_FEEDBACK}</a></td>
+			 {/if}
+
 			 <td style="padding-left:10px;padding-right:10px" class=small nowrap> <a href="index.php?module=Users&action=DetailView&record={$CURRENT_USER_ID}&modechk=prefview">{$APP.LBL_MY_PREFERENCES}</a></td>
 			 <td style="padding-left:10px;padding-right:10px" class=small nowrap><a href="http://wiki.vtiger.com/index.php/Main_Page" target="_blank">{$APP.LNK_HELP}</a></td>
 			 <td style="padding-left:10px;padding-right:10px" class=small nowrap><a href="javascript:;" onClick="openwin();">{$APP.LNK_WEARE}</a></td>
@@ -67,34 +142,32 @@
 		<table border=0 cellspacing=0 cellpadding=0>
 
 		<tr>
-			<td class=tabSeperator><img src="{$IMAGEPATH}/spacer.gif" width=2px height=28px></td>		
+			<td class=tabSeperator><img src="{'spacer.gif'|@vtiger_imageurl:$THEME}" width=2px height=28px></td>		
 			{foreach key=maintabs item=detail from=$HEADERS}
 				{if $maintabs ne $CATEGORY}
-				  <td class="tabUnSelected"  onmouseover="fnDropDown(this,'{$maintabs}_sub');" onmouseout="fnHideDrop('{$maintabs}_sub');" align="center" nowrap><a href="index.php?module={$detail[0]}&action=index&parenttab={$maintabs}">{$APP[$maintabs]}</a><img src="{$IMAGEPATH}/menuDnArrow.gif" border=0 style="padding-left:5px"></td>
-				  <td class="tabSeperator"><img src="{$IMAGEPATH}/spacer.gif"></td>
+				  <td class="tabUnSelected"  onmouseover="fnDropDown(this,'{$maintabs}_sub');" onmouseout="fnHideDrop('{$maintabs}_sub');" align="center" nowrap><a href="index.php?module={$detail[0]}&action=index&parenttab={$maintabs}">{$APP[$maintabs]}</a><img src="{'menuDnArrow.gif'|@vtiger_imageurl:$THEME}" border=0 style="padding-left:5px"></td>
+				  <td class="tabSeperator"><img src="{'spacer.gif'|@vtiger_imageurl:$THEME}"></td>
 				{else}
-				  <td class="tabSelected"  onmouseover="fnDropDown(this,'{$maintabs}_sub');" onmouseout="fnHideDrop('{$maintabs}_sub');" align="center" nowrap><a href="index.php?module={$detail[0]}&action=index&parenttab={$maintabs}">{$APP[$maintabs]}</a><img src="{$IMAGEPATH}/menuDnArrow.gif" border=0 style="padding-left:5px"></td>
-				  <td class="tabSeperator"><img src="{$IMAGEPATH}/spacer.gif"></td>
+				  <td class="tabSelected"  onmouseover="fnDropDown(this,'{$maintabs}_sub');" onmouseout="fnHideDrop('{$maintabs}_sub');" align="center" nowrap><a href="index.php?module={$detail[0]}&action=index&parenttab={$maintabs}">{$APP[$maintabs]}</a><img src="{'menuDnArrow.gif'|@vtiger_imageurl:$THEME}" border=0 style="padding-left:5px"></td>
+				  <td class="tabSeperator"><img src="{'spacer.gif'|@vtiger_imageurl:$THEME}"></td>
 				{/if}
 			{/foreach}
 			<td style="padding-left:10px" nowrap>
-			{if $CNT eq 1}
-                                <select class=small id="qccombo" style="width:120px"  onclick="QCreate(this);">
-					<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
+				{if $CNT eq 1}
+					<select class=small id="qccombo" style="width:120px"  onclick="QCreate(this);">
+						<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
                         {foreach  item=detail from=$QCMODULE}
-                                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$APP[$detail.0]}</option>
+                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$detail.0}</option>
                         {/foreach}
-                                </select>
-                        {else}
-                                <select class=small id="qccombo" style="width:120px"  onchange="QCreate(this);">
-					<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
+					</select>
+				{else}
+					<select class=small id="qccombo" style="width:120px"  onchange="QCreate(this);">
+						<option value="none">{$APP.LBL_QUICK_CREATE}...</option>
                         {foreach  item=detail from=$QCMODULE}
-                                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$APP[$detail.0]}</option>
+                        <option value="{$detail.1}">{$APP.NEW}&nbsp;{$detail.0}</option>
                         {/foreach}
-                                </select>
-
-                        {/if}
-	
+					</select>
+				{/if}	
 			</td>
 		</tr>
 
@@ -126,13 +199,37 @@
 	<td >
 		<table border=0 cellspacing=0 cellpadding=0>
 		<tr>
-			{foreach  key=maintabs item=detail from=$HEADERS}
+			<!-- ASHA: Avoid using this as it gives module name instead of module label. 
+			Now Using the same array QUICKACCESS that is used to show drop down menu
+			(which gives both module name and module label)-->
+			<!--{foreach  key=maintabs item=detail from=$HEADERS}
 				{if $maintabs eq $CATEGORY}
 					{foreach  key=number item=module from=$detail}
+						{assign var="modulelabel" value=$module}
+      					{if $APP.$module} 
+      						{assign var="modulelabel" value=$APP.$module} 
+      					{/if}
 						{if $module eq $MODULE_NAME}
-							<td class="level2SelTab" nowrap><a href="index.php?module={$module}&action=index&parenttab={$maintabs}">{$APP[$module]}</a></td>
+							<td class="level2SelTab" nowrap><a href="index.php?module={$module}&action=index&parenttab={$maintabs}">{$modulelabel}</a></td>
 						{else}
-							<td class="level2UnSelTab" nowrap> <a href="index.php?module={$module}&action=index&parenttab={$maintabs}">{$APP[$module]}</a> </td>
+							<td class="level2UnSelTab" nowrap> <a href="index.php?module={$module}&action=index&parenttab={$maintabs}">{$modulelabel}</a> </td>
+						{/if}	
+					{/foreach}
+				{/if}
+			{/foreach}-->
+			
+			{foreach key=maintabs item=details from=$QUICKACCESS}
+				{if $maintabs eq $CATEGORY}
+					{foreach  key=number item=modules from=$details}
+						{assign var="modulelabel" value=$modules[1]}
+	   					{if $APP[$modules.1]}
+	   						{assign var="modulelabel" value=$APP[$modules.1]}
+	   					{/if}
+				
+						{if $modules.0 eq $MODULE_NAME}
+							<td class="level2SelTab" nowrap><a href="index.php?module={$modules.0}&action=index&parenttab={$maintabs}">{$modulelabel}</a></td>
+						{else}
+							<td class="level2UnSelTab" nowrap> <a href="index.php?module={$modules.0}&action=index&parenttab={$maintabs}">{$modulelabel}</a> </td>
 						{/if}	
 					{/foreach}
 				{/if}
@@ -146,7 +243,7 @@
 <div id="calculator_cont" style="position:absolute; z-index:10000" ></div>
 	{include file="Clock.tpl"}
 
-<div id="qcform" style="position:absolute;width:500px;top:80px;left:450px;z-index:5000;"></div>
+<div id="qcform" style="position:absolute;width:700px;top:80px;left:450px;z-index:100000;"></div>
 
 <script>
 var gVTModule = '{$smarty.request.module}';
@@ -185,50 +282,45 @@ function fetch_calc()
 </script>
 
 <script>
-
-function QCreate(qcoptions)
-{ldelim}
-	var module = qcoptions.options[qcoptions.options.selectedIndex].value;
-	if(module != 'none')
-	{ldelim}
-	$("status").style.display="inline";
-	if(module == 'Events')
-	{ldelim}
-		module = 'Calendar';
-		var urlstr = '&activity_mode=Events';
-	{rdelim}
-	else if(module == 'Calendar')
-	{ldelim}
-		module = 'Calendar';
-		var urlstr = '&activity_mode=Task';
-	{rdelim}
-	else
-		var urlstr = '';
-	new Ajax.Request(
-                'index.php',
-                {ldelim}queue: {ldelim}position: 'end', scope: 'command'{rdelim},
-                        method: 'post',
-                        postBody: 'module='+module+'&action='+module+'Ajax&file=QuickCreate'+urlstr,
-                        onComplete: function(response)
-                                        {ldelim}
-						$("status").style.display="none";
-						$("qcform").style.display="inline";
-					        $("qcform").innerHTML = response.responseText;
-						eval($("date_calpopup").innerHTML);
-						eval($("date_calpopup23").innerHTML);
-						eval($("qcform"));
-                                        {rdelim}
-                {rdelim}
-        );
-	{rdelim}
-	else
-		hide('qcform');
-{rdelim}
-
-</script>
-
 {literal}
-<SCRIPT>
+function QCreate(qcoptions){
+	var module = qcoptions.options[qcoptions.options.selectedIndex].value;
+	if(module != 'none'){
+		$("status").style.display="inline";
+		if(module == 'Events'){
+			module = 'Calendar';
+			var urlstr = '&activity_mode=Events';
+		}else if(module == 'Calendar'){
+			module = 'Calendar';
+			var urlstr = '&activity_mode=Task';
+		}else{
+			var urlstr = '';
+		}
+		new Ajax.Request(
+			'index.php',
+				{queue: {position: 'end', scope: 'command'},
+				method: 'post',
+				postBody: 'module='+module+'&action='+module+'Ajax&file=QuickCreate'+urlstr,
+				onComplete: function(response){
+					$("status").style.display="none";
+					$("qcform").style.display="inline";
+					$("qcform").innerHTML = response.responseText;
+					// Evaluate all the script tags in the response text.
+					var scriptTags = $("qcform").getElementsByTagName("script");
+					for(var i = 0; i< scriptTags.length; i++){
+						var scriptTag = scriptTags[i];
+						eval(scriptTag.innerHTML);
+					}
+                    eval($("qcform"));
+                    posLay(qcoptions, "qcform");
+				}
+			}
+		);
+	}else{
+		hide('qcform');
+	}
+}
+
 function getFormValidate(divValidate)
 {
   var st = document.getElementById('qcvalidate');
@@ -238,8 +330,8 @@ function getFormValidate(divValidate)
 		if(window.document.QcEditView[curr_fieldname] != null)
 		{
 			var type=qcfielddatatype[i].split("~")
-			var input_type = window.document.QcEditView[curr_fieldname].type	
-				if (type[1]=="M") {
+			var input_type = window.document.QcEditView[curr_fieldname].type;	
+			if (type[1]=="M") {
 					if (!qcemptyCheck(curr_fieldname,qcfieldlabel[i],input_type))
 						return false
 				}
@@ -395,7 +487,7 @@ function getFormValidate(divValidate)
 {/literal}
 
 {* Quick Access Functionality *}
-<div id="allMenu" onmouseout="fninvsh('allMenu');" onMouseOver="fnvshNrm('allMenu');" style="width:550px;z-index: 10000001;">
+<div id="allMenu" onmouseout="fninvsh('allMenu');" onMouseOver="fnvshNrm('allMenu');" style="width:550px;z-index: 10000001;display:none;">
 	<table border=0 cellpadding="5" cellspacing="0" class="allMnuTable" >
 	<tr>
 		<td valign="top">
@@ -409,8 +501,12 @@ function getFormValidate(divValidate)
 			{if $loopvalue eq '0'}
 				</td><td valign="top">
 			{/if}
-			<a href="index.php?module={$modules.0}&action=index&parenttab={$parenttab}" class="allMnu">{$APP[$modules.1]}</a>
-		{/foreach}
+			{assign var="modulelabel" value=$modules[1]}
+   			{if $APP[$modules.1]}
+   				{assign var="modulelabel" value=$APP[$modules.1]}
+   			{/if}
+			<a href="index.php?module={$modules.0}&action=index&parenttab={$parenttab}" class="allMnu">{$modulelabel}</a>
+			{/foreach}
 		{/foreach}
 		</td>
 	</tr>
@@ -422,7 +518,12 @@ function getFormValidate(divValidate)
 <div class="drop_mnu" id="{$parenttab}_sub" onmouseout="fnHideDrop('{$parenttab}_sub')" onmouseover="fnShowDrop('{$parenttab}_sub')">
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
 		{foreach name=modulelist item=modules from=$details}
-		<tr><td><a href="index.php?module={$modules.0}&action=index&parenttab={$parenttab}" class="drop_down">{$APP[$modules.1]}</a></td></tr>
+		{assign var="modulelabel" value=$modules[1]}
+		{if $APP[$modules.1]}
+			{assign var="modulelabel" value=$APP[$modules.1]}
+		{/if}
+		
+		<tr><td><a href="index.php?module={$modules.0}&action=index&parenttab={$parenttab}" class="drop_down">{$modulelabel}</a></td></tr>
 		{/foreach}
 	</table>
 </div>
@@ -445,7 +546,7 @@ function openwin()
 	<tr style="cursor:move;">
 		<td colspan="2" class="mailClientBg small" id="Track_Handle"><strong>{$APP.LBL_LAST_VIEWED}</strong></td>
 		<td align="right" style="padding:5px;" class="mailClientBg small">
-		<a href="javascript:;"><img src="{$IMAGEPATH}close.gif" border="0"  onClick="fninvsh('tracker')" hspace="5" align="absmiddle"></a>
+		<a href="javascript:;"><img src="{'close.gif'|@vtiger_imageurl:$THEME}" border="0"  onClick="fninvsh('tracker')" hspace="5" align="absmiddle"></a>
 		</td></tr>
 	</table>
 	<table border="0" cellpadding="5" cellspacing="0" width="200" class="hdrNameBg">
@@ -463,5 +564,61 @@ function openwin()
 	Drag.init(THandle, TRoot);
 </script>		
 
+<!-- vtiger Feedback -->
+<script type="text/javascript">
+{literal}
+function vtiger_feedback() {
+	window.open("http://www.vtiger.com/products/crm/feedback.php?uid={/literal}{php}global $application_unique_key; echo $application_unique_key;{/php}{literal}","feedbackwin","height=300,width=515,top=200,left=300")
+}
+{/literal}
+</script>
+<!-- vtiger news -->
+<script type="text/javascript">
+{literal}
+function vtiger_news(obj) {
+	$('status').style.display = 'inline';
+	new Ajax.Request(
+		'index.php',
+		{queue: {position: 'end', scope: 'command'},
+			method: 'post',
+			postBody: 'module=Home&action=HomeAjax&file=HomeNews',
+			onComplete: function(response) {
+				$("vtigerNewsPopupLay").innerHTML=response.responseText;
+				fnvshobj(obj, 'vtigerNewsPopupLay');
+				$('status').style.display = 'none';
+			}
+		}
+	);
+		
+}
+{/literal}
+</script>
+<div class="lvtCol fixedLay1" id="vtigerNewsPopupLay" style="display: none; height: 250px; bottom: 2px; padding: 2px; z-index: 12; font-weight: normal;" align="left">
+</div>
+<!-- END -->
 
+<!-- ActivityReminder Customization for callback -->
+<div class="lvtCol fixedLay1" id="ActivityRemindercallback" style="right: 0px; bottom: 2px; display:none; padding: 2px; z-index: 10; font-weight: normal;" align="left">
+</div>
+<!-- End -->
 
+<!-- divs for asterisk integration -->
+<div class="lvtCol fixedLay1" id="notificationDiv" style="float: right;  padding-right: 5px; overflow: hidden; border-style: solid; right: 0px; border-color: rgb(141, 141, 141); bottom: 0px; display: none; padding: 2px; z-index: 10; font-weight: normal;" align="left">
+</div>
+
+<div id="OutgoingCall" style="display: none;position: absolute;z-index:200;" class="layerPopup">
+	<table  border='0' cellpadding='5' cellspacing='0' width='100%'>
+		<tr style='cursor:move;' >
+			<td class='mailClientBg small' id='outgoing_handle'>
+				<b>{$APP.LBL_OUTGOING_CALL}</b>
+			</td>
+		</tr>
+	</table>
+	<table  border='0' cellpadding='0' cellspacing='0' width='100%' class='hdrNameBg'>
+		</tr>
+		<tr><td style='padding:10px;' colspan='2'>
+			{$APP.LBL_OUTGOING_CALL_MESSAGE}
+		</td></tr>
+	</table>
+</div>
+<!-- divs for asterisk integration :: end-->

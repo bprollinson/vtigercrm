@@ -32,7 +32,7 @@ require_once('modules/Leads/ListViewTop.php');
 global $app_strings;
 global $app_list_strings;
 global $mod_strings;
-global $currentModule;
+global $currentModule,$default_charset;
 
 
 $smarty=new vtigerCRM_Smarty;
@@ -90,7 +90,7 @@ if ($_REQUEST['isDuplicate'] != 'true' && isset($_REQUEST['return_id']))
         $smarty->assign("RETURN_ID", $_REQUEST['return_id']);
         $RETURN_ID = $_REQUEST['return_id'];
 }
-
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH", $image_path);$smarty->assign("PRINT_URL", "phprint.php?jt=".session_id().$GLOBALS['request_string']);
 $focus->mode = $mode;
 $disp_view = getView($focus->mode);
@@ -111,12 +111,12 @@ if(isset($_REQUEST['record']) && $_REQUEST['isDuplicate'] != 'true')
 	$smarty->assign("USERNAME_READONLY", "readonly");
 }
 
-$smarty->assign("HOMEORDER",$focus->getHomeOrder($focus->id));
+$smarty->assign("HOMEORDER",$focus->getHomeStuffOrder($focus->id));
 //Added to provide User based Tagcloud
 $smarty->assign("TAGCLOUDVIEW",getTagCloudView($focus->id));
 $smarty->assign("DUPLICATE",$_REQUEST['isDuplicate']);
 $smarty->assign("USER_MODE",$mode);
-$smarty->assign('PARENTTAB',$_REQUEST['parenttab']);
+$smarty->assign('PARENTTAB',htmlspecialchars($_REQUEST['parenttab'],ENT_QUOTES,$default_charset));
 
 $smarty->display('UserEditView.tpl');
 

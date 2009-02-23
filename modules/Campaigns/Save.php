@@ -60,6 +60,11 @@ if(isset($_REQUEST['expectedroi']))
 	$focus->column_fields['expectedroi'] = $value;
 }
 
+if($_REQUEST['assigntype'] == 'U')  {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+} elseif($_REQUEST['assigntype'] == 'T') {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+}
 
 $focus->save("Campaigns");
 $return_id = $focus->id;

@@ -25,6 +25,7 @@ $image_path=$theme_path."images/";
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("SINGLE_MOD",'PriceBook');
@@ -33,6 +34,9 @@ $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
 $focus = new PriceBooks();
+// Initialize sort by fields
+$focus->initSortbyField('PriceBooks');
+// END
 $other_text=Array();
 
 if(!$_SESSION['lvs'][$currentModule])
@@ -77,9 +81,22 @@ $oCustomView = new CustomView("PriceBooks");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
+//Added to handle approving or denying status-public by the admin in CustomView
+$statusdetails = $oCustomView->isPermittedChangeStatus($viewnamedesc['status']);
+$smarty->assign("CUSTOMVIEW_PERMISSION",$statusdetails);
+
+//To check if a user is able to edit/delete a customview
+$edit_permit = $oCustomView->isPermittedCustomView($viewid,'EditView',$currentModule);
+$delete_permit = $oCustomView->isPermittedCustomView($viewid,'Delete',$currentModule);
+$smarty->assign("CV_EDIT_PERMIT",$edit_permit);
+$smarty->assign("CV_DELETE_PERMIT",$delete_permit);
+
 //<<<<<customview>>>>>
 if(isPermitted('PriceBooks','DeletePriceBook','') == 'yes')
 	$other_text['del'] = $app_strings[LBL_MASS_DELETE];
+if(isPermitted('PriceBooks','EditView','') == 'yes')
+	$other_text['mass_edit'] = $app_strings[LBL_MASS_EDIT];
 if($viewnamedesc['viewname'] == 'All')
 {
 	$smarty->assign("ALL", 'All');
@@ -167,6 +184,7 @@ $smarty->assign("SEARCHLISTHEADER",$listview_header_search);
 
 $listview_entries = getListViewEntries($focus,"PriceBooks",$list_result,$navigation_array,'','&return_module=PriceBooks&return_action=index','EditView','Delete',$oCustomView);
 $smarty->assign("LISTENTITY", $listview_entries);
+
 //Added to select Multiple records in multiple pages
 $smarty->assign("SELECTEDIDS", $_REQUEST['selobjs']);
 $smarty->assign("ALLSELECTEDIDS", $_REQUEST['allselobjs']);
@@ -188,6 +206,8 @@ $smarty->assign("BUTTONS", $other_text);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+$_SESSION['pricebooks_listquery'] = $list_query;
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

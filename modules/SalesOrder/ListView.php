@@ -24,6 +24,7 @@ $image_path=$theme_path."images/";
 $smarty = new vtigerCRM_Smarty;
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("SINGLE_MOD",'SalesOrder');
@@ -31,6 +32,9 @@ $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
 
 $focus = new SalesOrder();
+// Initialize sort by fields
+$focus->initSortbyField('SalesOrder');
+// END
 $other_text = Array();
 $url_string = ''; // assigning http url string
 
@@ -76,6 +80,17 @@ $oCustomView = new CustomView("SalesOrder");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
+//Added to handle approving or denying status-public by the admin in CustomView
+$statusdetails = $oCustomView->isPermittedChangeStatus($viewnamedesc['status']);
+$smarty->assign("CUSTOMVIEW_PERMISSION",$statusdetails);
+
+//To check if a user is able to edit/delete a customview
+$edit_permit = $oCustomView->isPermittedCustomView($viewid,'EditView',$currentModule);
+$delete_permit = $oCustomView->isPermittedCustomView($viewid,'Delete',$currentModule);
+$smarty->assign("CV_EDIT_PERMIT",$edit_permit);
+$smarty->assign("CV_DELETE_PERMIT",$delete_permit);
+
 //<<<<<customview>>>>>
 $smarty->assign("CHANGE_OWNER",getUserslist());
 $smarty->assign("CHANGE_GROUP_OWNER",getGroupslist());
@@ -86,7 +101,8 @@ if(isPermitted('SalesOrder','Delete','') == 'yes')
 }
 if(isPermitted('SalesOrder','EditView','') == 'yes')
 {
-        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
+	$other_text['mass_edit'] = $app_strings[LBL_MASS_EDIT];
+	$other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
 }
 if($viewnamedesc['viewname'] == 'All')
 {
@@ -208,6 +224,8 @@ $smarty->assign("BUTTONS", $other_text);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+$_SESSION['salesorder_listquery'] = $list_query;
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

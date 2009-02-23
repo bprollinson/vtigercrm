@@ -20,11 +20,11 @@ foreach($field_module as $fld_module=>$fld_name)
 {
 	$fieldListResult = getDefOrgFieldList($fld_module);
 	$noofrows = $adb->num_rows($fieldListResult);
-	$tab_id = getTabid($fld_module);
 	for($i=0; $i<$noofrows; $i++)
 	{
 		$fieldid =  $adb->query_result($fieldListResult,$i,"fieldid");
 		$displaytype = $adb->query_result($fieldListResult,$i,"displaytype");
+		$tab_id = $adb->query_result($fieldListResult,$i,"tabid");
 		$visible = $_REQUEST[$fieldid];
 		if($visible == 'on')
 		{
@@ -39,11 +39,10 @@ foreach($field_module as $fld_module=>$fld_name)
 		$fieldname = $adb->query_result($fieldListResult,$i,"fieldname");
 		$typeofdata = $adb->query_result($fieldListResult,$i,"typeofdata");
 		$fieldtype = explode("~",$typeofdata);
-		if($uitype == 2 || $uitype == 3 || $uitype == 6 || $uitype == 22 || $uitype == 73 || $uitype == 24 || $uitype == 81 || $uitype == 50 || $uitype == 23 || $uitype == 16 || $uitype == 53 || $uitype == 255 || $displaytype == 3 || $uitype == 20 || ($displaytype != 3 && $fieldname == "activitytype" && $uitype == 15)|| ($uitype == 111 && $fieldtype[1] == "M"))
+		if(($fieldname == "salutationtype" && $uitype == 55) || $fieldtype[1] == "M" || $uitype == 111  || $displaytype == 3|| $fieldname == "activitytype")
 		{
 			$visible_value = 0; 
-		}		
-
+		}
 		//Updating the database
 		$update_query = "update vtiger_def_org_field set visible=? where fieldid=? and tabid=?";
 		$update_params = array($visible_value, $fieldid, $tab_id);

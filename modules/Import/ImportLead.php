@@ -28,7 +28,7 @@ require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('modules/Contacts/Contacts.php');
 require_once('modules/Potentials/Potentials.php');
-require_once('modules/Notes/Notes.php');
+require_once('modules/Documents/Documents.php');
 require_once('modules/Emails/Emails.php');
 require_once('modules/Accounts/Accounts.php');
 require_once('include/ComboUtil.php');
@@ -39,7 +39,7 @@ class ImportLead extends Leads {
 	 var $db;
 
 	// This is the list of the functions to run when importing
-	var $special_functions =  array("assign_user");
+	var $special_functions =  array("assign_user", "modseq_number");
 
 	var $importable_fields = Array();
 
@@ -80,15 +80,20 @@ class ImportLead extends Leads {
 		}
 	}
 
+	// Module Sequence Numbering	
+	function modseq_number() {
+		$this->column_fields['lead_no'] = '';
+	}
+	// END
+
 	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
 	 */
 	function ImportLead() {
-		
+		parent::Leads();
 		$this->log = LoggerManager::getLogger('import_lead');
 		$this->db = new PearDatabase();
 		$this->db->println("IMP ImportLead");
 		$this->initImportableFields("Leads");
-		
 		$this->db->println($this->importable_fields);
 	}
 

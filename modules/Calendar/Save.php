@@ -26,7 +26,7 @@ require_once('include/logging.php');
 require_once("config.php");
 require_once('include/database/PearDatabase.php');
 require_once('modules/Calendar/CalendarCommon.php');
-global $adb;
+global $adb,$theme;
 $local_log =& LoggerManager::getLogger('index');
 $focus = new Activity();
 $activity_mode = $_REQUEST['activity_mode'];
@@ -72,7 +72,7 @@ if((isset($_REQUEST['change_status']) && $_REQUEST['change_status']) && ($_REQUE
 
 			<table border='0' cellpadding='5' cellspacing='0' width='98%'>
 			<tbody><tr>
-			<td rowspan='2' width='11%'><img src='themes/$theme/images/denied.gif' ></td>
+			<td rowspan='2' width='11%'><img src='<?php echo vtiger_imageurl('denied.gif', $theme). ?>' ></td>
 			<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$app_strings[LBL_PERMISSION]</span></td>
 			</tr>
 			<tr>
@@ -129,6 +129,12 @@ else
 	        $focus->column_fields['visibility'] = $_REQUEST['visibility'];
 	else
 	        $focus->column_fields['visibility'] = 'Private';
+	
+	if($_REQUEST['assigntype'] == 'U') {
+		$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+	} elseif($_REQUEST['assigntype'] == 'T') {
+		$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+	}
 	$focus->save($tab_type);
 	/* For Followup START -- by Minnie */
 	if(isset($_REQUEST['followup']) && $_REQUEST['followup'] == 'on' && $activity_mode == 'Events' && isset($_REQUEST['followup_time_start']) &&  $_REQUEST['followup_time_start'] != '')
@@ -174,7 +180,7 @@ function getRequestData()
 	$mail_data['contact_name'] = $_REQUEST['contact_name'];
 	$mail_data['description'] = $_REQUEST['description'];
 	$mail_data['assingn_type'] = $_REQUEST['assigntype'];
-	$mail_data['group_name'] = $_REQUEST['assigned_group_name'];
+	$mail_data['group_name'] = getGroupName($_REQUEST['assigned_group_id']);
 	$mail_data['mode'] = $_REQUEST['mode'];
 	$value = getaddEventPopupTime($_REQUEST['time_start'],$_REQUEST['time_end'],'24');
 	$start_hour = $value['starthour'].':'.$value['startmin'].''.$value['startfmt'];

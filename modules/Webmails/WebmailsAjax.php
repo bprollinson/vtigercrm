@@ -24,12 +24,13 @@ if($_POST['config_chk'] == 'true')
 		echo 'FAILED';
 		exit();
 	} else {
-		echo 'SUCESS';
+		echo 'SUCCESS';
 		exit();
 	}
 	exit();
 }
 if(isset($_REQUEST['file']) && $_REQUEST['file']!='' && !isset($_REQUEST['ajax'])){
+	checkFileAccess("modules/".$_REQUEST['module']."/".$_REQUEST['file'].".php");
 	require_once("modules/".$_REQUEST['module']."/".$_REQUEST['file'].".php");
 	exit();
 }

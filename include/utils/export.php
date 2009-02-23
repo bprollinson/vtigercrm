@@ -26,7 +26,7 @@ require_once('modules/Leads/Leads.php');
 require_once('modules/Contacts/Contacts.php');
 require_once('modules/Emails/Emails.php');
 require_once('modules/Calendar/Activity.php');
-require_once('modules/Notes/Notes.php');
+require_once('modules/Documents/Documents.php');
 require_once('modules/Potentials/Potentials.php');
 require_once('modules/Users/Users.php');
 require_once('modules/Products/Products.php');
@@ -35,6 +35,7 @@ require_once('modules/HelpDesk/HelpDesk.php');
 require_once('modules/Vendors/Vendors.php');
 require_once('include/utils/UserInfoUtil.php');
 require_once('modules/CustomView/CustomView.php');
+
 
 // Set the current language and the language strings, if not already set.
 setCurrentLanguage();
@@ -100,8 +101,14 @@ function export($type)
         $content = '';
 
         if ($type != "")
-        {
-                $focus = new $type;
+		{
+			// vtlib customization: Hook to dynamically include required module file.
+			// TODO: Make security check if the file access is within vtigercrm directory
+			// Refer to the logic in setting $currentModule in index.php
+			require_once("modules/$type/$type.php");
+			// END
+
+			$focus = new $type;
         }
         $log = LoggerManager::getLogger('export_'.$type);
         $db = new PearDatabase();
@@ -148,7 +155,7 @@ function export($type)
 		} elseif($type == 'Products' && count($idstring) > 0) {
 			$query .= ' and vtiger_products.productid in ('. generateQuestionMarks($idstring) .')';
 			array_push($params, $idstring);
-		} elseif($type == 'Notes' && count($idstring) > 0) {
+		} elseif($type == 'Documents' && count($idstring) > 0) {
 			$query .= ' and vtiger_notes.notesid in ('. generateQuestionMarks($idstring) .')';
 			array_push($params, $idstring);
 		}
@@ -159,6 +166,11 @@ function export($type)
 		} elseif($type == 'Vendors' && count($idstring) > 0) {
 			$query .= ' and vtiger_vendor.vendorid in ('. generateQuestionMarks($idstring) .')';
 			array_push($params, $idstring);
+		} else if(count($idstring) > 0) {
+			// vtlib customization: Hook to make the export feature available for custom modules.
+			$query .= " and $focus->table_name.$focus->table_index in (" . generateQuestionMarks($idstring) . ')';
+			array_push($params, $idstring);
+			// END
 		}
 	}
 	
@@ -168,7 +180,7 @@ function export($type)
 		{
 			$query .= ' ORDER BY user_name '.$sorder;
 		}
-		elseif($order_by == 'lastname' && $type == 'Notes')
+		elseif($order_by == 'lastname' && $type == 'Documents')
 		{
 			$query .= ' ORDER BY vtiger_contactdetails.lastname  '. $sorder;
 		}
@@ -209,7 +221,12 @@ function export($type)
 
 		foreach ($val as $key => $value)
 		{
-			if($key != "user_name")
+			if($type == 'Documents' && $key == 'description'){
+				$value = strip_tags($value);
+				$value = str_replace('&nbsp;','',$value);
+				array_push($new_arr,$value);
+			}
+			elseif($key != "user_name")
 			{
 				// No conversions are required here. We need to send the data to csv file as it comes from database.
 				array_push($new_arr, preg_replace("/\"/","\"\"",$value));
@@ -226,12 +243,12 @@ function export($type)
 }
 
 $content = export($_REQUEST['module']);
-
-header("Content-Disposition: attachment; filename={$_REQUEST['module']}.csv");
-header("Content-Type: text/csv; charset=UTF-8");
-header( "Expires: Mon, 26 Jul 1997 05:00:00 GMT" );
-header( "Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT" );
-header( "Cache-Control: post-check=0, pre-check=0", false );
+$log->fatal(htmlentities($content));
+header("Content-Disposition:attachment;filename={$_REQUEST['module']}.csv");
+header("Content-Type:text/csv;charset=UTF-8");
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT" );
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT" );
+header("Cache-Control: post-check=0, pre-check=0", false );
 header("Content-Length: ".strlen($content));
 print $content;
 

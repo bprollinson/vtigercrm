@@ -43,7 +43,11 @@
 	<input type="hidden" name="product_id" value="{$PRODUCTID}">
 
 {elseif $MODULE eq 'PurchaseOrder' || $MODULE eq 'SalesOrder' || $MODULE eq 'Invoice' || $MODULE eq 'Quotes'}
-	<form name="EditView" method="POST" action="index.php" onSubmit="settotalnoofrows();calcTotal();">
+	<!-- (id="frmEditView") content added to form tag and new hidden field added,  -->
+	<form id="frmEditView" name="EditView" method="POST" action="index.php" onSubmit="settotalnoofrows();calcTotal();">
+	<input type="hidden" name="hidImagePath" id="hidImagePath" value="{$IMAGE_PATH}"/>
+	<!-- End of code added -->
+
 	{if $MODULE eq 'Invoice' || $MODULE eq 'PurchaseOrder' ||  $MODULE eq 'SalesOrder'}
        		 <input type="hidden" name="convertmode">
 	{/if}
@@ -51,7 +55,7 @@
 {elseif $MODULE eq 'HelpDesk'}
 	<form name="EditView" method="POST" action="index.php" ENCTYPE="multipart/form-data">
 	<input type="hidden" name="old_smownerid" value="{$OLDSMOWNERID}">
-        <input type="hidden" name="old_id" value="{$OLD_ID}">
+	<input type="hidden" name="old_id" value="{$OLD_ID}">
 
 {elseif $MODULE eq 'Leads'}
         <form name="EditView" method="POST" action="index.php">
@@ -60,15 +64,15 @@
 {elseif $MODULE eq 'Accounts' || $MODULE eq 'Faq' || $MODULE eq 'PriceBooks' || $MODULE eq 'Vendors'}
 	<form name="EditView" method="POST" action="index.php">
 
-{elseif $MODULE eq 'Notes'}
+{elseif $MODULE eq 'Documents'}
 	<form name="EditView" method="POST" ENCTYPE="multipart/form-data" action="index.php">
 	<input type="hidden" name="max_file_size" value="{$MAX_FILE_SIZE}">
-	<input type="hidden" name="filename" value="{$FILENAME}">
 	<input type="hidden" name="form">
 	<input type="hidden" name="email_id" value="{$EMAILID}">
 	<input type="hidden" name="ticket_id" value="{$TICKETID}">
 	<input type="hidden" name="fileid" value="{$FILEID}">
 	<input type="hidden" name="old_id" value="{$OLD_ID}">
+	<input type="hidden" name="parentid" value="{$PARENTID}">
 
 {elseif $MODULE eq 'Products'}
 	{$ERROR_MESSAGE}

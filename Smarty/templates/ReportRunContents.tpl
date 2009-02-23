@@ -23,7 +23,7 @@
 
 <table style="border: 1px solid rgb(0, 0, 0);" align="center" cellpadding="0" cellspacing="0" width="100%">
 	<tbody><tr>
-	<td style="background-repeat: repeat-y;" background="{$IMAGE_PATH}report_btn.gif" width="16"></td>
+	<td style="background-repeat: repeat-y;" background="{'report_btn.gif'|@vtiger_imageurl:$THEME}" width="16"></td>
 
 	<td style="padding: 5px;" valign="top">
 	<table cellpadding="0" cellspacing="0" width="100%">
@@ -45,7 +45,11 @@
 		<tr><td colspan="2">&nbsp;</td></tr>
 		<tr>
 		<td colspan="2">
+		{if $ERROR_MSG eq ''}
 		{$REPORTHTML.0}
+		{else}
+		{$ERROR_MSG}
+		{/if}
 		</td>
 		</tr>
 		<tr><td colspan="2">&nbsp;</td></tr>
@@ -55,7 +59,7 @@
 		</tbody>
 	</table>
 	</td>
-	<td style="background-repeat: repeat-y;" background="{$IMAGE_PATH}report_btn.gif" width="16"></td>
+	<td style="background-repeat: repeat-y;" background="{'report_btn.gif'|@vtiger_imageurl:$THEME}" width="16"></td>
 	</tr>
 
 	</tbody>

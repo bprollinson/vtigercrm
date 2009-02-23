@@ -40,7 +40,11 @@ for($i=0; $i < $numrow; $i++)
 foreach($picklist_arr as $picklistname => $picklistidname)
 {
 	$result = $adb->query("select max(".$picklistidname.") as id from vtiger_".$picklistname);
-	$max_count = $adb->query_result($result,0,'id');
+	$max_count = 1;
+	if ($adb->num_rows($result) > 0) {
+		$max_count = $adb->query_result($result,0,'id');
+		if ($max_count <= 0) $max_count = 1;
+	}
 	$adb->query("drop table if exists vtiger_".$picklistname."_seq");
 	$adb->query("create table vtiger_".$picklistname."_seq (id integer(11))");
 	$adb->query("insert into vtiger_".$picklistname."_seq (id) values(".$max_count.")");
@@ -336,7 +340,16 @@ ExecuteQuery("update vtiger_notificationscheduler set active=1 where scheduledno
 ExecuteQuery("alter table vtiger_users modify date_format varchar(200) default NULL");
 // Updated the sequence number of taskstatus for the ticket #5027
 ExecuteQuery("update vtiger_field set sequence = 8 where columnname = 'status' and tablename = 'vtiger_activity' and fieldname = 'taskstatus' and uitype = 111");
-$migrationlog->debug("\n\nDB Changes from 5.0.4rc to 5.0.4 -------- Ends \n\n");
 
+$arr=$adb->getColumnNames("vtiger_users");
+if(!in_array("internal_mailer", $arr))
+{
+	$adb->pquery("alter table vtiger_users add column internal_mailer int(3) NOT NULL default '1'", array());
+}
+
+global $dbname;
+include("modules/Migration/HTMLtoUTF8Conversion.php");
+
+$migrationlog->debug("\n\nDB Changes from 5.0.4rc to 5.0.4 -------- Ends \n\n");
 
 ?>

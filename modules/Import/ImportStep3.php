@@ -36,7 +36,8 @@ require_once('include/ListView/ListView.php');
 require_once('include/database/PearDatabase.php');
 require_once('modules/Import/ImportSave.php');
 
-set_time_limit(0);
+global $php_max_execution_time;
+set_time_limit($php_max_execution_time);
 ini_set("display_errors",'0');
 
 
@@ -72,6 +73,7 @@ $image_path=$theme_path."images/";
 
 $log->info("Upload Step 3");
 
+include("include/saveMergeCriteria.php");
 
 $delimiter = ',';
 // file handle
@@ -84,6 +86,8 @@ $focus = 0;
 $current_bean_type = "";
 $id_exists_count = 0;
 $broken_ids = 0;
+
+$delimiter = $_SESSION['import_delimiter'];
 
 $has_header = 0;
 
@@ -102,12 +106,20 @@ $import_object_array = Array(
 				"Potentials"=>"ImportOpportunity",
 				"Products"=>"ImportProduct",
 				"HelpDesk"=>"ImportTicket",
-                                "Vendors"=>"ImportVendors"
+                "Vendors"=>"ImportVendors"
 			    );
 
 if(isset($_REQUEST['module']) && $_REQUEST['module'] != '')
 {
 	$current_bean_type = $import_object_array[$_REQUEST['module']];
+	// vtlib customization: Hook added to enable import for un-mapped modules
+	$module = $_REQUEST['module'];	
+	if($current_bean_type == null) {
+		require_once("modules/$module/$module.php");
+		$current_bean_type = $module;
+		$callInitImport = true;		
+	}
+	// END
 }
 else
 {
@@ -115,6 +127,9 @@ else
 }
 
 $focus = new $current_bean_type();
+// vtlib customization: Call the import initializer
+if($callInitImport) $focus->initImport($module);
+// END
 
 //Constructing the custom vtiger_field Array
 require_once('include/CustomFieldUtil.php');
@@ -178,6 +193,15 @@ $max_lines = -1;
 
 $ret_value = 0;
 
+// Save the file for name for next round of import 
+// http://trac.vtiger.com/cgi-bin/trac.cgi/ticket/5255 
+if(isset($_REQUEST['tmp_file'])) { 
+	$_SESSION['tmp_file'] = $_REQUEST['tmp_file']; 
+} else { 
+	$_REQUEST['tmp_file'] = $_SESSION['tmp_file']; 
+} 
+// End 
+
 if ($_REQUEST['source'] == 'act')
 {
         $ret_value = parse_import_act($_REQUEST['tmp_file'],$delimiter,$max_lines,$has_header);
@@ -187,10 +211,13 @@ else
 	$ret_value = parse_import($_REQUEST['tmp_file'],$delimiter,$max_lines,$has_header);
 }
 
+// We should delete the data file only in the last step of import 
+/* http://trac.vtiger.com/cgi-bin/trac.cgi/ticket/5255 
 if (file_exists($_REQUEST['tmp_file']))
 {
 	unlink($_REQUEST['tmp_file']);
 }
+*/
 
 $datarows = $ret_value['rows'];
 
@@ -231,7 +258,7 @@ $adb->println($datarows);
 
 $error = '';
 $focus = new $current_bean_type();
-
+$focus->initRequiredFields($module);
 
 // SAVE MAPPING IF REQUESTED
 if(isset($_REQUEST['save_map']) && $_REQUEST['save_map'] == 'on' && isset($_REQUEST['save_map_as']) && $_REQUEST['save_map_as'] != '')

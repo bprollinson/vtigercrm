@@ -11,6 +11,7 @@
 
 if(isset($_REQUEST['file']) && ($_REQUEST['file'] !=''))
 {
+	checkFileAccess('modules/Settings/'.$_REQUEST['file'].'.php');
 	require_once('modules/Settings/'.$_REQUEST['file'].'.php');
 }
 if(isset($_REQUEST['orgajax']) && ($_REQUEST['orgajax'] !=''))
@@ -19,7 +20,7 @@ if(isset($_REQUEST['orgajax']) && ($_REQUEST['orgajax'] !=''))
 }
 elseif(isset($_REQUEST['announce_save']) && ($_REQUEST['announce_save'] != ''))
 {
-        $date_var = date('YmdHis');
+        $date_var = date('Y-m-d H:i:s');
         $announcement = from_html($_REQUEST['announcement']);
 	//Change ##$## to & (reverse process has done in Smarty/templates/Settings/Announcements.tpl)
 	$announcement = str_replace("##$##","&",$announcement);

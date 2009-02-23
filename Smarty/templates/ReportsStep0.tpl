@@ -26,6 +26,7 @@
 		<form name="NewRep" method="POST" ENCTYPE="multipart/form-data" action="index.php" style="margin:0px" onSubmit="return changeSteps();">
 		<input type="hidden" name="module" value="Reports">
 		<input type="hidden" name="primarymodule" value="{$REP_MODULE}">
+		<input type="hidden" name="record" value="{$RECORDID}">
 		<input type="hidden" name="file" value="NewReport1">
 		<input type="hidden" name="action" value="ReportsAjax">
 
@@ -57,7 +58,7 @@
 							<td width="75%" valign="top"  bgcolor=white >
 								<!-- STEP 1 -->
 								<div id="step1" style="display:block;">
-									<table width="100%" border="0" cellpadding="10" cellspacing="0" bgcolor="#FFFFFF" class="small">
+									<table width="100%" border="0" cellpadding="10" cellspacing="0" bgcolor="#FFFFFF" height="600" class="small">
 										<tr>
 											<td colspan="2">
 												<span class="genHeaderGray">{$MOD.LBL_REPORT_DETAILS}</span><br>
@@ -87,36 +88,52 @@
 											<td align="left" style="padding-left:5px;"><textarea name="reportdes" class="txtBox" rows="5">{$REPORTDESC}</textarea></td>
 										</tr>
 										<tr> 
-							 	                        <td colspan="2" height="285">&nbsp;</td> 
+							 	                        <td colspan="2" height="355">&nbsp;</td> 
 										</tr>
 										
 									</table>
 								</div>
 								<!-- STEP 2 -->
 								<div id="step2" style="display:none;">
-									<table class="small" bgcolor="#ffffff" border="0" cellpadding="5" cellspacing="0" width="100%">
-										<tr>
+									<table class="small" bgcolor="#ffffff" border="0" cellpadding="5" cellspacing="0" height="600" width="100%">
+										<tr height='10%'>
 										<td colspan="2">
 											<span class="genHeaderGray">{$MOD.LBL_RELATIVE_MODULE}</span><br>
 											{$MOD.LBL_SELECT_RELATIVE_MODULE_FOR_REPORT}<hr>
 										</td>
 										</tr>
-										<tr>
+										<tr class='small' height='5%'><td colspan="2">{if $RESTRICTEDMODULES neq ''} <div class='dvtCellInfo' style='margin-left: 10px;'>{$MOD.LBL_NOT_ACTIVE}<font color="red"><b> {$RESTRICTEDMODULES} </b></font> </div>{/if}</td>
+										</tr>
+										<tr valign=top  height="70%">
 											<td style="padding-right: 5px;" align="right" nowrap width="25%"><b>{$MOD.LBL_NEW_REP0_HDR2}</b></td>
-											<td style="padding-left: 5px;" align="left" width="75%">
-												<select name="secondarymodule" class="txtBox">
-												<option value="">--None--</option>
+											<td style="padding-left: 5px; " align="left" width="75%">
+												<!--select name="secondarymodule" class="txtBox">
+												<option value="">--None--</option -->
+												<table class="small">
 												{foreach item=relmod from=$RELATEDMODULES}
-												{if $SEC_MODULE eq $relmod}
-													<option selected value="{$relmod}">{$APP.$relmod}</option>
+												{if $SEC_MODULE.$relmod eq 1}
+													<tr valign='top'><td><input type='checkbox' name="secondarymodule_{$relmod}" checked value="{$relmod}" />
+														{if $APP.$relmod neq ''}
+															{$APP.$relmod}
+														{else}
+															{$relmod}
+														{/if}
+													</td></tr>
 												{else}
-													<option value="{$relmod}">{$APP.$relmod}</option>
+													<tr valign='top'><td><input type='checkbox' name="secondarymodule_{$relmod}" value="{$relmod}" />
+														{if $APP.$relmod neq ''}
+															{$APP.$relmod}
+														{else}
+															{$relmod}
+														{/if}
+													</td></tr>
 												{/if}
 												{/foreach}
-												</select>
+												</table>
+												<!--/select-->
 											</td>
 										</tr>
-										<tr><td colspan="2" height="438">&nbsp;</td></tr> 
+										<tr><td colspan="2" height="300">&nbsp;</td></tr> 
 									</table>
 							</div>
 						</td>
@@ -152,6 +169,17 @@
 	hide('step1');
 	show('step2');
 	document.getElementById('back_rep').disabled = false;
+	getObj('step1label').className = 'settingsTabList'; 
+	getObj('step2label').className = 'settingsTabSelected';
+</script>
+{/literal}
+{/if}
+{if $BACK eq 'false'}
+{literal}
+<script>
+	hide('step1');
+	show('step2');
+	document.getElementById('back_rep').disabled = true;
 	getObj('step1label').className = 'settingsTabList'; 
 	getObj('step2label').className = 'settingsTabSelected';
 </script>

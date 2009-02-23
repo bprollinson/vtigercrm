@@ -24,7 +24,7 @@ require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('modules/Contacts/Contacts.php');
 require_once('modules/Potentials/Potentials.php');
-require_once('modules/Notes/Notes.php');
+require_once('modules/Documents/Documents.php');
 require_once('modules/Emails/Emails.php');
 require_once('modules/Accounts/Accounts.php');
 require_once('include/ComboUtil.php');
@@ -54,6 +54,7 @@ class ImportOpportunity extends Potentials {
 	var $special_functions =  array(
 						"add_create_account",
 						"map_campaign_source",
+						"modseq_number",
 						//"add_lead_source",
 						//"add_opportunity_type",
 				        	//"add_date_closed"
@@ -255,15 +256,21 @@ class ImportOpportunity extends Potentials {
 	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
 	 */
 	function ImportOpportunity() {
+		parent::Potentials();
 		$this->log = LoggerManager::getLogger('import_opportunity');
 		$this->db = new PearDatabase();
 
 		$this->db->println("IMP ImportOpportunity");
 		$this->initImportableFields("Potentials");		
-		
 		$this->db->println($this->importable_fields);
 	}
 
+	// Module Sequence Numbering	
+	function modseq_number() {
+		$this->column_fields['potential_no'] = '';
+	}
+	// END
+	
 }
 
 

@@ -28,10 +28,19 @@ class PreparedQMark2SqlValue {
         $this->ctr = 0;
         $this->vals = $vals;
     }
-    function call($matches){
-		$this->ctr++;
-		return $matches[1].$this->vals[$this->ctr-1];
-    }
+    function call($matches){ 
+            /** 
+             * If ? is found as expected in regex used in function convert2sql 
+             * /('[^']*')|(\"[^\"]*\")|([?])/ 
+             * 
+             */ 
+            if($matches[3]=='?'){ 
+                    $this->ctr++; 
+                    return $this->vals[$this->ctr-1]; 
+            }else{ 
+                    return $matches[0]; 
+            } 
+    } 
 }
 
 class PearDatabase{
@@ -53,8 +62,9 @@ class PearDatabase{
     // PreparedStatement will be converted to normal SQL statement for execution
     var $avoidPreparedSql = false;
 	
-    function isMySQL() { return dbType=='mysql'; }
-    function isOracle() { return dbType=='oci8'; }
+    function isMySQL() { return $this->dbType=='mysql'; }
+    function isOracle() { return $this->dbType=='oci8'; }
+    function isPostgres() { return $this->dbType=='pgsql'; }
     
     function println($msg)
     {
@@ -108,13 +118,15 @@ class PearDatabase{
 
     function startTransaction()
     {
+    if($this->isPostgres()) return;
 	$this->checkConnection();
 	$this->println("TRANS Started");
 	$this->database->StartTrans();
     }
 
     function completeTransaction()
-    {		
+    {	
+    if($this->isPostgres()) return;	
 	if($this->database->HasFailedTrans()) 
 	    $this->println("TRANS  Rolled Back");
 	else
@@ -124,6 +136,10 @@ class PearDatabase{
 	$this->println("TRANS  Completed");
     }
 
+    function hasFailedTransaction(){
+    	return $this->database->HasFailedTrans();
+    }
+    
     function checkError($msg='', $dieOnError=false)
     {
 /*
@@ -189,16 +205,41 @@ class PearDatabase{
 	}
     }
 
+	/**
+	 * Put out the SQL timing information
+	 */
+	function logSqlTiming($startat, $endat, $sql, $params=false) {
+		global $logsqltm;
+		// Specifically for timing the SQL execution, you need to enable DEBUG in log4php.properties		
+		if($logsqltm->isDebugEnabled()){
+			$logsqltm->debug("SQL: " . $sql);
+			if($params != null && count($params) > 0) $logsqltm->debug("PARAMS: [" . implode(",", $params) . "]");
+			$logsqltm->debug("EXEC: " . ($endat - $startat) ." micros [START=$startat, END=$endat]");
+			$logsqltm->debug("");
+		}
+	}
+
     function query($sql, $dieOnError=false, $msg='')
     {
 	global $log, $default_charset;
 	//$this->println("ADODB query ".$sql);		
 	$log->debug('query being executed : '.$sql);
 	$this->checkConnection();
-	if(strtoupper($default_charset) == 'UTF-8')
+
+	global $logsqltm;
+	if(strtoupper($default_charset) == 'UTF-8') {
+
+		$sql_start_time = microtime(true);
+
+		$setnameSql = "SET NAMES utf8";
 		$this->database->Execute("SET NAMES utf8");
-		
+		$this->logSqlTiming($sql_start_time, microtime(true), $setnameSql);
+	}
+	
+	$sql_start_time = microtime(true);
 	$result = & $this->database->Execute($sql);
+	$this->logSqlTiming($sql_start_time, microtime(true), $sql);
+	
 	$this->lastmysqlrow = -1;
 	if(!$result)$this->checkError($msg.' Query Failed:' . $sql . '::', $dieOnError);
 	return $result;		
@@ -206,7 +247,7 @@ class PearDatabase{
 
 	
 	/**
-	 * Covert PreparedStatement to SQL statement
+	 * Convert PreparedStatement to SQL statement
 	 */
 	function convert2Sql($ps, $vals) {
 		if(empty($vals)) { return $ps; }
@@ -217,13 +258,14 @@ class PearDatabase{
 					$vals[$index] = $this->database->Quote($vals[$index]);
 				}
 				else {
-					$vals[$index] = "'".mysql_real_escape_string($vals[$index]). "'";
+					$vals[$index] = "'".$this->sql_escape_string($vals[$index]). "'";
 				}
-			} else if($vals[$index] == null) {
+			} 
+			if($vals[$index] === null) {
 				$vals[$index] = "NULL";
 			}
 		}
-		$sql = preg_replace_callback("/((('[^']*')|(\"[^\"]*\")|[^?])+)(\?)/", array(new PreparedQMark2SqlValue($vals),"call"), $ps);
+		$sql = preg_replace_callback("/('[^']*')|(\"[^\"]*\")|([?])/", array(new PreparedQMark2SqlValue($vals),"call"), $ps); 
 		return $sql;
 	}
 
@@ -237,12 +279,16 @@ class PearDatabase{
 		global $log, $default_charset;
 		$log->debug('Prepared sql query being executed : '.$sql);
 		$this->checkConnection();
-		if(strtoupper($default_charset) == 'UTF-8')
-			$this->database->Execute("SET NAMES utf8");
-		
-		global $logsqltm;
 
-		$sql_start_time = microtime();
+		if(strtoupper($default_charset) == 'UTF-8') {
+			$sql_start_time = microtime(true);
+
+			$setnameSql = "SET NAMES utf8";
+			$this->database->Execute("SET NAMES utf8");
+			$this->logSqlTiming($sql_start_time, microtime(true), $setnameSql);
+		}
+		
+		$sql_start_time = microtime(true);
 		$params = $this->flatten_array($params);
 		if (count($params) > 0) {
 			$log->debug('Prepared sql query parameters : [' . implode(",", $params) . ']'); 
@@ -254,20 +300,8 @@ class PearDatabase{
 		} else {
 			$result = &$this->database->Execute($sql, $params);
 		}
-		$sql_end_time = microtime();
-
-		// Specifically for timing the SQL execution, you need to enable DEBUG in log4php.properties
-		if($logsqltm->isDebugEnabled()){
-			$sql_start_time = explode(" ", $sql_start_time);
-			$sql_end_time = explode(" ", $sql_end_time);
-			$sql_start_time = ((float)$sql_start_time[0] + (float)$sql_start_time[1]);
-			$sql_end_time = ((float)$sql_end_time[0] + (float)$sql_end_time[1]);
-			
-			$logsqltm->debug("SQL: " . $sql);
-			if($params != null && count($params) > 0) $logsqltm->debug("PARAMS: [" . implode(",", $params) . "]");
-			$logsqltm->debug("EXEC: " . ($sql_end_time - $sql_start_time) ." micros [START=$sql_start_time, END=$sql_end_time]");
-			$logsqltm->debug("");
-		}
+		$sql_end_time = microtime(true);
+		$this->logSqlTiming($sql_start_time, $sql_end_time, $sql, $params);
 		
 		$this->lastmysqlrow = -1;
 		if(!$result)$this->checkError($msg.' Query Failed:' . $sql . '::', $dieOnError);
@@ -585,20 +619,20 @@ class PearDatabase{
     /* ADODB newly added. replacement for mysql_result() */
     function query_result(&$result, $row, $col=0)
     {		
-	//$this->println("ADODB query_result r=".$row." c=".$col);
-	if (!is_object($result))
-                throw new Exception("result is not an object");
-	$result->Move($row);
-	$rowdata = $this->change_key_case($result->FetchRow());
-	//$this->println($rowdata);
-	//Commented strip_selected_tags and added to_html function for HTML tags vulnerability
-	//$coldata = strip_selected_tags($rowdata[$col],'script');
-	if($col == 'fieldlabel')
-		$coldata = $rowdata[$col];
-	else
-		$coldata = to_html($rowdata[$col]);
-	//$this->println("ADODB query_result ". $coldata);
-	return $coldata;
+		//$this->println("ADODB query_result r=".$row." c=".$col);
+		if (!is_object($result))
+	                throw new Exception("result is not an object");
+		$result->Move($row);
+		$rowdata = $this->change_key_case($result->FetchRow());
+		//$this->println($rowdata);
+		//Commented strip_selected_tags and added to_html function for HTML tags vulnerability
+		//$coldata = strip_selected_tags($rowdata[$col],'script');
+		if($col == 'fieldlabel')
+			$coldata = $rowdata[$col];
+		else
+			$coldata = to_html($rowdata[$col]);
+		//$this->println("ADODB query_result ". $coldata);
+		return $coldata;
     }
 
 	// Function to get particular row from the query result
@@ -653,23 +687,23 @@ class PearDatabase{
     function fetchByAssoc(&$result, $rowNum = -1, $encode=true)
     {
 	//$this->println("ADODB fetchByAssoc ".$rowNum." fetch mode=".$adb->database->$ADODB_FETCH_MODE);
-	if($result->EOF)
-	{
-	    $this->println("ADODB fetchByAssoc return null");
-	    return NULL;
-	}
-	if(isset($result) && $rowNum < 0)
-	{			
-	    $row = $this->change_key_case($result->GetRowAssoc(false));			
-	    $result->MoveNext();			
-	    //print_r($row);
-	    //$this->println("ADODB fetchByAssoc r< 0 isarray r=".is_array($row)." r1=".is_array($row[1]));			
-	    //$this->println($row);
-	    if($encode&& is_array($row))
-		return array_map('to_html', $row);
-	    //$this->println("ADODB fetchByAssoc r< 0 not array r1=".$row[1]);			
-	    return $row;			
-	}
+		if($result->EOF)
+		{
+		    $this->println("ADODB fetchByAssoc return null");
+		    return NULL;
+		}
+		if(isset($result) && $rowNum < 0)
+		{			
+		    $row = $this->change_key_case($result->GetRowAssoc(false));			
+		    $result->MoveNext();			
+		    //print_r($row);
+		    //$this->println("ADODB fetchByAssoc r< 0 isarray r=".is_array($row)." r1=".is_array($row[1]));			
+		    //$this->println($row);
+		    if($encode&& is_array($row))
+				return array_map('to_html', $row);
+		    //$this->println("ADODB fetchByAssoc r< 0 not array r1=".$row[1]);			
+		    return $row;			
+		}
 
 	//$this->println("ADODB fetchByAssoc after if ".$rowNum);	
 	
@@ -685,7 +719,7 @@ class PearDatabase{
 	$this->println($row);
 			
 	if($encode&& is_array($row))
-	    return array_map('to_html', $row);	
+		return array_map('to_html', $row);	
 	return $row;
     }
     
@@ -956,10 +990,38 @@ class PearDatabase{
 	$this->println($result);
 	return $result;		
     }
+	
+	//To get a function name with respect to the database type which escapes strings in given text 
+	function sql_escape_string($str)
+	{
+		if($this->isMySql())
+			$result_data = mysql_real_escape_string($str);
+		elseif($this->isPostgres())
+			$result_data = pg_escape_string($str);
+			
+		return $result_data;
+	}
+	
+	// Function to get the last insert id based on the type of database
+	function getLastInsertID($seqname) {
+		if($this->isPostgres()) {
+			$result = pg_query("SELECT currval('".$seqname."_seq')");
+			if($result)
+			{
+				$row = pg_fetch_row($result);
+				$last_insert_id = $row[0];
+			}
+		} else {
+			$last_insert_id = $this->Insert_ID();
+		}		
+		return $last_insert_id;
+	}
 } /* End of class */
 
-$adb = new PearDatabase();
-$adb->connect();
+if(empty($adb)) {
+	$adb = new PearDatabase();
+	$adb->connect();
+}
 //$adb->database->setFetchMode(ADODB_FETCH_NUM);
 
 ?>

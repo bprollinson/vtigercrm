@@ -63,6 +63,16 @@ else $smarty->assign("NAME", "");
 $smarty->assign("BLOCKS", getBlocks("Accounts","detail_view",'',$focus->column_fields));
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
+
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 $smarty->assign("ID", $_REQUEST['record']);
 $smarty->assign("SINGLE_MOD",'Account');
@@ -122,7 +132,50 @@ $smarty->assign("CHECK", $check_button);
 
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if(isset($_SESSION['accounts_listquery'])){
+	$arrayTotlist = array();
+	$aNamesToList = array(); 
+	$forAllCRMIDlist_query=$_SESSION['accounts_listquery'];
+	$resultAllCRMIDlist_query=$adb->pquery($forAllCRMIDlist_query,array());
+	while($forAllCRMID = $adb->fetch_array($resultAllCRMIDlist_query))
+	{
+		$arrayTotlist[]=$forAllCRMID['crmid'];
+	}
+	$_SESSION['listEntyKeymod_'.$focus->id] = $module.":".implode(",",$arrayTotlist);
+	
+	if(isset($_SESSION['listEntyKeymod_'.$focus->id]))
+	{
+		$split_temp=explode(":",$_SESSION['listEntyKeymod_'.$focus->id]);
+		if($split_temp[0] == $module)
+		{	
+			$smarty->assign("SESMODULE",$split_temp[0]);
+			$ar_allist=explode(",",$split_temp[1]);
+			
+			for($listi=0;$listi<count($ar_allist);$listi++)
+			{
+				if($ar_allist[$listi]==$_REQUEST[record])
+				{
+					if($listi-1>=0)
+					{
+						$privrecord=$ar_allist[$listi-1];
+						$smarty->assign("privrecord",$privrecord);
+					}else {unset($privrecord);}
+					if($listi+1<count($ar_allist))
+					{
+						$nextrecord=$ar_allist[$listi+1];
+						$smarty->assign("nextrecord",$nextrecord);
+					}else {unset($nextrecord);}
+					break;
+				}
+				
+			}
+		}
+	}
+}
+
 $smarty->assign("IS_REL_LIST",isPresentRelatedLists($currentModule));
+$smarty->assign("USE_ASTERISK", get_use_asterisk($current_user->id));
 
 if($singlepane_view == 'true')
 {
@@ -134,5 +187,13 @@ $smarty->assign("EVENT_PERMISSION",CheckFieldPermission('parent_id','Events'));
 
 $smarty->assign("SinglePane_View", $singlepane_view);
 
+// Record Change Notification
+$focus->markAsViewed($current_user->id);
+// END
+
+include_once('vtlib/Vtiger/Link.php');
+$customlink_params = Array('MODULE'=>$currentModule, 'RECORD'=>$focus->id, 'ACTION'=>$_REQUEST['action']);
+$smarty->assign('CUSTOM_LINKS', Vtiger_Link::getAllByType(getTabid($currentModule),'DETAILVIEW', $customlink_params));
+	
 $smarty->display("DetailView.tpl");
 ?>

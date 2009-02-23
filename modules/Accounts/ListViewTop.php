@@ -23,7 +23,7 @@
 /**Function to get the top 5 Accounts order by Amount in Descending Order
  *return array $values - array with the title, header and entries like  Array('Title'=>$title,'Header'=>$listview_header,'Entries'=>$listview_entries) where as listview_header and listview_entries are arrays of header and entity values which are returned from function getListViewHeader and getListViewEntries
 */
-function getTopAccounts()
+function getTopAccounts($maxval,$calCnt)
 {
 	$log = LoggerManager::getLogger('top accounts_list');
 	$log->debug("Entering getTopAccounts() method ...");
@@ -40,7 +40,7 @@ function getTopAccounts()
         require('user_privileges/user_privileges_'.$current_user->id.'.php');
         require('user_privileges/sharing_privileges_'.$current_user->id.'.php');
 
-	$list_query = "select vtiger_account.accountid, vtiger_account.accountname, vtiger_account.tickersymbol, sum(vtiger_potential.amount) as amount from vtiger_potential inner join vtiger_crmentity on (vtiger_potential.potentialid=vtiger_crmentity.crmid) inner join vtiger_account on (vtiger_potential.accountid=vtiger_account.accountid) left join vtiger_accountgrouprelation on (vtiger_account.accountid = vtiger_accountgrouprelation.accountid) left join vtiger_groups on (vtiger_groups.groupname = vtiger_accountgrouprelation.groupname) where vtiger_crmentity.deleted=0 AND vtiger_crmentity.smownerid='".$current_user->id."' and vtiger_potential.sales_stage not in ('Closed Won', 'Closed Lost','".$app_strings['LBL_CLOSE_WON']."','".$app_strings['LBL_CLOSE_LOST']."')";
+	$list_query = "select vtiger_account.accountid, vtiger_account.accountname, vtiger_account.tickersymbol, sum(vtiger_potential.amount) as amount from vtiger_potential inner join vtiger_crmentity on (vtiger_potential.potentialid=vtiger_crmentity.crmid) inner join vtiger_account on (vtiger_potential.accountid=vtiger_account.accountid) left join vtiger_groups on (vtiger_groups.groupid = vtiger_crmentity.smownerid) where vtiger_crmentity.deleted=0 AND vtiger_crmentity.smownerid='".$current_user->id."' and vtiger_potential.sales_stage not in ('Closed Won', 'Closed Lost','".$app_strings['LBL_CLOSE_WON']."','".$app_strings['LBL_CLOSE_LOST']."')";
 	if($is_admin==false && $profileGlobalPermission[1] == 1 && $profileGlobalPermission[2] == 1 && $defaultOrgSharingPermission[6] == 3)
 	{
 		$sec_parameter=getListViewSecurityParameter('Accounts');
@@ -50,7 +50,10 @@ function getTopAccounts()
 	$list_query .= " group by vtiger_account.accountid, vtiger_account.accountname, vtiger_account.tickersymbol order by amount desc";
 	$list_result=$adb->query($list_query);
 	$open_accounts_list = array();
-	$noofrows = min($adb->num_rows($list_result),5);
+	$noofrows = min($adb->num_rows($list_result),$maxval);
+	if($calCnt == 'calculateCnt')
+	      return $noofrows;
+
 	if (count($list_result)>0)
 		for($i=0;$i<$noofrows;$i++) 
 		{
@@ -89,7 +92,7 @@ function getTopAccounts()
 		$value[]=convertFromDollar($account['amount'],$rate);
 		$entries[$account['accountid']]=$value;	
 	}
-	$values=Array('Title'=>$title,'Header'=>$header,'Entries'=>$entries);
+	$values=Array('ModuleName'=>'Accounts','Title'=>$title,'Header'=>$header,'Entries'=>$entries);
 	$log->debug("Exiting getTopAccounts method ...");
 	if (($display_empty_home_blocks && count($entries) == 0 ) || (count($entries)>0))
 		return $values;

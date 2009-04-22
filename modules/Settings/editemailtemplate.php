@@ -12,6 +12,7 @@ require_once('Smarty_setup.php');
 require_once('data/Tracker.php');
 require_once('include/utils/UserInfoUtil.php');
 require_once('include/database/PearDatabase.php');
+require_once('include/CustomFieldUtil.php');
 
 global $mod_strings;
 global $app_strings;
@@ -20,7 +21,7 @@ global $current_language;
 
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-global $log;
+global $log,$default_charset;
 
 $mode = 'create';
 
@@ -35,6 +36,8 @@ $result = $adb->pquery($sql, array($templateid));
 $emailtemplateResult = str_replace('"','&quot;',$adb->fetch_array($result));
 $smod_strings = return_module_language($current_language,'Settings');
 
+//To get Email Template variables -- Pavani
+$allOptions=getEmailTemplateVariables();
 $smarty = new vtigerCRM_smarty;
 
 $smarty->assign("UMOD", $mod_strings);
@@ -49,8 +52,9 @@ $smarty->assign("DESCRIPTION", $emailtemplateResult["description"]);
 $smarty->assign("SUBJECT", $emailtemplateResult["subject"]);
 $smarty->assign("BODY", $emailtemplateResult["body"]);
 $smarty->assign("MODULE", 'Settings');
-$smarty->assign("PARENTTAB", $_REQUEST['parenttab']);
+$smarty->assign("PARENTTAB", htmlspecialchars($_REQUEST['parenttab'],ENT_QUOTES,$default_charset));
 $smarty->assign("EMODE", $mode);
+$smarty->assign("ALL_VARIABLES", $allOptions);
 
 $smarty->display("CreateEmailTemplate.tpl");
 ?>

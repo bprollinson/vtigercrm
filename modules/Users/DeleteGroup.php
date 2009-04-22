@@ -13,24 +13,21 @@ require_once('include/utils/UserInfoUtil.php');
 global $adb;
 $del_id =  $_REQUEST['delete_group_id'];
 $transfer_group_id = $_REQUEST['transfer_group_id'];
+$assignType = $_REQUEST['assigntype'];
 
-$transferType = $_REQUEST['assigntype'];
-
-if($transferType == 'T')
+if($assignType == 'T')
 {
 	$transferId = $_REQUEST['transfer_group_id'];
-        $transferType = "Groups";	
 }
-elseif($transferType == 'U')
+elseif($assignType == 'U')
 {
 	$transferId = $_REQUEST['transfer_user_id'];
-	$transferType = "Users";
 }	
 
 
 
 //Updating the user2 vtiger_role vtiger_table
-deleteGroup($del_id,$transferId,$transferType);
+deleteGroup($del_id,$transferId);
 
 
 header("Location: index.php?action=listgroups&module=Settings&parenttab=Settings");

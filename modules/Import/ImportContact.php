@@ -44,6 +44,7 @@ class ImportContact extends Contacts {
 						//"get_names_from_full_name"
 						"add_create_account",
 						"map_reports_to",
+						"modseq_number",
 						//,"add_salutation"
 						//,"add_lead_source"
 						//,"add_birthdate"
@@ -149,6 +150,12 @@ class ImportContact extends Contacts {
 
         }
 	*/
+
+	// Module Sequence Numbering	
+	function modseq_number() {
+		$this->column_fields['contact_no'] = '';
+	}
+	// END
 
 	/**	function used to create or map with existing account if the contact has mapped with an account during import
 	 */
@@ -287,13 +294,11 @@ class ImportContact extends Contacts {
 	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
 	 */
 	function ImportContact() {
+		parent::Contacts();
 		$this->log = LoggerManager::getLogger('import_contact');
 		$this->db = new PearDatabase();
 		$this->db->println("IMP ImportContact");
 		$this->initImportableFields("Contacts");
-		//unset($this->importable_fields['account_id']);
-		//$this->importable_fields['account_name']=1;
-		
 		$this->db->println($this->importable_fields);
 	}
 

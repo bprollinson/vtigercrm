@@ -66,7 +66,7 @@ $parent_email = getEmailParentsList('Contacts',$_REQUEST['record']);
 if(isset($_REQUEST['record']) && $_REQUEST['record']!='')
 {
 	$userid = $current_user->id;
-	$sql = "select fieldname from vtiger_field where uitype = 13 and tabid = 4";
+	$sql = "select fieldname from vtiger_field where uitype = '13' and tabid = 4 and vtiger_field.presence in (0,2)";
 	$result = $adb->pquery($sql, array());
 	$num_fieldnames = $adb->num_rows($result);
 	for($i = 0; $i < $num_fieldnames; $i++)
@@ -85,6 +85,16 @@ $smarty->assign("NAME",$focus->name);
 $smarty->assign("EMAIL",$focus->column_fields['email']);
 $smarty->assign("YAHOO",$focus->column_fields['yahooid']);
 
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
+
 $related_array = getRelatedLists($currentModule,$focus);
 $smarty->assign("RELATEDLISTS", $related_array);
 $smarty->assign("MODULE",$currentmodule);
@@ -97,8 +107,6 @@ $smarty->assign("IMAGE_PATH", $image_path);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
-$smarty->assign("MAIL_CHECK", is_emailId($RECORD));
-$smarty->assign("PERMIT",$permit);
 $smarty->display("RelatedLists.tpl");
 }
 ?>

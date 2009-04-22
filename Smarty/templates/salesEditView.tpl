@@ -55,18 +55,23 @@ function AddressSync(Addform,id)
 {*<!-- Contents -->*}
 <table border=0 cellspacing=0 cellpadding=0 width=98% align=center>
    <tr>
-	<td valign=top><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+	<td valign=top><img src="{'showPanelTopLeft.gif'|@vtiger_imageurl:$THEME}"></td>
 
 	<td class="showPanelBg" valign=top width=100%>
 		{*<!-- PUBLIC CONTENTS STARTS-->*}
 		<div class="small" style="padding:20px">
-		
-			{if $OP_MODE eq 'edit_view'}   
-				<span class="lvtHeaderText"><font color="purple">[ {$ID} ] </font>{$NAME} - {$APP.LBL_EDITING} {$APP[$SINGLE_MOD]} {$APP.LBL_INFORMATION}</span> <br>
+			{* vtlib customization: use translated label if available *}
+			{assign var="SINGLE_MOD_LABEL" value=$SINGLE_MOD}
+			{if $APP.$SINGLE_MOD} {assign var="SINGLE_MOD_LABEL" value=$APP.SINGLE_MOD} {/if}
+				
+			{if $OP_MODE eq 'edit_view'} 
+				{assign var="USE_ID_VALUE" value=$MOD_SEQ_ID}
+		  		{if $USE_ID_VALUE eq ''} {assign var="USE_ID_VALUE" value=$ID} {/if}			
+				<span class="lvtHeaderText"><font color="purple">[ {$USE_ID_VALUE} ] </font>{$NAME} - {$APP.LBL_EDITING} {$SINGLE_MOD_LABEL} {$APP.LBL_INFORMATION}</span> <br>
 				{$UPDATEINFO}	 
 			{/if}
 			{if $OP_MODE eq 'create_view'}
-				<span class="lvtHeaderText">{$APP.LBL_CREATING} {$APP[$SINGLE_MOD]}</span> <br>
+				<span class="lvtHeaderText">{$APP.LBL_CREATING} {$SINGLE_MOD_LABEL}</span> <br>
 			{/if}
 
 			<hr noshade size=1>
@@ -110,7 +115,7 @@ function AddressSync(Addform,id)
 												{if $MODULE eq 'Webmails'}
 													<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="crmbutton small save" onclick="this.form.action.value='Save';this.form.module.value='Webmails';this.form.send_mail.value='true';this.form.record.value='{$ID}'" type="submit" name="button" value="  {$APP.LBL_SAVE_BUTTON_LABEL}  " style="width:70px" >
 											{elseif $MODULE eq 'Accounts'}
-											<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="crmbutton small save" onclick="this.form.action.value='Save'; displaydeleted();  AddressSync(this.form,{$ID});"  type="button" name="button" value="  {$APP.LBL_SAVE_BUTTON_LABEL}  " style="width:70px" >
+											<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="crmbutton small save" onclick="this.form.action.value='Save';return AjaxDuplicateValidate('Accounts','accountname',this.form); displaydeleted();  AddressSync(this.form,{$ID});"  type="button" name="button" value="  {$APP.LBL_SAVE_BUTTON_LABEL}  " style="width:70px" >
 												{else}
 													<input title="{$APP.LBL_SAVE_BUTTON_TITLE}" accessKey="{$APP.LBL_SAVE_BUTTON_KEY}" class="crmButton small save" onclick="this.form.action.value='Save'; displaydeleted(); return formValidate() " type="submit" name="button" value="  {$APP.LBL_SAVE_BUTTON_LABEL}  " style="width:70px" >
 												{/if}
@@ -208,7 +213,7 @@ function AddressSync(Addform,id)
 			</table>
 		<div>
 	</td>
-	<td align=right valign=top><img src="{$IMAGE_PATH}showPanelTopRight.gif"></td>
+	<td align=right valign=top><img src="{'showPanelTopRight.gif'|@vtiger_imageurl:$THEME}"></td>
    </tr>
 </table>
 <!--added to fix 4600-->
@@ -216,11 +221,11 @@ function AddressSync(Addform,id)
 </form>
 
 
-{if ($MODULE eq 'Emails' || 'Notes') and ($FCKEDITOR_DISPLAY eq 'true')}
+{if ($MODULE eq 'Emails' || 'Documents') and ($FCKEDITOR_DISPLAY eq 'true')}
 	<script type="text/javascript" src="include/fckeditor/fckeditor.js"></script>
 	<script type="text/javascript" defer="1">
 		var oFCKeditor = null;
-		{if $MODULE eq 'Notes'}
+		{if $MODULE eq 'Documents'}
 			oFCKeditor = new FCKeditor( "notecontent" ) ;
 		{/if}
 		oFCKeditor.BasePath   = "include/fckeditor/" ;
@@ -263,3 +268,14 @@ function AddressSync(Addform,id)
 	{rdelim}
 
 </script>
+
+<!-- vtlib customization: Help information assocaited with the fields -->
+{if $FIELDHELPINFO}
+<script type='text/javascript'>
+{literal}var fieldhelpinfo = {}; {/literal}
+{foreach item=FIELDHELPVAL key=FIELDHELPKEY from=$FIELDHELPINFO}
+	fieldhelpinfo["{$FIELDHELPKEY}"] = "{$FIELDHELPVAL}";
+{/foreach}
+</script>
+{/if}
+<!-- END -->

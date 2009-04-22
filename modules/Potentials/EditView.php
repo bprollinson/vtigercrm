@@ -37,17 +37,20 @@ $searchurl = getBasic_Advance_SearchURL();
 $smarty->assign("SEARCH", $searchurl);
 //4600 ends
 
-if(isset($_REQUEST['record']) && $_REQUEST['record'] != '') 
-{
+if(isset($_REQUEST['record']) && $_REQUEST['record'] != ''){
     $focus->id = $_REQUEST['record'];
     $focus->mode = 'edit'; 	
     $focus->retrieve_entity_info($_REQUEST['record'],"Potentials");
     $focus->name=$focus->column_fields['potentialname'];	
 }
-if(isset($_REQUEST['account_id']))
-{
-        $focus->column_fields['account_id'] = $_REQUEST['account_id'];
+
+//adding support for uitype 10
+if(!empty($_REQUEST['contact_id'])){
+	$focus->column_fields['related_to'] = $_REQUEST['contact_id'];
+}elseif(!empty($_REQUEST['account_id'])){
+	$focus->column_fields['related_to'] = $_REQUEST['account_id'];
 }
+
 if(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true') {
 	$focus->id = "";
     	$focus->mode = ''; 	
@@ -67,13 +70,12 @@ $smarty->assign("CATEGORY",$category);
 //needed when creating a new opportunity with a default vtiger_account value passed in
 if (isset($_REQUEST['accountname']) && is_null($focus->accountname)) {
 	$focus->accountname = $_REQUEST['accountname'];
-	
 }
-if (isset($_REQUEST['accountid']) && is_null($focus->accountid)) {
-	$focus->accountid = $_REQUEST['accountid'];
+if (isset($_REQUEST['accountid']) && is_null($focus->related_to)) {
+	$focus->related_to = $_REQUEST['accountid'];
 }
-if (isset($_REQUEST['contactid']) && is_null($focus->contactid)) {
-	$focus->contactid = $_REQUEST['contactid'];
+if (isset($_REQUEST['contactid']) && is_null($focus->related_to)) {
+	$focus->related_to = $_REQUEST['contactid'];
 }
 
 global $theme;
@@ -138,6 +140,25 @@ $smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+global $adb;
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if($focus->mode != 'edit' && $mod_seq_field != null) {
+		$autostr = getTranslatedString('MSG_AUTO_GEN_ON_SAVE');
+		$mod_seq_string = $adb->pquery("SELECT prefix, cur_id from vtiger_modentity_num where semodule = ? and active=1",array($currentModule));
+        $mod_seq_prefix = $adb->query_result($mod_seq_string,0,'prefix');
+        $mod_seq_no = $adb->query_result($mod_seq_string,0,'cur_id');
+        if($adb->num_rows($mod_seq_string) == 0 || $focus->checkModuleSeqNumber($focus->table_name, $mod_seq_field['column'], $mod_seq_prefix.$mod_seq_no))
+                echo '<br><font color="#FF0000"><b>'. getTranslatedString('LBL_DUPLICATE'). ' '. getTranslatedString($mod_seq_field['label'])
+                	.' - '. getTranslatedString('LBL_CLICK') .' <a href="index.php?module=Settings&action=CustomModEntityNo&parenttab=Settings&selmodule='.$currentModule.'">'.getTranslatedString('LBL_HERE').'</a> '
+                	. getTranslatedString('LBL_TO_CONFIGURE'). ' '. getTranslatedString($mod_seq_field['label']) .'</b></font>';
+        else
+                $smarty->assign("MOD_SEQ_ID",$autostr);
+} else {
+	$smarty->assign("MOD_SEQ_ID", $focus->column_fields[$mod_seq_field['name']]);
+}
+// END
 
 if($focus->mode == 'edit')
 $smarty->display("salesEditView.tpl");

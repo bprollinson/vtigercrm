@@ -48,13 +48,11 @@ if($activity_mode =='' || strlen($activity_mode) < 1)
 	{
 		$activity_mode = $actType;	
 	}
-	elseif($actType == 'Meeting' || $actType == 'Call')
+	elseif($actType != 'Emails')
 	{
 		$activity_mode = 'Events';
 	}		
 }	
-
-
 
 if($activity_mode == 'Task')
 {
@@ -100,6 +98,7 @@ if (isset($_REQUEST['accountid']) && is_null($focus->parent_id)) {
 }
 
 $act_data = getBlocks($tab_type,"detail_view",'',$focus->column_fields);
+
 foreach($act_data as $block=>$entry)
 {
 	foreach($entry as $key=>$value)
@@ -107,7 +106,7 @@ foreach($act_data as $block=>$entry)
 		foreach($value as $label=>$field)
 		{
 			$fldlabel[$field['fldname']] = $label;
-			if($field['ui'] == 15 || $field['ui'] == 16 || $field['ui'] == 111)
+			if($field['ui'] == 15 || $field['ui'] == 16)
 			{
 				foreach($field['options'] as $index=>$arr_val)
 				{
@@ -126,6 +125,7 @@ foreach($act_data as $block=>$entry)
 		}
 	}
 }
+
 //Start
 //To set user selected hour format
 if($current_user->hour_format == '')
@@ -181,7 +181,7 @@ elseif($activity_mode == 'Events')
 	$rem_days = 0;
 	$rem_hrs = 0;
 	$rem_min = 0;
-	if($focus->column_fields['reminder_time'] != null)
+	if(!empty($focus->column_fields['reminder_time']))
 	{
 		$data['set_reminder'] = $mod_strings['LBL_YES'];
 		$data['reminder_str'] = $finaldata['reminder_time'];
@@ -337,6 +337,57 @@ $smarty->assign("CHECK", $check_button);
 
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("EDIT_PERMISSION",isPermitted($currentModule,'EditView',$_REQUEST[record]));
+
+if(isset($_SESSION['activity_listquery'])){
+	$arrayTotlist = array();
+	$aNamesToList = array(); 
+	$forAllCRMIDlist_query=$_SESSION['activity_listquery'];
+	$resultAllCRMIDlist_query=$adb->pquery($forAllCRMIDlist_query,array());
+	while($forAllCRMID = $adb->fetch_array($resultAllCRMIDlist_query))
+	{
+		$arrayTotlist[]=$forAllCRMID['crmid'];
+	}
+	$_SESSION['listEntyKeymod_'.$focus->id] = $module.":".implode(",",$arrayTotlist);
+	
+	if(isset($_SESSION['listEntyKeymod_'.$focus->id]))
+	{
+		$split_temp=explode(":",$_SESSION['listEntyKeymod_'.$focus->id]);
+		if($split_temp[0] == $module)
+		{	
+			$smarty->assign("SESMODULE",$split_temp[0]);
+			$ar_allist=explode(",",$split_temp[1]);
+			
+			for($listi=0;$listi<count($ar_allist);$listi++)
+			{
+				if($ar_allist[$listi]==$_REQUEST[record])
+				{
+					if($listi-1>=0)
+					{
+						$privrecord=$ar_allist[$listi-1];
+						$smarty->assign("privrecord",$privrecord);
+					}else {unset($privrecord);}
+					if($listi+1<count($ar_allist))
+					{
+						$nextrecord=$ar_allist[$listi+1];
+						$smarty->assign("nextrecord",$nextrecord);
+					}else {unset($nextrecord);}
+					break;
+				}
+				
+			}
+		}
+	}
+}
+
+// Gather the custom link information to display
+include_once('vtlib/Vtiger/Link.php');
+$customlink_params = Array('MODULE'=>$currentModule, 'RECORD'=>$focus->id, 'ACTION'=>$_REQUEST['action']);
+$smarty->assign('CUSTOM_LINKS', Vtiger_Link::getAllByType(getTabid($currentModule), 'DETAILVIEW', $customlink_params));
+// END
+
+$custom_fields_data = getCalendarCustomFields($tabid,'detail_view',$focus->column_fields);
+$smarty->assign("CUSTOM_FIELDS_DATA", $custom_fields_data);
+
 $smarty->display("ActivityDetailView.tpl");
 
 ?>

@@ -34,6 +34,9 @@ if (!isset($where)) $where = "";
 $url_string = '';
 
 $focus = new Invoice();
+// Initialize sort by fields
+$focus->initSortbyField('Invoice');
+// END
 $smarty = new vtigerCRM_Smarty;
 $other_text = Array();
 
@@ -77,6 +80,17 @@ $oCustomView = new CustomView("Invoice");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
+//Added to handle approving or denying status-public by the admin in CustomView
+$statusdetails = $oCustomView->isPermittedChangeStatus($viewnamedesc['status']);
+$smarty->assign("CUSTOMVIEW_PERMISSION",$statusdetails);
+
+//To check if a user is able to edit/delete a customview
+$edit_permit = $oCustomView->isPermittedCustomView($viewid,'EditView',$currentModule);
+$delete_permit = $oCustomView->isPermittedCustomView($viewid,'Delete',$currentModule);
+$smarty->assign("CV_EDIT_PERMIT",$edit_permit);
+$smarty->assign("CV_DELETE_PERMIT",$delete_permit);
+
 //<<<<<customview>>>>>
 $smarty->assign("CHANGE_OWNER",getUserslist());
 $smarty->assign("CHANGE_GROUP_OWNER",getGroupslist());
@@ -86,7 +100,8 @@ if(isPermitted('Invoice','Delete','') == 'yes')
 }
 if(isPermitted('Invoice','EditView','') == 'yes')
 {
-        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
+	$other_text['mass_edit'] = $app_strings[LBL_MASS_EDIT];
+	$other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
 }
 
 if($viewnamedesc['viewname'] == 'All')
@@ -98,6 +113,7 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("SINGLE_MOD",'Invoice');
@@ -190,6 +206,7 @@ else
 
 $record_string= $app_strings[LBL_SHOWING]." " .$start_rec." - ".$end_rec." " .$app_strings[LBL_LIST_OF] ." ".$noofrows;
 
+
 //Retreive the List View Table Header
 if($viewid !='')
 $url_string .="&viewname=".$viewid;
@@ -203,6 +220,7 @@ $smarty->assign("SEARCHLISTHEADER",$listview_header_search);
 $listview_entries = getListViewEntries($focus,"Invoice",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
 $smarty->assign("LISTENTITY", $listview_entries);
 $smarty->assign("SELECT_SCRIPT", $view_script);
+
 //Added to select Multiple records in multiple pages
 $smarty->assign("SELECTEDIDS", $_REQUEST['selobjs']);
 $smarty->assign("ALLSELECTEDIDS", $_REQUEST['allselobjs']);
@@ -226,6 +244,8 @@ $smarty->assign("BUTTONS", $other_text);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+$_SESSION['invoice_listquery'] = $query;
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

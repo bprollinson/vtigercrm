@@ -14,6 +14,7 @@
 require_once('include/database/PearDatabase.php');
 require_once('include/utils/utils.php');
 
+global $mod_strings;
 $profilename=$_REQUEST['profile_name'];
 
 if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check']!='')
@@ -23,11 +24,11 @@ if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check']!='')
 
         if($adb->num_rows($result) > 0)
         {
-                echo 'A Profile in the specified name "'.$profilename.'" already exists';
+                echo $mod_strings['LBL_PROFILENAME_EXIST'];
                 die;
         }else
         {
-                echo 'SUCESS';
+                echo 'SUCCESS';
                 die;
         }
 
@@ -51,6 +52,7 @@ if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != '')
 	$smarty->assign("MODE",$_REQUEST['mode']);
 
 $smarty->assign("MOD", return_module_language($current_language,'Settings'));
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("CMOD", $mod_strings);
@@ -66,5 +68,4 @@ do
 	$profilelist[] = array($name,$profileid); 
 }while($temprow = $adb->fetch_array($result));
 $smarty->assign("PROFILE_LISTS", $profilelist);
-                    
 $smarty->display("CreateProfile.tpl");

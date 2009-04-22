@@ -27,9 +27,9 @@ global $currentModule;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
-global $current_language;
+global $current_language,$default_charset;
 
-$category = $_REQUEST['parenttab'];
+$category = htmlspecialchars($_REQUEST['parenttab'],ENT_QUOTES,$default_charset);
 
 //Function added to convert line breaks to space in description during export
 function br2nl_int($str) {
@@ -54,7 +54,7 @@ function getStdContactFlds(&$queryFields, $adb, $valueArray)
 {
   global $current_language;
   require_once('modules/Contacts/language/'.$current_language.'.lang.php');
-  $query = "SELECT fieldid, columnname, fieldlabel FROM vtiger_field WHERE tablename='vtiger_contactdetails' AND uitype=56";
+  $query = "SELECT fieldid, columnname, fieldlabel FROM vtiger_field WHERE tablename='vtiger_contactdetails' AND uitype='56' and vtiger_field.presence in (0,2)";
 	$result = $adb->query ($query,true,"Error: "."<BR>$query");
 	for ($tmp=0; $tmp < $adb->num_rows($result); $tmp++)
 	{
@@ -83,7 +83,7 @@ if ($step == "ask")
   $smarty->assign("EXPORTWHERE",$exportWhere);
   $queryFields = Array();
 	// get the Contacts CF fields
- 	$cfquery = "SELECT columnname,fieldlabel,uitype FROM vtiger_field WHERE tablename='vtiger_contactscf'";
+ 	$cfquery = "SELECT columnname,fieldlabel,uitype FROM vtiger_field WHERE tablename='vtiger_contactscf' and vtiger_field.presence in (0,2)";
 	$result = $adb->query ($cfquery,true,"Error: "."<BR>$cfquery");
 	for ($tmp=0; $tmp < $adb->num_rows($result); $tmp++)
 	{
@@ -186,7 +186,7 @@ else
 	   INNER JOIN vtiger_accountscf ON vtiger_account.accountid = vtiger_accountscf.accountid
 	   INNER JOIN vtiger_contactdetails contactdetails ON vtiger_account.accountid = contactdetails.accountid
 	   INNER JOIN vtiger_contactscf contactscf ON contactscf.contactid = contactdetails.contactid
-	   WHERE crmentity.deleted=0 AND contactdetails.email != \"\" ".$where;
+	   WHERE crmentity.deleted=0 AND contactdetails.email != '' ".$where;
 
 	 if (strlen ($exportWhere))
 	      $exquery[0] .= " AND ".$exportWhere;

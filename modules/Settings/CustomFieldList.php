@@ -13,11 +13,13 @@ require_once('include/database/PearDatabase.php');
 require_once('include/CustomFieldUtil.php');
 
 global $mod_strings,$app_strings,$theme;
+
 $smarty=new vtigerCRM_Smarty;
 $smarty->assign("MOD",$mod_strings);
 $smarty->assign("APP",$app_strings);
+$smarty->assign("THEME", $theme);
 $theme_path="themes/".$theme."/";
-$image_path=$theme_path."images/";
+$image_path="themes/images/";
 $smarty->assign("IMAGE_PATH", $image_path);
 $module_array=getCustomFieldSupportedModules();
 
@@ -54,6 +56,9 @@ $smarty->assign("CFTEXTCOMBO",$cftextcombo);
 $smarty->assign("CFIMAGECOMBO",$cfimagecombo);
 if($_REQUEST['fld_module'] !='')
 	$fld_module = $_REQUEST['fld_module'];
+elseif($_REQUEST['formodule'] != ''){
+	$fld_module = $_REQUEST['formodule'];
+}	
 else
 	$fld_module = 'Leads';
 $smarty->assign("MODULE",$fld_module);
@@ -69,9 +74,9 @@ if($_REQUEST['mode'] !='')
 $smarty->assign("MODE", $mode);
 
 if($_REQUEST['ajax'] != 'true')
-	$smarty->display('CustomFieldList.tpl');	
+	$smarty->display(vtlib_getModuleTemplate('Calendar','CustomFieldList.tpl'));	
 else
-	$smarty->display('CustomFieldEntries.tpl');
+	$smarty->display(vtlib_getModuleTemplate('Calendar','CustomFieldEntries.tpl'));
 
 	/**
 	* Function to get customfield entries
@@ -80,11 +85,14 @@ else
 	*/
 function getCFListEntries($module)
 {
+	global $adb,$app_strings,$theme,$smarty,$log;
 	$tabid = getTabid($module);
-	global $adb,$app_strings,$theme;
+	if ($module == 'Calendar') {
+		$tabid = array(9, 16);
+	}
 	$theme_path="themes/".$theme."/";
-	$image_path=$theme_path."images/";
-	$dbQuery = "select fieldid,columnname,fieldlabel,uitype,displaytype,vtiger_convertleadmapping.cfmid from vtiger_field left join vtiger_convertleadmapping on  vtiger_convertleadmapping.leadfid = vtiger_field.fieldid where tabid=? and generatedtype=2 order by sequence";
+	$image_path="themes/images/";
+	$dbQuery = "select fieldid,columnname,fieldlabel,uitype,displaytype,block,vtiger_convertleadmapping.cfmid,tabid from vtiger_field left join vtiger_convertleadmapping on  vtiger_convertleadmapping.leadfid = vtiger_field.fieldid where tabid in (". generateQuestionMarks($tabid) .") and vtiger_field.presence in (0,2) and generatedtype = 2 order by sequence";
 	$result = $adb->pquery($dbQuery, array($tabid));
 	$row = $adb->fetch_array($result);
 	$count=1;
@@ -98,6 +106,7 @@ function getCFListEntries($module)
 			$cf_element['label']=$row["fieldlabel"];
 			$fld_type_name = getCustomFieldTypeName($row["uitype"]);
 			$cf_element['type']=$fld_type_name;
+			$cf_tab_id = $row["tabid"];
 			if($module == 'Leads')
 			{
 				$mapping_details = getListLeadMapping($row["cfmid"]);
@@ -105,8 +114,16 @@ function getCFListEntries($module)
 				$cf_element[]= $mapping_details['contactlabel'];
 				$cf_element[]= $mapping_details['potentiallabel'];
 			}
-			$cf_element['tool']='<img src="'.$image_path.'editfield.gif" border="0" style="cursor:pointer;" onClick="fnvshobj(this,\'createcf\');getCreateCustomFieldForm(\''.$module.'\',\''.$row["fieldid"].'\',\''.$tabid.'\',\''.$row["uitype"].'\')" alt="'.$app_strings['LBL_EDIT_BUTTON_LABEL'].'" title="'.$app_strings['LBL_EDIT_BUTTON_LABEL'].'"/>&nbsp;|&nbsp;<img style="cursor:pointer;" onClick="deleteCustomField('.$row["fieldid"].',\''.$module.'\', \''.$row["columnname"].'\', \''.$row["uitype"].'\')" src="'.$image_path.'delete.gif" border="0"  alt="'.$app_strings['LBL_DELETE_BUTTON_LABEL'].'" title="'.$app_strings['LBL_DELETE_BUTTON_LABEL'].'"/></a>';
-
+			if($module == 'Calendar')
+			{
+				if ($cf_tab_id == '9')
+					$cf_element['activitytype'] = $app_strings['Task'];
+				else
+					$cf_element['activitytype'] = $app_strings['Event'];
+			}
+			if ($module == 'Calendar') {
+				$cf_element['tool']='&nbsp;<img style="cursor:pointer;" onClick="deleteCustomField('.$row["fieldid"].',\''.$module.'\', \''.$row["columnname"].'\', \''.$row["uitype"].'\')" src="'. vtiger_imageurl('delete.gif', $theme) .'" border="0"  alt="'.$app_strings['LBL_DELETE_BUTTON_LABEL'].'" title="'.$app_strings['LBL_DELETE_BUTTON_LABEL'].'"/></a>';
+			}
 			$cflist[] = $cf_element;
 			$count++;
 		}while($row = $adb->fetch_array($result));
@@ -156,7 +173,10 @@ function getListLeadMapping($cfid)
 function getCustomFieldSupportedModules()
 {
 	global $adb;
-	$sql="select distinct vtiger_field.tabid,name from vtiger_field inner join vtiger_tab on vtiger_field.tabid=vtiger_tab.tabid where vtiger_field.tabid not in(9,10,16,15,8,29)";
+	// vtlib customization: Do not list disabled modules.
+	//$sql="select distinct vtiger_field.tabid,name from vtiger_field inner join vtiger_tab on vtiger_field.tabid=vtiger_tab.tabid where vtiger_field.tabid not in(9,10,16,15,8,29)";
+	$sql="select distinct vtiger_field.tabid,name from vtiger_field inner join vtiger_tab on vtiger_field.tabid=vtiger_tab.tabid where vtiger_field.tabid not in(10,16,15,8,29) and vtiger_tab.presence != 1"; // 16 is still here as we do not want duplicates for Calendar - Both 9 and 16 point to Calendar itself
+	// END
 	$result = $adb->pquery($sql, array());
 	while($moduleinfo=$adb->fetch_array($result))
 	{

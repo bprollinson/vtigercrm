@@ -33,6 +33,9 @@ if (!isset($where)) $where = "";
 $url_string = '';
 
 $focus = new Quotes();
+// Initialize sort by fields
+$focus->initSortbyField('Quotes');
+// END
 $smarty = new vtigerCRM_Smarty;
 $other_text = Array();
 
@@ -76,6 +79,17 @@ $oCustomView = new CustomView("Quotes");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
+//Added to handle approving or denying status-public by the admin in CustomView
+$statusdetails = $oCustomView->isPermittedChangeStatus($viewnamedesc['status']);
+$smarty->assign("CUSTOMVIEW_PERMISSION",$statusdetails);
+
+//To check if a user is able to edit/delete a customview
+$edit_permit = $oCustomView->isPermittedCustomView($viewid,'EditView',$currentModule);
+$delete_permit = $oCustomView->isPermittedCustomView($viewid,'Delete',$currentModule);
+$smarty->assign("CV_EDIT_PERMIT",$edit_permit);
+$smarty->assign("CV_DELETE_PERMIT",$delete_permit);
+
 //<<<<<customview>>>>>
 $smarty->assign("CHANGE_OWNER",getUserslist());
 $smarty->assign("CHANGE_GROUP_OWNER",getGroupslist());
@@ -86,7 +100,8 @@ if(isPermitted('Quotes','Delete','') == 'yes')
 }
 if(isPermitted('Quotes','EditView','') == 'yes')
 {
-        $other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
+	$other_text['mass_edit'] = $app_strings[LBL_MASS_EDIT];
+	$other_text['c_owner'] = $app_strings[LBL_CHANGE_OWNER];
 }
 if($viewnamedesc['viewname'] == 'All')
 {
@@ -97,6 +112,7 @@ $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("SINGLE_MOD",'Quote');
@@ -139,7 +155,7 @@ if(isset($order_by) && $order_by != '')
 }
 
 //Retreiving the no of rows
-$count_result = $adb->query("select count(*) count ".substr($query, strpos($query,'FROM'),strlen($query)));
+$count_result = $adb->query(mkCountQuery( $query));
 $noofrows = $adb->query_result($count_result,0,"count");
 
 //Storing Listview session object
@@ -208,6 +224,9 @@ $smarty->assign("BUTTONS", $other_text);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+$_SESSION['quotes_listquery'] = $query;
+
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");
 else	

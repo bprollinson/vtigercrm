@@ -80,6 +80,9 @@ function getSearchListHeaderValues($focus, $module,$sort_qry='',$sorder='',$orde
 		{
 			$fieldname = "contact_id";
 		}
+		if($fieldname == 'folderid' && $module == 'Documents'){
+			$fieldname = 'foldername';
+		}
 		array_push($field_list, $fieldname);
 		$j++;
 	}
@@ -88,7 +91,7 @@ function getSearchListHeaderValues($focus, $module,$sort_qry='',$sorder='',$orde
 	{
 		$profileList = getCurrentUserProfileList();
 		//changed to get vtiger_field.fieldname
-		$query  = "SELECT vtiger_profile2field.*,vtiger_field.fieldname FROM vtiger_field INNER JOIN vtiger_profile2field ON vtiger_profile2field.fieldid=vtiger_field.fieldid INNER JOIN vtiger_def_org_field ON vtiger_def_org_field.fieldid=vtiger_field.fieldid WHERE vtiger_field.tabid=? AND vtiger_profile2field.visible=0 AND vtiger_def_org_field.visible=0 AND vtiger_profile2field.profileid IN (". generateQuestionMarks($profileList) .") AND vtiger_field.fieldname IN (". generateQuestionMarks($field_list) .") GROUP BY vtiger_field.fieldid";
+		$query  = "SELECT vtiger_profile2field.*,vtiger_field.fieldname FROM vtiger_field INNER JOIN vtiger_profile2field ON vtiger_profile2field.fieldid=vtiger_field.fieldid INNER JOIN vtiger_def_org_field ON vtiger_def_org_field.fieldid=vtiger_field.fieldid WHERE vtiger_field.tabid=? AND vtiger_profile2field.visible=0 AND vtiger_def_org_field.visible=0 AND vtiger_profile2field.profileid IN (". generateQuestionMarks($profileList) .") AND vtiger_field.fieldname IN (". generateQuestionMarks($field_list) .") and vtiger_field.presence in (0,2) GROUP BY vtiger_field.fieldid";
  		if( $adb->dbType == "pgsql")
  		    $query = fixPostgresQuery( $query, $log, 0);
 		$result = $adb->pquery($query, array($tabid, $profileList, $field_list));
@@ -102,8 +105,10 @@ function getSearchListHeaderValues($focus, $module,$sort_qry='',$sorder='',$orde
 		if($module == 'Users' && empty($field))
 			$field = Array("last_name","email1");
 	}
-
-        //modified for vtiger_customview 27/5 - $app_strings change to $mod_strings
+	//this is used to get fields that are visible for admin --vikas
+	$focus->list_fields = filterInactiveFields($module,$focus->list_fields);
+	   
+	    //modified for vtiger_customview 27/5 - $app_strings change to $mod_strings
         foreach($focus->list_fields as $name=>$tableinfo)
         {
                 //added for vtiger_customview 27/5
@@ -325,38 +330,49 @@ function getValuesforColumns($column_name,$search_string,$criteria='cts')
 *Returns the where conditions for list query in string format
 */
 
-function BasicSearch($module,$search_field,$search_string)
-{
-	 global $log,$mod_strings,$current_user;
-         $log->debug("Entering BasicSearch(".$module.",".$search_field.",".$search_string.") method ...");
+function BasicSearch($module,$search_field,$search_string){
+	global $log,$mod_strings,$current_user;
+	$log->debug("Entering BasicSearch(".$module.",".$search_field.",".$search_string.") method ...");
 	global $adb;
 	$search_string = ltrim(rtrim(mysql_real_escape_string($search_string)));
 	global $column_array,$table_col_array;
-	if($search_field =='crmid')
-	{
+	if($search_field =='crmid'){
 		$column_name='crmid';
 		$table_name='vtiger_crmentity';
 		$where="$table_name.$column_name like '". formatForSqlLike($search_string) ."'";
-	}else
-	{	
+	}elseif($search_field =='currency_id' && ($module == 'PriceBooks' || $module == 'PurchaseOrder' || $module == 'SalesOrder' || $module == 'Invoice' || $module == 'Quotes')){
+		$column_name='currency_name';
+		$table_name='vtiger_currency_info';
+		$where="$table_name.$column_name like '". formatForSqlLike($search_string) ."'";
+	}elseif($search_field == 'folderid' && $module == 'Documents'){
+		$column_name='foldername';
+		$table_name='vtiger_attachmentsfolder';
+		$where="$table_name.$column_name like '". formatForSqlLike($search_string) ."'";	
+	}else{
 		//Check added for tickets by accounts/contacts in dashboard
 		$search_field_first = $search_field;
-		if($module=='HelpDesk' && ($search_field == 'contactid' || $search_field == 'account_id'))
-		{
-			$search_field = "parent_id";
+		if($module=='HelpDesk'){
+			if($search_field == 'contactid'){
+				$where = "(vtiger_contactdetails.contact_no like '". formatForSqlLike($search_string) ."')";
+				return $where;
+			}elseif($search_field == 'account_id'){
+				$search_field = "parent_id";
+			}
 		}
 		//Check ends
 
 		//Added to search contact name by lastname
-		if(($module == "Calendar" || $module == "Invoice" || $module == "Notes" || $module == "SalesOrder" || $module== "PurchaseOrder") && ($search_field == "contact_id"))
-		{
+		if(($module == "Calendar" || $module == "Invoice" || $module == "Documents" || $module == "SalesOrder" || $module== "PurchaseOrder") && ($search_field == "contact_id")){
 			$module = 'Contacts';
 			$search_field = 'lastname';
 		}
-		if($search_field == "accountname" && $module != "Accounts")
+		if($search_field == "accountname" && $module != "Accounts"){
 			$search_field = "account_id";
-		if($search_field == 'productname' && $module == 'Campaigns')
+		}
+		if($search_field == 'productname' && $module == 'Campaigns'){
 			$search_field = "product_id";
+		}
+		
 		$qry="select vtiger_field.columnname,tablename from vtiger_tab inner join vtiger_field on vtiger_field.tabid=vtiger_tab.tabid where vtiger_tab.name=? and (fieldname=? or columnname=?)";
 		$result = $adb->pquery($qry, array($module, $search_field, $search_field));
 		$noofrows = $adb->num_rows($result);
@@ -381,6 +397,11 @@ function BasicSearch($module,$search_field,$search_string)
 			{
 				$table_name = "vtiger_account2";
 				$column_name = "accountname";
+			}
+			if($column_name == "parentid" && $module == "Products")
+			{
+				$table_name = "vtiger_products2";
+				$column_name = "productname";
 			}
 			if($column_name == "reportsto" && $module == "Contacts")
 			{
@@ -412,7 +433,7 @@ function BasicSearch($module,$search_field,$search_string)
 					$where="$table_name.$column_name = '-1'";
 
 			}
-			elseif ($uitype == 111 || $uitype == 15 || $uitype == 16)
+			elseif ($uitype == 15 || $uitype == 16)
 			{
 				if(is_uitype($uitype, '_picklist_')) 
 				{ 
@@ -479,16 +500,41 @@ function BasicSearch($module,$search_field,$search_string)
 			$where = "(".$where_cond0." or ".$where_cond1.")";
 	}
 	// commented to support searching "%" with the search string.
-	/*if($_REQUEST['type'] == 'entchar')
-	{
-		$search = array('Un Assigned','%','like');
-		$replace = array('','','=');
-		$where= str_replace($search,$replace,$where);
-	}*/
-	if($_REQUEST['type'] == 'alpbt')
-	{
+	if($_REQUEST['type'] == 'alpbt'){
 	        $where = str_replace_once("%", "", $where);
 	}
+	
+	//uitype 10 handling
+	if($uitype == 10){
+		$where = array();
+		$sql = "select fieldid from vtiger_field where tabid=? and fieldname=?";
+		$result = $adb->pquery($sql, array(getTabid($module), $search_field));
+		
+		if($adb->num_rows($result)>0){
+			$fieldid = $adb->query_result($result, 0, "fieldid");
+			$sql = "select * from vtiger_fieldmodulerel where fieldid=?";
+			$result = $adb->pquery($sql, array($fieldid));
+			$count = $adb->num_rows($result);
+			$searchString = formatForSqlLike($search_string);
+			
+			for($i=0;$i<$count;$i++){
+				$relModule = $adb->query_result($result, $i, "relmodule");
+				$relInfo = getEntityField($relModule);
+				$relTable = $relInfo["tablename"];
+				$relField = $relInfo["fieldname"];
+				
+				if(strpos($relField, 'concat') !== false){
+					$where[] = "$relField like '$searchString'";
+				}else{
+					$where[] = "$relTable.$relField like '$searchString'";
+				}
+				
+			}
+			$where = implode(" or ", $where);
+		}
+		$where = "($where) ";
+	}
+	
 	$log->debug("Exiting BasicSearch method ...");
 	return $where;
 }
@@ -515,7 +561,7 @@ function getAdvSearchfields($module)
 	{
 		$sql = "select * from vtiger_field ";
 		$sql.= " where vtiger_field.tabid in(?) and";
-		$sql.= " vtiger_field.displaytype in (1,2,3)";
+		$sql.= " vtiger_field.displaytype in (1,2,3) and vtiger_field.presence in (0,2)";
 		if($tabid == 13 || $tabid == 15)
 		{
 			$sql.= " and vtiger_field.fieldlabel != 'Add Comment'";
@@ -545,7 +591,7 @@ function getAdvSearchfields($module)
 		$profileList = getCurrentUserProfileList();
 		$sql = "select * from vtiger_field inner join vtiger_profile2field on vtiger_profile2field.fieldid=vtiger_field.fieldid inner join vtiger_def_org_field on vtiger_def_org_field.fieldid=vtiger_field.fieldid ";
 		$sql.= " where vtiger_field.tabid in(?) and";
-		$sql.= " vtiger_field.displaytype in (1,2,3) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
+		$sql.= " vtiger_field.displaytype in (1,2,3) and vtiger_field.presence in (0,2) and vtiger_profile2field.visible=0 and vtiger_def_org_field.visible=0";
 		
 		$params = array($tabid);
 		
@@ -590,7 +636,7 @@ function getAdvSearchfields($module)
 		$fieldtype = $adb->query_result($result,$i,"typeofdata");
 		$fieldtype = explode("~",$fieldtype);
 		$fieldtypeofdata = $fieldtype[0];	
-		if($fieldcolname == 'account_id' || $fieldcolname == 'accountid' || $fieldcolname == 'product_id' || $fieldcolname == 'vendor_id' || $fieldcolname == 'contact_id' || $fieldcolname == 'contactid' || $fieldcolname == 'vendorid' || $fieldcolname == 'potentialid' || $fieldcolname == 'salesorderid' || $fieldcolname == 'quoteid' || $fieldcolname == 'parentid' || $fieldcolname == "recurringtype" || $fieldcolname == "campaignid" || $fieldcolname == "inventorymanager" ||  $fieldcolname == "handler")
+		if($fieldcolname == 'account_id' || $fieldcolname == 'accountid' || $fieldcolname == 'product_id' || $fieldcolname == 'vendor_id' || $fieldcolname == 'contact_id' || $fieldcolname == 'contactid' || $fieldcolname == 'vendorid' || $fieldcolname == 'potentialid' || $fieldcolname == 'salesorderid' || $fieldcolname == 'quoteid' || $fieldcolname == 'parentid' || $fieldcolname == "recurringtype" || $fieldcolname == "campaignid" || $fieldcolname == "inventorymanager" ||  $fieldcolname == "handler" ||  $fieldcolname == "currency_id")
 			$fieldtypeofdata = "V";
 		if($fieldcolname == "discontinued" || $fieldcolname == "active")
 			$fieldtypeofdata = "C";
@@ -622,6 +668,10 @@ function getAdvSearchfields($module)
                 {
                         $fieldtablename = 'vtiger_contactdetails2';
                         $fieldcolname = 'lastname';
+                }
+                if($fieldtablename == 'vtiger_notes' && $fieldcolname == 'folderid'){
+                	$fieldtablename = 'vtiger_attachmentsfolder';
+                	$fieldcolname = 'foldername';
                 }
 		if($fieldlabel != 'Related to')
 		{
@@ -702,6 +752,9 @@ function getSearch_criteria($criteria,$searchstring,$searchfield)
 	}
 	if($searchfield == "vtiger_account.parentid")
 		$searchfield = "vtiger_account2.accountname";
+	if($searchfield == "vtiger_pricebook.currency_id" || $searchfield == "vtiger_quotes.currency_id" || $searchfield == "vtiger_invoice.currency_id"
+			|| $searchfield == "vtiger_purchaseorder.currency_id" || $searchfield == "vtiger_salesorder.currency_id")
+		$searchfield = "vtiger_currency_info.currency_name";
 	$where_string = '';
 	switch($criteria)
 	{
@@ -817,7 +870,7 @@ function getWhereCondition($currentModule)
 				else
 					$adv_string .= " ".getSearch_criteria($srch_cond,"-1",$tab_name.'.'.$column_name)." ".$matchtype;
 			}
-			elseif ($uitype == 111 || $uitype == 15 || $uitype == 16)
+			elseif ($uitype == 15 || $uitype == 16)
 			{
 				if(is_uitype($uitype, '_picklist_')) { 
 					// Get all the keys for the for the Picklist value
@@ -955,7 +1008,8 @@ function getdashboardcondition()
 		$res = $adb->pquery($user_qry, array($owner));
 		$uid = $adb->query_result($res,0,'id');
 		array_push($where_clauses, "vtiger_crmentity.smownerid = ".$uid);
-		$url_string .= "&assigned_user_id=".$uid;
+		//$url_string .= "&assigned_user_id=".$uid;
+		$url_string .= "&owner=".$owner;
 	}
 	if(isset($campaign) && $campaign != "")
 	{
@@ -977,7 +1031,13 @@ function getdashboardcondition()
 		array_push($where_clauses, "vtiger_inventoryproductrel.id = ".$po);
 		$url_string .= "&purchaseorderid=".$po;
 	}
-
+	if(isset($_REQUEST['from_homepagedb']) && $_REQUEST['from_homepagedb'] != '') {
+		$url_string .= "&from_homepagedb=".$_REQUEST['from_homepagedb'];
+	}
+	if(isset($_REQUEST['type']) && $_REQUEST['type'] != '') {
+		$url_string .= "&type=".$_REQUEST['type'];
+	}
+	
 	$where = "";
 	foreach($where_clauses as $clause)
 	{

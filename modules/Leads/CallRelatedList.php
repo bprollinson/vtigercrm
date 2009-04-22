@@ -62,7 +62,7 @@ if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != ' ') {
 if(isset($_REQUEST['record']) && $_REQUEST['record']!='')
 {
 	$userid = $current_user->id;
-	$sql = "select fieldname from vtiger_field where uitype = 13 and tabid = 7";
+	$sql = "select fieldname from vtiger_field where uitype = '13' and tabid = 7 and vtiger_field.presence in (0,2)";
 	$result = $adb->pquery($sql, array());
 	$num_fieldnames = $adb->num_rows($result);
 	for($i = 0; $i < $num_fieldnames; $i++)
@@ -77,7 +77,17 @@ $smarty->assign("TODO_PERMISSION",CheckFieldPermission('parent_id','Calendar'));
 $smarty->assign("EVENT_PERMISSION",CheckFieldPermission('parent_id','Events'));
 $smarty->assign("CATEGORY",$category);
 $parent_email = getEmailParentsList('Leads',$focus->id);
-        $smarty->assign("HIDDEN_PARENTS_LIST",$parent_email);
+$smarty->assign("HIDDEN_PARENTS_LIST",$parent_email);
+
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
 
 $smarty->assign("ID",$focus->id);
 $smarty->assign("NAME",$focus->lastname.' '.$focus->firstname);
@@ -95,8 +105,6 @@ $smarty->assign("IMAGE_PATH", $image_path);
 
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
-$smarty->assign("MAIL_CHECK", is_emailId($RECORD));
-$smarty->assign("PERMIT",$permit);
 $smarty->display("RelatedLists.tpl");
 }
 ?>

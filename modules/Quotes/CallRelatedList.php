@@ -48,6 +48,17 @@ $smarty->assign("CATEGORY",$category);
 if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != ' ') {
 	$smarty->assign("OP_MODE",$_REQUEST['mode']);
 }
+
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
+
 $smarty->assign("ID",$focus->id);
 $smarty->assign("MODULE",$currentmodule);
 $smarty->assign("SINGLE_MOD",$app_strings['Quote']);

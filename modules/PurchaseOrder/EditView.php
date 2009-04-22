@@ -63,6 +63,16 @@ if(isset($_REQUEST['product_id']) && $_REQUEST['product_id'] !='')
 	$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
 	$smarty->assign("AVAILABLE_PRODUCTS", 'true');
 }
+if(!empty($_REQUEST['parent_id']) && !empty($_REQUEST['return_module']))
+{
+    if ($_REQUEST['return_module'] == 'Services') {
+	    $focus->column_fields['product_id'] = $_REQUEST['parent_id'];
+	    $log->debug("Service Id from the request is ".$_REQUEST['parent_id']);
+	    $associated_prod = getAssociatedProducts("Services",$focus,$focus->column_fields['product_id']);
+		$smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
+		$smarty->assign("AVAILABLE_PRODUCTS", 'true');
+    }
+}
 
 // Get vtiger_vendor address if vtiger_vendorid is given
 if(isset($_REQUEST['vendor_id']) && $_REQUEST['vendor_id']!='' && $_REQUEST['record']==''){
@@ -138,16 +148,15 @@ elseif(isset($_REQUEST['isDuplicate']) && $_REQUEST['isDuplicate'] == 'true')
 }
 elseif((isset($_REQUEST['product_id']) && $_REQUEST['product_id'] != '')) {
         $smarty->assign("ASSOCIATEDPRODUCTS", $associated_prod);
-	$InvTotal = getInventoryTotal($_REQUEST['return_module'],$_REQUEST['return_id']);
-	$InvTotal = convertFromDollar($InvTotal,$rate);
-        $smarty->assign("MODE", $focus->mode);
+		$InvTotal = getInventoryTotal($_REQUEST['return_module'],$_REQUEST['return_id']);
+		$smarty->assign("MODE", $focus->mode);
 
 	//this is to display the Product Details in first row when we create new PO from Product relatedlist
 	if($_REQUEST['return_module'] == 'Products')
 	{
 		$smarty->assign("PRODUCT_ID",$_REQUEST['product_id']);
 		$smarty->assign("PRODUCT_NAME",getProductName($_REQUEST['product_id']));
-		$smarty->assign("UNIT_PRICE",getUnitPrice($_REQUEST['product_id']));
+		$smarty->assign("UNIT_PRICE",$_REQUEST['product_id']);
 		$smarty->assign("QTY_IN_STOCK",getPrdQtyInStck($_REQUEST['product_id']));
 		$smarty->assign("VAT_TAX",getProductTaxPercentage("VAT",$_REQUEST['product_id']));
 		$smarty->assign("SALES_TAX",getProductTaxPercentage("Sales",$_REQUEST['product_id']));
@@ -205,6 +214,34 @@ $smarty->assign("SH_TAXES",$sh_tax_details);
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
 $smarty->assign("DUPLICATE", $_REQUEST['isDuplicate']);
+
+global $adb;
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if($focus->mode != 'edit' && $mod_seq_field != null) {
+		$autostr = getTranslatedString('MSG_AUTO_GEN_ON_SAVE');
+		$mod_seq_string = $adb->pquery("SELECT prefix, cur_id from vtiger_modentity_num where semodule = ? and active=1",array($currentModule));
+        $mod_seq_prefix = $adb->query_result($mod_seq_string,0,'prefix');
+        $mod_seq_no = $adb->query_result($mod_seq_string,0,'cur_id');
+        if($adb->num_rows($mod_seq_string) == 0 || $focus->checkModuleSeqNumber($focus->table_name, $mod_seq_field['column'], $mod_seq_prefix.$mod_seq_no))
+                echo '<br><font color="#FF0000"><b>'. getTranslatedString('LBL_DUPLICATE'). ' '. getTranslatedString($mod_seq_field['label'])
+                	.' - '. getTranslatedString('LBL_CLICK') .' <a href="index.php?module=Settings&action=CustomModEntityNo&parenttab=Settings&selmodule='.$currentModule.'">'.getTranslatedString('LBL_HERE').'</a> '
+                	. getTranslatedString('LBL_TO_CONFIGURE'). ' '. getTranslatedString($mod_seq_field['label']) .'</b></font>';
+        else
+                $smarty->assign("MOD_SEQ_ID",$autostr);
+} else {
+	$smarty->assign("MOD_SEQ_ID", $focus->column_fields[$mod_seq_field['name']]);
+}
+// END
+
+$smarty->assign("CURRENCIES_LIST", getAllCurrencies());
+if($focus->mode == 'edit' || $_REQUEST['isDuplicate'] == 'true') {
+	$inventory_cur_info = getInventoryCurrencyInfo('PurchaseOrder', $focus->id);
+	$smarty->assign("INV_CURRENCY_ID", $inventory_cur_info['currency_id']);
+} else {
+	$smarty->assign("INV_CURRENCY_ID", $currencyid);
+}
+
 if($focus->mode == 'edit')
 	$smarty->display('Inventory/InventoryEditView.tpl');
 else

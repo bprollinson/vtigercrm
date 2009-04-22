@@ -9,14 +9,17 @@
 *
  ********************************************************************************/
 require_once('modules/CustomView/CustomView.php');
-if(isset($_REQUEST["record"]) == false)
+if(isset($_REQUEST["record"]) == false || $_REQUEST["record"]=='')
 {
         $oReport = new Reports();
         $primarymodule = $_REQUEST["primarymodule"];
-        $secondarymodule = $_REQUEST["secondarymodule"];
+        //$secondarymodule = $_REQUEST["secondarymodule"];
 
-	$BLOCK1 = getPrimaryStdFilterHTML($primarymodule);
-	$BLOCK1 .= getSecondaryStdFilterHTML($secondarymodule);
+		$BLOCK1 = getPrimaryStdFilterHTML($primarymodule);
+		foreach($ogReport->related_modules[$primarymodule] as $key=>$value){
+			$BLOCK1 .= getSecondaryStdFilterHTML($_REQUEST["secondarymodule_".$value]);
+		}
+
 		$report_std_filter->assign("BLOCK1_STD",$BLOCK1);
         $BLOCKJS = $oReport->getCriteriaJS();
 		$report_std_filter->assign("BLOCKJS_STD",$BLOCKJS);
@@ -29,9 +32,21 @@ if(isset($_REQUEST["record"]) == false)
 	global $current_user;
 	require('user_privileges/user_privileges_'.$current_user->id.'.php');
 
-        $reportid = $_REQUEST["record"];
-        $oReport = new Reports($reportid);
-        $oReport->getSelectedStandardCriteria($reportid);
+    $reportid = $_REQUEST["record"];
+    $oReport = new Reports($reportid);
+    $oReport->getSelectedStandardCriteria($reportid);
+	
+	$oRep = new Reports();
+	$secondarymodule = '';
+	$secondarymodules =Array();
+	
+	foreach($oRep->related_modules[$oReport->primodule] as $key=>$value){
+		if(isset($_REQUEST["secondarymodule_".$value]))$secondarymodules []= $_REQUEST["secondarymodule_".$value];
+	}
+	$secondarymodule = implode(":",$secondarymodules);
+	
+	if($secondarymodule!='')
+		$oReport->secmodule = $secondarymodule;
 	
 	$BLOCK1 = getPrimaryStdFilterHTML($oReport->primodule,$oReport->stdselectedcolumn);
 	$BLOCK1 .= getSecondaryStdFilterHTML($oReport->secmodule,$oReport->stdselectedcolumn);

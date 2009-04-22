@@ -26,7 +26,7 @@ $smarty = new vtigerCRM_Smarty;
 
 $userid =  $current_user->id;
 
-$querystr = "select fieldid, fieldname, fieldlabel, columnname from vtiger_field where tabid=? and uitype=13";
+$querystr = "select fieldid, fieldname, fieldlabel, columnname from vtiger_field where tabid=? and uitype=13 and vtiger_field.presence in (0,2)";
 $res=$adb->pquery($querystr, array(getTabid($pmodule)));
 $numrows = $adb->num_rows($res);
 $returnvalue = Array();
@@ -97,6 +97,7 @@ $smarty->assign("MOD", $mod_strings);
 $smarty->assign("IDLIST", $idlist);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("FROM_MODULE", $pmodule);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 if($single_record && count($columnlists) > 0 && $val_cnt > 0)
 	$smarty->display("SelectEmail.tpl");

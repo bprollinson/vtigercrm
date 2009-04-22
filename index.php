@@ -103,9 +103,44 @@ if (is_file('config_override.php'))
 {
 	require_once('config_override.php');
 }
-$default_config_values = Array( "allow_exports"=>"all","upload_maxsize"=>"3000000", "listview_max_textlength" => "40" );
- 	
+
+/**
+ * Check for vtiger installed version and codebase
+ */
+require_once('vtigerversion.php');
+global $adb, $vtiger_current_version;
+if(isset($_SESSION['VTIGER_DB_VERSION']) && isset($_SESSION['authenticated_user_id'])) {
+    if(version_compare($_SESSION['VTIGER_DB_VERSION'], $vtiger_current_version, '!=')) {
+        unset($_SESSION['VTIGER_DB_VERSION']);
+        header("Location: install.php");
+        exit();
+    }
+} else {
+    $exists = $adb->query("SHOW CREATE TABLE vtiger_version");
+    if($exists)
+    {
+        $result = $adb->query("SELECT * FROM vtiger_version");
+        $dbversion = $adb->query_result($result, 0, 'current_version');
+        if(version_compare($dbversion, $vtiger_current_version, '=')) {
+            $_SESSION['VTIGER_DB_VERSION']= $dbversion;
+        } else {
+            header("Location: install.php");
+            exit();
+        }   
+    }
+}
+// END
+
+$default_config_values = Array( "allow_exports"=>"all","upload_maxsize"=>"3000000", "listview_max_textlength" => "40", "php_max_execution_time" => "0");
+
 set_default_config($default_config_values);
+
+// Set the default timezone preferred by user
+global $default_timezone;
+if(isset($default_timezone) && function_exists('date_default_timezone_set')) {
+	@date_default_timezone_set($default_timezone);
+} 
+
 require_once('include/logging.php');
 require_once('modules/Users/Users.php');
 
@@ -141,6 +176,12 @@ if($action == 'ExportAjax')
 {
         include ('include/utils/ExportAjax.php');
 }
+// vtlib customization: Module manager export
+if($action == 'ModuleManagerExport') {
+	include('modules/Settings/ModuleManager/Export.php');
+}
+// END
+
 //Code added for 'Path Traversal/File Disclosure' security fix - Philip
 $is_module = false;
 $is_action = false;
@@ -185,11 +226,15 @@ if(isset($_SESSION["authenticated_user_id"]) && (isset($_SESSION["app_unique_key
         $use_current_login = true;
 }
 
-if($use_current_login)
-{
+// Prevent loading Login again if there is an authenticated user in the session.
+if (isset($_SESSION["authenticated_user_id"]) && $module == 'Users' && $action == 'Login') {
 
-	//Added to prevent fatal error before starting migration(5.0.4. patch ).
-	//NOTE: These lines  should be removed at next release.
+    header("Location: index.php?action=$default_action&module=$default_module");
+
+} 
+
+if($use_current_login){
+	/*&Added to prevent fatal error before starting migration(5.0.4. patch ).
 	//Start
 	$arr=$adb->getColumnNames("vtiger_users");
 	if(!in_array("internal_mailer", $arr))
@@ -197,24 +242,20 @@ if($use_current_login)
 		$adb->pquery("alter table vtiger_users add column internal_mailer int(3) NOT NULL default '1'", array());
 		$adb->pquery("alter table vtiger_users add column tagcloud_view int(1) default 1", array());
 	}
-	//End
+	//End*/
 
 	//getting the internal_mailer flag
-	if(!isset($_SESSION['internal_mailer']))
-	{
+	if(!isset($_SESSION['internal_mailer'])){
 		$qry_res = $adb->pquery("select internal_mailer from vtiger_users where id=?", array($_SESSION["authenticated_user_id"]));
 		$_SESSION['internal_mailer'] = $adb->query_result($qry_res,0,"internal_mailer");
 	}
 	$log->debug("We have an authenticated user id: ".$_SESSION["authenticated_user_id"]);
-}
-else if(isset($action) && isset($module) && $action=="Authenticate" && $module=="Users")
-{
+}else if(isset($action) && isset($module) && $action=="Authenticate" && $module=="Users"){
 	$log->debug("We are authenticating user now");
-}
-else 
-{
-	if($_REQUEST['action'] != 'Logout' && $_REQUEST['action'] != 'Login')
+}else{
+	if($_REQUEST['action'] != 'Logout' && $_REQUEST['action'] != 'Login'){
 		$_SESSION['lastpage'] = $_SERVER['argv'];
+	}
 	$log->debug("The current user does not have a session.  Going to the login page");	
 	$action = "Login";
 	$module = "Users";
@@ -262,6 +303,8 @@ if(isset($action) && isset($module))
 		ereg("^TemplateMerge",$action) ||
 		ereg("^testemailtemplateusage",$action) ||
 		ereg("^saveemailtemplate",$action) ||
+		ereg("^ProcessDuplicates", $action ) ||
+		ereg("^lastImport", $action ) ||
 		ereg("^lookupemailtemplate",$action) ||
 		ereg("^deletewordtemplate",$action) ||
 		ereg("^deleteemailtemplate",$action) ||
@@ -310,9 +353,13 @@ if(isset($action) && isset($module))
 		(ereg("^dlAttachments",$action) && ereg("^Webmails",$module)) ||
 		(ereg("^DetailView",$action) &&	ereg("^Webmails",$module) ) ||
 		ereg("^savewordtemplate",$action) ||
-		ereg("^mailmergedownloadfile",$action) || ereg("^Webmails",$module) && ereg("^get_img",$action) || ereg("^download",$action) )
-	
-		
+		ereg("^mailmergedownloadfile",$action) || ereg("^Webmails",$module) && ereg("^get_img",$action) || ereg("^download",$action) || 
+		ereg("^getListOfRecords", $action) ||
+		ereg("^MoveBlockFieldToDB", $action) ||
+		ereg("^AddBlockFieldToDB", $action) ||
+		ereg("^AddBlockToDB", $action)  ||
+		ereg("^MassEditSave", $action)
+		)
 	{
 		$skipHeaders=true;
 		//skip headers for all these invocations as they are mostly popups
@@ -330,10 +377,14 @@ if(isset($action) && isset($module))
 			ereg("^massdelete", $action) ||
 			ereg("^mailmergedownloadfile",$action) || 	ereg("^get_img",$action) ||
 			ereg("^download",$action) ||
-			ereg("^massdelete", $action ))
+			ereg("^ProcessDuplicates", $action ) ||
+			ereg("^lastImport", $action ) ||
+			ereg("^massdelete", $action ) ||
+			ereg("^getListOfRecords", $action) ||
+			ereg("^MassEditSave", $action))
 			$skipFooters=true;
 		//skip footers for all these invocations as they are mostly popups
-		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^mailmergedownloadfile",$action)|| ereg("^get_img",$action))
+		if(ereg("^downloadfile", $action) || ereg("^fieldtypes",$action) || ereg("^mailmergedownloadfile",$action)|| ereg("^get_img",$action) || ereg("^MergeFieldLeads", $action) || ereg("^MergeFieldContacts", $action ) || ereg("^MergeFieldAccounts", $action ) || ereg("^MergeFieldProducts", $action ) || ereg("^MergeFieldHelpDesk", $action ) || ereg("^MergeFieldPotentials", $action ) || ereg("^MergeFieldVendors", $action ))
 		{
 			$viewAttachment = true;
 		}
@@ -422,7 +473,7 @@ if($use_current_login)
 		else
 			$auditrecord = $record;	
 
-		$date_var = $adb->formatDate(date('YmdHis'), true);
+		$date_var = $adb->formatDate(date('Y-m-d H:i:s'), true);
 		if ($action != 'chat')
 		{	
 			$query = "insert into vtiger_audit_trial values(?,?,?,?,?,?)";
@@ -459,6 +510,7 @@ else
 $log->debug('current_language is: '.$current_language);
 
 //set module and application string arrays based upon selected language
+$app_currency_strings = return_app_currency_strings_language($current_language);
 $app_strings = return_application_language($current_language);
 $app_list_strings = return_app_list_strings_language($current_language);
 $mod_strings = return_module_language($current_language, $currentModule);
@@ -508,6 +560,12 @@ if (isset($_SESSION['vtiger_authenticated_user_theme'])) {
 if (isset($_SESSION['authenticated_user_language'])) {
         $log->debug("setting cookie ck_login_language_vtiger to ".$_SESSION['authenticated_user_language']);
         setcookie('ck_login_language_vtiger', $_SESSION['authenticated_user_language']);
+}
+
+if($_REQUEST['module'] == 'Documents' && $action == 'DownloadFile')
+{
+	include('modules/Documents/DownloadFile.php');
+	exit;
 }
 
 //skip headers for popups, deleting, saving, importing and other actions
@@ -600,7 +658,7 @@ if($display == "no")
 
 		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
 		<tbody><tr>
-		<td rowspan='2' width='11%'><img src='themes/$theme/images/denied.gif' ></td>
+		<td rowspan='2' width='11%'><img src='". vtiger_imageurl('denied.gif', $theme) . "' ></td>
 		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$app_strings[LBL_PERMISSION]</span></td>
 		</tr>
 		<tr>
@@ -610,7 +668,27 @@ if($display == "no")
 		</tbody></table> 
 		</div>";
 	echo "</td></tr></table>";
+} 
+// vtlib customization: Check if module has been de-activated
+else if(!vtlib_isModuleActive($currentModule)) {
+	echo "<link rel='stylesheet' type='text/css' href='themes/$theme/style.css'>";	
+	echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
+	echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
+
+		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
+		<tbody><tr>
+		<td rowspan='2' width='11%'><img src='". vtiger_imageurl('denied.gif', $theme) . "' ></td>
+		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$currentModule $app_strings[VTLIB_MOD_NOT_ACTIVE]</span></td>
+		</tr>
+		<tr>
+		<td class='small' align='right' nowrap='nowrap'>			   	
+		<a href='javascript:window.history.back();'>$app_strings[LBL_GO_BACK]</a><br>								   						     </td>
+		</tr>
+		</tbody></table> 
+		</div>";
+	echo "</td></tr></table>";
 }
+// END
 else
 {
 	include($currentModuleFile);
@@ -677,14 +755,21 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 	</script>
 		";
 
-	if($action != "about_us" && $action != "vtchat" && $action != "ChangePassword" && $action != "body" && $action != $module."Ajax" && $action!='Popup' && $action != 'ImportStep3' && $action != 'ActivityAjax')
+	if((!$skipFooters) && $action != "about_us" && $action != "vtchat" && $action != "ChangePassword" && $action != "body" && $action != $module."Ajax" && $action!='Popup' && $action != 'ImportStep3' && $action != 'ActivityAjax' && $action != 'getListOfRecords')
 	
 	{
 		echo $copyrightstatement;
+		// Status tracking
+		$statimage = '';
+		if($currentModule == 'Users' && empty($current_user->id)) {
+			$statimage = "<img src='http://stats.vtiger.com/stats.php?uid=$application_unique_key&v=$vtiger_current_version&type=U' 
+				alt='|' title='' border=0 width='1px' height='1px'>";
+		}
+		// END
 		echo "<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>";
 		echo "<br><br><br><table border=0 cellspacing=0 cellpadding=5 width=100% class=settingsSelectedUI >";
-		echo "<tr><td class=small align=left><span style='color: rgb(153, 153, 153);'>vtiger CRM 5.0.4</span></td>";
-		echo "<td class=small align=right><span style='color: rgb(153, 153, 153);'>&copy; 2004-2008 <a href='http://www.vtiger.com' target='_blank'>vtiger.com</a> | <a href='javascript:mypopup()'>".$app_strings['LNK_READ_LICENSE']."</a></span></td></tr></table>";
+		echo "<tr><td class=small align=left><span style='color: rgb(153, 153, 153);'>vtiger CRM $vtiger_current_version</span></td>";
+		echo "<td class=small align=right><span style='color: rgb(153, 153, 153);'>&copy; 2004-".date('Y')." <a href='http://www.vtiger.com' target='_blank'>vtiger.com</a> | <a href='javascript:mypopup()'>".$app_strings['LNK_READ_LICENSE']."</a> | <a href='http://www.vtiger.com/products/crm/privacy_policy.html' target='_blank'>".getTranslatedString('LNK_PRIVACY_POLICY')."</a></span> $statimage</td></tr></table>";
 			
 	//	echo "<table align='center'><tr><td align='center'>";
 		// Under the Sugar Public License referenced above, you are required to leave in all copyright statements
@@ -707,6 +792,14 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 		</script>
 <?php
 	}
+	// ActivityReminder Customization for callback
+	if(!$skipFooters) {
+	
+		if($current_user->id!=NULL && isPermitted('Calendar','index') == 'yes')
+			echo "<script type='text/javascript'>if(typeof(ActivityReminderCallback) != 'undefined') ActivityReminderCallback();</script>";
+	}
+	// End
+	
 	if((!$skipFooters) && ($action != "body") && ($action != $module."Ajax") && ($action != "ActivityAjax"))
 		include('themes/'.$theme.'/footer.php');
 }

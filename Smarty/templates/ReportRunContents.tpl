@@ -14,8 +14,10 @@
 <br>
 <table align="center" border="0" cellpadding="5" cellspacing="0" width="100%" class="mailSubHeader">
 	<tbody><tr>
-	<td align="left" nowrap ><input class="crmbutton small create" id="btnExport" name="btnExport" value="{$MOD.LBL_EXPORTPDF_BUTTON}" type="button" onClick="goToURL(CrearEnlace('CreatePDF',{$REPORTID}));" title="{$MOD.LBL_EXPORTPDF_BUTTON}"></td>
-	<td align="left" nowrap ><input class="crmbutton small create" id="btnExport" name="btnExport" value="{$MOD.LBL_EXPORTXL_BUTTON}" type="button" onClick="goToURL(CrearEnlace('CreateXL',{$REPORTID}));" title="{$MOD.LBL_EXPORTXL_BUTTON}" ></td>
+	{if $EXPORT_PERMITTED eq 'YES'}
+		<td align="left" nowrap ><input class="crmbutton small create" id="btnExport" name="btnExport" value="{$MOD.LBL_EXPORTPDF_BUTTON}" type="button" onClick="goToURL(CrearEnlace('CreatePDF',{$REPORTID}));" title="{$MOD.LBL_EXPORTPDF_BUTTON}"></td>
+		<td align="left" nowrap ><input class="crmbutton small create" id="btnExport" name="btnExport" value="{$MOD.LBL_EXPORTXL_BUTTON}" type="button" onClick="goToURL(CrearEnlace('CreateXL',{$REPORTID}));" title="{$MOD.LBL_EXPORTXL_BUTTON}" ></td>
+	{/if}
 	<td align="left" width="100%"><input name="PrintReport" value="{$MOD.LBL_PRINT_REPORT}" onClick="goToPrintReport({$REPORTID});" class="crmbutton small create" type="button"></td>
 	</tr>
 	</tbody>
@@ -23,7 +25,7 @@
 
 <table style="border: 1px solid rgb(0, 0, 0);" align="center" cellpadding="0" cellspacing="0" width="100%">
 	<tbody><tr>
-	<td style="background-repeat: repeat-y;" background="{$IMAGE_PATH}report_btn.gif" width="16"></td>
+	<td style="background-repeat: repeat-y;" background="{'report_btn.gif'|@vtiger_imageurl:$THEME}" width="16"></td>
 
 	<td style="padding: 5px;" valign="top">
 	<table cellpadding="0" cellspacing="0" width="100%">
@@ -45,7 +47,11 @@
 		<tr><td colspan="2">&nbsp;</td></tr>
 		<tr>
 		<td colspan="2">
+		{if $ERROR_MSG eq ''}
 		{$REPORTHTML.0}
+		{else}
+		{$ERROR_MSG}
+		{/if}
 		</td>
 		</tr>
 		<tr><td colspan="2">&nbsp;</td></tr>
@@ -55,7 +61,7 @@
 		</tbody>
 	</table>
 	</td>
-	<td style="background-repeat: repeat-y;" background="{$IMAGE_PATH}report_btn.gif" width="16"></td>
+	<td style="background-repeat: repeat-y;" background="{'report_btn.gif'|@vtiger_imageurl:$THEME}" width="16"></td>
 	</tr>
 
 	</tbody>

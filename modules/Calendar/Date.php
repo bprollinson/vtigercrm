@@ -47,31 +47,31 @@ class vt_DateTime
                 }
                 else if ( isset( $timearr['ts']))
                 {
-                        $this->setDateTime($time['ts']);
+                        $this->setDateTime($timearr['ts']);
                 }
 		else
 		{
-			if(isset($timearr['hour']))
+			if(isset($timearr['hour']) && $timearr['hour'] != '')
 	                {
         	                $this->hour = $timearr['hour'];
                 	}
-			if(isset($timearr['min']))
+			if(isset($timearr['min']) && $timearr['min'] != '')
         	        {
                 	        $this->minute = $timearr['min'];
 	                }
-			if(isset($timearr['sec']))
+			if(isset($timearr['sec']) && $timearr['sec']  != '')
                 	{
 				$this->second = $timearr['sec'];
 			}
-        		if(isset($timearr['day']))
+        		if(isset($timearr['day']) && $timearr['day'] != '')
 	                {
          	               $this->day = $timearr['day'];
                 	}
-	                if(isset($timearr['week']))
+	                if(isset($timearr['week']) && $timearr['week'] != '')
         	        {
                 	        $this->week = $timearr['week'];
 	                }
-        	        if(isset($timearr['month']))
+        	        if(isset($timearr['month']) && $timearr['month'] != '')
                 	{
                         	$this->month = $timearr['month'];
 	                }
@@ -350,27 +350,27 @@ class vt_DateTime
                 $month = 1;
                 $year = 1970;
 
-                if ( isset($this->second))
+                if ( isset($this->second) && $this->second != '')
                 {
                         $second = $this->second;
                 }
-                if ( isset($this->minute))
+                if ( isset($this->minute) && $this->minute != '')
                 {
                         $minute = $this->minute;
                 }
-                if ( isset($this->hour))
+                if ( isset($this->hour) && $this->hour != '')
                 {
                         $hour = $this->hour;
                 }
-                if ( isset($this->day))
+                if ( isset($this->day) && $this->day != '')
                 {
                         $day= $this->day;
                 }
-                if ( isset($this->month))
+                if ( isset($this->month) && $this->month != '')
                 {
                         $month = $this->month;
                 }
-                if ( isset($this->year))
+                if ( isset($this->year) && $this->year != '')
                 {
                         $year = $this->year;
                 }
@@ -378,6 +378,11 @@ class vt_DateTime
                 {
                         die("year was not set");
                 }
+                
+                // Fix for http://trac.vtiger.com/cgi-bin/trac.cgi/ticket/5467
+                if(empty($hour) && $hour !== 0) $hour = 0;
+                // END
+                
                 $this->ts = mktime($hour,$minute,$second,$month,$day,$year);
                 $this->setDateTime($this->ts);
 	}
@@ -500,19 +505,19 @@ class vt_DateTime
         {
 
                 $array = Array();
-                if ( isset( $this->hour))
+                if ( isset( $this->hour) && $this->hour != '')
                 {
                  array_push( $array, "hour=".$this->hour);
                 }
-                if ( isset( $this->day))
+                if ( isset( $this->day) && $this->day != '')
                 {
                  array_push( $array, "day=".$this->day);
                 }
-                if ( isset( $this->month))
+                if ( isset( $this->month) && $this->month)
                 {
                  array_push( $array, "month=".$this->month);
                 }
-                if ( isset( $this->year))
+                if ( isset( $this->year) && $this->year != '')
                 {
                  array_push( $array, "year=".$this->year);
                 }

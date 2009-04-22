@@ -26,7 +26,7 @@ require_once('include/logging.php');
 require_once("config.php");
 require_once('include/database/PearDatabase.php');
 require_once('modules/Calendar/CalendarCommon.php');
-global $adb;
+global $adb,$theme;
 $local_log =& LoggerManager::getLogger('index');
 $focus = new Activity();
 $activity_mode = $_REQUEST['activity_mode'];
@@ -72,7 +72,7 @@ if((isset($_REQUEST['change_status']) && $_REQUEST['change_status']) && ($_REQUE
 
 			<table border='0' cellpadding='5' cellspacing='0' width='98%'>
 			<tbody><tr>
-			<td rowspan='2' width='11%'><img src='themes/$theme/images/denied.gif' ></td>
+			<td rowspan='2' width='11%'><img src='<?php echo vtiger_imageurl('denied.gif', $theme). ?>' ></td>
 			<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$app_strings[LBL_PERMISSION]</span></td>
 			</tr>
 			<tr>
@@ -129,6 +129,12 @@ else
 	        $focus->column_fields['visibility'] = $_REQUEST['visibility'];
 	else
 	        $focus->column_fields['visibility'] = 'Private';
+	
+	if($_REQUEST['assigntype'] == 'U') {
+		$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+	} elseif($_REQUEST['assigntype'] == 'T') {
+		$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+	}
 	$focus->save($tab_type);
 	/* For Followup START -- by Minnie */
 	if(isset($_REQUEST['followup']) && $_REQUEST['followup'] == 'on' && $activity_mode == 'Events' && isset($_REQUEST['followup_time_start']) &&  $_REQUEST['followup_time_start'] != '')
@@ -162,8 +168,25 @@ $activemode = "";
 if($activity_mode != '') 
 	$activemode = "&activity_mode=".$activity_mode;
 
-function getRequestData()
+function getRequestData($return_id)
 {
+	global $adb;
+	$cont_qry = "select * from vtiger_cntactivityrel where activityid=?";
+	$cont_res = $adb->pquery($cont_qry, array($return_id));
+	$noofrows = $adb->num_rows($cont_res);
+	$cont_id = array();
+	if($noofrows > 0) {
+		for($i=0; $i<$noofrows; $i++) {
+			$cont_id[] = $adb->query_result($cont_res,$i,"contactid");
+		}
+	}
+	$cont_name = '';
+	foreach($cont_id as $key=>$id) {
+		if($id != '') {	
+			$cont_name .= getContactName($id).', ';
+		}
+	}
+	$cont_name  = trim($cont_name,', ');
 	$mail_data = Array();
 	$mail_data['user_id'] = $_REQUEST['assigned_user_id'];
 	$mail_data['subject'] = $_REQUEST['subject'];
@@ -171,10 +194,10 @@ function getRequestData()
 	$mail_data['activity_mode'] = $_REQUEST['activity_mode'];
 	$mail_data['taskpriority'] = $_REQUEST['taskpriority'];
 	$mail_data['relatedto'] = $_REQUEST['parent_name'];
-	$mail_data['contact_name'] = $_REQUEST['contact_name'];
+	$mail_data['contact_name'] = $cont_name;
 	$mail_data['description'] = $_REQUEST['description'];
 	$mail_data['assingn_type'] = $_REQUEST['assigntype'];
-	$mail_data['group_name'] = $_REQUEST['assigned_group_name'];
+	$mail_data['group_name'] = getGroupName($_REQUEST['assigned_group_id']);
 	$mail_data['mode'] = $_REQUEST['mode'];
 	$value = getaddEventPopupTime($_REQUEST['time_start'],$_REQUEST['time_end'],'24');
 	$start_hour = $value['starthour'].':'.$value['startmin'].''.$value['startfmt'];
@@ -184,19 +207,6 @@ function getRequestData()
 	$mail_data['end_date_time']=getDisplayDate($_REQUEST['due_date'])." ".$end_hour;
 	$mail_data['location']=$_REQUEST['location'];
 	return $mail_data;
-}
-//Added code to send mail to the assigned to user about the details of the vtiger_activity if sendnotification = on and assigned to user
-if($_REQUEST['sendnotification'] == 'on')
-{
-	$mail_contents = getRequestData();
-	getEventNotification($_REQUEST['activity_mode'],$_REQUEST['subject'],$mail_contents);
-}
-
-//code added to send mail to the vtiger_invitees
-if(isset($_REQUEST['inviteesid']) && $_REQUEST['inviteesid']!='')
-{
-	$mail_contents = getRequestData();
-        sendInvitation($_REQUEST['inviteesid'],$_REQUEST['activity_mode'],$_REQUEST['subject'],$mail_contents);
 }
 
 if(isset($_REQUEST['contactidlist']) && $_REQUEST['contactidlist'] != '')
@@ -218,6 +228,20 @@ if(isset($_REQUEST['contactidlist']) && $_REQUEST['contactidlist'] != '')
 			}
 		}
 	}
+}
+
+//Added code to send mail to the assigned to user about the details of the vtiger_activity if sendnotification = on and assigned to user
+if($_REQUEST['sendnotification'] == 'on')
+{
+	$mail_contents = getRequestData($return_id);
+	getEventNotification($_REQUEST['activity_mode'],$_REQUEST['subject'],$mail_contents);
+}
+
+//code added to send mail to the vtiger_invitees
+if(isset($_REQUEST['inviteesid']) && $_REQUEST['inviteesid']!='')
+{
+	$mail_contents = getRequestData($return_id);
+        sendInvitation($_REQUEST['inviteesid'],$_REQUEST['activity_mode'],$_REQUEST['subject'],$mail_contents);
 }
 
 //to delete contact account relation while editing event
@@ -259,6 +283,11 @@ if(isset($_REQUEST['viewOption']) && $_REQUEST['viewOption']!='')
 	$viewOption=$_REQUEST['viewOption'];
 if(isset($_REQUEST['subtab']) && $_REQUEST['subtab']!='') 
 	$subtab=$_REQUEST['subtab'];
+
+if($_REQUEST['recurringcheck']) { 
+	include_once dirname(__FILE__) . '/RepeatEvents.php';
+	Calendar_RepeatEvents::repeat($focus);
+}
 
 //code added for returning back to the current view after edit from list view
 if($_REQUEST['return_viewname'] == '') 

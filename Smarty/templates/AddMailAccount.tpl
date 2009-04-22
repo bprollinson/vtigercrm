@@ -14,13 +14,13 @@
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
 
 <tr>
-        <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+        <td valign="top"><img src="{'showPanelTopLeft.gif'|@vtiger_imageurl:$THEME}"></td>
         <td class="showPanelBg" valign="top" width="100%">
                 <div class="small" style="padding: 10px;">
                         <span class="lvtHeaderText">{$MOD.LBL_MY_MAIL_SERVER_DET}</span> <br>
                         <hr noshade="noshade" size="1"><br>
 
-  		<form action="index.php" method="post" name="EditView" id="form">
+  		<form action="index.php" method="post" name="EditView" id="form" onsubmit="VtigerJS_DialogBox.block();">
 			<input type="hidden" name="module" value="Users">
 		  	<input type="hidden" name="action">
   			<input type="hidden" name="server_type" value="email">

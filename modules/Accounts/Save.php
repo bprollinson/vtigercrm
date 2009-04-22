@@ -33,6 +33,10 @@ if(isset($_REQUEST['dup_check']) && $_REQUEST['dup_check'] != '')
 	//started
 	$value = $_REQUEST['accountname'];
 	$query = "SELECT accountname FROM vtiger_account,vtiger_crmentity WHERE accountname =? and vtiger_account.accountid = vtiger_crmentity.crmid and vtiger_crmentity.deleted != 1";
+	$id = $_REQUEST['record'];
+	if(isset($id) && $id !='') {
+		$query .= " and vtiger_account.accountid != $id";
+	}
 	$result = $adb->pquery($query, array($value));
         if($adb->num_rows($result) > 0)
 	{
@@ -79,13 +83,20 @@ foreach($focus->column_fields as $fieldname => $val)
 		$log->DEBUG($fieldname."=Field Name &first& Value =".$value);
 		$focus->column_fields[$fieldname] = $value;
 	}
-	if(isset($_REQUEST['annual_revenue']))
-        {
-                        $value = convertToDollar($_REQUEST['annual_revenue'],$rate);
-                        $focus->column_fields['annual_revenue'] = $value;
-        }
-		
 }
+
+if(isset($_REQUEST['annual_revenue']))
+{
+	$value = convertToDollar($_REQUEST['annual_revenue'],$rate);
+	$focus->column_fields['annual_revenue'] = $value;
+}
+
+if($_REQUEST['assigntype'] == 'U')  {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+} elseif($_REQUEST['assigntype'] == 'T') {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+}
+
 //echo '<BR>';
 //print_r($focus->column_fields);
 //echo '<BR>';

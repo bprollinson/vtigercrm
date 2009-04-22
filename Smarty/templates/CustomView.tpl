@@ -15,7 +15,9 @@
 <script type="text/javascript" src="jscalendar/calendar-setup.js"></script>
 <script type="text/javascript" src="modules/CustomView/CustomView.js"></script>
 <script language="JavaScript" type="text/javascript" src="include/calculator/calc.js"></script>
-<form enctype="multipart/form-data" name="CustomView" method="POST" action="index.php" onsubmit="return mandatoryCheck();">
+{literal}
+<form enctype="multipart/form-data" name="CustomView" method="POST" action="index.php" onsubmit="if(mandatoryCheck()){VtigerJS_DialogBox.block();} else{ return false; }">
+{/literal}
 <input type="hidden" name="module" value="CustomView">
 <input type="hidden" name="action" value="Save">
 <input type="hidden" name="parenttab" value="{$CATEGORY}">
@@ -109,10 +111,10 @@ function mandatoryCheck()
 
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
  <tbody><tr>
-  <td valign="top"><img src="{$IMAGE_PATH}showPanelTopLeft.gif"></td>
+  <td valign="top"><img src="{'showPanelTopLeft.gif'|@vtiger_imageurl:$THEME}"></td>
   <td class="showPanelBg" valign="top" width="100%">
    <div class="small" style="padding: 20px;">
-	<span class="lvtHeaderText"><a class="hdrLink" href="index.php?action=ListView&module={$MODULE}&parenttab={$CATEGORY}">{$APP.$MODULE}</a> &gt;
+	<span class="lvtHeaderText"><a class="hdrLink" href="index.php?action=ListView&module={$MODULE}&parenttab={$CATEGORY}">{$MODULELABEL}</a> &gt;
 	{if $EXIST eq "true" && $EXIST neq ''}
 		{$MOD.Edit_Custom_View}
 	{else}
@@ -121,34 +123,51 @@ function mandatoryCheck()
 	</span> <br>
       <hr noshade="noshade" size="1">
       <form name="EditView" method="post" enctype="multipart/form-data" action="index.php">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" width="95%">
-             <tbody><tr>
-              <td align="left" valign="top">
-               <table width="100%"  border="0" cellspacing="0" cellpadding="5">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="95%">
+      <tbody><tr>
+      <td align="left" valign="top">
+      <table width="100%"  border="0" cellspacing="0" cellpadding="5">
 		<tr>
-		 <td colspan="4" class="detailedViewHeader"><strong>{$MOD.Details}</strong></td>
+		 	<td colspan="4" class="detailedViewHeader"><strong>{$MOD.Details}</strong></td>
 		</tr>
 		<tr>
-		 <td class="dvtCellInfo" align="right" width="25%"><span class="style1">*</span>{$MOD.LBL_VIEW_NAME} </td>
-		 <td class="dvtCellInfo" width="25%">
-		  <input class="detailedViewTextBox" type="text" name='viewName' value="{$VIEWNAME}" onfocus="this.className='detailedViewTextBoxOn'" onblur="this.className='detailedViewTextBox'"/>
-		 </td>
-		 <td class="dvtCellInfo" width="25%">
-		  {if $CHECKED eq 'checked'}
-		      <input type="checkbox" name="setDefault" value="1" checked/>{$MOD.LBL_SETDEFAULT}
-		  {else}
-		      <input type="checkbox" name="setDefault" value="0" />{$MOD.LBL_SETDEFAULT}
-		  {/if}
-		 </td>
-		 <td class="dvtCellInfo" width="25%">
-		  {if $MCHECKED eq 'checked'}
-		      <input type="checkbox" name="setMetrics" value="1" checked/>{$MOD.LBL_LIST_IN_METRICS}
-		  {else}
-		      <input type="checkbox" name="setMetrics" value="0" />{$MOD.LBL_LIST_IN_METRICS}
-		  {/if}
-		 </td>
+			<td colspan=4 width="100%" style="padding:0px">
+			<table cellpadding=0 cellspacing=0 width=100% border=0>
+				<tr>
+					<td class="dvtCellInfo" width="10%" align="right"><span class="style1">*</span>{$MOD.LBL_VIEW_NAME}
+					</td>
+					<td class="dvtCellInfo" width="30%">
+						<input class="detailedViewTextBox" type="text" name='viewName' value="{$VIEWNAME}" onfocus="this.className='detailedViewTextBoxOn'" onblur="this.className='detailedViewTextBox'" size="40"/>
+		 			</td>
+		 			<td class="dvtCellInfo" width="20%">
+		  			{if $CHECKED eq 'checked'}
+		      			<input type="checkbox" name="setDefault" value="1" checked/>{$MOD.LBL_SETDEFAULT}
+		  			{else}
+		      			<input type="checkbox" name="setDefault" value="0" />{$MOD.LBL_SETDEFAULT}
+		  			{/if}
+		 			</td>
+		 			<td class="dvtCellInfo" width="20%">
+		  			{if $MCHECKED eq 'checked'}
+		      			<input type="checkbox" name="setMetrics" value="1" checked/>{$MOD.LBL_LIST_IN_METRICS}
+		  			{else}
+		      			<input type="checkbox" name="setMetrics" value="0" />{$MOD.LBL_LIST_IN_METRICS}
+		  			{/if}
+		 			</td>
+					<td class="dvtCellInfo" width="20%">
+					{if $STATUS eq '' || $STATUS eq 1}
+						<input type="checkbox" name="setStatus" value="1"/>
+					{elseif $STATUS eq 2}
+						<input type="checkbox" name="setStatus" value="2" checked/>
+					{elseif $STATUS eq 3 || $STATUS eq 0}
+						<input type="checkbox" name="setStatus" value="3" checked/>
+					{/if}
+						{$MOD.LBL_SET_AS_PUBLIC}
+					</td>
+				</tr>
+			</table>
+			</td>
 		</tr>
-		<tr><td colspan="3">&nbsp;</td></tr>
+		<tr><td colspan="4">&nbsp;</td></tr>
 		<tr>
 		 <td colspan="4" class="detailedViewHeader">
 		  <b>{$MOD.LBL_STEP_2_TITLE} </b>
@@ -531,7 +550,7 @@ function mandatoryCheck()
 				{assign var=msg_style value="readonly"}
 			     {/if}	
 			     <input name="startdate" id="jscal_field_date_start" type="text" size="10" class="textField" value="{$STARTDATE}" {$msg_style}>
-			     <img src="{$IMAGE_PATH}calendar.gif" id="jscal_trigger_date_start" style={$img_style}>
+			     <img src="{$IMAGE_PATH}btnL3Calendar.gif" id="jscal_trigger_date_start" style={$img_style}>
 			     <font size=1><em old="(yyyy-mm-dd)">({$DATEFORMAT})</em></font>
 			     <script type="text/javascript">
 			  		Calendar.setup ({ldelim}
@@ -543,7 +562,7 @@ function mandatoryCheck()
 			     <td align="right" class="dvtCellLabel">{$MOD.End_Date} :</td> 
   			     <td width="25%" align=left class="dvtCellInfo">
 			     <input name="enddate" {$msg_style} id="jscal_field_date_end" type="text" size="10" class="textField" value="{$ENDDATE}">
-			     <img src="{$IMAGE_PATH}calendar.gif" id="jscal_trigger_date_end" style={$img_style}>
+			     <img src="{$IMAGE_PATH}btnL3Calendar.gif" id="jscal_trigger_date_end" style={$img_style}>
 			     <font size=1><em old="(yyyy-mm-dd)">({$DATEFORMAT})</em></font>
 			     <script type="text/javascript">
 					Calendar.setup ({ldelim}
@@ -727,6 +746,11 @@ if(document.CustomView.record.value == '')
 }
 function checkDuplicate()
 {
+	if(getObj('viewName').value.toLowerCase() == 'all')
+	{
+		alert(alert_arr.ALL_FILTER_CREATION_DENIED);
+		return false;
+	}
 	var cvselect_array = new Array('column1','column2','column3','column4','column5','column6','column7','column8','column9')
 		for(var loop=0;loop < cvselect_array.length-1;loop++)
 		{

@@ -33,18 +33,34 @@ $report_column_tot->assign("MOD", $mod_strings);
 $report_column_tot->assign("APP", $app_strings);
 $report_column_tot->assign("IMAGE_PATH",$image_path);
 
-if(isset($_REQUEST["record"]))
+if(isset($_REQUEST["record"]) && $_REQUEST['record']!='')
 {
         $recordid = $_REQUEST["record"];
         $oReport = new Reports($recordid);
-        $BLOCK1 = $oReport->sgetColumntoTotalSelected($oReport->primodule,$oReport->secmodule,$recordid);
+		$oRep = new Reports();
+		$secondarymodule = '';
+		$secondarymodules =Array();
+		
+		foreach($oRep->related_modules[$oReport->primodule] as $key=>$value){
+			if(isset($_REQUEST["secondarymodule_".$value]))$secondarymodules []= $_REQUEST["secondarymodule_".$value];
+		}
+		$secondarymodule = implode(":",$secondarymodules);
+		
+		if($secondarymodule!='') 
+			$oReport->secmodule = $secondarymodule;
+
+  		$BLOCK1 = $oReport->sgetColumntoTotalSelected($oReport->primodule,$oReport->secmodule,$recordid);
 		$report_column_tot->assign("BLOCK1",$BLOCK1);
 		$report_column_tot->assign("RECORDID",$recordid);
 }else
 {
         $primarymodule = $_REQUEST["primarymodule"];
-        $secondarymodule = $_REQUEST["secondarymodule"];
         $oReport = new Reports();
+        $secondarymodule = Array();
+		foreach($ogReport->related_modules[$primarymodule] as $key=>$value){
+        	$secondarymodule[] = $_REQUEST["secondarymodule_".$value];
+        	
+		}
         $BLOCK1 = $oReport->sgetColumntoTotal($primarymodule,$secondarymodule);
 		$report_column_tot->assign("BLOCK1",$BLOCK1);
 }

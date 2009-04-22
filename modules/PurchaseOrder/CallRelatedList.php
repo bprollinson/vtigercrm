@@ -51,6 +51,17 @@ if(isset($_REQUEST['mode']) && $_REQUEST['mode'] != ' ') {
 $smarty->assign("TODO_PERMISSION",CheckFieldPermission('parent_id','Calendar'));
 $smarty->assign("EVENT_PERMISSION",CheckFieldPermission('parent_id','Events'));
 $smarty->assign("ID",$focus->id);
+
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
+
 $smarty->assign("MODULE",$currentmodule);
 $smarty->assign("SINGLE_MOD",$mod_strings['PurchaseOrder']);
 $smarty->assign("UPDATEINFO",updateInfo($focus->id));

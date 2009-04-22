@@ -21,7 +21,7 @@ if($current_user->is_admin != 'on')
 
 $log = LoggerManager::getLogger('user_list');
 
-global $mod_strings;
+global $mod_strings,$adb;
 global $theme;
 $theme_path="themes/".$theme."/";
 $image_path=$theme_path."images/";
@@ -53,8 +53,19 @@ elseif($_SESSION['user_pagestart'] != '')
 else
 	$start=1;
 
-$list_query = getListQuery("Users"); 
+$list_query = getListQuery("Users");
 
+	$userid = array(); 
+	$userid_Query = "SELECT id,user_name FROM vtiger_users WHERE user_name IN ('admin')";
+	$users = $adb->pquery($userid_Query,array());
+	$norows = $adb->num_rows($users);
+	if($norows  > 0){
+		for($i=0;$i<$norows ;$i++){
+			$id = $adb->query_result($users,$i,'id');
+			$userid[$id] = $adb->query_result($users,$i,'user_name');
+		}
+	}
+	$smarty->assign("USERNODELETE",$userid);
 $_SESSION['user_pagestart'] = $start;
 if($_REQUEST['sorder'] !='')
 	$sorder = $_REQUEST['sorder'];
@@ -80,6 +91,7 @@ $smarty->assign("MOD", return_module_language($current_language,'Settings'));
 $smarty->assign("CMOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
 $smarty->assign("CURRENT_USERID", $current_user->id);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("CATEGORY",$category);
 $smarty->assign("LIST_HEADER",getListViewHeader($focus,"Users",$url_string,$sorder,$order_by,"",""));

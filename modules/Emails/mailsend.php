@@ -29,10 +29,10 @@ else
 
 $adb->println("\n\nMail Sending Process has been started.");
 //This function call is used to send mail to the assigned to user. In this mail CC and BCC addresses will be added.
-if($focus->column_fields["assigned_user_id"]==0 && $_REQUEST['assigned_group_name']!='')
+if($REQUEST['assigntype' == 'T'] && $_REQUEST['assigned_group_id']!='')
 {
 	$grp_obj = new GetGroupUsers();
-	$grp_obj->getAllUsersInGroup(getGrpId($_REQUEST['assigned_group_name']));
+	$grp_obj->getAllUsersInGroup($_REQUEST['assigned_group_id']);
 	$users_list = constructList($grp_obj->group_users,'INTEGER');
 	if (count($users_list) > 0) {
 		$sql = "select first_name, last_name, email1, email2, yahoo_id from vtiger_users where id in (". generateQuestionMarks($users_list) .")";
@@ -131,7 +131,7 @@ for ($i=0;$i<(count($myids)-1);$i++)
 		for ($j=1;$j<$nemail;$j++)
 		{
 			$temp=$realid[$j];
-			$myquery='Select columnname from vtiger_field where fieldid=?';
+			$myquery='Select columnname from vtiger_field where fieldid = ? and vtiger_field.presence in (0,2)';
 			$fresult=$adb->pquery($myquery, array($temp));			
 			if ($pmodule=='Contacts')
 			{
@@ -166,6 +166,13 @@ for ($i=0;$i<(count($myids)-1);$i++)
 			if($emailadd != '')
 			{
 				$description = getMergedDescription($_REQUEST['description'],$mycrmid,$pmodule);
+				//Email Open Tracking
+				global $site_URL, $application_unique_key;
+				$emailid = $focus->id;
+				$track_URL = "$site_URL/modules/Emails/TrackAccess.php?record=$mycrmid&mailid=$emailid&app_key=$application_unique_key";
+				$description = "<img src='$track_URL' alt='' width='1' height='1'>$description";
+				// END
+
 				$pos = strpos($description, '$logo$');
 				if ($pos !== false)
 				{

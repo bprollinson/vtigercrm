@@ -24,7 +24,7 @@ require_once('modules/CustomView/CustomView.php');
 require_once('include/database/Postgres8.php');
 require_once('include/DatabaseUtil.php');
 
-global $app_strings;
+global $app_strings,$theme;
 $current_module_strings = return_module_language($current_language, 'Faq');
 
 global $currentModule;
@@ -41,6 +41,9 @@ else
 }
 
 $focus = new Faq();
+// Initialize sort by fields
+$focus->initSortbyField('Faq');
+// END
 $smarty = new vtigerCRM_Smarty;
 
 $other_text = Array();
@@ -68,6 +71,17 @@ $oCustomView = new CustomView("Faq");
 $viewid = $oCustomView->getViewId($currentModule);
 $customviewcombo_html = $oCustomView->getCustomViewCombo($viewid);
 $viewnamedesc = $oCustomView->getCustomViewByCvid($viewid);
+
+//Added to handle approving or denying status-public by the admin in CustomView
+$statusdetails = $oCustomView->isPermittedChangeStatus($viewnamedesc['status']);
+$smarty->assign("CUSTOMVIEW_PERMISSION",$statusdetails);
+
+//To check if a user is able to edit/delete a customview
+$edit_permit = $oCustomView->isPermittedCustomView($viewid,'EditView',$currentModule);
+$delete_permit = $oCustomView->isPermittedCustomView($viewid,'Delete',$currentModule);
+$smarty->assign("CV_EDIT_PERMIT",$edit_permit);
+$smarty->assign("CV_DELETE_PERMIT",$delete_permit);
+
 //<<<<<customview>>>>>
 
 //<<<<<<<<<<<<<<<<<<< sorting - stored in session >>>>>>>>>>>>>>>>>>>>
@@ -89,6 +103,28 @@ if($viewid != 0)
 {
         $CActionDtls = $oCustomView->getCustomActionDetails($viewid);
 }
+elseif($viewid ==0)
+{
+	echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
+	echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
+
+		<table border='0' cellpadding='5' cellspacing='0' width='98%'>
+		<tbody><tr>
+		<td rowspan='2' width='11%'><img src='". vtiger_imageurl('denied.gif', $theme)."' ></td>
+		<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span clas
+		s='genHeaderSmall'>$app_strings[LBL_PERMISSION]</span></td>
+		</tr>
+		<tr>
+		<td class='small' align='right' nowrap='nowrap'>
+		<a href='javascript:window.history.back();'>$app_strings[LBL_GO_BACK]</a><br>
+		</td>
+		</tr>
+		</tbody></table>
+		</div>";
+	echo "</td></tr></table>";
+	exit;
+}
+
 if(isPermitted('Faq','Delete','') == 'yes')
 $other_text ['del'] = $app_strings[LBL_MASS_DELETE]; 
 
@@ -144,11 +180,12 @@ if(isset($order_by) && $order_by != '')
 
 $smarty->assign("MOD", $mod_strings);
 $smarty->assign("APP", $app_strings);
+$smarty->assign("THEME", $theme);
 $smarty->assign("IMAGE_PATH",$image_path);
 $smarty->assign("MODULE",$currentModule);
 $smarty->assign("BUTTONS",$other_text);
 $smarty->assign("CATEGORY",$category);
-$smarty->assign("SINGLE_MOD",'Note');
+$smarty->assign("SINGLE_MOD",'Document');
 //Retreiving the no of rows
 //Retreiving the no of rows
 $count_result = $adb->query( mkCountQuery( $list_query));
@@ -213,6 +250,7 @@ $listview_entries = getListViewEntries($focus,"Faq",$list_result,$navigation_arr
 $smarty->assign("LISTHEADER", $listview_header);
 $smarty->assign("LISTENTITY", $listview_entries);
 $smarty->assign("SELECT_SCRIPT", $view_script);
+
 //Added to select Multiple records in multiple pages
 $smarty->assign("SELECTEDIDS", $_REQUEST['selobjs']);
 $smarty->assign("ALLSELECTEDIDS", $_REQUEST['allselobjs']);
@@ -231,8 +269,14 @@ $smarty->assign("CUSTOMVIEW_OPTION",$customviewcombo_html);
 $smarty->assign("VIEWID", $viewid);
 $smarty->assign("SINGLE_MOD" ,'Faq');
 
+if(isPermitted('Faq','EditView','') == 'yes') {
+	$other_text['mass_edit'] = $app_strings[LBL_MASS_EDIT];
+}
+$smarty->assign("BUTTONS",$other_text);
 $check_button = Button_Check($module);
 $smarty->assign("CHECK", $check_button);
+
+$_SESSION['faq_listquery'] = $list_query;
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

@@ -63,6 +63,17 @@ $smarty->assign("UPDATEINFO",updateInfo($focus->id));
 
 $smarty->assign("CUSTOMFIELD", $cust_fld);
 $smarty->assign("ID", $_REQUEST['record']);
+
+// Module Sequence Numbering
+$mod_seq_field = getModuleSequenceField($currentModule);
+if ($mod_seq_field != null) {
+	$mod_seq_id = $focus->column_fields[$mod_seq_field['name']];
+} else {
+	$mod_seq_id = $focus->id;
+}
+$smarty->assign('MOD_SEQ_ID', $mod_seq_id);
+// END
+
 $smarty->assign("SINGLE_MOD", 'PurchaseOrder');
 $category = getParentTab();
 $smarty->assign("CATEGORY",$category);
@@ -103,7 +114,50 @@ if($singlepane_view == 'true')
 
 $smarty->assign("SinglePane_View", $singlepane_view);
 
-$smarty->display("Inventory/InventoryDetailView.tpl");
+if(isset($_SESSION['purchaseorder_listquery'])){
+	$arrayTotlist = array();
+	$aNamesToList = array(); 
+	$forAllCRMIDlist_query=$_SESSION['purchaseorder_listquery'];
+	$resultAllCRMIDlist_query=$adb->pquery($forAllCRMIDlist_query,array());
+	while($forAllCRMID = $adb->fetch_array($resultAllCRMIDlist_query))
+	{
+		$arrayTotlist[]=$forAllCRMID['crmid'];
+	}
+	$_SESSION['listEntyKeymod_'.$focus->id] = $module.":".implode(",",$arrayTotlist);
+	if(isset($_SESSION['listEntyKeymod_'.$focus->id]))
+	{
+		$split_temp=explode(":",$_SESSION['listEntyKeymod_'.$focus->id]);
+		if($split_temp[0] == $module)
+		{	
+			$smarty->assign("SESMODULE",$split_temp[0]);
+			$ar_allist=explode(",",$split_temp[1]);
+			
+			for($listi=0;$listi<count($ar_allist);$listi++)
+			{
+				if($ar_allist[$listi]==$_REQUEST[record])
+				{
+					if($listi-1>=0)
+					{
+						$privrecord=$ar_allist[$listi-1];
+						$smarty->assign("privrecord",$privrecord);
+					}else {unset($privrecord);}
+					if($listi+1<count($ar_allist))
+					{
+						$nextrecord=$ar_allist[$listi+1];
+						$smarty->assign("nextrecord",$nextrecord);
+					}else {unset($nextrecord);}
+					break;
+				}
+				
+			}
+		}
+	}
+}
 
+// Record Change Notification
+$focus->markAsViewed($current_user->id);
+// END
+
+$smarty->display("Inventory/InventoryDetailView.tpl");
 
 ?>

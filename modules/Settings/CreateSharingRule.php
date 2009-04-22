@@ -27,7 +27,6 @@ global $mod_strings;
 global $app_strings;
 global $theme;
 $theme_path="themes/".$theme."/";
-$image_path=$theme_path."images/";
 global $adb;
 
 $mode = $_REQUEST['mode'];
@@ -244,7 +243,7 @@ elseif($mode == 'edit')
 }
 
 	
-$output.='<div class="layerPopup" id="sharingRule"><form name="newGroupForm" action="index.php" method="post">
+$output.='<div class="layerPopup" id="sharingRule"><form name="newGroupForm" action="index.php" method="post" onsubmit="VtigerJS_DialogBox.block();">
 <input type="hidden" name="module" value="Settings">
 <input type="hidden" name="parenttab" value="Settings">	
 <input type="hidden" name="action" value="SaveSharingRule">
@@ -268,7 +267,7 @@ if($mode == 'edit')
     	$output .=$mod_strings[LBL_EDIT_CUSTOM_RULE].'</td>';
 else
 	$output .=$mod_strings[LBL_ADD_CUSTOM_RULE].'</td>';
-$output .= '<td align="right" class="small"><img src="'.$image_path.'close.gif" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer" onClick="hide(\'sharingRule\')";></td>
+$output .= '<td align="right" class="small"><img src="'. vtiger_imageurl('close.gif', $theme).'" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer" onClick="hide(\'sharingRule\')";></td>
 
 </tr>
 </table>

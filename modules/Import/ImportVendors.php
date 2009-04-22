@@ -21,7 +21,7 @@ class ImportVendors extends Vendors {
 	 var $db;
 
 	// This is the list of the functions to run when importing
-	var $special_functions =  array("assign_user");
+	var $special_functions =  array("assign_user","modseq_number");
 
 	var $importable_fields = Array();
 
@@ -65,14 +65,20 @@ class ImportVendors extends Vendors {
 	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
 	 */
 	function ImportVendors() {
-		
+		parent::Vendors();
 		$this->log = LoggerManager::getLogger('import_vendors');
 		$this->db = new PearDatabase();
 		$this->db->println("IMP ImportVendors");
 		$this->initImportableFields("Vendors");
-		
 		$this->db->println($this->importable_fields);
 	}
+
+	//Module Sequence Numbering	
+	function modseq_number() {
+		$this->column_fields['vendor_no'] = '';
+	}
+	// END
+	
 
 }
 ?>

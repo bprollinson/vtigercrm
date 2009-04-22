@@ -12,22 +12,31 @@ require_once('include/database/PearDatabase.php');
 require_once('include/ComboUtil.php');
 global $current_user;
  $fldmodule=$_REQUEST['fld_module'];
- $fldlabel=$_REQUEST['fldLabel'];
- $fldType= $_REQUEST['fieldType'];
+ $blockid = $_REQUEST['blockid'];
+ $fldlabel=trim($_REQUEST['fldLabel_'.$blockid]);
+ $fldType= $_REQUEST['fieldType_'.$blockid];
  $parenttab=$_REQUEST['parenttab'];
  $mode=$_REQUEST['mode'];
 
 $tabid = getTabid($fldmodule);
+if ($fldmodule == 'Calendar' && isset($_REQUEST['activity_type'])) {
+	$activitytype = $_REQUEST['activity_type'];
+	if ($activitytype == 'E') $tabid = '16';
+	if ($activitytype == 'T') $tabid = '9';
+}
 
 if(get_magic_quotes_gpc() == 1)
 {
 	$fldlabel = stripslashes($fldlabel);
 }
 
-
+$log->fatal(print_r($_REQUEST,true));
 //checking if the user is trying to create a custom vtiger_field which already exists  
-$checkquery="select * from vtiger_field where tabid=? and fieldlabel=?";
-$params =  array($tabid, $fldlabel);
+$dup_check_tab_id = $tabid;
+if ($fldmodule == 'Calendar')
+	$dup_check_tab_id = array('9', '16');
+$checkquery="select * from vtiger_field where tabid in (". generateQuestionMarks($dup_check_tab_id) .") and fieldlabel=?";
+$params =  array($dup_check_tab_id, $fldlabel);
 if($mode == 'edit' && isset($_REQUEST['fieldid']) && $_REQUEST['fieldid'] != '')
 {
 	$checkquery .= " and fieldid !=?";
@@ -38,25 +47,25 @@ $checkresult=$adb->pquery($checkquery,$params);
 if($adb->num_rows($checkresult) > 0)
 {
 	
-	if(isset($_REQUEST['fldLength']))
+	if(isset($_REQUEST['fldLength_'.$blockid]))
 	{	
-		$fldlength=$_REQUEST['fldLength'];
+		$fldlength=$_REQUEST['fldLength_'.$blockid];
 	}
 	else
 	{
 		 $fldlength='';
 	}
-	if(isset($_REQUEST['fldDecimal']))
+	if(isset($_REQUEST['fldDecimal_'.$blockid]))
 	{
-		$flddecimal=$_REQUEST['fldDecimal'];
+		$flddecimal=$_REQUEST['fldDecimal_'.$blockid];
 	}
 	else
 	{
 		$flddecimal='';
 	}
-	if(isset($_REQUEST['fldPickList']))
+	if(isset($_REQUEST['fldPickList_'.$blockid]))
 	{
-		$fldPickList=$_REQUEST['fldPickList'];
+		$fldPickList=$_REQUEST['fldPickList_'.$blockid];
 	}
 	else
 	{
@@ -75,13 +84,15 @@ else
 	{
 		$max_fieldid = $adb->getUniqueID("vtiger_field");
 		$columnName = 'cf_'.$max_fieldid;
+		$custfld_fieldid=$max_fieldid;
 	}
 	else
 	{
 		$max_fieldid = $_REQUEST['column'];
 		$columnName = $max_fieldid;
+		$custfld_fieldid= $_REQUEST['fieldid'];
 	}
-  
+
 	//Assigning the vtiger_table Name
 	$tableName ='';
 	if($fldmodule == 'HelpDesk')
@@ -100,17 +111,27 @@ else
 	{
 		$tableName='vtiger_pricebookcf';
 	}
-	elseif($fldmodule != '')
+	elseif($fldmodule == 'Calendar')
 	{
-		$tableName= 'vtiger_'.strtolower($fldmodule).'cf';
+		$tableName='vtiger_activitycf';
+	}
+	elseif($fldmodule != '') {
+		checkFileAccess("modules/$fldmodule/$fldmodule.php");
+		include_once("modules/$fldmodule/$fldmodule.php");
+		$focus = new $fldmodule();
+		if (isset($focus->customFieldTable)) {
+			$tableName=$focus->customFieldTable[0];
+		} else {
+			$tableName= 'vtiger_'.strtolower($fldmodule).'cf';
+		}
 	}
 	//Assigning the uitype
-	$fldlength=$_REQUEST['fldLength'];
+	$fldlength=$_REQUEST['fldLength_'.$blockid];
 	$uitype='';
 	$fldPickList='';
-	if(isset($_REQUEST['fldDecimal']) && $_REQUEST['fldDecimal'] != '')
+	if(isset($_REQUEST['fldDecimal_'.$blockid]) && $_REQUEST['fldDecimal_'.$blockid] != '')
 	{
-		$decimal=$_REQUEST['fldDecimal'];
+		$decimal=$_REQUEST['fldDecimal_'.$blockid];
 	}
 	else
 	{
@@ -205,24 +226,10 @@ else
 	}
 	// No Decimal Pleaces Handling
 
-        
-
-
-        
-
-        //1. add the customfield vtiger_table to the vtiger_field vtiger_table as Block4
-        //2. fetch the contents of the custom vtiger_field and show in the UI
-        
-	//retreiving the sequence
-	if($_REQUEST['fieldid'] == '')
-	{
-		$custfld_fieldid=$adb->getUniqueID("vtiger_field");
-	}
-	else
-	{
-		$custfld_fieldid= $_REQUEST['fieldid'];
-	}
-	$custfld_sequece=$adb->getUniqueId("vtiger_customfield_sequence");
+   	//1. add the customfield vtiger_table to the vtiger_field vtiger_table as Block4
+	//2. fetch the contents of the custom vtiger_field and show in the UI
+  
+	$custfld_sequece=$adb->getUniqueID("vtiger_customfield_sequence");
     	
 	$blockid ='';
         //get the blockid for this custom block
@@ -237,7 +244,8 @@ else
 		}
 		else if($_REQUEST['fieldid'] == '')
 		{
-			$query = "insert into vtiger_field values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			$query = "insert into vtiger_field (tabid,fieldid,columnname,tablename,generatedtype,uitype,fieldname,fieldlabel,
+				readonly,presence,selected,maximumlength,sequence,block,displaytype,typeofdata,quickcreate,quickcreatesequence,info_type) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			$qparams = array($tabid,$custfld_fieldid,$columnName,$tableName,2,$uitype,$columnName,$fldlabel,0,0,0,100,$custfld_sequece,$blockid,1,$uichekdata,1,0,'BAS');
 			$adb->pquery($query, $qparams);
 			$adb->alterTable($tableName, $columnName." ".$type, "Add_Column");
@@ -284,7 +292,7 @@ else
 				$qry="select picklistid from vtiger_picklist where  name=?";
 				$picklistid = $adb->query_result($adb->pquery($qry, array($columnName)), 0,'picklistid');
 				$pickArray = Array();
-				$fldPickList =  $_REQUEST['fldPickList'];
+				$fldPickList =  $_REQUEST['fldPickList_'.$blockid];
 				$pickArray = explode("\n",$fldPickList);
 				$count = count($pickArray);
 				for($i = 0; $i < $count; $i++)
@@ -308,8 +316,8 @@ else
 							$picklist_valueid = getUniquePicklistID();
 							$query = "insert into vtiger_".$columnName." values(?,?,?,?)";				
 							$adb->pquery($query, array($adb->getUniqueID("vtiger_".$columnName),$pickArray[$i],1,$picklist_valueid));
-							$sql="update vtiger_picklistvalues_seq set id = ?";
-							$adb->pquery($sql, array(++$picklist_valueid));
+							/*$sql="update vtiger_picklistvalues_seq set id = ?";
+							$adb->pquery($sql, array(++$picklist_valueid));*/
 						}
 						$sql = "select picklist_valueid from vtiger_$columnName where $columnName=?";
 						$pick_valueid = $adb->query_result($adb->pquery($sql, array($pickArray[$i])),0,'picklist_valueid');

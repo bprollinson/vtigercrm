@@ -44,6 +44,11 @@ if(isset($_REQUEST['amount']))
 	$focus->column_fields['amount'] = $value;
 }
 
+if($_REQUEST['assigntype'] == 'U')  {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_user_id'];
+} elseif($_REQUEST['assigntype'] == 'T') {
+	$focus->column_fields['assigned_user_id'] = $_REQUEST['assigned_group_id'];
+}
 $focus->save("Potentials");
 $pot_id = $return_id = $focus->id;
 
@@ -61,7 +66,9 @@ if($_REQUEST['return_viewname'] == '') $return_viewname='0';
 if($_REQUEST['return_viewname'] != '')$return_viewname=$_REQUEST['return_viewname'];
 
 //Added to send mail to the vtiger_potential-owner about the Potential
-$status = sendNotificationToOwner('Potentials',$focus);
+if($focus->mode == 'edit') { // For non-edit mode sending mail is handled during Save 
+	$status = sendNotificationToOwner('Potentials',$focus);
+}
 
 header("Location: index.php?action=$return_action&module=$return_module&parenttab=$parenttab&record=$return_id&pot_id=$pot_id&viewname=$return_viewname&start=".$_REQUEST['pagenumber'].$search);
 ?>

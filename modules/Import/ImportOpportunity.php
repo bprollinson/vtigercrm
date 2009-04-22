@@ -24,7 +24,7 @@ require_once('include/database/PearDatabase.php');
 require_once('data/SugarBean.php');
 require_once('modules/Contacts/Contacts.php');
 require_once('modules/Potentials/Potentials.php');
-require_once('modules/Notes/Notes.php');
+require_once('modules/Documents/Documents.php');
 require_once('modules/Emails/Emails.php');
 require_once('modules/Accounts/Accounts.php');
 require_once('include/ComboUtil.php');
@@ -39,168 +39,124 @@ $comboFieldArray = getComboArray($comboFieldNames);
 class ImportOpportunity extends Potentials {
 	 var $db;
 
-	// This is the list of vtiger_fields that are required.
-	/*
-	var $required_fields =  array(
-					"potentialname"=>1,
-					"account_id"=>1,
-					"closingdate"=>1,
-					"sales_stage"=>1,
-					"amount"=>1
-				     );
-	*/
-
 	// This is the list of the functions to run when importing
 	var $special_functions =  array(
-						"add_create_account",
+						"assign_user",
+						"add_related_to",
 						"map_campaign_source",
-						//"add_lead_source",
-						//"add_opportunity_type",
-				        	//"add_date_closed"
-				        	//"add_sales_stage"
+						"modseq_number",
 				       );
-	/*
-        function add_lead_source()
-        {
-                if ( isset($this->lead_source) &&
-                        ! isset( $comboFieldArray['lead_source_dom'][ $this->lead_source ]) )
-                {
-                        $this->lead_source = '';
-                }
 
-        }
+/**	function used to set the assigned_user_id value in the column_fields when we map the username during import
+ */
+function assign_user()
+{
+	global $current_user;
+	$ass_user = $this->column_fields["assigned_user_id"];
+	$this->db->println("assign_user ".$ass_user." cur_user=".$current_user->id);
+	
+	if( $ass_user != $current_user->id)
+	{
+		$this->db->println("searching and assigning ".$ass_user);
 
-        function add_sales_stage()
-        {
-                if ( isset($this->sales_stage) &&
-                        ! isset( $comboFieldArray['sales_stage_dom'][ $this->sales_stage ]) )
-                {
-                        $this->sales_stage = 'Prospecting';
-                }
-
-
-	}
-
-        function add_opportunity_type()
-        {
-                if ( isset($this->opportunity_type) &&
-                        ! isset( $comboFieldArray['opportunity_type_dom'][ $this->opportunity_type ]) )
-                {
-                        $this->opportunity_type = '';
-                }
-
-        }
-
-        function add_date_closed()
-        {
-                if ( isset($this->date_closed))
-                {
-                        if ( preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/',$this->date_closed,$match))
-                        {
-                                $this->date_closed = $match[3]."-".$match[1]."-".$match[2];
-                        }
-
-                        if (! preg_match('/^\d{4}-\d{1,2}-\d{1,2}$/',$this->date_closed))
-                        {
-                                $this->date_closed = '';
-                        }
-                }
-
-        }
-	*/
-
-	//exactly the same function from ImportAccount.php
-	// lets put this in one place.. 
-
-	/**     function used to create or map with existing account if the potential is map with an account during import
-         */
-	function add_create_account()
-        {
-		global $adb;
-		// global is defined in UsersLastImport.php
-		global $imported_ids;
-                global $current_user;
-
-		$acc_name = $this->column_fields['account_id'];
-		$adb->println("oppor add_create acc=".$acc_name);
-
-		if ((! isset($acc_name) || $acc_name == '') )
+		//$result = $this->db->query("select id from vtiger_users where user_name = '".$ass_user."'");
+		$result = $this->db->pquery("select id from vtiger_users where id = ? union select groupid as id from vtiger_groups where groupid = ?", array($ass_user, $ass_user));
+		if($this->db->num_rows($result)!=1)
 		{
-			return; 
+			$this->db->println("not exact records setting current userid");
+			$this->column_fields["assigned_user_id"] = $current_user->id;
 		}
+		else
+		{
+		
+			$row = $this->db->fetchByAssoc($result, -1, false);
+			if (isset($row['id']) && $row['id'] != -1)
+                	{
+				$this->db->println("setting id as ".$row['id']);
+				$this->column_fields["assigned_user_id"] = $row['id'];
+			}
+			else
+			{
+				$this->db->println("setting current userid");
+				$this->column_fields["assigned_user_id"] = $current_user->id;
+			}
+		}
+	}
+}				   
+	/**
+	 * this function is used to create the related to field for the potential
+	 */
+	function add_related_to(){
+		global $adb, $imported_ids, $current_user;
+		
+		$related_to = $this->column_fields['related_to'];
 
-                $arr = array();
-
-		// check if it already exists
-                $focus = new Accounts();
+		if(empty($related_to)){
+			return;
+		}
+		
+		//check if the field has module information; if not exit
+		if(!strpos($related_to, "::::")){
+			$module = getFirstModule('Potentials', 'related_to');
+			echo "er";
+		}else{
+			//check the module of the field
+			$arr = array();
+			$arr = explode("::::", $related_to);
+			$module = $arr[0];
+			$value = $arr[1];
+			if(empty($module)){
+				$module = getFirstModule();
+			}
+		}
+				
+		require_once "modules/$module/$module.php";
+		$focus1 = new $module();
 
 		$query = '';
-
-		// if user is defining the vtiger_account id to be associated with this contact..
-		$acc_name = trim($acc_name);
-
-		//Modified the query to get the available account only ie., which is not deleted
-		$query = "select vtiger_crmentity.deleted, vtiger_account.* from vtiger_account, vtiger_crmentity WHERE accountname=? and vtiger_crmentity.crmid =vtiger_account.accountid and vtiger_crmentity.deleted=0";
-		$this->log->info($query);
-		$result = $adb->pquery($query, array($acc_name));
-
-         $row = $this->db->fetchByAssoc($result, -1, false);
-
-		$adb->println("fetched account");
-		$adb->println($row);
-
-		// we found a row with that id
-                if (isset($row['accountid']) && $row['accountid'] != -1)
-                {
-			$focus->id = $row['accountid'];
-			$adb->println("Account row exists - using same id=".$focus->id);
-                }
-
-		// if we didnt find the vtiger_account, so create it
-                if (! isset($focus->id) || $focus->id == '')
-                {
-			$adb->println("Createing new vtiger_account");
-                        $focus->column_fields['accountname'] = $acc_name;
-                        $focus->column_fields['assigned_user_id'] = $current_user->id;
-                        $focus->column_fields['modified_user_id'] = $current_user->id;
-
-			$focus->save("Accounts");
-			$acc_id = $focus->id;
-
-			$adb->println("New Account created id=".$focus->id);
-
-			// avoid duplicate mappings:
-			if (! isset( $imported_ids[$acc_id]) )
-			{
-				$adb->println("inserting vtiger_users last import for vtiger_accounts");
-				// save the new vtiger_account as a vtiger_users_last_import
-                		$last_import = new UsersLastImport();
-                		$last_import->assigned_user_id = $current_user->id;
-                		$last_import->bean_type = "Accounts";
-                		$last_import->bean_id = $focus->id;
-                		$last_import->save();
-				$imported_ids[$acc_id] = 1;
+		if($module == 'Accounts'){
+			$query = "select vtiger_crmentity.deleted, vtiger_account.* 
+						from vtiger_account, vtiger_crmentity 
+						WHERE accountname=? and vtiger_crmentity.crmid=vtiger_account.accountid and vtiger_crmentity.deleted=0";
+		}elseif($module == 'Contacts'){
+			$query = "select vtiger_crmentity.deleted, vtiger_contactdetails.* 
+						from vtiger_contactdetails inner join vtiger_crmentity 
+						on vtiger_crmentity.crmid=vtiger_contactdetails.contactid  
+						WHERE concat(lastname, ' ', firstname)=? and vtiger_crmentity.deleted=0";
+		}
+		$result = $adb->pquery($query, array($value));
+		if($adb->num_rows($result)>0){
+			//record found
+			$focus1->id = $adb->query_result($result, 0, $focus1->table_index);
+		}else{
+			//record not found; create it
+			if($module == 'Accounts'){
+		        $focus1->column_fields['accountname'] = $value;
+			}else if($module == 'Contacts'){
+		        $focus1->column_fields['lastname'] = $value;
 			}
-                }
-
-		$adb->println("prev contact accid=".$this->column_fields["account_id"]);
-		// now just link the vtiger_account
-                $this->column_fields["account_id"] = $focus->id;
-		$adb->println("curr contact accid=".$this->column_fields["account_id"]);
-
-        }	
+	        $focus1->column_fields['assigned_user_id'] = $current_user->id;
+	        $focus1->column_fields['modified_user_id'] = $current_user->id;
+			$focus1->save($module);
+    		$last_import = new UsersLastImport();
+    		$last_import->assigned_user_id = $current_user->id;
+    		$last_import->bean_type = $module;
+    		$last_import->bean_id = $focus1->id;
+    		$last_import->save();
+			$imported_ids[$focus1->id] = 1;
+		}
+		$this->column_fields["related_to"] = $focus1->id;
+    }	
 
 	/**     function used to map with existing Campaign Source if the potential is map with an campaign during import
          */
-	function map_campaign_source()
-	{
+	function map_campaign_source(){
 		global $adb;
 
 		$campaign_name = $this->column_fields['campaignid'];
 		$adb->println("Entering map_campaign_source campaignid=".$campaign_name);
 
-		if ((! isset($campaign_name) || $campaign_name == '') )
-		{
+		if ((! isset($campaign_name) || $campaign_name == '') ){
 			$adb->println("Exit map_campaign_source. Campaign Name not set for this entity.");
 			return; 
 		}
@@ -212,60 +168,32 @@ class ImportOpportunity extends Potentials {
 
 		$campaignid = $adb->query_result($adb->pquery($query, array($campaign_name)),0,'campaignid');
 
-		if($campaignid == '' || !isset($campaignid))
+		if($campaignid == '' || !isset($campaignid)){
 			$campaignid = 0;
+		}
 
 		$this->column_fields['campaignid'] = $campaignid;
-
 		$adb->println("Exit map_campaign_source. Fetched Campaign for '".$campaign_name."' and the campaignid = $campaignid");
-        }
-
-
-	/*
-	function fix_website()
-	{
-		if ( isset($this->website) &&
-			preg_match("/^http:\/\//",$this->website) )
-		{
-			$this->website = substr($this->website,7);
-		}	
-	}
-	*/
-	
-	// This is the list of vtiger_fields that are importable.
-	// some if these do not map directly to database columns
-	/*var $importable_fields = Array(
-		"id"=>1
-                , "name"=>1
-                , "account_id"=>1
-                , "account_name"=>1
-                , "opportunity_type"=>1
-                , "lead_source"=>1
-                , "amount"=>1
-                , "date_entered"=>1
-                , "date_closed"=>1
-                , "next_step"=>1
-                , "sales_stage"=>1
-                , "probability"=>1
-                , "description"=>1
-		);*/
+    }
 
 	var $importable_fields = Array();
 
 	/** Constructor which will set the importable_fields as $this->importable_fields[$key]=1 in this object where key is the fieldname in the field table
 	 */
 	function ImportOpportunity() {
+		parent::Potentials();
 		$this->log = LoggerManager::getLogger('import_opportunity');
 		$this->db = new PearDatabase();
 
 		$this->db->println("IMP ImportOpportunity");
 		$this->initImportableFields("Potentials");		
-		
 		$this->db->println($this->importable_fields);
 	}
 
+	// Module Sequence Numbering	
+	function modseq_number() {
+		$this->column_fields['potential_no'] = '';
+	}
+	// END
 }
-
-
-
 ?>

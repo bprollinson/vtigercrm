@@ -21,8 +21,13 @@ class PriceBooks extends CRMEntity {
 	var $log;
 	var $db;
 	var $table_name = "vtiger_pricebook";
+	var $table_index= 'pricebookid';
 	var $tab_name = Array('vtiger_crmentity','vtiger_pricebook','vtiger_pricebookcf');
 	var $tab_name_index = Array('vtiger_crmentity'=>'crmid','vtiger_pricebook'=>'pricebookid','vtiger_pricebookcf'=>'pricebookid');
+	/**
+	 * Mandatory table for supporting custom fields.
+	 */
+	var $customFieldTable = Array('vtiger_pricebookcf', 'pricebookid');
 	var $column_fields = Array();
 
 	var $sortby_fields = Array('bookname');		  
@@ -32,16 +37,17 @@ class PriceBooks extends CRMEntity {
                                 'Price Book Name'=>Array('pricebook'=>'bookname'),
                                 'Active'=>Array('pricebook'=>'active')
                                 );
-        var $list_fields_name = Array(
+                                
+	var $list_fields_name = Array(
                                         'Price Book Name'=>'bookname',
                                         'Active'=>'active'
                                      );
-        var $list_link_field= 'bookname';
+	var $list_link_field= 'bookname';
 
 	var $search_fields = Array(
                                 'Price Book Name'=>Array('pricebook'=>'bookname')
                                 );
-        var $search_fields_name = Array(
+	var $search_fields_name = Array(
                                         'Price Book Name'=>'bookname',
                                      );
 
@@ -49,6 +55,8 @@ class PriceBooks extends CRMEntity {
 	var $default_order_by = 'bookname';
 	var $default_sort_order = 'ASC';
 
+	var $mandatory_fields = Array('bookname','currency_id','pricebook_no','createdtime' ,'modifiedtime');
+	
 	/**	Constructor which will set the column_fields in this object
 	 */
 	function PriceBooks() {
@@ -61,7 +69,36 @@ class PriceBooks extends CRMEntity {
 
 	function save_module($module)
 	{
+		// Update the list prices in the price book with the unit price, if the Currency has been changed
+		$this->updateListPrices();
 	}	
+	
+	/* Function to Update the List prices for all the products of a current price book 
+	   with its Unit price, if the Currency for Price book has changed. */
+	function updateListPrices() {
+		global $log, $adb;
+		$log->debug("Entering function updateListPrices...");
+		$pricebook_currency = $this->column_fields['currency_id'];
+		$prod_res = $adb->pquery("select productid from vtiger_pricebookproductrel where pricebookid=? and usedcurrency != ?", 
+							array($this->id,$pricebook_currency));
+		$numRows = $adb->num_rows($prod_res);
+		$prod_ids = array();
+		for($i=0;$i<$numRows;$i++) {
+			$prod_ids[] = $adb->query_result($prod_res,$i,'productid');
+		}
+		if(count($prod_ids) > 0) {
+			$prod_price_list = getPricesForProducts($pricebook_currency,$prod_ids);
+		
+			for($i=0;$i<count($prod_ids);$i++) {
+				$product_id = $prod_ids[$i];
+				$unit_price = $prod_price_list[$product_id];
+				$query = "update vtiger_pricebookproductrel set listprice=?, usedcurrency=? where pricebookid=? and productid=?";
+				$params = array($unit_price, $pricebook_currency, $this->id, $product_id);
+				$adb->pquery($query, $params);
+			}	
+		}
+		$log->debug("Exiting function updateListPrices...");
+	}
 
 	/**	Function used to get the sort order for PriceBook listview
 	 *	@return string	$sorder	- first check the $_REQUEST['sorder'] if request value is empty then check in the $_SESSION['PRICEBOOK_SORT_ORDER'] if this session value is empty then default sort order will be returned. 
@@ -97,24 +134,90 @@ class PriceBooks extends CRMEntity {
 	 *	@param int $id - pricebook id
          *      @return array - return an array which will be returned from the function getPriceBookRelatedProducts
         **/
-	function get_pricebook_products($id)
-	{
-		global $log,$singlepane_view;
+	function get_pricebook_products($id, $cur_tab_id, $rel_tab_id, $actions=false) {
+		global $log, $singlepane_view,$currentModule,$current_user;
 		$log->debug("Entering get_pricebook_products(".$id.") method ...");
-		global $app_strings;
-		require_once('modules/Products/Products.php');	
-		$focus = new Products();
+		$this_module = $currentModule;
 
-		$button = '';
-
+        $related_module = vtlib_getModuleNameById($rel_tab_id);
+		require_once("modules/$related_module/$related_module.php");
+		$other = new $related_module();
+        vtlib_setup_modulevars($related_module, $other);		
+		$singular_modname = vtlib_toSingular($related_module);
+		
+		$parenttab = getParentTab();
+		
 		if($singlepane_view == 'true')
-			$returnset = '&return_module=PriceBooks&return_action=DetailView&return_id='.$id;
+			$returnset = '&return_module='.$this_module.'&return_action=DetailView&return_id='.$id;
 		else
-			$returnset = '&return_module=PriceBooks&return_action=CallRelatedList&return_id='.$id;
-
+			$returnset = '&return_module='.$this_module.'&return_action=CallRelatedList&return_id='.$id;
+		
+		$button = '';
+		
+		if($actions) {
+			if(is_string($actions)) $actions = explode(',', strtoupper($actions));
+			if(in_array('SELECT', $actions) && isPermitted($related_module,4, '') == 'yes') {
+				$button .= "<input title='".getTranslatedString('LBL_SELECT')." ". getTranslatedString($related_module). "' class='crmbutton small edit' type='submit' name='button' onclick=\"this.form.action.value='AddProductsToPriceBook';this.form.module.value='$related_module';this.form.return_module.value='$currentModule';this.form.return_action.value='PriceBookDetailView'\" value='". getTranslatedString('LBL_SELECT'). " " . getTranslatedString($related_module) ."'>&nbsp;";
+			}
+		}
+		
 		$query = 'select vtiger_products.productid, vtiger_products.productname, vtiger_products.productcode, vtiger_products.commissionrate, vtiger_products.qty_per_unit, vtiger_products.unit_price, vtiger_crmentity.crmid, vtiger_crmentity.smownerid,vtiger_pricebookproductrel.listprice from vtiger_products inner join vtiger_pricebookproductrel on vtiger_products.productid = vtiger_pricebookproductrel.productid inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_products.productid inner join vtiger_pricebook on vtiger_pricebook.pricebookid = vtiger_pricebookproductrel.pricebookid  where vtiger_pricebook.pricebookid = '.$id.' and vtiger_crmentity.deleted = 0'; 
+		
+		$return_value = getPriceBookRelatedProducts($query,$this,$returnset);
+
+		if($return_value == null) $return_value = Array();
+		$return_value['CUSTOM_BUTTON'] = $button;
+		
 		$log->debug("Exiting get_pricebook_products method ...");
-		return getPriceBookRelatedProducts($query,$focus,$returnset);
+		return $return_value; 
+	}	
+
+	/**	function used to get the services which are related to the pricebook
+	 *	@param int $id - pricebook id
+         *      @return array - return an array which will be returned from the function getPriceBookRelatedServices
+        **/
+	function get_pricebook_services($id, $cur_tab_id, $rel_tab_id, $actions=false) {
+		global $log, $singlepane_view,$currentModule,$current_user;
+		$log->debug("Entering get_pricebook_services(".$id.") method ...");
+		$this_module = $currentModule;
+
+        $related_module = vtlib_getModuleNameById($rel_tab_id);
+		require_once("modules/$related_module/$related_module.php");
+		$other = new $related_module();
+        vtlib_setup_modulevars($related_module, $other);		
+		$singular_modname = vtlib_toSingular($related_module);
+		
+		$parenttab = getParentTab();
+		
+		if($singlepane_view == 'true')
+			$returnset = '&return_module='.$this_module.'&return_action=DetailView&return_id='.$id;
+		else
+			$returnset = '&return_module='.$this_module.'&return_action=CallRelatedList&return_id='.$id;
+		
+		$button = '';
+		
+		if($actions) {
+			if(is_string($actions)) $actions = explode(',', strtoupper($actions));
+			if(in_array('SELECT', $actions) && isPermitted($related_module,4, '') == 'yes') {
+				$button .= "<input title='".getTranslatedString('LBL_SELECT')." ". getTranslatedString($related_module). "' class='crmbutton small edit' type='submit' name='button' onclick=\"this.form.action.value='AddServicesToPriceBook';this.form.module.value='$related_module';this.form.return_module.value='$currentModule';this.form.return_action.value='PriceBookDetailView'\" value='". getTranslatedString('LBL_SELECT'). " " . getTranslatedString($related_module) ."'>&nbsp;";
+			}
+		}
+
+		$query = 'select vtiger_service.serviceid, vtiger_service.servicename, vtiger_service.commissionrate,  
+			vtiger_service.qty_per_unit, vtiger_service.unit_price, vtiger_crmentity.crmid, vtiger_crmentity.smownerid,  
+			vtiger_pricebookproductrel.listprice from vtiger_service 
+			inner join vtiger_pricebookproductrel on vtiger_service.serviceid = vtiger_pricebookproductrel.productid  
+			inner join vtiger_crmentity on vtiger_crmentity.crmid = vtiger_service.serviceid
+			inner join vtiger_pricebook on vtiger_pricebook.pricebookid = vtiger_pricebookproductrel.pricebookid
+			where vtiger_pricebook.pricebookid = '.$id.' and vtiger_crmentity.deleted = 0';
+		
+		$return_value = $other->getPriceBookRelatedServices($query,$this,$returnset);
+
+		if($return_value == null) $return_value = Array();
+		$return_value['CUSTOM_BUTTON'] = $button;
+		
+		$log->debug("Exiting get_pricebook_services method ...");
+		return $return_value; 
 	}
 
 	/**	function used to get whether the pricebook has related with a product or not
@@ -154,6 +257,67 @@ class PriceBooks extends CRMEntity {
 			$log->debug("Exiting get_pricebook_noproduct method ...");
 			return false;
 		}
+	}
+	
+	/*
+	 * Function to get the primary query part of a report 
+	 * @param - $module Primary module name
+	 * returns the query string formed on fetching the related data for report for primary module
+	 */
+	function generateReportsQuery($module){
+	 			$moduletable = $this->table_name;
+	 			$moduleindex = $this->table_index;
+	 			
+	 			$query = "from $moduletable
+					inner join vtiger_crmentity on vtiger_crmentity.crmid=$moduletable.$moduleindex
+					left join vtiger_currency_info as vtiger_currency_info$module on vtiger_currency_info$module.id = $moduletable.currency_id 
+					left join vtiger_groups as vtiger_groups$module on vtiger_groups$module.groupid = vtiger_crmentity.smownerid 
+					left join vtiger_users as vtiger_users$module on vtiger_users$module.id = vtiger_crmentity.smownerid 
+					left join vtiger_groups on vtiger_groups.groupid = vtiger_crmentity.smownerid 
+					left join vtiger_users on vtiger_users.id = vtiger_crmentity.smownerid";
+	            return $query;
+	}
+	
+	/*
+	 * Function to get the secondary query part of a report 
+	 * @param - $module primary module name
+	 * @param - $secmodule secondary module name
+	 * returns the query string formed on fetching the related data for report for secondary module
+	 */
+	function generateReportsSecQuery($module,$secmodule){
+		$tab = getRelationTables($module,$secmodule);
+		
+		foreach($tab as $key=>$value){
+			$tables[]=$key;
+			$fields[] = $value;
+		}
+		$tabname = $tables[0];
+		$prifieldname = $fields[0][0];
+		$secfieldname = $fields[0][1];
+		$tmpname = $tabname."tmp".$secmodule;
+		$condvalue = $tables[1].".".$fields[1];
+	
+		$query = " left join $tabname as $tmpname on $tmpname.$prifieldname = $condvalue and $tmpname.$secfieldname IN (SELECT pricebookid from vtiger_pricebook INNER JOIN vtiger_crmentity ON vtiger_crmentity.deleted=0 AND vtiger_crmentity.crmid=vtiger_pricebook.pricebookid)";
+		$query .=" left join vtiger_pricebook on vtiger_pricebook.pricebookid=$tmpname.$secfieldname  
+				left join vtiger_crmentity as vtiger_crmentityPriceBooks on vtiger_crmentityPriceBooks.crmid=vtiger_pricebook.pricebookid and vtiger_crmentityPriceBooks.deleted=0 
+				left join vtiger_currency_info as vtiger_currency_infoPriceBooks on vtiger_currency_infoPriceBooks.id = vtiger_pricebook.currency_id 
+				left join vtiger_users as vtiger_usersPriceBooks on vtiger_usersPriceBooks.id = vtiger_crmentityPriceBooks.smownerid
+				left join vtiger_groups as vtiger_groupsPriceBooks on vtiger_groupsPriceBooks.groupid = vtiger_crmentityPriceBooks.smownerid"; 
+
+		return $query;
+	}
+
+	/*
+	 * Function to get the relation tables for related modules 
+	 * @param - $secmodule secondary module name
+	 * returns the array with table names and fieldnames storing relations between module and this module
+	 */
+	function setRelationTables($secmodule){
+		$rel_tables = array (
+			"Products" => array("vtiger_pricebookproductrel"=>array("pricebookid","productid"),"vtiger_pricebook"=>"pricebookid"),
+			"Services" => array("vtiger_pricebookproductrel"=>array("pricebookid","productid"),"vtiger_pricebook"=>"pricebookid"),
+		);
+		return $rel_tables[$secmodule];
 	}
 
 }

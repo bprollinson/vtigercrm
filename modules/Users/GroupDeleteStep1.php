@@ -18,21 +18,20 @@ global $app_strings;
 global $mod_strings;
 global $theme,$default_charset;
 $theme_path="themes/".$theme."/";
-$image_path=$theme_path."images/";
 $delete_group_id = $_REQUEST['groupid'];
 $delete_group_name = fetchGroupName($delete_group_id);
 
 
 $output='';
 $output ='<div id="DeleteLay" class="layerPopup" style="width:400px;">
-<form name="deleteGroupForm" action="index.php">
+<form name="deleteGroupForm" action="index.php" onsubmit="VtigerJS_DialogBox.block();">
 <input type="hidden" name="module" value="Users">
 <input type="hidden" name="action" value="DeleteGroup">
 <input type="hidden" name="delete_group_id" value="'.$delete_group_id.'">	
 <table border=0 cellspacing=0 cellpadding=5 width=100% class=layerHeadingULine>
 <tr>
 	<td class=layerPopupHeading " align="left">'.$mod_strings['LBL_DELETE_GROUP'].'</td>
-	<td align="right" class="small"><img src="'.$image_path.'close.gif" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer" onClick="document.getElementById(\'DeleteLay\').style.display=\'none\'";></td>
+	<td align="right" class="small"><img src="'. vtiger_imageurl('close.gif', $theme) .'" border=0 alt="'.$app_strings["LBL_CLOSE"].'" title="'.$app_strings["LBL_CLOSE"].'" style="cursor:pointer" onClick="document.getElementById(\'DeleteLay\').style.display=\'none\'";></td>
 </tr>
 </table>
 <table border=0 cellspacing=0 cellpadding=5 width=95% align=center>

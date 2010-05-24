@@ -30,7 +30,7 @@ $table_col_array=array('vtiger_account.accountname','vtiger_contactdetails.first
 function getSearchListHeaderValues($focus, $module,$sort_qry='',$sorder='',$order_by='',$relatedlist='',$oCv='')
 {
 	global $log;
-	$log->debug("Entering getSearchListHeaderValues(".get_class($focus).",". $module.",".$sort_qry.",".$sorder.",".$order_by.",".$relatedlist.",".get_class($oCv).") method ...");
+	$log->debug("Entering getSearchListHeaderValues(".(is_object($focus)? get_class($focus):'').",". $module.",".$sort_qry.",".$sorder.",".$order_by.",".$relatedlist.",".(is_object($oCV)? get_class($oCV):'').") method ...");
         global $adb;
         global $theme;
         global $app_strings;
@@ -218,30 +218,10 @@ function get_usersid($table_name,$column_name,$search_string)
 {
 
 	global $log;
-        $log->debug("Entering get_usersid(".$table_name.",".$column_name.",".$search_string.") method ...");
+	$log->debug("Entering get_usersid(".$table_name.",".$column_name.",".$search_string.") method ...");
 	global $adb;
-	$user_qry="select distinct(vtiger_users.id)from vtiger_users inner join vtiger_crmentity on vtiger_crmentity.smownerid=vtiger_users.id where vtiger_users.user_name like '" . formatForSqlLike($search_string) . "'";
-	$user_result=$adb->pquery($user_qry, array());
-	$noofuser_rows=$adb->num_rows($user_result);
-	$x=$noofuser_rows-1;
-	if($noofuser_rows!=0)
-	{
-		$where="(";
-		for($i=0;$i<$noofuser_rows;$i++)
-		{
-			$user_id=$adb->query_result($user_result,$i,'id');
-			$where .= "$table_name.$column_name =".$user_id;
-			if($i != $x)
-			{
-				$where .= " or ";
-			}
-		}
-		$where.=" or vtiger_groups.groupname like '". formatForSqlLike($search_string) ."')";
-	}
-	else
-	{
-		$where=" vtiger_groups.groupname like '". formatForSqlLike($search_string) ."' ";
-	}	
+	$where.="(vtiger_users.user_name like '". formatForSqlLike($search_string) .
+			"' or vtiger_groups.groupname like '". formatForSqlLike($search_string) ."')";
 	$log->debug("Exiting get_usersid method ...");
 	return $where;	
 }
@@ -431,7 +411,7 @@ function BasicSearch($module,$search_field,$search_string){
 							if ($stridx !== 0) 
 							{
 								$search_string = $mod_key;
-								if(getFieldVisibilityPermission("Calendar", $current_user->id,'taskstatus') == '0' && ($tab_col == "vtiger_activity.status" || $tab_col == "vtiger_activity.eventstatus"))
+								if(getFieldVisibilityPermission("Calendar", $current_user->id,'taskstatus') == '0' && ($column_name == "status" || $column_name == "eventstatus"))
 								{
 										$where="(vtiger_activity.status like '". formatForSqlLike($search_string) ."' or vtiger_activity.eventstatus like '". formatForSqlLike($search_string) ."')";
 								}

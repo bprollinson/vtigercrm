@@ -212,9 +212,9 @@ function emptyCheck(fldName,fldLabel, fldType) {
 			return true
 		}
 	} else if((fldType == "textarea")  
-		&& (typeof(FCKeditorAPI)!=='undefined' && FCKeditorAPI.GetInstance(fldName) !== 'undefined')) { 
- 		var textObj = FCKeditorAPI.GetInstance(fldName); 
- 		var textValue = textObj.EditorDocument.body.innerHTML; 
+		&& (typeof(CKEDITOR)!=='undefined' && CKEDITOR.intances[fldName] !== 'undefined')) {
+ 		var textObj = CKEDITOR.intances[fldName];
+ 		var textValue = textObj.getData();
  		if (trim(textValue) == '' || trim(textValue) == '<br>') { 
  		   	alert(fldLabel+alert_arr.CANNOT_BE_NONE); 
  			return false; 
@@ -2774,6 +2774,22 @@ function delimage(id) {
 	);
 }
 
+function delUserImage(id) {
+	new Ajax.Request(
+		'index.php',
+		{queue: {position: 'end', scope: 'command'},
+			method: 'post',
+			postBody: 'module=Users&action=UsersAjax&file=Save&deleteImage=true&recordid='+id,
+			onComplete: function(response) {
+					if(response.responseText.indexOf("SUCCESS")>-1)
+						$("replaceimage").innerHTML=alert_arr.LBL_IMAGE_DELETED;
+					else
+						alert(alert_arr.ERROR_WHILE_EDITING);
+			}
+		}
+	);
+}
+
 // Function to enable/disable related elements based on whether the current object is checked or not
 function fnenableDisable(currObj,enableId) {
 	var disable_flag = true;
@@ -3555,8 +3571,17 @@ function placeAtCenter(node){
 	node.style.position = "absolute";
 	var point = getDimension(node);
 
-	node.style.top = centerPixel.y - point.y/2 +"px";
-	node.style.right = centerPixel.x - point.x/2 + "px";
+	
+	var topvalue = (centerPixel.y - point.y/2) ;	
+	var rightvalue = (centerPixel.x - point.x/2);
+	
+	//to ensure that values will not be negative
+	if(topvalue<0) topvalue = 0;
+	if(rightvalue < 0) rightvalue = 0;
+	
+	node.style.top = topvalue + "px";
+	node.style.right =rightvalue + "px";	
+	
 }
 
 /**

@@ -251,6 +251,11 @@ function dtlViewAjaxSave(fieldLabel,module,uitype,tableName,fieldName,crmId)
 							if(response.responseText.indexOf(":#:FAILURE")>-1) {
 	          					alert(alert_arr.ERROR_WHILE_EDITING);
 	          				}
+	          				else if(response.responseText.indexOf(":#:ERR")>-1) {
+								alert_str = response.responseText.replace(":#:ERR","");
+	          					alert(alert_str);
+	           					$("vtbusy_info").style.display="none";
+	          				}
 	          				else if(response.responseText.indexOf(":#:SUCCESS")>-1) {
 								//For HD & FAQ - comments, we should empty the field value
 								if((module == "HelpDesk" || module == "Faq") && fieldName == "comments") {
@@ -291,7 +296,7 @@ function dtlViewAjaxSave(fieldLabel,module,uitype,tableName,fieldName,crmId)
 		}
 	}else if(uitype == '11'){
 		if(typeof(use_asterisk) != 'undefined' && use_asterisk == true){
-			getObj(dtlView).innerHTML = "<a href=\"javascript:;\" onclick=\"startCall('"+tagValue+"')\">"+tagValue+"</a>";
+			getObj(dtlView).innerHTML = "<a href=\"javascript:;\" onclick=\"startCall('"+tagValue+"','"+crmId+")\">"+tagValue+"</a>";
 		}else{
 			getObj(dtlView).innerHTML = tagValue;
 		}

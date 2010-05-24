@@ -137,14 +137,12 @@ $smarty->assign("SINGLE_MOD",'HelpDesk');
 
 //Retreive the list from Database
 //<<<<<<<<<customview>>>>>>>>>
-if($viewid != "0")
-{
-	$listquery = getListQuery("HelpDesk");
-	$list_query = $oCustomView->getModifiedCvListQuery($viewid,$listquery,"HelpDesk");
-}
-else
-{
-	$list_query = getListQuery("HelpDesk");
+global $current_user;
+if ($viewid != "0") {
+	$queryGenerator = new QueryGenerator($currentModule, $current_user);
+	$list_query = $queryGenerator->getCustomViewQueryById($viewid);
+} else {
+	$list_query = $queryGenerator->getDefaultCustomViewQuery();
 }
 //<<<<<<<<customview>>>>>>>>>
 
@@ -210,7 +208,7 @@ if( $adb->dbType == "pgsql")
 else
 	$list_result = $adb->pquery($list_query. " LIMIT $limit_start_rec, $list_max_entries_per_page", array());
 
-$recordListRangeMsg = getRecordRangeMessage($list_result, $limit_start_rec);
+$recordListRangeMsg = getRecordRangeMessage($list_result, $limit_start_rec,$noofrows);
 $smarty->assign('recordListRange',$recordListRangeMsg);
 
 //mass merge for word templates -- *Raj*17/11
@@ -255,13 +253,16 @@ if(isPermitted("HelpDesk","Merge") == 'yes')
 if($viewid !='')
 	$url_string .="&viewname=".$viewid;
 
-$listview_header = getListViewHeader($focus,"HelpDesk",$url_string,$sorder,$order_by,"",$oCustomView);
+$controller = new ListViewController($adb, $current_user, $queryGenerator);
+$listview_header = $controller->getListViewHeader($focus,$currentModule,$url_string,$sorder,
+		$order_by);
 $smarty->assign("LISTHEADER", $listview_header);
 
 $listview_header_search = getSearchListHeaderValues($focus,"HelpDesk",$url_string,$sorder,$order_by,"",$oCustomView);
 $smarty->assign("SEARCHLISTHEADER",$listview_header_search);
 
-$listview_entries = getListViewEntries($focus,"HelpDesk",$list_result,$navigation_array,"","","EditView","Delete",$oCustomView);
+$listview_entries = $controller->getListViewEntries($focus,$currentModule,$list_result,
+		$navigation_array);
 $smarty->assign("LISTENTITY", $listview_entries);
 $smarty->assign("SELECT_SCRIPT", $view_script);
 
@@ -286,6 +287,12 @@ $check_button = Button_Check($currentModule);
 $smarty->assign("CHECK", $check_button);
 
 $_SESSION[$currentModule.'_listquery'] = $list_query;
+
+// Gather the custom link information to display
+include_once('vtlib/Vtiger/Link.php');
+$customlink_params = Array('MODULE'=>$currentModule, 'ACTION'=>vtlib_purify($_REQUEST['action']), 'CATEGORY'=> $category);
+$smarty->assign('CUSTOM_LINKS', Vtiger_Link::getAllByType(getTabid($currentModule), Array('LISTVIEWBASIC','LISTVIEW'), $customlink_params));
+// END
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

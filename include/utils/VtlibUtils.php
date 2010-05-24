@@ -104,7 +104,7 @@ function vtlib_isModuleActive($module) {
 		return true;
 	}
 
-	if(!isset($__cache_module_activeinfo[$module])) {
+		if(!isset($__cache_module_activeinfo[$module])) {
 		$tabres = $adb->pquery("SELECT presence FROM vtiger_tab WHERE name=?", array($module));
 		$presence = $adb->query_result($tabres, 0, 'presence');
 		$__cache_module_activeinfo[$module] = $presence;
@@ -564,6 +564,30 @@ function vtlib_purify($input, $ignore=false) {
 		}
 	}
 	return $value;
+}
+
+/**
+ * Process the UI Widget requested
+ * @param Vtiger_Link $widgetLinkInfo
+ * @param Current Smarty Context $context
+ * @return 
+ */
+function vtlib_process_widget($widgetLinkInfo, $context = false) {
+	if (preg_match("/^block:\/\/(.*)/", $widgetLinkInfo->linkurl, $matches)) {
+		list($widgetControllerClass, $widgetControllerClassFile) = explode(':', $matches[1]);
+		if (!class_exists($widgetControllerClass)) {
+			checkFileAccess($widgetControllerClassFile);
+			include_once $widgetControllerClassFile;
+		}
+		if (class_exists($widgetControllerClass)) {
+			$widgetControllerInstance = new $widgetControllerClass;
+			$widgetInstance = $widgetControllerInstance->getWidget($widgetLinkInfo->linklabel);
+			if ($widgetInstance) {
+				return $widgetInstance->process($context);
+			}
+		}
+	}
+	return "";
 }
 
 ?>

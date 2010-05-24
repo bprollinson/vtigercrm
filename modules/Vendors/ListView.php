@@ -135,13 +135,12 @@ if($viewid ==0)
 
 //Retreive the list from Database
 //<<<<<<<<<customview>>>>>>>>>
-if($viewid != "0")
-{
-	$listquery = getListQuery("Vendors");
-	$list_query = $oCustomView->getModifiedCvListQuery($viewid,$listquery,"Vendors");
-}else
-{
-	$list_query = getListQuery("Vendors");
+global $current_user;
+if ($viewid != "0") {
+	$queryGenerator = new QueryGenerator($currentModule, $current_user);
+	$list_query = $queryGenerator->getCustomViewQueryById($viewid);
+} else {
+	$list_query = $queryGenerator->getDefaultCustomViewQuery();
 }
 //<<<<<<<<customview>>>>>>>>>
 
@@ -188,20 +187,23 @@ if( $adb->dbType == "pgsql")
 else
 	$list_result = $adb->pquery($list_query. " LIMIT $limit_start_rec, $list_max_entries_per_page", array());
 
-$recordListRangeMsg = getRecordRangeMessage($list_result, $limit_start_rec);
+$recordListRangeMsg = getRecordRangeMessage($list_result, $limit_start_rec,$noofrows);
 $smarty->assign('recordListRange',$recordListRangeMsg);
 
 //Retreive the List View Table Header
 if($viewid !='')
 $url_string .="&viewname=".$viewid;
 
-$listview_header = getListViewHeader($focus,"Vendors",$url_string,$sorder,$order_by,"",$oCustomView);
+$controller = new ListViewController($adb, $current_user, $queryGenerator);
+$listview_header = $controller->getListViewHeader($focus,$currentModule,$url_string,$sorder,
+		$order_by);
 $smarty->assign("LISTHEADER", $listview_header);
 
 $listview_header_search = getSearchListHeaderValues($focus,"Vendors",$url_string,$sorder,$order_by,"",$oCustomView);
 $smarty->assign("SEARCHLISTHEADER",$listview_header_search);
 
-$listview_entries = getListViewEntries($focus,"Vendors",$list_result,$navigation_array,'','&return_module=Vendors&return_action=index','EditView','Delete',$oCustomView);
+$listview_entries = $controller->getListViewEntries($focus,$currentModule,$list_result,
+		$navigation_array);
 $smarty->assign("LISTENTITY", $listview_entries);
 
 $smarty->assign("AVALABLE_FIELDS", getMergeFields($currentModule,"available_fields"));
@@ -229,6 +231,12 @@ $check_button = Button_Check($currentModule);
 $smarty->assign("CHECK", $check_button);
 
 $_SESSION[$currentModule.'_listquery'] = $list_query;
+
+// Gather the custom link information to display
+include_once('vtlib/Vtiger/Link.php');
+$customlink_params = Array('MODULE'=>$currentModule, 'ACTION'=>vtlib_purify($_REQUEST['action']), 'CATEGORY'=> $category);
+$smarty->assign('CUSTOM_LINKS', Vtiger_Link::getAllByType(getTabid($currentModule), Array('LISTVIEWBASIC','LISTVIEW'), $customlink_params));
+// END
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

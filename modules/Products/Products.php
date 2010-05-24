@@ -65,7 +65,8 @@ class Products extends CRMEntity {
 
 	// Placeholder for sort fields - All the fields will be initialized for Sorting through initSortFields
 	var $sortby_fields = Array();
-
+	var $def_basicsearch_col = 'productname';
+	
 	//Added these variables which are used as default order by and sortorder in ListView
 	var $default_order_by = 'productname';
 	var $default_sort_order = 'ASC';
@@ -198,14 +199,12 @@ class Products extends CRMEntity {
 	{
 		global $adb, $log, $current_user;
 		$log->debug("Entering into insertPriceInformation($tablename, $module) method ...");
-		// Update the currency_id based on the logged in user's preference
-		$currencyid=fetchCurrency($current_user->id);
-		$adb->pquery("update vtiger_products set currency_id=? where productid=?", array($currencyid, $this->id));
+		//removed the update of currency_id based on the logged in user's preference : fix 6490
 		
 		$currency_details = getAllCurrencies('all');
 		
 		//Delete the existing currency relationship if any
-		if($this->mode == 'edit')
+		if($this->mode == 'edit' && $_REQUEST['action'] !== 'MassEditSave')
 		{
 			for($i=0;$i<count($currency_details);$i++)
 			{

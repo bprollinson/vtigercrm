@@ -72,14 +72,24 @@ class CRMEntity
 		$this->save_module($module);
 	
 		$assigntype=vtlib_purify($_REQUEST['assigntype']);
-		if($module != "Calendar")
-	          $this->whomToSendMail($module,$this ->mode,$assigntype);
+		if(PerformancePrefs::getBoolean('NOTIFY_OWNER_EMAILS', true) === true){
+			if($module != "Calendar" && $module != "Accounts" && $module != "Contacts"){
+				$this->whomToSendMail($module,$this ->mode,$assigntype);
+			}
+		}
 		
 		$this->db->completeTransaction();
 		$this->db->println("TRANS saveentity ends");
 	
-		// vtlib customization: Hook provide to enable generic module relation.
-		if($_REQUEST['return_action'] == 'CallRelatedList') {
+		// vtlib customization: Hook provide to enable generic module relation.		
+
+		// Ticket 6386 fix
+		global $singlepane_view;
+
+		if($_REQUEST['return_action'] == 'CallRelatedList' || 
+			(isset($singlepane_view) && $singlepane_view == true && 
+				$_REQUEST['return_action'] == 'DetailView' && 
+					!empty($_REQUEST['return_module']))){
 			$for_module = vtlib_purify($_REQUEST['return_module']);
 			$for_crmid  = vtlib_purify($_REQUEST['return_id']);
 	
@@ -510,18 +520,11 @@ class CRMEntity
 			  }
 			  elseif($uitype == 5 || $uitype == 6 || $uitype ==23)
 			  {
-				  if($_REQUEST['action'] == 'Import')
-				  {
-					  $fldvalue = $this->column_fields[$fieldname];
-				  }
-				  else
-				  {
-					  //Added to avoid function call getDBInsertDateValue in ajax save
-					  if (isset($current_user->date_format)) {
-							$fldvalue = getValidDBInsertDateValue($this->column_fields[$fieldname]);
-					  } else {
-							$fldvalue = $this->column_fields[$fieldname];
-					  }
+				  //Added to avoid function call getDBInsertDateValue in ajax save
+				  if (isset($current_user->date_format)) {
+						$fldvalue = getValidDBInsertDateValue($this->column_fields[$fieldname]);
+				  } else {
+						$fldvalue = $this->column_fields[$fieldname];
 				  }
 			  }
 			  elseif($uitype == 7)
@@ -754,8 +757,9 @@ $log->info("in getOldFileName  ".$notesid);
     foreach($this->tab_name_index as $table_name=>$index)
     {
 	    $result[$table_name] = $adb->pquery("select * from $table_name where $index=?", array($record));
-	    if($adb->query_result($result["vtiger_crmentity"],0,"deleted") == 1)
-	    die("<br><br><center>".$app_strings['LBL_RECORD_DELETE']." <a href='javascript:window.history.back()'>".$app_strings['LBL_GO_BACK'].".</a></center>");
+	    if($adb->query_result($result["vtiger_crmentity"],0,"deleted") == 1) {
+			die("<br><br><center>".$app_strings['LBL_RECORD_DELETE']." <a href='javascript:window.history.back()'>".$app_strings['LBL_GO_BACK'].".</a></center>");
+		}
     }
 
     /* Prasad: Fix for ticket #4595 */
@@ -965,9 +969,10 @@ $log->info("in getOldFileName  ".$notesid);
 	 * Contributor(s): ______________________________________..
 	*/
 	function mark_deleted($id) {
+		global $current_user;
 		$date_var = date('Y-m-d H:i:s');
-		$query = "UPDATE vtiger_crmentity set deleted=1,modifiedtime=? where crmid=?";
-		$this->db->pquery($query, array($this->db->formatDate($date_var, true),$id), true,"Error marking record deleted: ");
+		$query = "UPDATE vtiger_crmentity set deleted=1,modifiedtime=?,modifiedby=? where crmid=?";
+		$this->db->pquery($query, array($this->db->formatDate($date_var, true),$current_user->id,$id), true,"Error marking record deleted: ");
 	}
 
 	function retrieve_by_string_fields($fields_array, $encode=true) 
@@ -1035,7 +1040,7 @@ $log->info("in getOldFileName  ".$notesid);
         function constructCustomQueryAddendum($tablename,$module)
         {
                 global $adb;
-		$tabid=getTabid($module);		
+				$tabid=getTabid($module);		
                 $sql1 = "select columnname,fieldlabel from vtiger_field where generatedtype=2 and tabid=? and vtiger_field.presence in (0,2)"; 
                 $result = $adb->pquery($sql1, array($tabid));
                 $numRows = $adb->num_rows($result);
@@ -1287,9 +1292,25 @@ $log->info("in getOldFileName  ".$notesid);
 		$this->db->println("TRANS restore starts $module");
 		$this->db->startTransaction();		
 	
-		$this->db->pquery('UPDATE vtiger_crmentity SET deleted=0 WHERE crmid = ?', array($id));
+		$date_var = date('Y-m-d H:i:s'); 
+		$query = 'UPDATE vtiger_crmentity SET deleted=0,modifiedtime=?,modifiedby=? WHERE crmid = ?'; 
+		$this->db->pquery($query, array($this->db->formatDate($date_var, true),$current_user->id,$id),true,"Error restoring records :" ); 
 		//Restore related entities/records
 		$this->restoreRelatedRecords($module,$id);
+		
+		//Event triggering code
+		require_once("include/events/include.inc");
+		global $adb;
+		$em = new VTEventsManager($adb);
+		
+		// Initialize Event trigger cache
+		$em->initTriggerCache();
+
+		$this->id = $id;
+		$entityData  = VTEntityData::fromCRMEntity($this);
+		//Event triggering code
+		$em->triggerEvent("vtiger.entity.afterrestore", $entityData);
+		//Event triggering code ends
 		
 		$this->db->completeTransaction();
 	    $this->db->println("TRANS restore ends");
@@ -1708,11 +1729,9 @@ $log->info("in getOldFileName  ".$notesid);
 		$query .= " INNER JOIN vtiger_crmentityrel ON (vtiger_crmentityrel.relcrmid = vtiger_crmentity.crmid OR vtiger_crmentityrel.crmid = vtiger_crmentity.crmid)";
 		$query .= " LEFT  JOIN $this->table_name   ON $this->table_name.$this->table_index = $other->table_name.$other->table_index";
 		$query .= $more_relation;
-		$query .= " LEFT  JOIN vtiger_users        ON vtiger_users.id = vtiger_crmentity.smownerid";
-		$query .= " LEFT  JOIN vtiger_groups       ON vtiger_groups.groupid = vtiger_crmentity.smownerid";
-
+		$query .= " LEFT  JOIN vtiger_users ON vtiger_users.id = vtiger_crmentity.smownerid";
+		$query .= " LEFT  JOIN vtiger_groups ON vtiger_groups.groupid = vtiger_crmentity.smownerid";
 		$query .= " WHERE vtiger_crmentity.deleted = 0 AND (vtiger_crmentityrel.crmid = $id OR vtiger_crmentityrel.relcrmid = $id)";
-
 		$return_value = GetRelatedList($currentModule, $related_module, $other, $query, $button, $returnset);	
 
 		if($return_value == null) $return_value = Array();
@@ -2157,5 +2176,201 @@ $log->info("in getOldFileName  ".$notesid);
 		$this->__inactive_fields_filtered = true;
 	}
 	/** END **/
+	
+	function buildSearchQueryForFieldTypes($uitypes, $value) {
+		global $adb;
+
+		if(!is_array($uitypes)) $uitypes = array($uitypes);
+		$module = get_class($this);
+		
+		$cachedModuleFields = VTCacheUtils::lookupFieldInfo_Module($module);
+		if($cachedModuleFields === false) {
+			getColumnFields($module); // This API will initialize the cache as well
+			// We will succeed now due to above function call
+			$cachedModuleFields = VTCacheUtils::lookupFieldInfo_Module($module);
+		}
+
+		$lookuptables = array();
+		$lookupcolumns = array();
+		foreach($cachedModuleFields as $fieldinfo) {
+			if (in_array($fieldinfo['uitype'], $uitypes)) {
+				$lookuptables[] = $fieldinfo['tablename'];
+				$lookupcolumns[] = $fieldinfo['columnname'];
+			}
+		}
+
+		$entityfields = getEntityField($module);
+		$querycolumnnames = implode(',', $lookupcolumns);
+		$entitycolumnnames = $entityfields['fieldname'];
+		$query = "select crmid as id, $querycolumnnames, $entitycolumnnames as name ";
+		$query .= " FROM $this->table_name ";
+		$query .=" INNER JOIN vtiger_crmentity ON $this->table_name.$this->table_index = vtiger_crmentity.crmid AND deleted = 0 ";
+
+		//remove the base table
+		$LookupTable = array_unique($lookuptables);
+		$indexes = array_keys($LookupTable, $this->table_name);
+		if(!empty($indexes)) {
+			foreach($indexes as $index) {
+				unset($LookupTable[$index]);
+			}
+		}
+		foreach($LookupTable as $tablename) {
+			$query .= " INNER JOIN $tablename
+						on $this->table_name.$this->table_index = $tablename.".$this->tab_name_index[$tablename];
+		}
+		if(!empty($lookupcolumns)) {
+			$query .=" WHERE ";
+			$i=0;
+			$columnCount = count($lookupcolumns);
+			foreach($lookupcolumns as $columnname) {
+				if(!empty($columnname)) {
+					if($i == 0 || $i == ($columnCount))
+						$query .= sprintf("%s = '%s'", $columnname, $value);
+					else
+						$query .= sprintf(" OR %s = '%s'", $columnname, $value);
+					$i++;
+				}
+			}
+		}
+		return $query;
+	}
+	
+	/**
+	 *
+	 * @param String $tableName
+	 * @return String
+	 */
+	public function getJoinClause($tableName) {
+		if(strripos($tableName, 'rel') === (strlen($tableName) - 3)) {
+			return 'LEFT JOIN';
+		} else {
+			return 'INNER JOIN';
+		}
+	}
+	
+	/**
+	 *
+	 * @param <type> $module
+	 * @param <type> $user
+	 * @param <type> $parentRole
+	 * @param <type> $userGroups
+	 */
+	function getNonAdminAccessQuery($module,$user,$parentRole,$userGroups){
+		$query = $this->getNonAdminUserAccessQuery($user, $parentRole, $userGroups);
+		if(!empty($module)) {
+			$moduleAccessQuery = $this->getNonAdminModuleAccessQuery($module, $user);
+			if(!empty($moduleAccessQuery)) {
+				$query .= " UNION $moduleAccessQuery";
+			}
+		}
+		return $query;
+	}
+
+	/**
+	 *
+	 * @param <type> $user
+	 * @param <type> $parentRole
+	 * @param <type> $userGroups
+	 */
+	function getNonAdminUserAccessQuery($user,$parentRole,$userGroups){
+		$query = "(SELECT $user->id as id) UNION (SELECT vtiger_user2role.userid AS userid FROM ".
+		"vtiger_user2role INNER JOIN vtiger_users ON vtiger_users.id=vtiger_user2role.userid ".
+		"INNER JOIN vtiger_role ON vtiger_role.roleid=vtiger_user2role.roleid WHERE ".
+		"vtiger_role.parentrole like '$parentRole::%')";
+		if(count($userGroups) > 0 ) {
+			$query .= " UNION (SELECT groupid FROM vtiger_groups where".
+				" groupid in (".implode(",", $userGroups)."))";
+		}
+		return $query;
+	}
+
+	/**
+	 *
+	 * @param <type> $module
+	 * @param <type> $user
+	 */
+	function getNonAdminModuleAccessQuery($module,$user){
+		require('user_privileges/sharing_privileges_'.$user->id.'.php');
+		$tabId = getTabid($module);
+		$sharingRuleInfoVariable = $module.'_share_read_permission';
+		$sharingRuleInfo = $$sharingRuleInfoVariable;
+		$sharedTabId = null;
+		$query = '';
+		if(!empty($sharingRuleInfo) && (count($sharingRuleInfo['ROLE']) > 0 ||
+				count($sharingRuleInfo['GROUP']) > 0)) {
+			$query = " (SELECT shareduserid FROM vtiger_tmp_read_user_sharing_per ".
+			"WHERE userid=$user->id AND tabid=$tabId) UNION (SELECT ".
+			"vtiger_tmp_read_group_sharing_per.sharedgroupid FROM ".
+			"vtiger_tmp_read_group_sharing_per WHERE userid=$user->id AND tabid=$tabId)";
+		}
+		return $query;
+	}
+
+	/**
+	 *
+	 * @param <type> $module
+	 * @param <type> $user
+	 * @param <type> $parentRole
+	 * @param <type> $userGroups
+	 */
+	protected function setupTemporaryTable($tableName,$tabId, $user,$parentRole,$userGroups) {
+		$module = null;
+		if (!empty($tabId)) {
+			$module = getTabModuleName($tabId);
+		}
+		$query = $this->getNonAdminAccessQuery($module, $user, $parentRole, $userGroups);
+		$query = "create temporary table IF NOT EXISTS $tableName(id int(11) primary key) ignore ".
+			$query;
+		$db = PearDatabase::getInstance();
+		$result = $db->pquery($query, array());
+		if(is_object($result)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 *
+	 * @param String $module - module name for which query needs to be generated.
+	 * @param Users $user - user for which query needs to be generated.
+	 * @return String Access control Query for the user.
+	 */
+	function getNonAdminAccessControlQuery($module,$user,$scope=''){
+		require('user_privileges/user_privileges_'.$user->id.'.php');
+		require('user_privileges/sharing_privileges_'.$user->id.'.php');
+		$query = ' ';
+		$tabId = getTabid($module);
+		if($is_admin==false && $profileGlobalPermission[1] == 1 && $profileGlobalPermission[2]
+				== 1 && $defaultOrgSharingPermission[$tabId] == 3) {
+			$tableName = 'vt_tmp_u'.$user->id;
+			$sharingRuleInfoVariable = $module.'_share_read_permission';
+			$sharingRuleInfo = $$sharingRuleInfoVariable;
+			$sharedTabId = null;
+			if(!empty($sharingRuleInfo) && (count($sharingRuleInfo['ROLE']) > 0 ||
+					count($sharingRuleInfo['GROUP']) > 0)) {
+				$tableName = $tableName.'_t'.$tabId;
+				$sharedTabId = $tabId;
+			}elseif($module == 'Calendar' || !empty($scope)) {
+				$tableName .= '_t'.$tabId;
+			}
+			$this->setupTemporaryTable($tableName, $sharedTabId, $user,
+					$current_user_parent_role_seq, $current_user_groups);
+			$query = " INNER JOIN $tableName $tableName$scope ON $tableName$scope.id = ".
+					"vtiger_crmentity$scope.smownerid ";
+		}
+		return $query;
+	}
+
+	public function listQueryNonAdminChange( $query, $scope='' ) {
+		//make the module base table as left hand side table for the joins,
+		//as mysql query optimizer puts crmentity on the left side and considerably slow down
+		$query = preg_replace('/\s+/', ' ', $query);
+		if(strripos($query, ' WHERE ') !== false) {
+			vtlib_setup_modulevars($module, $this);
+			$query = str_ireplace(' where ', " WHERE $this->table_name.$this->table_index > 0  AND ",
+					$query);
+		}
+		return $query;
+	}
 }
 ?>

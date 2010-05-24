@@ -399,6 +399,13 @@ class DefaultDataPopulator extends CRMEntity {
 		$this->db->query("insert into vtiger_field values(26,".$this->db->getUniqueID("vtiger_field").",'actualroi','vtiger_campaign',1,'1','actualroi','Actual ROI',1,2,0,100,10,$campaignexpectedandactualsblock,1,'N~O',1,null,'BAS',1)");
 		
 		$this->db->query("insert into vtiger_field values (26,".$this->db->getUniqueID("vtiger_field").",'description','vtiger_crmentity',1,'19','description','Description',1,2,0,100,1,$campaidndescriptionblock,1,'V~O',1,null,'BAS',1)");
+		
+		//entry to vtiger_field to maintain account,contact,lead relationships
+	
+		$this->db->query("INSERT INTO vtiger_field(tabid, fieldid, columnname, tablename, generatedtype, uitype, fieldname, fieldlabel, readonly, presence, selected, maximumlength, sequence, block, displaytype, typeofdata, quickcreate, quickcreatesequence, info_type, masseditable) VALUES (".getTabid('Contacts').",".$this->db->getUniqueID('vtiger_field').", 'campaignrelstatus', 'vtiger_campaignrelstatus', 1, '16', 'campaignrelstatus', 'Status', 1, 0, 0, 100, 1, NULL, 1, 'V~O', 1, NULL, 'BAS', 0)");
+		$this->db->query("INSERT INTO vtiger_field(tabid, fieldid, columnname, tablename, generatedtype, uitype, fieldname, fieldlabel, readonly, presence, selected, maximumlength, sequence, block, displaytype, typeofdata, quickcreate, quickcreatesequence, info_type, masseditable) VALUES (".getTabid('Accounts').",".$this->db->getUniqueID('vtiger_field').", 'campaignrelstatus', 'vtiger_campaignrelstatus', 1, '16', 'campaignrelstatus', 'Status', 1, 0, 0, 100, 1, NULL, 1, 'V~O', 1, NULL, 'BAS', 0)");
+		$this->db->query("INSERT INTO vtiger_field(tabid, fieldid, columnname, tablename, generatedtype, uitype, fieldname, fieldlabel, readonly, presence, selected, maximumlength, sequence, block, displaytype, typeofdata, quickcreate, quickcreatesequence, info_type, masseditable) VALUES (".getTabid('Leads').",".$this->db->getUniqueID('vtiger_field').", 'campaignrelstatus', 'vtiger_campaignrelstatus', 1, '16', 'campaignrelstatus', 'Status', 1, 0, 0, 100, 1, NULL, 1, 'V~O', 1, NULL, 'BAS', 0)");
+		$this->db->query("INSERT INTO vtiger_field(tabid, fieldid, columnname, tablename, generatedtype, uitype, fieldname, fieldlabel, readonly, presence, selected, maximumlength, sequence, block, displaytype, typeofdata, quickcreate, quickcreatesequence, info_type, masseditable) VALUES (".getTabid('Campaigns').",".$this->db->getUniqueID('vtiger_field').", 'campaignrelstatus', 'vtiger_campaignrelstatus', 1, '16', 'campaignrelstatus', 'Status', 1, 0, 0, 100, 1, NULL, 1, 'V~O', 1, NULL, 'BAS', 0)");
 		//Campaign entries end
 
 		//Ticket Details -- START
@@ -488,7 +495,7 @@ class DefaultDataPopulator extends CRMEntity {
 		$this->db->query("insert into vtiger_field values (8,".$this->db->getUniqueID("vtiger_field").",'notecontent','vtiger_notes',1,'19','notecontent','Note',1,2,0,100,1,$desc_blockid,1,'V~O',1,null,'BAS',0)");
 		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'filetype','vtiger_notes',1,1,'filetype','File Type',1,2,0,100,5,".$fileblockid.",2,'V~O',3,'','BAS',0)");
 		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'filesize','vtiger_notes',1,1,'filesize','File Size',1,2,0,100,4,".$fileblockid.",2,'V~O',3,'','BAS',0)");
-		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'filelocationtype','vtiger_notes',1,27,'filelocationtype','Download Type',1,0,0,100,1,".$fileblockid.",1,'V~O',1,'','BAS',0)");
+		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'filelocationtype','vtiger_notes',1,27,'filelocationtype','Download Type',1,0,0,100,1,".$fileblockid.",1,'V~O',3,'','BAS',0)");
 		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'fileversion','vtiger_notes',1,1,'fileversion','Version',1,2,0,100,6,$fileblockid,1,'V~O',1,'','BAS',0)");
 		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'filestatus','vtiger_notes',1,56,'filestatus','Active',1,2,0,100,2,".$fileblockid.",1,'V~O',1,'','BAS',0)");
 		$this->db->query("insert into vtiger_field values(8,".$this->db->getUniqueID("vtiger_field").",'filedownloadcount','vtiger_notes',1,1,'filedownloadcount','Download Count',1,2,0,100,7,".$fileblockid.",2,'I~O',3,'','BAS',0)");
@@ -969,7 +976,9 @@ class DefaultDataPopulator extends CRMEntity {
 		
 		//Emails field added here
 		$email_Tabid = getTabid('Emails');
-		$blockid = $this->db->getUniqueID('vtiger_blocks');
+		$blockquery = "select blockid from vtiger_blocks where blocklabel = ?";
+		$blockres = $this->db->pquery($blockquery,array('LBL_EMAIL_INFORMATION'));
+		$blockid = $this->db->query_result($blockres,0,'blockid');
 		$this->db->query("INSERT INTO vtiger_field values($email_Tabid,".$this->db->getUniqueID("vtiger_field").",'from_email','vtiger_emaildetails',1,12,'from_email','From',1,2,0,100,1,$blockid,3,'V~M',3,NULL,'BAS',0)");
 		$this->db->query("INSERT INTO vtiger_field values($email_Tabid,".$this->db->getUniqueID("vtiger_field").",'to_email','vtiger_emaildetails',1,8,'saved_toid','To',1,2,0,100,2,$blockid,1,'V~M',3,NULL,'BAS',0)");
 		$this->db->query("INSERT INTO vtiger_field values($email_Tabid,".$this->db->getUniqueID("vtiger_field").",'cc_email','vtiger_emaildetails',1,8,'ccmail','CC',1,2,0,1000,3,$blockid,1,'V~O',3,NULL,'BAS',0)");		
@@ -1244,6 +1253,8 @@ class DefaultDataPopulator extends CRMEntity {
 	$this->db->query("insert into vtiger_relatedlists values (".$this->db->getUniqueID('vtiger_relatedlists').",".getTabid("Campaigns").",".getTabid("Leads").",'get_leads',2,'Leads',0,'add,select')");
 	$this->db->query("insert into vtiger_relatedlists values (".$this->db->getUniqueID('vtiger_relatedlists').",".getTabid("Campaigns").",".getTabid("Potentials").",'get_opportunities',3,'Potentials',0,'add')");
 	$this->db->query("insert into vtiger_relatedlists values(".$this->db->getUniqueID('vtiger_relatedlists').",".getTabid("Campaigns").",9,'get_activities',4,'Activities',0,'add')");
+	$this->db->query("INSERT INTO vtiger_relatedlists VALUES (".$this->db->getUniqueID('vtiger_relatedlists').", ".getTabid("Accounts").", ".getTabid("Campaigns").", 'get_campaigns', 13, 'Campaigns', 0, 'select')");
+	$this->db->query("INSERT INTO vtiger_relatedlists VALUES (".$this->db->getUniqueID('vtiger_relatedlists').", ".getTabid("Campaigns").", ".getTabid("Accounts").", 'get_accounts', 5, 'Accounts', 0, 'add,select')");
 	
 	// Inserting Faq's Related Lists
 	$this->db->query("insert into vtiger_relatedlists values (".$this->db->getUniqueID('vtiger_relatedlists').",".getTabid("Faq").",".getTabid("Documents").",'get_attachments',1,'Documents',0,'add,select')");
@@ -1988,9 +1999,6 @@ $body='<table width="700" cellspacing="0" cellpadding="0" border="0" align="cent
 	$vtlanguage = new Vtiger_Language();
 	$vtlanguage->register('en_us','US English','English',true,true,true);
 	
-	$this->insertUser2mergefields(0);
-	$this->insertUser2mergefields(1);
-	$this->db->query("update vtiger_user2mergefields set visible=1 where fieldid in(1,38,40,65,104,106,111,152,156,255)");
 	$this->initWebservices();
 
 	/**
@@ -2026,38 +2034,11 @@ $body='<table width="700" cellspacing="0" cellpadding="0" border="0" align="cent
 	$this->db->query("insert into vtiger_reportfilters values(2,'Public')");
 	$this->db->query("insert into vtiger_reportfilters values(3,'Shared')");
 	
-		require_once('modules/Utilities/Currencies.php');
+		require('modules/Utilities/Currencies.php');
 		foreach($currencies as $key=>$value){
 			$this->db->query("insert into vtiger_currencies values(".$this->db->getUniqueID("vtiger_currencies").",'$key','".$value[0]."','".$value[1]."')");
 		}
 	
-	}
-	
-	//Added to insert the records in vtiger_user_mergefields
-	function insertUser2mergefields($userid){
-		global $log, $adb;
-		$log->debug("Entering insertUser2mergefields(".$userid.") method ...");
-	        $log->info("in insertUser2mergefields ".$userid);
-	
-		//$this->db->database->SetFetchMode(ADODB_FETCH_ASSOC); 
-		$tab_res = $adb->query("SELECT distinct tabid FROM vtiger_tab");
-		$noOfTabs = $adb->num_rows($tab_res);
-		for($i=0;$i<$noOfTabs;$i++) {
-			$tab_id = $this->db->query_result($tab_res,$i,'tabid');
-	        $fld_result = getFieldsResultForMerge($tab_id);
-	        if ($fld_result != null) {
-	    		$num_rows = $this->db->num_rows($fld_result);
-			    for($j=0; $j<$num_rows; $j++) {
-					$field_id = $this->db->query_result($fld_result,$j,'fieldid');
-					$data_type = explode("~",$this->db->query_result($fld_result,$j,'typeofdata')); 
-					if($data_type[1] == 'M') { 
-						$visible = 1;
-						$this->db->query("insert into vtiger_user2mergefields values ($userid, $tab_id, $field_id, $visible)"); 
-					} 				
-				}
-	        }
-		}
-		$log->debug("Exiting insertUser2mergefields method ...");
 	}
 	
 	function initWebservices(){
@@ -2198,6 +2179,21 @@ $body='<table width="700" cellspacing="0" cellpadding="0" border="0" align="cent
 				'params'=>array(),
 				"prelogin"=>1,
 				"type"=>"POST"
+			),
+			'convertlead'=>array(
+				"include"=>array(
+					"include/Webservices/ConvertLead.php"
+				),
+				"handler"=>"vtws_convertlead",
+				"prelogin"=>0,
+				"type"=>"POST",
+				'params'=>array(
+					'leadId'=>'String',
+					'assignedTo'=>'String',
+					'accountName'=>'String',
+					'avoidPotential'=>'Boolean',
+					'potential'=>'Encoded'
+				)
 			)
 		);
 		$createOperationQuery = "insert into vtiger_ws_operation(operationid,name,handler_path,handler_method,type,prelogin) 

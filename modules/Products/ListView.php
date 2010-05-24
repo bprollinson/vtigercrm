@@ -109,8 +109,14 @@ if($viewid ==0)
 	exit;
 }
 
-$listquery = getListQuery($currentModule);
-$list_query= $customView->getModifiedCvListQuery($viewid, $listquery, $currentModule);
+global $current_user;
+if ($viewid != "0") {
+	$queryGenerator = new QueryGenerator($currentModule, $current_user);
+	//TODO move header generation to controller.
+	$list_query = $queryGenerator->getCustomViewQueryById($viewid);
+} else {
+	$list_query = $queryGenerator->getDefaultCustomViewQuery();
+}
 
 if($where != '') {
 	$list_query = "$list_query AND $where";
@@ -149,7 +155,7 @@ if( $adb->dbType == "pgsql")
 else
 	$list_result = $adb->pquery($list_query. " LIMIT $limit_start_rec, $list_max_entries_per_page", array());
 
-$recordListRangeMsg = getRecordRangeMessage($list_result, $limit_start_rec);
+$recordListRangeMsg = getRecordRangeMessage($list_result, $limit_start_rec,$noofrows);
 $smarty->assign('recordListRange',$recordListRangeMsg);
 
 $smarty->assign("CUSTOMVIEW_OPTION",$customview_html);
@@ -157,8 +163,11 @@ $smarty->assign("CUSTOMVIEW_OPTION",$customview_html);
 $navigationOutput = getTableHeaderSimpleNavigation($navigation_array, $url_string, $currentModule, 'index', $viewid);
 $smarty->assign("NAVIGATION", $navigationOutput);
 
-$listview_header = getListViewHeader($focus,$currentModule,$url_string,$sorder,$order_by,'',$customView);
-$listview_entries = getListViewEntries($focus,$currentModule,$list_result,$navigation_array,'','','EditView','Delete',$customView);
+$controller = new ListViewController($adb, $current_user, $queryGenerator);
+$listview_header = $controller->getListViewHeader($focus,$currentModule,$url_string,$sorder,
+		$order_by);
+$listview_entries = $controller->getListViewEntries($focus,$currentModule,$list_result,
+		$navigation_array);
 $listview_header_search = getSearchListHeaderValues($focus,$currentModule,$url_string,$sorder,$order_by,'',$customView);
 
 $smarty->assign('LISTHEADER', $listview_header);
@@ -203,6 +212,12 @@ $smarty->assign("FIELDS_TO_MERGE", getMergeFields($currentModule,"fileds_to_merg
 $smarty->assign("SELECTEDIDS", vtlib_purify($_REQUEST['selobjs']));
 $smarty->assign("ALLSELECTEDIDS", vtlib_purify($_REQUEST['allselobjs']));
 $smarty->assign("CURRENT_PAGE_BOXES", implode(array_keys($listview_entries),";"));
+
+// Gather the custom link information to display
+include_once('vtlib/Vtiger/Link.php');
+$customlink_params = Array('MODULE'=>$currentModule, 'ACTION'=>vtlib_purify($_REQUEST['action']), 'CATEGORY'=> $category);
+$smarty->assign('CUSTOM_LINKS', Vtiger_Link::getAllByType(getTabid($currentModule), Array('LISTVIEWBASIC','LISTVIEW'), $customlink_params));
+// END
 
 if(isset($_REQUEST['ajax']) && $_REQUEST['ajax'] != '')
 	$smarty->display("ListViewEntries.tpl");

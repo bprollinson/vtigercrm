@@ -141,7 +141,7 @@ $mod_strings = Array(
 'LBL_FINISHED'=>'Finished',
 'LBL_UNDO_LAST_IMPORT'=>'Undo Last Import',
 
-'LBL_SUCCESS_1' => 'No. of Records Successfully Imported : ',
+'LBL_SUCCESS_1' => 'No. of Records Successfully Imported/Updated : ',
 'LBL_SKIPPED_1' => 'No. of Records Skipped as they were missing one or more required fields : ',
 
 //Added for patch2 - Products Import Notes
@@ -190,6 +190,10 @@ $mod_strings = Array(
 
 'LBL_DELIMITER' => 'Delimiter:',
 'LBL_FORMAT' => 'Format:',
+'LBL_MAX_FILE_SIZE' => ' is the max allowed filesize',
+
+'LBL_MERGE_FIELDS_DUPLICATE' => 'Merge Fields For Duplicate Import Records',
+'Customer Portal Login Details' => 'Customer Portal Login Details',
 );
 
 /*$mod_list_strings = Array(
@@ -263,7 +267,7 @@ $mod_list_strings = Array(
 	,"fax"=>"Fax"
 	,"email"=>"Email"
 	,"otheremail"=>"Email (Other)"
-	,"yahooid"=>"Yahoo! ID"
+	,"secondaryemail"=>"Secondary Email"
 	,"assistant"=>"Assistant"
 	,"assistantphone"=>"Assistant Phone"
 	,"mailingstreet"=>"Mailing Address Street"
@@ -356,7 +360,7 @@ $mod_list_strings = Array(
 		"rating"=>"Rating",
 		"noofemployees"=>"No Of Employees",
 		"assigned_user_id"=>"Assigned To",
-		"yahooid"=>"Yahoo Id",		
+		"secondaryemail"=>"Secondary Email",
 		"lane"=>"Street",
 		"pobox"=>"PO Box",
 		"code"=>"Postal Code",

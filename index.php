@@ -25,6 +25,7 @@ global $category;
 
 if(version_compare(phpversion(), '5.0') < 0) {
         insert_charset_header();
+		$serverPhpVersion = phpversion();
         require_once('phpversionfail.php');
         die();
 }
@@ -68,6 +69,13 @@ if(isset($_REQUEST['PHPSESSID']))
         $sid=$_REQUEST['PHPSESSID'];
 }	
 
+if(isset($_REQUEST['view'])) {
+    //setcookie("view",$_REQUEST['view']);
+    $view = $_REQUEST["view"];
+    session_register("view");
+}
+	
+
 /** Function to set, character set in the header, as given in include/language/*_lang.php
  */
 	 
@@ -86,6 +94,10 @@ function insert_charset_header()
 insert_charset_header();
 // Create or reestablish the current session
 session_start();
+$_SESSION['KCFINDER'] = array();
+$_SESSION['KCFINDER']['disabled'] = false;
+$_SESSION['KCFINDER']['uploadURL'] = "test/upload";
+$_SESSION['KCFINDER']['uploadDir'] = "../test/upload";
 
 if (!is_file('config.inc.php')) {
 	header("Location: install.php");
@@ -112,7 +124,20 @@ global $adb, $vtiger_current_version;
 if(isset($_SESSION['VTIGER_DB_VERSION']) && isset($_SESSION['authenticated_user_id'])) {
     if(version_compare($_SESSION['VTIGER_DB_VERSION'], $vtiger_current_version, '!=')) {
         unset($_SESSION['VTIGER_DB_VERSION']);
-        header("Location: install.php");
+    	global $app_strings;
+		echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
+		echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
+
+			<table border='0' cellpadding='5' cellspacing='0' width='98%'>
+			<tbody><tr>
+			<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$app_strings[LBL_MIGRATION_INCOMPLETE]</span></td>
+			</tr>
+			<tr>
+			<td class='small' align='right' nowrap='nowrap'>$app_strings[LBL_CONTACT_SYS_ADMIN] ($app_strings[LBL_SERVER_ADMIN_EMAIL_ID])<br></td>
+			</tr>
+			</tbody></table>
+			</div>";
+		echo "</td></tr></table>";
         exit();
     }
 } else {
@@ -121,7 +146,20 @@ if(isset($_SESSION['VTIGER_DB_VERSION']) && isset($_SESSION['authenticated_user_
     if(version_compare($dbversion, $vtiger_current_version, '=')) {
     	$_SESSION['VTIGER_DB_VERSION']= $dbversion;
     } else {
-    	header("Location: install.php");
+    	global $app_strings;
+		echo "<table border='0' cellpadding='5' cellspacing='0' width='100%' height='450px'><tr><td align='center'>";
+		echo "<div style='border: 3px solid rgb(153, 153, 153); background-color: rgb(255, 255, 255); width: 55%; position: relative; z-index: 10000000;'>
+
+			<table border='0' cellpadding='5' cellspacing='0' width='98%'>
+			<tbody><tr>
+			<td style='border-bottom: 1px solid rgb(204, 204, 204);' nowrap='nowrap' width='70%'><span class='genHeaderSmall'>$app_strings[LBL_MIGRATION_INCOMPLETE]</span></td>
+			</tr>
+			<tr>
+			<td class='small' align='right' nowrap='nowrap'>$app_strings[LBL_CONTACT_SYS_ADMIN] ($app_strings[LBL_SERVER_ADMIN_EMAIL_ID])<br></td>
+			</tr>
+			</tbody></table>
+			</div>";
+		echo "</td></tr></table>";
         exit();
     }
 }
@@ -250,11 +288,13 @@ if($use_current_login){
 	$log->debug("We are authenticating user now");
 }else{
 	if($_REQUEST['action'] != 'Logout' && $_REQUEST['action'] != 'Login'){
-		$_SESSION['lastpage'] = $_SERVER['argv'];
+		$_SESSION['lastpage'] = $_SERVER['QUERY_STRING']; 
 	}
 	$log->debug("The current user does not have a session.  Going to the login page");	
 	$action = "Login";
 	$module = "Users";
+	include 'modules/Users/Login.php';
+	exit;
 }
 
 
@@ -512,7 +552,11 @@ if(isset($_SESSION['vtiger_authenticated_user_theme']) && $_SESSION['vtiger_auth
 }
 else 
 {
-	$theme = $default_theme;
+	if(!empty($current_user->theme)) {
+		$theme = $current_user->theme;
+	} else {
+		$theme = $default_theme;
+	}
 }
 $log->debug('Current theme is: '.$theme);
 
@@ -526,7 +570,11 @@ if(isset($_SESSION['authenticated_user_language']) && $_SESSION['authenticated_u
 }
 else 
 {
-	$current_language = $default_language;
+	if(!empty($current_user->language)) {
+		$current_language = $current_user->language;
+	} else {
+		$current_language = $default_language;
+	}
 }
 $log->debug('current_language is: '.$current_language);
 
@@ -599,8 +647,6 @@ if(!$skipHeaders) {
 		}
 		include('themes/'.$theme.'/header.php');
 	}
-	else 
-		include('themes/'.$theme.'/loginheader.php');
 	
 	if(isset($_SESSION['administrator_error']))
 	{
@@ -627,14 +673,18 @@ if(isset($_SESSION['vtiger_authenticated_user_theme']) && $_SESSION['vtiger_auth
 }
 else 
 {
-	$theme = $default_theme;
+	if(!empty($current_user->theme)) {
+		$theme = $current_user->theme;
+	} else {
+		$theme = $default_theme;
+	}
 }
 
 
 //logging the security Information
 $seclog->debug('########  Module -->  '.$module.'  :: Action --> '.$action.' ::  UserID --> '.$current_user->id.' :: RecordID --> '.$record.' #######');
 
-if(!$skipSecurityCheck)
+if(!$skipSecurityCheck && $use_current_login)
 {
 
 
@@ -790,8 +840,8 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 		// END
 		echo "<script language = 'JavaScript' type='text/javascript' src = 'include/js/popup.js'></script>";
 		echo "<br><br><br><table border=0 cellspacing=0 cellpadding=5 width=100% class=settingsSelectedUI >";
-		echo "<tr><td class=small align=left><span style='color: rgb(153, 153, 153);'>vtiger CRM $vtiger_current_version</span></td>";
-		echo "<td class=small align=right><span style='color: rgb(153, 153, 153);'>&copy; 2004-".date('Y')." <a href='http://www.vtiger.com' target='_blank'>vtiger.com</a> | <a href='javascript:mypopup()'>".$app_strings['LNK_READ_LICENSE']."</a> | <a href='http://www.vtiger.com/products/crm/privacy_policy.html' target='_blank'>".getTranslatedString('LNK_PRIVACY_POLICY')."</a></span> $statimage</td></tr></table>";
+		echo "<tr><td class=small align=left><span>Powered by vtiger CRM - $vtiger_current_version</span></td>";
+		echo "<td class=small align=right><span>&copy; 2004-".date('Y')." <a href='http://www.vtiger.com' target='_blank'>vtiger.com</a> | <a href='javascript:mypopup()'>".$app_strings['LNK_READ_LICENSE']."</a> | <a href='http://www.vtiger.com/products/crm/privacy_policy.html' target='_blank'>".getTranslatedString('LNK_PRIVACY_POLICY')."</a></span> $statimage</td></tr></table>";
 			
 	//	echo "<table align='center'><tr><td align='center'>";
 		// Under the Sugar Public License referenced above, you are required to leave in all copyright statements
@@ -808,9 +858,23 @@ if((!$viewAttachment) && (!$viewAttachment && $action != 'home_rss') && $action 
 	if(($action != 'mytkt_rss') && ($action != 'home_rss') && ($action != $module."Ajax") && ($action != "body") && ($action != 'ActivityAjax'))
 	{
 	?>
-		<script>
+		<script type="text/javascript">
 			var userDateFormat = "<?php echo $current_user->date_format ?>";
 			var default_charset = "<?php echo $default_charset; ?>";
+			var userCurrencySeparator = "<?php if(isset($current_user->currency_grouping_separator)
+													&& $current_user->currency_grouping_separator == '') {
+													echo ' ';
+												} else {
+													echo html_entity_decode($current_user->currency_grouping_separator, ENT_QUOTES, $default_charset);
+												}
+										?>";
+			var userDecimalSeparator = "<?php if(isset($current_user->currency_decimal_separator)
+													&& $current_user->currency_decimal_separator == '') {
+													echo ' ';
+												} else {
+													echo html_entity_decode($current_user->currency_decimal_separator, ENT_QUOTES, $default_charset);
+												}
+										?>";
 		</script>
 <?php
 	}

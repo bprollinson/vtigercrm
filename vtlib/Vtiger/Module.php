@@ -137,6 +137,13 @@ class Vtiger_Module extends Vtiger_ModuleBasic {
 	}
 
 	/**
+	 * De-Initialize webservice setup for this module instance.
+	 */
+	function deinitWebservice() {
+		Vtiger_Webservice::uninitialize($this);
+	}
+
+	/**
 	 * Get instance by id or name
 	 * @param mixed id or name of the module
 	 */
@@ -167,7 +174,7 @@ class Vtiger_Module extends Vtiger_ModuleBasic {
 
 		$instance = false;
 		$filepath = "modules/$modulename/$modulename.php";
-		if(Vtiger_Utils::checkFileAccess($filepath, false)) {
+		if(Vtiger_Utils::checkFileAccessForInclusion($filepath, false)) {
 			include_once($filepath);
 			if(class_exists($modulename)) {
 				$instance = new $modulename();

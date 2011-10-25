@@ -17,10 +17,17 @@ require_once('modules/Emails/mail.php');
 require_once('modules/HelpDesk/language/en_us.lang.php');
 require_once('include/utils/CommonUtils.php');
 require_once('include/utils/VtlibUtils.php');
+require_once 'modules/Users/Users.php';
+
 
 /** Configure language for server response translation */
 global $default_language, $current_language;
 if(!isset($current_language)) $current_language = $default_language;
+
+$userid = getPortalUserid();
+$user = new Users();
+$current_user = $user->retrieveCurrentUserInfoFromFile($userid);
+
 
 $log = &LoggerManager::getLogger('customerportal');
 
@@ -376,7 +383,6 @@ class Vtiger_Soap_CustomerPortal {
 */
 function get_ticket_comments($input_array)
 {
-	require_once('modules/Users/Users.php');
 	global $adb,$log,$current_user;
 	$adb->println("Entering customer portal function get_ticket_comments");
 	$adb->println($input_array);
@@ -465,9 +471,23 @@ function get_combo_values($input_array)
 		$output['serviceid']['serviceid']="#MODULE INACTIVE#";
 		$output['servicename']['servicename']="#MODULE INACTIVE#";
 	} else {
-		$servicequery = "SELECT vtiger_servicecontracts.servicecontractsid,vtiger_servicecontracts.subject from vtiger_servicecontracts
-inner join vtiger_crmentity on vtiger_crmentity.crmid=vtiger_servicecontracts.servicecontractsid and vtiger_crmentity.deleted = 0";
-		$serviceResult = $adb->pquery($servicequery,array());
+		$servicequery = "SELECT vtiger_servicecontracts.servicecontractsid,vtiger_servicecontracts.subject
+							FROM vtiger_servicecontracts
+							INNER JOIN vtiger_crmentity on vtiger_crmentity.crmid=vtiger_servicecontracts.servicecontractsid
+									AND vtiger_crmentity.deleted = 0
+							WHERE vtiger_servicecontracts.sc_related_to = ?";
+		$params = array($id);
+		$showAll = show_all('HelpDesk');
+		if($showAll == 'true') {
+			$servicequery .= ' OR vtiger_servicecontracts.sc_related_to = (SELECT accountid FROM vtiger_contactdetails WHERE contactid=?)
+								OR vtiger_servicecontracts.sc_related_to IN
+											(SELECT contactid FROM vtiger_contactdetails WHERE accountid =
+													(SELECT accountid FROM vtiger_contactdetails WHERE contactid=?))
+							';
+			array_push($params, $id);
+			array_push($params, $id);
+		}
+		$serviceResult = $adb->pquery($servicequery,$params);
 
 		for($i=0;$i < $adb->num_rows($serviceResult);$i++){
 			$serviceid = $adb->query_result($serviceResult,$i,'servicecontractsid');
@@ -623,7 +643,6 @@ function get_tickets_list($input_array) {
 
 	global $adb,$log;
 	global $current_user;
-	require_once('modules/Users/Users.php');
 	$log->debug("Entering customer portal function get_ticket_list");
 	
 	$user = new Users();
@@ -1352,13 +1371,7 @@ function add_ticket_attachment($input_array)
 	$attachmentid = $adb->getUniqueID("vtiger_crmentity");
 
 	//fix for space in file name
-	$filename = preg_replace('/\s+/', '_', $filename);
-	$ext_pos = strrpos($filename, ".");
-	$ext = substr($filename, $ext_pos + 1);
-
-	if (in_array(strtolower($ext), $upload_badext)){
-		$filename .= ".txt";
-	}
+	$filename = sanitizeUploadFileName($filename, $upload_badext);
 	$new_filename = $attachmentid.'_'.$filename;
 
 	$data = base64_decode($filecontents);
@@ -1548,7 +1561,6 @@ function get_list_values($id,$module,$sessionid,$only_mine='true')
 {
 	require_once('modules/'.$module.'/'.$module.'.php');
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	global $adb,$log,$current_user;
 	$log->debug("Entering customer portal function get_list_values");
 	$check = checkModuleActive($module);
@@ -1916,13 +1928,8 @@ function get_pdf($id,$block,$customerid,$sessionid)
 	if(!validateSession($customerid,$sessionid))
 	return null;
 
-	require_once("modules/Users/Users.php");
 	require_once("config.inc.php");
-	$seed_user=new Users();
-	$user_id=$seed_user->retrieve_user_id('admin');
-	
-	$current_user=$seed_user;
-	$current_user->retrieveCurrentUserInfoFromFile($user_id);
+	$current_user = Users::getActiveAdminUser();
 	
 	$currentModule = $block;
 	$current_language = $default_language;
@@ -1932,11 +1939,12 @@ function get_pdf($id,$block,$customerid,$sessionid)
 
 	$_REQUEST['record']= $id;
 	$_REQUEST['savemode']= 'file';
-	$filenamewithpath='test/product/'.$id.'_'.$block.'.pdf';
+	$sequenceNo = getModuleSequenceNumber($block, $id);
+	$filenamewithpath='test/product/'.$id.'_'.$block.'_'.$sequenceNo.'.pdf';
 	if (file_exists($filenamewithpath) && (filesize($filenamewithpath) != 0))
 	unlink($filenamewithpath);
 
-	checkFileAccess("modules/$block/CreatePDF.php");
+	checkFileAccessForInclusion("modules/$block/CreatePDF.php");
 	include("modules/$block/CreatePDF.php");
 
 	if (file_exists($filenamewithpath) && (filesize($filenamewithpath) != 0))
@@ -1972,7 +1980,6 @@ function get_salesorder_name($id)
 function get_invoice_detail($id,$module,$customerid,$sessionid)
 {
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	require_once('include/utils/utils.php');
 
 	global $adb,$site_URL,$log,$current_user;
@@ -2061,7 +2068,6 @@ function get_product_list_values($id,$modulename,$sessionid,$only_mine='true')
 {
 	require_once('modules/Products/Products.php');
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	global $current_user,$adb,$log;
 	$log->debug("Entering customer portal function get_product_list_values ..");
 	$check = checkModuleActive($modulename);
@@ -2110,7 +2116,6 @@ function get_product_list_values($id,$modulename,$sessionid,$only_mine='true')
 	$fields_list['Related To'] = 'entityid';
 	$query = array();
 	$params = array();
-
 	$query[] = "SELECT vtiger_products.*,vtiger_seproductsrel.crmid as entityid, vtiger_seproductsrel.setype FROM vtiger_products
 		INNER JOIN vtiger_crmentity on vtiger_products.productid = vtiger_crmentity.crmid 
 		LEFT JOIN vtiger_seproductsrel on vtiger_seproductsrel.productid = vtiger_products.productid  					
@@ -2197,7 +2202,6 @@ function get_details($id,$module,$customerid,$sessionid)
 	global $adb,$log,$current_language,$default_language,$current_user;
 	require_once('include/utils/utils.php');
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	$log->debug("Entering customer portal function get_details ..");
 
 	$user = new Users();
@@ -2808,7 +2812,6 @@ function get_documents($id,$module,$customerid,$sessionid)
 function get_project_components($id,$module,$customerid,$sessionid) {
 	require_once("modules/$module/$module.php");
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	
 	global $adb,$log;
 	$log->debug("Entering customer portal function get_project_components ..");
@@ -2879,7 +2882,6 @@ function get_project_components($id,$module,$customerid,$sessionid) {
 function get_project_tickets($id,$module,$customerid,$sessionid) {
 	require_once('modules/HelpDesk/HelpDesk.php');
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	
 	global $adb,$log;
 	$log->debug("Entering customer portal function get_project_tickets ..");
@@ -2959,7 +2961,6 @@ function get_service_list_values($id,$modulename,$sessionid,$only_mine='true')
 {
 	require_once('modules/Services/Services.php');
 	require_once('include/utils/UserInfoUtil.php');
-	require_once('modules/Users/Users.php');
 	global $current_user,$adb,$log;
 	$log->debug("Entering customer portal Function get_service_list_values");
 	$check = checkModuleActive($modulename);

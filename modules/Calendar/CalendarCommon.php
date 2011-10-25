@@ -14,13 +14,6 @@
  * @param $id -- The user id :: Type integer
  * @returns $sharedids -- The shared vtiger_users id :: Type Array
  */
-if(isset($_REQUEST['fieldval']))
-{
-        $currtime = date("Y:m:d:H:i:s");
-        list($y,$m,$d,$h,$min,$sec) = split(':',$currtime);
-        echo "[{YEAR:'".$y."',MONTH:'".$m."',DAY:'".$d."',HOUR:'".$h."',MINUTE:'".$min."'}]";
-        die;
-}
 function getSharedUserId($id)
 {
 	global $adb;
@@ -387,7 +380,22 @@ function twoDigit( $no ){
 }
 
 function timeString($datetime,$fmt){
+	
+	$timeStr = formatUserTimeString($datetime, $fmt);
+	$date = new DateTimeField($timeStr);
+	list($h, $m) = explode(':', $date->getDisplayTime());
+	$timeStr = formatUserTimeString(array('hour'=>$h, 'minute'=>$m), $fmt);
+	return $timeStr;
+}
 
+/**
+ *
+ * @param type $datetime
+ * @param type $fmt
+ * @return Date 
+ */
+function formatUserTimeString($datetime,$fmt){
+	
 	if(is_object($datetime)){
 		$hr = $datetime->hour;
 		$min = $datetime->minute;
@@ -399,11 +407,12 @@ function timeString($datetime,$fmt){
 	if($fmt != 'am/pm'){
 		$timeStr .= twoDigit($hr).":".twoDigit($min);
 	}else{
-		$am = ($hr >= 12) ? "pm" : "am";
-		if($hr == 0) $hr = 12;
-		$timeStr .= ($hr>12)?($hr-12):$hr;
-		$timeStr .= ":".twoDigit($min);
-		$timeStr .= $am;
+		$am_pm = array('AM', 'PM');
+		$hour = twoDigit($hr%12);
+		if($hour == 0) {
+			$hour = 12;
+		}
+		$timeStr = $hour.':'.twoDigit($min).$am_pm[($hr/12)%2];
 	}
 	return $timeStr;
 }
@@ -478,6 +487,18 @@ function getActivityMailInfo($return_id,$status,$activity_type)
 	$end_time = $adb->query_result($ary_res,0,"time_end");
 	$location = $adb->query_result($ary_res,0,"location");
 
+	if(!empty($st_time)){
+		$date = new DateTimeField($st_date.' '.$st_time);
+		$st_date = $date->getDisplayDate();
+		$st_time = $date->getDisplayTime();
+	}
+
+	if(!empty($end_time)){
+		$date = new DateTimeField($end_date.' '.$end_time);
+		$end_date = $date->getDisplayDate();
+		$end_time = $date->getDisplayTime();
+	}
+
 	$owner_qry = "select smownerid from vtiger_crmentity where crmid=?";
 	$res = $adb->pquery($owner_qry, array($return_id));
 	$owner_id = $adb->query_result($res,0,"smownerid");
@@ -503,15 +524,8 @@ function getActivityMailInfo($return_id,$status,$activity_type)
 	$rel_res = $adb->pquery($rel_qry, array($return_id));
 	$rel_name = $adb->query_result($rel_res,0,"relname");
 
-
-	$cont_qry = "select * from vtiger_cntactivityrel where activityid=?";
-	$cont_res = $adb->pquery($cont_qry, array($return_id));
-	$cont_id = $adb->query_result($cont_res,0,"contactid");
-	$cont_name = '';
-	if($cont_id != '')
-	{
-		$cont_name = getContactName($cont_id);
-	}
+	$relatedContacts = getActivityRelatedContacts($return_id);
+	
 	$mail_data['mode'] = "edit";
 	$mail_data['activity_mode'] = $activity_type;
 	$mail_data['sendnotification'] = $send_notification;
@@ -520,7 +534,7 @@ function getActivityMailInfo($return_id,$status,$activity_type)
 	$mail_data['status'] = $status;
 	$mail_data['taskpriority'] = $priority;
 	$mail_data['relatedto'] = $rel_name;
-	$mail_data['contact_name'] = $cont_name;
+	$mail_data['contact_name'] = implode(',', $relatedContacts);
 	$mail_data['description'] = $description;
 	$mail_data['assign_type'] = $assignType;
 	$mail_data['group_name'] = $grp_name;
@@ -528,8 +542,11 @@ function getActivityMailInfo($return_id,$status,$activity_type)
 	$start_hour = $value['starthour'].':'.$value['startmin'].''.$value['startfmt'];
 	if($activity_type != 'Task' )
 		$end_hour = $value['endhour'] .':'.$value['endmin'].''.$value['endfmt'];
-	$mail_data['st_date_time']=getDisplayDate($st_date)." ".$start_hour;
-	$mail_data['end_date_time']=getDisplayDate($end_date)." ".$end_hour;
+	$date = new DateTimeField($st_date." ".$start_hour);
+	$endDate = new DateTimeField($end_date." ".$end_hour);
+	$mail_data['st_date_time'] = $date->getDBInsertDateTimeValue();
+	$mail_data['end_date_time'] = $endDate->getDBInsertDateValue().' '.
+			$endDate->getDBInsertTimeValue();
 	$mail_data['location']=$location;
 	return $mail_data;
 

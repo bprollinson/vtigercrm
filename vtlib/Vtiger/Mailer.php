@@ -93,6 +93,15 @@ class Vtiger_Mailer extends PHPMailer {
 		}
 		return false;		
 	}
+	/**
+	*Adding signature to mail
+	*/
+	function addSignature($userId) {
+		global $adb;
+		$sign = nl2br($adb->query_result($adb->pquery("select signature from vtiger_users where id=?", array($userId)),0,"signature"));
+		$this->Signature = $sign;
+	}
+
 
 	/**
 	 * Configure sender information
@@ -199,7 +208,7 @@ class Vtiger_Mailer extends PHPMailer {
 	/**
 	 * Dispatch (send) email that was queued.
 	 */
-	static function dispatchQueue(Vtiger_Mailer_Listener $listener) {
+	static function dispatchQueue(Vtiger_Mailer_Listener $listener=null) {
 		global $adb;
 		if(!Vtiger_Utils::CheckTable('vtiger_mailer_queue')) return;
 

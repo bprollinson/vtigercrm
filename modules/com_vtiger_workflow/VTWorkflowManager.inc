@@ -9,6 +9,7 @@
  ************************************************************************************/
 	require_once("VTJsonCondition.inc");
 	require_once 'include/utils/ConfigReader.php';
+	require_once 'includes/runtime/Cache.php';
 
 	class VTWorkflowManager{
 
@@ -27,26 +28,29 @@
 			$adb=$this->adb;
 			if(isset($workflow->id)){
 				$wf=$workflow;
+				if($wf->filtersavedinnew == null) $wf->filtersavedinnew = 5;
+				
 				$adb->pquery("update com_vtiger_workflows set
-								module_name=?, summary=?, test=?, execution_condition=?, defaultworkflow=?
+								module_name=?, summary=?, test=?, execution_condition=?, defaultworkflow=?, filtersavedinnew=?
 								where workflow_id=?",
-					array($wf->moduleName, $wf->description, $wf->test, $wf->executionCondition, $wf->defaultworkflow, $wf->id));
+					array($wf->moduleName, $wf->description, $wf->test, $wf->executionCondition, $wf->defaultworkflow, $wf->filtersavedinnew, $wf->id));
 			}else{
 				$workflowId = $adb->getUniqueID("com_vtiger_workflows");
 				$workflow->id = $workflowId;
 				$wf=$workflow;
-
+				if($wf->filtersavedinnew == null) $wf->filtersavedinnew = 5;
+				
 				$result=$adb->getColumnNames("com_vtiger_workflows");
 				if(in_array("type",$result)) {
 					$adb->pquery("insert into com_vtiger_workflows
-									(workflow_id, module_name, summary, test, execution_condition, type, defaultworkflow)
-									values (?,?,?,?,?,?,?)",
-						array($workflowId, $wf->moduleName, $wf->description, $wf->test,  $wf->executionCondition, $wf->type, $wf->defaultworkflow));
+									(workflow_id, module_name, summary, test, execution_condition, type, defaultworkflow, filtersavedinnew)
+									values (?,?,?,?,?,?,?,?)",
+						array($workflowId, $wf->moduleName, $wf->description, $wf->test,  $wf->executionCondition, $wf->type, $wf->defaultworkflow, $wf->filtersavedinnew));
 				} else {
 					$adb->pquery("insert into com_vtiger_workflows
-									(workflow_id, module_name, summary, test, execution_condition, defaultworkflow)
-									values (?,?,?,?,?,?)",
-						array($workflowId, $wf->moduleName, $wf->description, $wf->test,  $wf->executionCondition, $wf->defaultworkflow));
+									(workflow_id, module_name, summary, test, execution_condition, defaultworkflow,filtersavedinnew)
+									values (?,?,?,?,?,?,?)",
+						array($workflowId, $wf->moduleName, $wf->description, $wf->test,  $wf->executionCondition, $wf->defaultworkflow, $wf->filtersavedinnew));
 				}
 			}
 		}
@@ -57,11 +61,11 @@
 
 			$result=$adb->getColumnNames("com_vtiger_workflows");
 			if(in_array("defaultworkflow",$result)){
-				$result = $adb->query("select workflow_id, module_name, summary, test, execution_condition,defaultworkflow, type
+				$result = $adb->query("select workflow_id, module_name, summary, test, execution_condition,defaultworkflow, type, filtersavedinnew
 									from com_vtiger_workflows ");
 			}else{
 
-				$result = $adb->query("select workflow_id, module_name, summary, test, execution_condition, type
+				$result = $adb->query("select workflow_id, module_name, summary, test, execution_condition, type, filtersavedinnew
 									from com_vtiger_workflows");
 			}
 			return $this->getWorkflowsForResult($result);
@@ -70,18 +74,23 @@
 
 		function getWorkflowsForModule($moduleName){
 			$adb=$this->adb;
-
+			$cache= Vtiger_Cache::getInstance();
+			if($cache->getWorkflowForModule($moduleName)){
+				return $this->getWorkflowsForResult($cache->getWorkflowForModule($moduleName)); 
+			} else {
 			//my changes
 			$result=$adb->getColumnNames("com_vtiger_workflows");
 			if(in_array(defaultworkflow,$result)){
-				$result = $adb->pquery("select workflow_id, module_name, summary, test, execution_condition, defaultworkflow, type
+				$result = $adb->pquery("select workflow_id, module_name, summary, test, execution_condition, defaultworkflow, type, filtersavedinnew
 									from com_vtiger_workflows where module_name=?",array($moduleName));
 			}
 			else{
-				$result = $adb->pquery("select workflow_id, module_name, summary, test, execution_condition, type
+				$result = $adb->pquery("select workflow_id, module_name, summary, test, execution_condition, type, filtersavedinnew
 									from com_vtiger_workflows where module_name=?",array($moduleName));
 			}
+				$cache->setWorkflowForModule($moduleName,$result);
 			return $this->getWorkflowsForResult($result);
+			}
 		}
 
 		protected function getWorkflowsForResult($result){
@@ -121,7 +130,7 @@
 		 */
 		function retrieve($id){
 			$adb=$this->adb;
-			$result = $adb->pquery("select workflow_id, module_name, summary, test, execution_condition, type, defaultworkflow
+			$result = $adb->pquery("select workflow_id, module_name, summary, test, execution_condition, type, defaultworkflow, filtersavedinnew
 									from com_vtiger_workflows where workflow_id=?",
 						array($id));
 
@@ -214,6 +223,7 @@
 			if($row['defaultworkflow']){
 				$this->defaultworkflow=$row['defaultworkflow'];
 			}
+			$this->filtersavedinnew = $row['filtersavedinnew'];
 		}
 
 		function evaluate($entityCache, $id){

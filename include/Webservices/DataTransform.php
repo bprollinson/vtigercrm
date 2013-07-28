@@ -134,6 +134,7 @@
 
 			$row = DataTransform::sanitizeDateFieldsForInsert($row,$meta);
 			$row = DataTransform::sanitizeCurrencyFieldsForInsert($row,$meta);
+			$row = DataTransform::sanitizeInventoryForInsert($row,$meta);
 
 			return $row;
 			
@@ -197,12 +198,11 @@
 			global $adb,$log;
 			$references = $meta->getReferenceFieldDetails();
 			foreach($references as $field=>$typeList){
-                            if(strtolower($meta->getEntityName()) == "emails"){
-				if(isset($row['parent_id'])){
-                                    list($row['parent_id'], $fieldId) = explode('@',
-					    $row['parent_id']);
-                                }
-                            }
+				if(strtolower($meta->getEntityName()) == "emails"){
+					if(isset($row['parent_id'])){
+						list($row['parent_id'], $fieldId) = explode('@', $row['parent_id']);
+					}
+				}
 				if($row[$field]){
 					$found = false;
 					foreach ($typeList as $entity) {
@@ -264,12 +264,43 @@
 			global $current_user;
 			$moduleFields = $meta->getModuleFields();
 			foreach($moduleFields as $fieldName=>$fieldObj){
-				if($fieldObj->getFieldDataType()=="currency"){
-					if(!empty($row[$fieldName])){
+				if($fieldObj->getFieldDataType()=="currency" && !empty($row[$fieldName])) {
+					if($fieldObj->getUIType() == '71') {
+						$row[$fieldName] = CurrencyField::convertToUserFormat($row[$fieldName],$current_user);
+					} else if($fieldObj->getUIType() == '72') {
 						$row[$fieldName] = CurrencyField::convertToUserFormat($row[$fieldName],$current_user,true);
 					}
 				}
 			}
+			return $row;
+		}
+		
+		/**
+		 * function to display discount amount and discount percent 
+		 * @param type $row
+		 * @param type $meta
+		 * @return type
+		 */
+		function sanitizeInventoryForInsert($row, $meta) {
+			$inventoryModules = getInventoryModules();
+			if(!in_array($meta->getEntityName(), $inventoryModules)) {
+				return $row;
+			}
+			
+			$currencyId = $row['currency_id'];
+			$currencyInfo = getCurrencySymbolandCRate($currencyId);
+			$row['conversion_rate'] = $currencyInfo['rate'];
+            if(array_key_exists('discount_amount', $row)){
+                $row['discount_type_final']= 'amount';
+                $row['discount_amount_final'] = $row['discount_amount'];
+                $_REQUEST['discount_type_final']= 'amount';
+                $_REQUEST['discount_amount_final'] = $row['discount_amount'];
+            } else if(array_key_exists('discount_precent', $row)) {
+                $row['discount_type_final']= 'percentage';
+                $row['discount_percentage_final'] = $row['discount_precent'];
+                $_REQUEST['discount_type_final']= 'percentage';
+                $_REQUEST['discount_percentage_final'] = $row['discount_precent'];
+            }
 			return $row;
 		}
 	}

@@ -11,7 +11,7 @@
 
 require_once("config.php");
 require_once('include/logging.php');
-require_once('include/nusoap/nusoap.php');
+require_once('libraries/nusoap/nusoap.php');
 require_once('include/database/PearDatabase.php');
 
 $log = &LoggerManager::getLogger('firefoxlog');
@@ -905,7 +905,7 @@ function getServerSessionId($id)
 	$id = (int) $id;
 
 	$query = "select * from vtiger_soapservice where type='FireFox' and id={$id}";
-	$sessionid = $adb->query_result($adb->pquery($query, array()),0,'sessionid');
+	$sessionid = $adb->query_result($adb->query($query),0,'sessionid');
 
 	return $sessionid;
 }

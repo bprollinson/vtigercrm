@@ -195,7 +195,7 @@ class Vtiger_Utils {
 	 */
 	static function AlterTable($tablename, $criteria) {
 		global $adb;
-		$adb->pquery("ALTER TABLE " . $tablename . $criteria, array());
+		$adb->query("ALTER TABLE " . $tablename . $criteria);
 	}
 
 	/**

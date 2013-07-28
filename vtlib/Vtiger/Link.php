@@ -79,7 +79,8 @@ class Vtiger_Link {
 	 * Initialize the schema (tables)
 	 */
 	static function __initSchema() {
-		if(empty(self::$__cacheSchemaChanges['vtiger_links'])) {
+		/* vtiger_links is already core product table */
+		/*if(empty(self::$__cacheSchemaChanges['vtiger_links'])) {
 			if(!Vtiger_Utils::CheckTable('vtiger_links')) {
 				Vtiger_Utils::CreateTable(
 					'vtiger_links',
@@ -90,7 +91,7 @@ class Vtiger_Link {
 					'CREATE INDEX link_tabidtype_idx on vtiger_links(tabid,linktype)');
 			}
 			self::$__cacheSchemaChanges['vtiger_links'] = true;
-		}
+		}*/
 	}
 
 	/**
@@ -242,6 +243,21 @@ class Vtiger_Link {
 			}
 		}
 		return $instances;
+	}
+
+	/**
+	 * Extract the links of module for export.
+	 */
+	static function getAllForExport($tabid) {
+		global $adb;
+		$result = $adb->pquery('SELECT * FROM vtiger_links WHERE tabid=?', array($tabid));
+		$links  = array();
+		while($row = $adb->fetch_array($result)) {
+			$instance = new self();
+			$instance->initialize($row);
+			$links[] = $instance;
+		}
+		return $links;
 	}
 
 	/**

@@ -15,7 +15,7 @@
 		function __construct($adb){
 			$this->adb = $adb;
 		}
-		
+
 		/**
 		 * Save the task into the database.
 		 *
@@ -24,46 +24,47 @@
 		 *
 		 * @param $summary A summary of the task instance.
 		 * @param $task The task instance to save.
-		 * @return The id of the task 
+		 * @return The id of the task
 		 */
 		public function saveTask($task){
 			$adb = $this->adb;
 			if(is_numeric($task->id)){//How do I check whether a member exists in php?
 				$taskId = $task->id;
-				$adb->pquery("update com_vtiger_workflowtasks set summary=?, task=? where task_id=?", 
-							array($task->summary, serialize($task), $taskId));	
+				$adb->pquery("update com_vtiger_workflowtasks set summary=?, task=? where task_id=?",
+							array($task->summary, serialize($task), $taskId));
 				return $taskId;
 			}else{
 				$taskId = $adb->getUniqueID("com_vtiger_workflowtasks");
 				$task->id = $taskId;
-				$adb->pquery("insert into com_vtiger_workflowtasks 
-							(task_id, workflow_id, summary, task) 
-							values (?, ?, ?, ?)", 
+				$adb->pquery("insert into com_vtiger_workflowtasks
+							(task_id, workflow_id, summary, task)
+							values (?, ?, ?, ?)",
 					array($taskId, $task->workflowId, $task->summary, serialize($task)));
 				return $taskId;
 			}
 		}
-		
+
 		public function deleteTask($taskId){
 			$adb = $this->adb;
 			$adb->pquery("delete from com_vtiger_workflowtasks where task_id=?", array($taskId));
 		}
-		
-		
+
+
 		/**
 		 * Create a new class instance
 		 */
-		public function createTask($taskType, $workflowId){
-			$taskClass = $taskType;
-			$this->requireTask($taskType);
+		public function createTask($taskType, $workflowId) {
+			$taskTypeInstance = VTTaskType::getInstanceFromTaskType($taskType);
+			$taskClass = $taskTypeInstance->get('classname');
+			$this->requireTask($taskClass, $taskTypeInstance);
 			$task = new $taskClass();
 			$task->workflowId=$workflowId;
 			$task->summary = "";
-			$task->active=true; 
+			$task->active=true;
 			return $task;
 		}
-		
-		
+
+
 		/**
 		 * Retrieve a task from the database
 		 *
@@ -78,26 +79,26 @@
 			$task = $this->unserializeTask($task);
 			$timeFieldList = $task->getTimeFieldList();
 			foreach ($timeFieldList as $field) {
-				$task->$field = $task->formatTimeForTimePicker($task->$field);
+				//$task->$field = $task->formatTimeForTimePicker($task->$field);
 			}
 			return $task;
 		}
-		
-		
+
+
 		/**
 		 *
 		 */
 		public function getTasksForWorkflow($workflowId){
 			$adb = $this->adb;
-			$result = $adb->pquery("select task from com_vtiger_workflowtasks 
-									where workflow_id=?", 
+			$result = $adb->pquery("select task from com_vtiger_workflowtasks
+									where workflow_id=?",
 				array($workflowId));
 			return $this->getTasksForResult($result);
 		}
 
 
 		/**
-		 * 
+		 *
 		 */
 		public function unserializeTask($str){
 			$this->requireTask(self::taskName($str));
@@ -112,57 +113,47 @@
 			$result = $adb->query("select task from com_vtiger_workflowtasks");
 			return $this->getTasksForResult($result);
 		}
-		
-		
-		function getTaskTypes($moduleName=''){
-			$taskTypes = array("VTEmailTask", "VTEntityMethodTask", "VTCreateTodoTask","VTCreateEventTask","VTUpdateFieldsTask","VTCreateEntityTask");
-			// Make SMSTask available if module is active
-			// TODO Generic way of handling this could be helpful
-			if(getTabid('SMSNotifier') && vtlib_isModuleActive('SMSNotifier')) {
-				$taskTypes [] = 'VTSMSTask'; 	
-			}
-			$taskTypes = $this->filterTaskTypes($moduleName, $taskTypes);
-			return $taskTypes;
-		}
 
-		private function filterTaskTypes($moduleName, $taskTypes) {
-			$eliminateTaskTypes = array(
-				"Calendar" => array("VTCreateTodoTask","VTCreateEventTask"),
-				"Events" => array("VTCreateTodoTask","VTCreateEventTask"),
-				"Faq" => array("VTCreateTodoTask","VTCreateEventTask"),
-			);
-
-			if(!empty($moduleName) && array_key_exists($moduleName, $eliminateTaskTypes)) {
-				$taskTypes = array_diff($taskTypes, $eliminateTaskTypes[$moduleName]);
-			}
-			return $taskTypes;
-		}
-		
 		private function getTasksForResult($result){
 			$adb = $this->adb;
 			$it = new SqlResultIterator($adb, $result);
 			$tasks = array();
 			foreach($it as $row){
 				$text = $row->task;
-				
+
 				$this->requireTask(self::taskName($text));
 				$tasks[] = unserialize($text);
 			}
 			return $tasks;
 		}
-		
+
 		private function taskName($serializedTask){
 			$matches = array();
 			preg_match ('/"([^"]+)"/', $serializedTask, $matches);
 			return $matches[1];
 		}
-		
-		private function requireTask($taskType){
-			require_once("tasks/".$taskType.".inc");
+
+		private function requireTask($taskType, $taskTypeInstance='') {
+			if(!empty($taskTypeInstance)) {
+				$taskClassPath = $taskTypeInstance->get('classpath');
+				require_once($taskClassPath);
+			} else {
+				require_once("tasks/".$taskType.".inc");
+			}
 		}
-		
+
+		public function retrieveTemplatePath($moduleName, $taskTypeInstance) {
+			$taskTemplatePath = $taskTypeInstance->get('templatepath');
+			if(!empty($taskTemplatePath)) {
+				return $taskTemplatePath;
+			} else {
+				$taskType = $taskTypeInstance->get('classname');
+				return $moduleName."/taskforms/".$taskType.".tpl";
+			}
+		}
+
 	}
-	
+
 	abstract class VTTask{
 		public abstract function doTask($data);
 		public abstract function getFieldNames();
@@ -191,5 +182,97 @@
 		}
 
 	}
-	
+
+class VTTaskType {
+	var $data;
+
+	public function get($key) {
+		return $this->data[$key];
+	}
+
+	public function set($key, $value) {
+		$this->data[$key] = $value;
+		return $this;
+	}
+
+	public function setData($valueMap) {
+		$this->data = $valueMap;
+		return $this;
+	}
+
+	public static function getInstance($values) {
+		$instance = new self();
+		return $instance->setData($values);
+	}
+
+	public static function registerTaskType($taskType) {
+		$adb = PearDatabase::getInstance();
+		$modules = Zend_Json::encode($taskType['modules']);
+
+		$taskTypeId = $adb->getUniqueID("com_vtiger_workflow_tasktypes");
+		$taskType['id'] = $taskTypeId;
+
+		$taskResult = $adb->pquery('SELECT 1 FROM com_vtiger_workflow_tasktypes WHERE tasktypename = ?', array($taskType['name']));
+		if($adb->num_rows($taskResult) === 0) {
+			$adb->pquery("INSERT INTO com_vtiger_workflow_tasktypes (id, tasktypename, label, classname, classpath,
+				templatepath, modules, sourcemodule) values (?,?,?,?,?,?,?,?)",
+					array($taskTypeId, $taskType['name'], $taskType['label'], $taskType['classname'],  $taskType['classpath'],
+					$taskType['templatepath'], $modules, $taskType['sourcemodule']));
+		}
+	}
+
+	public static function getAll($moduleName='') {
+		$adb = PearDatabase::getInstance();
+
+		$result = $adb->pquery("SELECT * FROM com_vtiger_workflow_tasktypes",array());
+		$numrows = $adb->num_rows($result);
+		for ($i = 0; $i < $numrows; $i++) {
+			$rawData = $adb->raw_query_result_rowdata($result,$i);
+			$taskName = $rawData['tasktypename'];
+			$moduleslist = $rawData['modules'];
+			$sourceModule = $rawData['sourcemodule'];
+			$modules = Zend_Json::decode($moduleslist);
+			$includeModules = $modules['include'];
+			$excludeModules = $modules['exclude'];
+
+			if(!empty ($sourceModule)) {
+				if(getTabid($sourceModule) == null || !vtlib_isModuleActive($sourceModule)) {
+					continue;
+				}
+			}
+
+			if(empty($includeModules) && empty($excludeModules)) {
+				$taskTypeInstances[$taskName] = self::getInstance($rawData);
+				continue;
+			} elseif(!empty($includeModules)) {
+				if(in_array($moduleName, $includeModules)) {
+					$taskTypeInstances[$taskName] = self::getInstance($rawData);
+				}
+				continue;
+			} elseif(!empty($excludeModules)) {
+				if(!(in_array($moduleName, $excludeModules))) {
+					$taskTypeInstances[$taskName] = self::getInstance($rawData);
+				}
+				continue;
+			}
+		}
+		return $taskTypeInstances;
+	}
+
+	public static function getInstanceFromTaskType($taskType) {
+		$adb = PearDatabase::getInstance();
+
+		$result = $adb->pquery("SELECT * FROM com_vtiger_workflow_tasktypes where tasktypename=?",array($taskType));
+		$taskTypes['name'] = $adb->query_result($result, 0, 'tasktypename');
+		$taskTypes['label'] = $adb->query_result($result, 0, 'label');
+		$taskTypes['classname'] = $adb->query_result($result, 0, 'classname');
+		$taskTypes['classpath'] = $adb->query_result($result, 0, 'classpath');
+		$taskTypes['templatepath'] = $adb->query_result($result, 0, 'templatepath');
+		$taskTypes['sourcemodule'] = $adb->query_result($result, 0, 'sourcemodule');
+
+		$taskDetails = self::getInstance($taskTypes);
+		return $taskDetails;
+	}
+}
+
 ?>

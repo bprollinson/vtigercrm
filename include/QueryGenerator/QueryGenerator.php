@@ -54,7 +54,10 @@ class QueryGenerator {
 	public static $AND = 'AND';
 	public static $OR = 'OR';
 	private $customViewFields;
-
+	/**
+	 * Import Feature
+	 */
+	private $ignoreComma;
 	public function __construct($module, $user) {
 		$db = PearDatabase::getInstance();
 		$this->module = $module;
@@ -209,18 +212,50 @@ class QueryGenerator {
 			$this->addConditionGlue(self::$AND);
 		}
 		if(is_array($this->advFilterList) && count($this->advFilterList) > 0) {
-			foreach ($this->advFilterList as $groupindex=>$groupcolumns) {
+			$this->parseAdvFilterList($this->advFilterList);	
+		}
+		if($this->conditionInstanceCount > 0) {
+			$this->endGroup();
+		}
+	}
+	
+	public function parseAdvFilterList($advFilterList, $glue=''){
+		if(!empty($glue)) $this->addConditionGlue($glue);
+		
+		$customView = new CustomView($this->module);
+		$dateSpecificConditions = $customView->getStdFilterConditions();
+		foreach ($advFilterList as $groupindex=>$groupcolumns) {
 				$filtercolumns = $groupcolumns['columns'];
 				if(count($filtercolumns) > 0) {
 					$this->startGroup('');
 					foreach ($filtercolumns as $index=>$filter) {
-						$name = explode(':',$filter['columnname']);
-						if(empty($name[2]) && $name[1] == 'crmid' && $name[0] == 'vtiger_crmentity') {
+						$nameComponents = explode(':',$filter['columnname']);
+						if(empty($nameComponents[2]) && $nameComponents[1] == 'crmid' && $nameComponents[0] == 'vtiger_crmentity') {
 							$name = $this->getSQLColumn('id');
 						} else {
-							$name = $name[2];
+							$name = $nameComponents[2];
 						}
-						$this->addCondition($name, $filter['value'], $filter['comparator']);
+                        if(($nameComponents[4] == 'D' || $nameComponents[4] == 'DT') && in_array($filter['comparator'], $dateSpecificConditions)) {
+                            $filter['stdfilter'] = $filter['comparator'];
+                            $valueComponents = explode(',',$filter['value']);
+                            if($filter['comparator'] == 'custom') {
+							if($nameComponents[4] == 'DT') {
+								$startDateTimeComponents = explode(' ',$valueComponents[0]);
+								$endDateTimeComponents = explode(' ',$valueComponents[1]);
+								$filter['startdate'] = DateTimeField::convertToDBFormat($startDateTimeComponents[0]);
+								$filter['enddate'] = DateTimeField::convertToDBFormat($endDateTimeComponents[0]);
+							} else {
+                                $filter['startdate'] = DateTimeField::convertToDBFormat($valueComponents[0]);
+                                $filter['enddate'] = DateTimeField::convertToDBFormat($valueComponents[1]);
+                            }
+						}
+                            $dateFilterResolvedList = $customView->resolveDateFilterValue($filter);
+                            $value[] = $this->fixDateTimeValue($name, $dateFilterResolvedList['startdate']);
+                            $value[] = $this->fixDateTimeValue($name, $dateFilterResolvedList['enddate'], false);
+                            $this->addCondition($name, $value, 'BETWEEN');
+                        }else{
+                            $this->addCondition($name, $filter['value'], $filter['comparator']);
+                        }
 						$columncondition = $filter['column_condition'];
 						if(!empty($columncondition)) {
 							$this->addConditionGlue($columncondition);
@@ -233,10 +268,6 @@ class QueryGenerator {
 				}
 			}
 		}
-		if($this->conditionInstanceCount > 0) {
-			$this->endGroup();
-		}
-	}
 
 	public function getCustomViewQueryById($viewId) {
 		$this->initForCustomViewById($viewId);
@@ -298,6 +329,26 @@ class QueryGenerator {
 		foreach ($this->fields as $field) {
 			$sql = $this->getSQLColumn($field);
 			$columns[] = $sql;
+
+			//To merge date and time fields 
+			if($this->meta->getEntityName() == 'Calendar' && ($field == 'date_start' || $field == 'due_date' || $field == 'taskstatus' || $field == 'eventstatus')) {
+				if($field=='date_start') {
+					$timeField = 'time_start';
+					$sql = $this->getSQLColumn($timeField);
+				} else if ($field == 'due_date') {
+					$timeField = 'time_end';
+					$sql = $this->getSQLColumn($timeField);
+				} else if ($field == 'taskstatus' || $field == 'eventstatus') {
+					//In calendar list view, Status value = Planned is not displaying
+					$sql = "CASE WHEN (vtiger_activity.status not like '') THEN vtiger_activity.status ELSE vtiger_activity.eventstatus END AS ";
+					if ( $field == 'taskstatus') {
+						$sql .= "status";
+					} else {
+						$sql .= $field;
+					}
+				}
+				$columns[] = $sql;
+			}
 		}
 		$this->columns = implode(', ',$columns);
 		return $this->columns;
@@ -307,10 +358,12 @@ class QueryGenerator {
 		if(!empty($this->query) || !empty($this->fromClause)) {
 			return $this->fromClause;
 		}
+		$baseModule = $this->getModule();
 		$moduleFields = $this->meta->getModuleFields();
 		$tableList = array();
 		$tableJoinMapping = array();
 		$tableJoinCondition = array();
+		$i =1;
 		foreach ($this->fields as $fieldName) {
 			if ($fieldName == 'id') {
 				continue;
@@ -324,13 +377,14 @@ class QueryGenerator {
 				$moduleList = $this->referenceFieldInfoList[$fieldName];
 				$tableJoinMapping[$field->getTableName()] = 'INNER JOIN';
 				foreach($moduleList as $module) {
-					if($module == 'Users') {
-						$tableJoinCondition[$fieldName]['vtiger_users'] = $field->getTableName().
-								".".$field->getColumnName()." = vtiger_users.id";
-						$tableJoinCondition[$fieldName]['vtiger_groups'] = $field->getTableName().
-								".".$field->getColumnName()." = vtiger_groups.groupid";
-						$tableJoinMapping['vtiger_users'] = 'LEFT JOIN';
-						$tableJoinMapping['vtiger_groups'] = 'LEFT JOIN';
+					if($module == 'Users' && $baseModule != 'Users') {
+						$tableJoinCondition[$fieldName]['vtiger_users'.$i] = $field->getTableName().
+								".".$field->getColumnName()." = vtiger_users".$i.".id";
+						$tableJoinCondition[$fieldName]['vtiger_groups'.$i] = $field->getTableName().
+								".".$field->getColumnName()." = vtiger_groups".$i.".groupid";
+						$tableJoinMapping['vtiger_users'.$i] = 'LEFT JOIN vtiger_users AS';
+						$tableJoinMapping['vtiger_groups'.$i] = 'LEFT JOIN vtiger_groups AS';
+						$i++;
 					}
 				}
 			} elseif($field->getFieldDataType() == 'owner') {
@@ -500,7 +554,7 @@ class QueryGenerator {
 		foreach ($this->conditionals as $index=>$conditionInfo) {
 			$fieldName = $conditionInfo['name'];
 			$field = $moduleFieldList[$fieldName];
-			if(empty($field)) {
+			if(empty($field) || $conditionInfo['operator'] == 'None') {
 				continue;
 			}
 			$fieldSql = '(';
@@ -594,8 +648,14 @@ class QueryGenerator {
 		$operator = strtolower($operator);
 		$db = PearDatabase::getInstance();
 
-		if(is_string($value)) {
+		if(is_string($value) && $this->ignoreComma == false) {
 			$valueArray = explode(',' , $value);
+			if ($field->getFieldDataType() == 'multipicklist' && in_array($operator, array('e', 'n'))) {
+				$valueArray = getCombinations($valueArray);
+				foreach ($valueArray as $key => $value) {
+					$valueArray[$key] = str_replace(' ', ' |##| ', $value);
+				}
+			}
 		} elseif(is_array($value)) {
 			$valueArray = $value;
 		} else{
@@ -621,6 +681,10 @@ class QueryGenerator {
 		foreach ($valueArray as $value) {
 			if(!$this->isStringType($field->getFieldDataType())) {
 				$value = trim($value);
+			}
+			if ($operator == 'empty' || $operator == 'y') {
+				$sql[] = sprintf("IS NULL OR %s = ''", $this->getSQLColumn($field->getFieldName()));
+				continue;
 			}
 			if((strtolower(trim($value)) == 'null') ||
 					(trim($value) == '' && !$this->isStringType($field->getFieldDataType())) &&
@@ -737,10 +801,10 @@ class QueryGenerator {
 		return ($type == 'date' || $type == 'datetime');
 	}
 
-	private function fixDateTimeValue($name, $value, $first = true) {
+	public function fixDateTimeValue($name, $value, $first = true) {
 		$moduleFields = $this->meta->getModuleFields();
 		$field = $moduleFields[$name];
-		$type = $field->getFieldDataType();
+		$type = $field ? $field->getFieldDataType() : false;
 		if($type == 'datetime') {
 			if(strrpos($value, ' ') === false) {
 				if($first) {
@@ -754,10 +818,14 @@ class QueryGenerator {
 	}
 
 	public function addCondition($fieldname,$value,$operator,$glue= null,$newGroup = false,
-			$newGroupType = null) {
+			$newGroupType = null, $ignoreComma = false) {
 		$conditionNumber = $this->conditionInstanceCount++;
+		if($glue != null && $conditionNumber > 0)
+			$this->addConditionGlue ($glue);
+		
 		$this->groupInfo .= "$conditionNumber ";
 		$this->whereFields[] = $fieldname;
+		$this->ignoreComma = $ignoreComma;
 		$this->reset();
 		$this->conditionals[$conditionNumber] = $this->getConditionalArray($fieldname,
 				$value, $operator);
@@ -912,9 +980,6 @@ class QueryGenerator {
 						$value = CurrencyField::convertToDBFormat($value, null, true);
 					} else {
 						$currencyField = new CurrencyField($value);
-						if($this->getModule() == 'Potentials' && $fieldName == 'amount') {
-							$currencyField->setNumberofDecimals(2);
-						}
 						$value = $currencyField->getDBInsertedValue();
 					}
 				}

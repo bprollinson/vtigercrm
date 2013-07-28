@@ -8,19 +8,23 @@
  * All Rights Reserved.
  ************************************************************************************/
 require_once 'data/VTEntityDelta.php';
+require_once 'includes/runtime/Cache.php';
 
 class VTWorkflowEntity{
 	function __construct($user, $id){
-		$this->moduleName = null;
-		$this->id = $id;
-		$this->user = $user;
-		$data = vtws_retrieve($id, $user);
-		foreach($data as $key => $value){
-			if(is_string($value)){
-				$data[$key] = html_entity_decode($value, ENT_QUOTES, 'utf-8');
+		try {
+			$this->moduleName = null;
+			$this->id = $id;
+			$this->user = $user;
+			$data = vtws_retrieve($id, $user);
+			foreach($data as $key => $value){
+				if(is_string($value)){
+					$data[$key] = html_entity_decode($value, ENT_QUOTES, 'utf-8');
+				}
 			}
+			$this->data = $data;
+		}catch(Exception $ex) {
 		}
-		$this->data = $data;
 	}
 	/**
 	 * Get the data from the entity object as an array.
@@ -46,14 +50,21 @@ class VTWorkflowEntity{
 	 * @return The module name.
 	 */
 	function getModuleName(){
+		$cache = Vtiger_Cache::getInstance();
+
 		if($this->moduleName==null){
 			global $adb;
 			$wsId = $this->data['id'];
 			$parts = explode('x', $wsId);
+			if($cache->getModuleName($parts[0])){
+				$this->moduleName=$cache->getModuleName($parts[0]);
+			} else {
 			$result = $adb->pquery('select name from vtiger_ws_entity where id=?',
 						 array($parts[0]));
 			$rowData = $adb->raw_query_result_rowdata($result, 0);
 			$this->moduleName = $rowData['name'];
+				$cache->setModuleName($parts[0],  $this->moduleName);
+			}
 		}
 		return $this->moduleName;
 	}

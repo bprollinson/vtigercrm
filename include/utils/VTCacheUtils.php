@@ -13,30 +13,6 @@
  */
 class VTCacheUtils {
 	
-	/** Tab information caching */
-	static $_tabidinfo_cache = array();
-	static function lookupTabid($module) {
-		$flip_cache = array_flip(self::$_tabidinfo_cache);
-		
-		if(isset($flip_cache[$module])) {
-			return $flip_cache[$module];
-		}
-		return false;
-	}
-	
-	static function lookupModulename($tabid) {
-		if(isset(self::$_tabidinfo_cache[$tabid])) {
-			return self::$_tabidinfo_cache[$tabid];
-		}
-		return false;
-	}
-	
-	static function updateTabidInfo($tabid, $module) {
-		if(!empty($tabid) && !empty($module)) {
-			self::$_tabidinfo_cache[$tabid] = $module;
-		}
-	}
-	
 	/** All tab information caching */
 	static $_alltabrows_cache = false;
 	static function lookupAllTabsInfo() {
@@ -44,6 +20,18 @@ class VTCacheUtils {
 	}
 	static function updateAllTabsInfo($tabrows) {
 		self::$_alltabrows_cache = $tabrows;
+	}
+	
+	/** Block information caching */
+	static $_blocklabel_cache = array();
+	static function updateBlockLabelWithId($label, $id) {
+		self::$_blocklabel_cache[$id] = $label;
+	}
+	static function lookupBlockLabelWithId($id) {
+		if (isset(self::$_blocklabel_cache[$id])) {
+			return self::$_blocklabel_cache[$id];
+		}
+		return false;
 	}
 	
 	/** Field information caching */
@@ -62,50 +50,108 @@ class VTCacheUtils {
 			'typeofdata'=> $typeofdata,
 			'presence'  => $presence,
 		);
+        Vtiger_Cache::set('fieldInfo', $tabid, self::$_fieldinfo_cache[$tabid]);
 	}
 	static function lookupFieldInfo($tabid, $fieldname) {
-		if(isset(self::$_fieldinfo_cache[$tabid]) && isset(self::$_fieldinfo_cache[$tabid][$fieldname])) {
+        $fieldInfo = Vtiger_Cache::get('fieldInfo', $tabid);
+        if($fieldInfo && isset($fieldInfo[$fieldname])){
+            return $fieldInfo[$fieldname];
+        }else if(isset(self::$_fieldinfo_cache[$tabid]) && isset(self::$_fieldinfo_cache[$tabid][$fieldname])) {
 			return self::$_fieldinfo_cache[$tabid][$fieldname];
 		}
+        
+        $field = Vtiger_Cache::get('field-'.$tabid,$fieldname);
+        if($field){
+            $cacheField = array(
+                'tabid' => $tabid,
+                'fieldid' => $field->getId(),
+                'fieldname' => $field->getName(),
+                'fieldlabel' => $field->get('label'),
+                'columnname' => $field->get('column'),
+                'tablename' => $field->get('table'),
+                'uitype' => $field->get('uitype'),
+                'typeofdata' => $field->get('typeofdata'),
+                'presence' => $field->get('presence'),
+            );
+            return $cacheField;
+        }
 		return false;
 	}	
 	static function lookupFieldInfo_Module($module, $presencein = array('0', '2')) {
 		$tabid = getTabid($module);
 		$modulefields = false;
+		$fieldInfo = Vtiger_Cache::get('fieldInfo', $tabid);
+        if($fieldInfo){
+            $fldcache =$fieldInfo;
+        }else if(isset(self::$_fieldinfo_cache[$tabid])) {
+            $fldcache = self::$_fieldinfo_cache[$tabid];
+        }
 		
-		if(isset(self::$_fieldinfo_cache[$tabid])) {
+        if($fldcache){
 			$modulefields = array();
 			
-			$fldcache = self::$_fieldinfo_cache[$tabid];
 			foreach($fldcache as $fieldname=>$fieldinfo) {
 				if(in_array($fieldinfo['presence'], $presencein)) {
 					$modulefields[] = $fieldinfo;
 				}
 			}
 		}
+        
+        $fieldInfo = Vtiger_Cache::get('ModuleFields',$tabid);
+        if($fieldInfo){
+            foreach($fieldInfo as $block => $blockFields){
+                foreach ($blockFields as $field){
+                if(in_array($field->get('presence'), $presencein)) {
+                     $cacheField = array(
+                            'tabid' => $tabid,
+                            'fieldid' => $field->getId(),
+                            'fieldname' => $field->getName(),
+                            'fieldlabel' => $field->get('label'),
+                            'columnname' => $field->get('column'),
+                            'tablename' => $field->get('table'),
+                            'uitype' => $field->get('uitype'),
+                            'typeofdata' => $field->get('typeofdata'),
+                            'presence' => $field->get('presence'),
+                        );
+                     $modulefields[] = $cacheField;
+                 }   
+                }
+            }
+        }
 		return $modulefields;
 	}
 	
 	static function lookupFieldInfoByColumn($tabid, $columnname) {
-		if(isset(self::$_fieldinfo_cache[$tabid])) {
+		
+        if(isset(self::$_fieldinfo_cache[$tabid])) {
 			foreach(self::$_fieldinfo_cache[$tabid] as $fieldname=>$fieldinfo) {
 				if($fieldinfo['columnname'] == $columnname) {
 					return $fieldinfo;
 				}
 			}
 		}
-		return false;
-	}
-	
-	/** Module active column fields caching */
-	static $_module_columnfields_cache = array();
-	static function updateModuleColumnFields($module, $column_fields) {
-		self::$_module_columnfields_cache[$module] = $column_fields;
-	}
-	static function lookupModuleColumnFields($module) {
-		if(isset(self::$_module_columnfields_cache[$module])) {
-			return self::$_module_columnfields_cache[$module];
-		}
+        
+        $fieldInfo = Vtiger_Cache::get('ModuleFields',$tabid);
+        if($fieldInfo){
+            foreach($fieldInfo as $block => $blockFields){
+                foreach ($blockFields as $field){
+                 if($field->get('column') == $columnname) {
+                     $cacheField = array(
+                            'tabid' => $tabid,
+                            'fieldid' => $field->getId(),
+                            'fieldname' => $field->getName(),
+                            'fieldlabel' => $field->get('label'),
+                            'columnname' => $field->get('column'),
+                            'tablename' => $field->get('table'),
+                            'uitype' => $field->get('uitype'),
+                            'typeofdata' => $field->get('typeofdata'),
+                            'presence' => $field->get('presence'),
+                        );
+                        return $cacheField;
+                 }   
+                }
+            }
+        }
 		return false;
 	}
 	
@@ -129,37 +175,6 @@ class VTCacheUtils {
 		self::$_usercurrencyid_cache[$userid] = array(
 			'currencyid' => $currencyid
 		);
-	}
-	
-	/** Currency information caching */
-	static $_currencyinfo_cache = array();
-	static function lookupCurrencyInfo($currencyid) {
-		if(isset(self::$_currencyinfo_cache[$currencyid])) {
-			return self::$_currencyinfo_cache[$currencyid];
-		}
-		return false;
-	}
-	static function updateCurrencyInfo($currencyid, $name, $code, $symbol, $rate) {
-		self::$_currencyinfo_cache[$currencyid] = array(
-			'currencyid' => $currencyid,
-			'name'       => $name,
-			'code'       => $code,
-			'symbol'     => $symbol,
-			'rate'       => $rate
-		);
-	}
-	
-	
-	/** ProfileId information caching */
-	static $_userprofileid_cache = array();
-	static function updateUserProfileId($userid, $profileid) {
-		self::$_userprofileid_cache[$userid] = $profileid;
-	}
-	static function lookupUserProfileId($userid) {
-		if(isset(self::$_userprofileid_cache[$userid])) {
-			return self::$_userprofileid_cache[$userid];
-		}
-		return false;
 	}
 	
 	/** Profile2Field information caching */

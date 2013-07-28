@@ -365,8 +365,6 @@ class CustomView extends CRMEntity {
 			}
 			if ($fieldlabel == "Start Date & Time") {
 				$fieldlabel = "Start Date";
-				if ($module == 'Calendar' && $block == 19)
-					$module_columnlist['vtiger_activity:time_start::Calendar_Start_Time:I'] = 'Start Time';
 			}
 			$fieldlabel1 = str_replace(" ", "_", $fieldlabel);
 			$optionvalue = $fieldtablename . ":" . $fieldcolname . ":" . $fieldname . ":" . $module . "_" .
@@ -492,6 +490,19 @@ class CustomView extends CRMEntity {
 
 		return $stdcriteria_list;
 	}
+    
+    /**
+     *  Function which will give condition list for date fields 
+     * @return array of std filter conditions
+     */
+    function getStdFilterConditions() {
+        return Array("custom","prevfy" ,"thisfy" ,"nextfy","prevfq",
+			"thisfq","nextfq","yesterday","today","tomorrow",
+			"lastweek","thisweek","nextweek","lastmonth","thismonth",
+			"nextmonth","last7days","last30days","last60days","last90days",
+			"last120days","next30days","next60days","next90days","next120days",
+		);
+    }
 
 	/** to get the standard filter criteria
 	 * @param $selcriteria :: Type String (optional)
@@ -837,29 +848,32 @@ class CustomView extends CRMEntity {
 
 		$result = $adb->pquery($sSQL, array($cvid));
 		$stdfilterrow = $adb->fetch_array($result);
+        return $this->resolveDateFilterValue($stdfilterrow);
+	}
+    
+    function resolveDateFilterValue ($dateFilterRow) {
+        $stdfilterlist = array();
+		$stdfilterlist["columnname"] = $dateFilterRow["columnname"];
+		$stdfilterlist["stdfilter"] = $dateFilterRow["stdfilter"];
 
-		$stdfilterlist = array();
-		$stdfilterlist["columnname"] = $stdfilterrow["columnname"];
-		$stdfilterlist["stdfilter"] = $stdfilterrow["stdfilter"];
-
-		if ($stdfilterrow["stdfilter"] == "custom" || $stdfilterrow["stdfilter"] == "") {
-			if ($stdfilterrow["startdate"] != "0000-00-00" && $stdfilterrow["startdate"] != "") {
-				$startDateTime = new DateTimeField($stdfilterrow["startdate"] . ' ' . date('H:i:s'));
+		if ($dateFilterRow["stdfilter"] == "custom" || $dateFilterRow["stdfilter"] == "") {
+			if ($dateFilterRow["startdate"] != "0000-00-00" && $dateFilterRow["startdate"] != "") {
+				$startDateTime = new DateTimeField($dateFilterRow["startdate"] . ' ' . date('H:i:s'));
 				$stdfilterlist["startdate"] = $startDateTime->getDisplayDate();
 			}
-			if ($stdfilterrow["enddate"] != "0000-00-00" && $stdfilterrow["enddate"] != "") {
-				$endDateTime = new DateTimeField($stdfilterrow["enddate"] . ' ' . date('H:i:s'));
+			if ($dateFilterRow["enddate"] != "0000-00-00" && $dateFilterRow["enddate"] != "") {
+				$endDateTime = new DateTimeField($dateFilterRow["enddate"] . ' ' . date('H:i:s'));
 				$stdfilterlist["enddate"] = $endDateTime->getDisplayDate();
 			}
 		} else { //if it is not custom get the date according to the selected duration
-			$datefilter = $this->getDateforStdFilterBytype($stdfilterrow["stdfilter"]);
+			$datefilter = $this->getDateforStdFilterBytype($dateFilterRow["stdfilter"]);
 			$startDateTime = new DateTimeField($datefilter[0] . ' ' . date('H:i:s'));
 			$stdfilterlist["startdate"] = $startDateTime->getDisplayDate();
 			$endDateTime = new DateTimeField($datefilter[1] . ' ' . date('H:i:s'));
 			$stdfilterlist["enddate"] = $endDateTime->getDisplayDate();
 		}
 		return $stdfilterlist;
-	}
+    }
 
 	/** to get the Advanced filter for the given customview Id
 	 * @param $cvid :: Type Integer
@@ -1150,6 +1164,9 @@ class CustomView extends CRMEntity {
 					}
 					elseif ($comparator == 'bw' && count($valuearray) == 2) {
 						$advfiltersql = "(" . $columns[0] . "." . $columns[1] . " between '" . getValidDBInsertDateTimeValue(trim($valuearray[0]), $datatype) . "' and '" . getValidDBInsertDateTimeValue(trim($valuearray[1]), $datatype) . "')";
+					}
+					elseif ($comparator == 'y') {
+						$advfiltersql = sprintf("(%s.%s IS NULL OR %s.%s = '')", $columns[0], $columns[1], $columns[0], $columns[1]);
 					} else {
 						//Added for getting vtiger_activity Status -Jaguar
 						if ($this->customviewmodule == "Calendar" && ($columns[1] == "status" || $columns[1] == "eventstatus")) {
@@ -1259,7 +1276,7 @@ class CustomView extends CRMEntity {
 			$value = $this->getSalesRelatedName($comparator, $value, $datatype, $tablename, $fieldname);
 		} else {
 			//For checkbox type values, we have to convert yes/no as 1/0 to get the values
-			$field_uitype = getUItype($this->customviewmodule, $fieldname);
+			$field_uitype = $this->getUItype($this->customviewmodule, $fieldname);
 			if ($field_uitype == 56) {
 				if (strtolower($value) == 'yes')
 					$value = 1;
@@ -1945,6 +1962,21 @@ class CustomView extends CRMEntity {
 		}
 		$log->debug("Exiting isPermittedChangeStatus($status) method..............");
 		return $status_details;
+	}
+	
+	function getUItype($module, $columnname) {
+		global $adb;
+		
+		$tabIdList = array();
+		//To find tabid for this module
+		$tabIdList[] = getTabid($module);
+		if ($module == 'Calendar') {
+			$tabIdList[] = getTabid('Events');
+		}
+		$sql = "select uitype from vtiger_field where tabid IN (" . generateQuestionMarks($tabIdList) . ") and columnname=?";
+		$result = $adb->pquery($sql, array($tabIdList, $columnname));
+		$uitype = $adb->query_result($result, 0, "uitype");
+		return $uitype;
 	}
 
 }

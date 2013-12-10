@@ -17,6 +17,7 @@ include_once('vtlib/Vtiger/Link.php');
 include_once('vtlib/Vtiger/Event.php');
 include_once('vtlib/Vtiger/Webservice.php');
 include_once('vtlib/Vtiger/Version.php');
+require_once 'includes/runtime/Cache.php';
 
 /**
  * Provides API to work with vtiger CRM Module
@@ -88,12 +89,10 @@ class Vtiger_ModuleBasic {
 	 * @access private
 	 */
 	function initialize2() {
-		global $adb;
-		$result = $adb->pquery("SELECT tablename,entityidfield FROM vtiger_entityname WHERE tabid=?",
-			Array($this->id));
-		if($adb->num_rows($result)) {
-			$this->basetable = $adb->query_result($result, 0, 'tablename');
-			$this->basetableid=$adb->query_result($result, 0, 'entityidfield');
+		$entitydata = Vtiger_Functions::getEntityModuleInfo($this->name);
+		if ($entitydata) {
+			$this->basetable = $entitydata['tablename'];
+			$this->basetableid=$entitydata['entityidfield'];
 		}
 	}
 
@@ -103,7 +102,7 @@ class Vtiger_ModuleBasic {
 	 */
 	function __getUniqueId() {
 		global $adb;
-		$result = $adb->pquery("SELECT MAX(tabid) AS max_seq FROM vtiger_tab", array());
+		$result = $adb->query("SELECT MAX(tabid) AS max_seq FROM vtiger_tab");
 		$maxseq = $adb->query_result($result, 0, 'max_seq');
 		return ++$maxseq;
 	}

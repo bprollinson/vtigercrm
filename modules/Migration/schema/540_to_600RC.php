@@ -59,6 +59,21 @@ if(!defined('INSTALLATION_MODE')) {
 
 Migration_Index_View::ExecuteQuery('UPDATE com_vtiger_workflows SET filtersavedinnew = 5', array());
 
+// Core workflow schema dependecy introduced in 6.1.0
+$adb=PearDatabase::getInstance();
+$result = $adb->pquery("show columns from com_vtiger_workflows like ?", array('schtypeid'));
+if (!($adb->num_rows($result))) { $adb->pquery("ALTER TABLE com_vtiger_workflows ADD schtypeid INT(10)", array()); }
+$result = $adb->pquery("show columns from com_vtiger_workflows like ?", array('schtime'));
+if (!($adb->num_rows($result))) { $adb->pquery("ALTER TABLE com_vtiger_workflows ADD schtime TIME", array()); }
+$result = $adb->pquery("show columns from com_vtiger_workflows like ?", array('schdayofmonth'));
+if (!($adb->num_rows($result))) {$adb->pquery("ALTER TABLE com_vtiger_workflows ADD schdayofmonth VARCHAR(100)", array());}
+$result = $adb->pquery("show columns from com_vtiger_workflows like ?", array('schdayofweek'));
+if (!($adb->num_rows($result))) {$adb->pquery("ALTER TABLE com_vtiger_workflows ADD schdayofweek VARCHAR(100)", array());}
+$result = $adb->pquery("show columns from com_vtiger_workflows like ?", array('schannualdates'));
+if (!($adb->num_rows($result))) {$adb->pquery("ALTER TABLE com_vtiger_workflows ADD schannualdates VARCHAR(100)", array());}
+$result = $adb->pquery("show columns from com_vtiger_workflows like ?", array('nexttrigger_time'));
+if (!($adb->num_rows($result))) {$adb->pquery("ALTER TABLE com_vtiger_workflows ADD nexttrigger_time DATETIME", array());}
+
 if(!defined('INSTALLATION_MODE')) {
 	Migration_Index_View::ExecuteQuery("CREATE TABLE IF NOT EXISTS com_vtiger_workflow_tasktypes (
 					id int(11) NOT NULL,
@@ -1266,8 +1281,6 @@ if(!defined('INSTALLATION_MODE')) {
 	Migration_Index_View::ExecuteQuery('ALTER TABLE vtiger_salutationtype ADD COLUMN sortorderid INT(1)', array());
 }
 
-Migration_Index_View::ExecuteQuery('ALTER TABLE vtiger_field ADD COLUMN summaryfield int(1) DEFAULT 0', array());
-
 $summaryFields = array(
 	'Accounts'	=> array('assigned_user_id', 'email1', 'phone', 'bill_city', 'bill_country', 'website'),
 	'Contacts'	=> array('assigned_user_id', 'email', 'phone', 'mailingcity', 'mailingcountry'),
@@ -1894,6 +1907,24 @@ if (!$usersRowHeightField) {
 	$field->setPicklistValues(array('wide', 'medium', 'narrow'));
 }
 
+$moduleInstance = Vtiger_Module::getInstance('HelpDesk');
+$block = Vtiger_Block::getInstance('LBL_TICKET_INFORMATION', $moduleInstance);
+$fromPortal = Vtiger_Field_Model::getInstance('from_portal', $moduleInstance);
+
+if(!$fromPortal){
+    $field = new Vtiger_Field();
+    $field->name = 'from_portal';
+    $field->label = 'From Portal';
+    $field->table ='vtiger_ticketcf';
+    $field->column = 'from_portal';
+    $field->columntype = 'varchar(3)';
+    $field->typeofdata = 'C~O';
+    $field->uitype = 56;
+    $field->displaytype = 3;
+    $field->presence = 0;
+    $block->addField($field);
+}
+
 //Start: Customer - Feature #10254 Configuring all Email notifications including Ticket notifications
 $moduleName = 'HelpDesk';
 //Start: Moving Entity methods of Comments to Workflows
@@ -2447,3 +2478,89 @@ $module->addLink('DETAILVIEWSIDEBARWIDGET', 'Google Map', 'module=Google&view=Ma
 Migration_Index_View::ExecuteQuery('DELETE FROM vtiger_settings_field WHERE name=?', array('LBL_BACKUP_SERVER_SETTINGS'));
 
 // Changes ends as on 2013.11.29
+Migration_Index_View::ExecuteQuery("CREATE TABLE IF NOT EXISTS vtiger_faqcf ( 
+                                faqid int(19), 
+                                PRIMARY KEY (faqid), 
+                                CONSTRAINT fk_1_vtiger_faqcf FOREIGN KEY (faqid) REFERENCES vtiger_faq(id) ON DELETE CASCADE 
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8", array()); 
+
+//Unlinking unwanted resources when migrating to 6.1.0
+$unWanted=array(
+ "modules/Import/resources/Import.js",
+ "modules/Webmails/Webmails.js",
+ "modules/Webforms/Webforms.js",
+ "modules/Vendors/Vendors.js",
+ "modules/Users/Users.js",
+ "modules/Tooltip/TooltipHeaderScript.js",
+ "modules/Tooltip/Tooltip.js",
+ "modules/Tooltip/TooltipSettings.js",
+ "modules/Settings/Settings.js",
+ "modules/Services/multifile.js",
+ "modules/Services/Services.js",
+ "modules/Services/Servicesslide.js",
+ "modules/ServiceContracts/ServiceContracts.js",
+ "modules/SalesOrder/SalesOrder.js",
+ "modules/Rss/Rss.js",
+ "modules/Reports/Reports.js",
+ "modules/RecycleBin/RecycleBin.js",
+ "modules/Quotes/Quotes.js",
+ "modules/PurchaseOrder/PurchaseOrder.js",
+ "modules/ProjectTask/ProjectTask.js",
+ "modules/ProjectMilestone/ProjectMilestone.js",
+ "modules/Project/Project.js",
+ "modules/Products/Productsslide.js",
+ "modules/Products/Products.js",
+ "modules/Products/multifile.js",
+ "modules/PriceBooks/PriceBooks.js",
+ "modules/Potentials/Potentials.js",
+ "modules/Portal/Portal.js",
+ "modules/Picklist/DependencyPicklist.js",
+ "modules/PBXManager/PBXManager.js",
+ "modules/MailManager/MailManager.js",
+ "modules/Leads/Leads.js",
+ "modules/Invoice/Invoice.js",
+ "modules/Integration/Integration.js",
+ "modules/Home/Homestuff.js",
+ "modules/HelpDesk/HelpDesk.js",
+ "modules/Faq/Faq.js",
+ "modules/Emails/Emails.js",
+ "modules/Emails/GmailBookmarklet.js",
+ "modules/Emails/GmailBookmarkletTrigger.js",
+ "modules/CustomerPortal/CustomerPortal.js",
+ "modules/CronTasks/CronTasks.js",
+ "modules/Contacts/Contacts.js",
+ "modules/ConfigurationEditor/ConfigEditor.js",
+ "modules/Documents/Documents.js",
+ "modules/CustomView/CustomView.js",
+ "modules/ModComments/ModComments.js",
+ "modules/ModComments/ModCommentsCommon.js",
+ "modules/ModTracker/ModTracker.js",
+ "modules/ModTracker/ModTrackerCommon.js",
+ "modules/com_vtiger_workflow/resources/functional.js",
+ "modules/com_vtiger_workflow/resources/parallelexecuter.js",
+ "modules/com_vtiger_workflow/resources/editworkflowscript.js",
+ "modules/com_vtiger_workflow/resources/createtodotaskscript.js",
+ "modules/com_vtiger_workflow/resources/fieldexpressionpopup.js",
+ "modules/com_vtiger_workflow/resources/workflowlistscript.js",
+ "modules/com_vtiger_workflow/resources/fieldvalidator.js",
+ "modules/com_vtiger_workflow/resources/updatefieldstaskscript.js",
+ "modules/com_vtiger_workflow/resources/jquery-1.2.6.js",
+ "modules/com_vtiger_workflow/resources/json2.js",
+ "modules/com_vtiger_workflow/resources/vtigerwebservices.js",
+ "modules/com_vtiger_workflow/resources/jquery.timepicker.js",
+ "modules/com_vtiger_workflow/resources/createentitytaskscript.js",
+ "modules/com_vtiger_workflow/resources/edittaskscript.js",
+ "modules/com_vtiger_workflow/resources/createeventtaskscript.js",
+ "modules/com_vtiger_workflow/resources/emailtaskscript.js",
+ "modules/FieldFormulas/editexpressionscript.js",              
+ "modules/FieldFormulas/jquery-1.2.6.js",
+ "modules/FieldFormulas/json2.js",
+ "modules/FieldFormulas/vtigerwebservices.js",
+ "modules/FieldFormulas/functional.js"
+);
+
+for($i=0;$i<=count($unWanted);$i++){
+    if(file_exists($unWanted[$i])){
+        unlink($unWanted[$i]);
+    }
+}

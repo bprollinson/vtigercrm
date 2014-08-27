@@ -341,7 +341,7 @@ $languageStrings = array(
 	'Leads by Source'              => 'Leads per Source'            ,
 	'Leads by Industry'            => 'Leads per Industrie'         ,
 	'Tickets by Status'            => 'Tickets by Status'           , // TODO: Review
-	'Open Tickets'                 => 'Open Tickets'                , // TODO: Review
+	'Open Tickets'                 => 'Open Kaarten'                , // TODO: Review
 	'LBL_EXPORT_ALL_DATA'          => 'Exporteer alle gegevens'     ,
 	'LBL_EXPORT_DATA_IN_CURRENT_PAGE' => 'Exporteer gegevens in huidige pagina',
 	'LBL_EXPORT_SELECTED_RECORDS'  => 'Exporteer Geselecteerde Records',
@@ -496,7 +496,7 @@ $languageStrings = array(
 	'Sales End Date'               => 'Verkoop Einddatum'           ,
 	'Open Tickets'                 => 'Open Tickets'                , // TODO: Review
 	'LBL_SELECT_STATUS'            => 'Select Status'               , // TODO: Review
-	'LBL_VTIGER_CRM_HONEST_OPEN_SOURCE' => 'vtiger CRM On Demand'        ,
+	'LBL_VTIGER_CRM_HONEST_OPEN_SOURCE' => 'vtiger CRM Open Source'        ,
 	'SINGLE_Accounts'              => 'Organization'                , // TODO: Review
 	'SINGLE_Contacts'              => 'Contact'                     , // TODO: Review
 	'LBL_Sun'                      => 'Sun'                         , // TODO: Review
@@ -527,7 +527,7 @@ $languageStrings = array(
 	'LBL_GLOBAL_SEARCH_MAX_MESSAGE_FOR_MODULE' => 'Only the first 100 results are shown below. Please do Advanced Search if you are not satisfied with the result', // TODO: Review
 	'LBL ACTION'                   => 'Action'                      , // TODO: Review
 	'LBL_NOTE'                     => 'Note'                        , // TODO: Review
-	'LBL_SELECT_OPTION'            => 'Select an Option'            , // TODO: Review
+	'LBL_SELECT_OPTION'            => 'Selecteer een optie'            , // TODO: Review
 	'LBL_TOOLTIP'                  => 'Tooltip Management'          , // TODO: Review
 	'LBL_MODULE_SEQUENCE_NUMBERING' => 'Module Sequence Numbering'   , // TODO: Review
 	'LBL_CUSTOM_FIELD_MAPPING'     => 'Custom Field Mapping'        , // TODO: Review
@@ -549,7 +549,7 @@ $languageStrings = array(
 	'LBL_ADD_BCC'                  => 'Add Bcc'                     , // TODO: Review
 	'LBL_MAX_UPLOAD_SIZE'          => 'Maximum upload size is'      , // TODO: Review
 	'LBL_EXCEEDED'                 => 'Exceeded'                    , // TODO: Review
-
+        'LBL_MERGE'                    => 'Samensmelten',    
 	//Translations used for Export to Pdf
 	'Valid Date' => 'geldige Date',
 	'Phone: ' => 'telefoon: ',
@@ -687,4 +687,7 @@ $jsLanguageStrings = array(
 	'JS_DUPLIACATE_ENTRIES_FOUND_FOR_THE_VALUE' => 'Duplicate entries found for the value', // TODO: Review
 	'JS_USER_EXISTS' => 'User Already Exists',//TODO Review
 	'JS_REENTER_PASSWORDS' => 'Renter Passwords',//TODO Review
+  
+        //No Tax exist 
+        'JS_LBL_NO_TAXES'=>'Geen belastingen', 
 );

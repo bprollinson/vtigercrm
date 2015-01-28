@@ -537,6 +537,8 @@ $languageStrings = array(
 	'LBL_GLOBAL_SEARCH_MAX_MESSAGE' => 'Sólo los primeros 100 resultados de todos los módulos se muestran a continuación. Para obtener resultados específicos de un módulo, selecciona ese módulo y ejecuta la búsqueda de nuevo.',
 	'LBL_GLOBAL_SEARCH_MAX_MESSAGE_FOR_MODULE' => 'Sólo los 100 primeros resultados se muestran a continuación. Prueba con la Búsqueda Avanzada si no has encontrado lo que buscas.',
 
+	'LBL_CONVERSION_RATE' => 'Tasa Conversión',
+    
 	// used in reports detail view
 	'LBL ACTION' => 'Acción',
 	'LBL_NOTE' => 'Nota',
@@ -756,4 +758,7 @@ $jsLanguageStrings = array(
 	'JS_PBX_OUTGOING_FAILURE'=>'Llamada fallida',
 	'JS_PBX_FILL_ALL_FIELDS'=>'Por favor rellene todos los campos',
 	// ends
+    
+    //Edit view mode Translations
+        'JS_CHANGES_WILL_BE_LOST' => 'Sus cambios se perderán!',
 );

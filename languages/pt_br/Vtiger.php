@@ -554,6 +554,8 @@ $languageStrings = array(
 	'LBL_MAX_UPLOAD_SIZE'          => 'Maximum upload size is'      , // TODO: Review
 	'LBL_EXCEEDED'                 => 'Exceeded'                    , // TODO: Review
         'LBL_MERGE'                    => 'Mesclar',
+    
+	'LBL_CONVERSION_RATE'          => 'Conversion Rate'             , // TODO: Review
 	
 	//Translations used for Export to Pdf
 	'Valid Date' => 'Válido até',
@@ -717,4 +719,7 @@ $jsLanguageStrings = array(
 	'JS_PBX_OUTGOING_FAILURE'=>'Ligação Perdida',
 	'JS_PBX_FILL_ALL_FIELDS'=>'Por favor, preencha todos os campos',
 	// ends
+    
+     //Edit view mode Translations
+        'JS_CHANGES_WILL_BE_LOST' => 'Suas alterações serão perdidas!',
 );

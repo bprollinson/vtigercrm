@@ -609,6 +609,8 @@ $languageStrings = array(
     'LBL_SETUP_WEBFORMS'                 => 'Настройка WebForms'              ,
     
     'LBL_MERGE'                    => 'Слияние',
+   
+	'LBL_CONVERSION_RATE'          => 'Обменный курс'   , 
 );
 $jsLanguageStrings = array(
 	'JS_EMAIL_SERVER_CONFIGURATION' => 'Пожалуйста, настроить параметры исходящей сервера на странице настроек', 
@@ -759,4 +761,7 @@ $jsLanguageStrings = array(
     'LBL_SMS_MAX_CHARACTERS_ALLOWED' => 'Максимальные 160 символов разрешено для текстового сообщения',
     'JS_VIEWNAME_ALERT' => 'Максимум 40 символов разрешены для имени фильтра',
 	'JS_FUTURE_EVENT_CANNOT_BE_HELD' => 'Не может нести за будущее',
+    
+    //Edit view mode Translations
+        'JS_CHANGES_WILL_BE_LOST' => 'Ваши изменения будут потеряны!',
 );

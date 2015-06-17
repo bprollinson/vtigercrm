@@ -265,6 +265,7 @@ class DateTimeField {
 		$date = self::convertToUserTimeZone($this->datetime, $user);
 		$time = $date->format("H:i:s");
 		$log->debug("Exiting getDisplayTime method ...");
+       
 		return $time;
 	}
 

@@ -418,7 +418,12 @@ class Vtiger_Functions {
 		$moduleInfo = self::getBasicModuleInfo($mixed);
 		$module = $moduleInfo['name'];
 
-		if ($module && !isset(self::$moduleFieldInfoByNameCache[$module])) {
+                $no_of_fields = $adb->pquery('SELECT COUNT(fieldname) FROM vtiger_field WHERE tabid=?',array(self::getModuleId($module)));
+                $fields_count = $adb->query_result($no_of_fields,0,'COUNT(fieldname)');
+                
+                $cached_fields_count = isset(self::$moduleFieldInfoByNameCache[$module]) ? count(self::$moduleFieldInfoByNameCache[$module]) : NULL;
+                
+		if ($module && (!isset(self::$moduleFieldInfoByNameCache[$module]) || ((int)$fields_count != (int)$cached_fields_count))) {
 			$result =
 				($module == 'Calendar')?
 				$adb->pquery('SELECT * FROM vtiger_field WHERE tabid=? OR tabid=?', array(9, 16)) :
@@ -902,5 +907,19 @@ class Vtiger_Functions {
         $result = $adb->pquery($query, array($productid));
         $unitpice = $adb->query_result($result,0,'unit_price');
         return $unitpice;
+    }
+
+
+    /**
+    * Function to fetch the list of vtiger_groups from group vtiger_table
+    * Takes no value as input
+    * returns the query result set object
+    */
+    static function get_group_options() {
+        global $adb, $noof_group_rows;
+        $sql = "select groupname,groupid from vtiger_groups";
+        $result = $adb->pquery($sql, array());
+        $noof_group_rows = $adb->num_rows($result);
+        return $result;
     }
 }

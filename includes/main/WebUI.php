@@ -22,9 +22,15 @@ class Vtiger_WebUI extends Vtiger_EntryPoint {
 	 * @throws AppException
 	 */
 	protected function checkLogin (Vtiger_Request $request) {
-		if (!$this->hasLogin()) {
-			header('Location: index.php');
-			throw new AppException('Login is required');
+		 if (!$this->hasLogin()) {
+			    $return_params = $_SERVER['QUERY_STRING'];
+                 if($return_params && !$_SESSION['return_params']) {
+                    //Take the url that user would like to redirect after they have successfully logged in.
+                    $return_params = urlencode($return_params);
+                    Vtiger_Session::set('return_params', $return_params);
+                }
+                header ('Location: index.php');
+                throw new AppException('Login is required');
 		}
 	}
 
@@ -89,6 +95,8 @@ class Vtiger_WebUI extends Vtiger_EntryPoint {
 		Vtiger_Session::init();
 		
 		// Better place this here as session get initiated
+                //skipping the csrf checking for the forgot(reset) password 
+                if($request->get('mode') != 'reset' && $request->get('action') != 'Login')
 		require_once 'libraries/csrf-magic/csrf-magic.php';
 
 		// TODO - Get rid of global variable $current_user
